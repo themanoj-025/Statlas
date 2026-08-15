@@ -10,6 +10,7 @@ rendering layer, Constitution §3 null-vs-zero policy):
                     the minimum pool size for that metric (no percentile)
     no_data       — no value for this metric in the latest snapshot
 """
+
 from __future__ import annotations
 
 from datetime import date, datetime, timezone
@@ -35,11 +36,17 @@ from app.queries.similar_players import get_similar_players
 def _age_on(birth: date | None, as_of: date | None) -> int | None:
     if birth is None or as_of is None:
         return None
-    return as_of.year - birth.year - ((as_of.month, as_of.day) < (birth.month, birth.day))
+    return (
+        as_of.year - birth.year - ((as_of.month, as_of.day) < (birth.month, birth.day))
+    )
 
 
 def _axis_status(
-    pct: float | None, raw: float | None, minutes: float, raw_stats: dict[str, float], mid: str
+    pct: float | None,
+    raw: float | None,
+    minutes: float,
+    raw_stats: dict[str, float],
+    mid: str,
 ) -> str:
     if pct is not None:
         return "qualified"
@@ -54,12 +61,18 @@ def _axis_status(
 
 
 def build_radar_axes(
-    db: Session, player_id: int, percentiles: dict[str, float], raw_stats: dict[str, float], minutes: float
+    db: Session,
+    player_id: int,
+    percentiles: dict[str, float],
+    raw_stats: dict[str, float],
+    minutes: float,
 ) -> list[dict[str, Any]]:
     registry = load_registry()
     profile = get_player_profile(db, player_id)
     group = profile["position_group"] if profile else None
-    metric_ids = registry["gk_metrics"] if group == "GK" else registry["outfield_metrics"]
+    metric_ids = (
+        registry["gk_metrics"] if group == "GK" else registry["outfield_metrics"]
+    )
 
     axes: list[dict[str, Any]] = []
     for mid in metric_ids:
@@ -87,9 +100,7 @@ def has_player_event_data(db: Session, player_id: int) -> bool:
     teaser, no implied shot maps.
     """
     return (
-        db.query(MatchEvent.id)
-        .filter(MatchEvent.player_id == player_id)
-        .first()
+        db.query(MatchEvent.id).filter(MatchEvent.player_id == player_id).first()
         is not None
     )
 
@@ -133,7 +144,11 @@ def build_player_payload(
             "date_of_birth": profile["date_of_birth"],
             "age": _age_on(
                 profile["date_of_birth"],
-                snapshot_date.date() if snapshot_date else datetime.now(timezone.utc).date(),
+                (
+                    snapshot_date.date()
+                    if snapshot_date
+                    else datetime.now(timezone.utc).date()
+                ),
             ),  # UTC policy: "today" for age is the UTC date (timezone-policy.md)
             "photo": None,  # honest placeholder — no licensed imagery yet (Constitution imagery rule)
         },

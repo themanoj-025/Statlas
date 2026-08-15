@@ -1,5 +1,8 @@
 <p align="center">
-  <!-- TODO: add assets/logo.svg — inline wordmark, pitch-green on transparent -->
+  <img src="assets/logo.svg" width="280" alt="Statlas logo" />
+</p>
+
+<p align="center">
   <img src="https://img.shields.io/badge/version-0.2.0-144E33" alt="Version 0.2.0" />
   <img src="https://img.shields.io/github/actions/workflow/status/themanoj-025/Statlas/ci.yml?branch=main" alt="CI status" />
   <img src="https://img.shields.io/github/license/themanoj-025/Statlas" alt="License: AGPL-3.0" />

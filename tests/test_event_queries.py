@@ -5,6 +5,7 @@ UI must NEVER render for a player/competition combination without a matching
 `data_coverage` confirmation (Constitution Never-List #8) — no coverage row,
 no map data, no entry point.
 """
+
 from __future__ import annotations
 
 from app.models import DataCoverage, MatchEvent, Player, Team
@@ -22,7 +23,12 @@ def _player(db, name="Player A"):
     team = Team(name="Manchester City", league_id=league.id, external_ids={})
     db.add(team)
     db.flush()
-    player = Player(canonical_name=name, position_group="ST", current_team_id=team.id, external_ids={})
+    player = Player(
+        canonical_name=name,
+        position_group="ST",
+        current_team_id=team.id,
+        external_ids={},
+    )
     db.add(player)
     db.flush()
     db.commit()
@@ -40,7 +46,11 @@ def _shot(db, player, match_id="m1", outcome="Goal", xg=0.42, x=95.0, y=40.0):
             y_coordinate=y,
             minute=30,
             outcome=outcome,
-            extra={"player_name": player.canonical_name, "xg": xg, "body_part": "Right Foot"},
+            extra={
+                "player_name": player.canonical_name,
+                "xg": xg,
+                "body_part": "Right Foot",
+            },
             source_competition_id=COMP,
             season=SEASON,
         )
@@ -50,7 +60,9 @@ def _shot(db, player, match_id="m1", outcome="Goal", xg=0.42, x=95.0, y=40.0):
 _pass_counter = 0
 
 
-def _pass(db, player, match_id="m1", completed=True, sx=50.0, ex=70.0, pass_type="Pass"):
+def _pass(
+    db, player, match_id="m1", completed=True, sx=50.0, ex=70.0, pass_type="Pass"
+):
     global _pass_counter
     _pass_counter += 1
     db.add(
@@ -102,8 +114,18 @@ def test_coverage_gating_without_coverage_row_never_renders(db):
     assert coverage == {"has_coverage": False, "competitions": []}
 
     # The data queries must also refuse the unconfirmed combination.
-    assert get_player_events(db, player.id, event_type="Shot", competition_id=COMP, season=SEASON) == []
-    assert get_player_events(db, player.id, event_type="Pass", competition_id=COMP, season=SEASON) == []
+    assert (
+        get_player_events(
+            db, player.id, event_type="Shot", competition_id=COMP, season=SEASON
+        )
+        == []
+    )
+    assert (
+        get_player_events(
+            db, player.id, event_type="Pass", competition_id=COMP, season=SEASON
+        )
+        == []
+    )
 
 
 def test_coverage_gating_active_row_unlocks_maps(db):
@@ -126,13 +148,17 @@ def test_coverage_gating_active_row_unlocks_maps(db):
     assert coverage["competitions"][0]["competition_name"] == "Premier League"
     assert coverage["competitions"][0]["matches"] == 2
 
-    shots = get_player_events(db, player.id, event_type="Shot", competition_id=COMP, season=SEASON)
+    shots = get_player_events(
+        db, player.id, event_type="Shot", competition_id=COMP, season=SEASON
+    )
     assert len(shots) == 2
     assert {s["outcome"] for s in shots} == {"Goal", "Saved"}
     assert {s["xg"] for s in shots} == {0.42, 0.05}
     assert all(s["x"] == 95.0 for s in shots)
 
-    matches = get_player_event_matches(db, player.id, competition_id=COMP, season=SEASON)
+    matches = get_player_event_matches(
+        db, player.id, competition_id=COMP, season=SEASON
+    )
     assert {m["match_id"] for m in matches} == {"m1", "m2"}
 
     # Match filter narrows the shot set.
@@ -152,16 +178,20 @@ def test_coverage_status_failed_blocks_maps(db):
 
 def test_pass_queries_and_progressive_derivation(db):
     player = _player(db)
-    _pass(db, player, completed=True, sx=50.0, ex=70.0)          # +20 x -> progressive
-    _pass(db, player, completed=False, sx=50.0, ex=70.0)         # incomplete, still +20
-    _pass(db, player, completed=True, sx=95.0, ex=100.0)         # +5 -> not progressive
-    _pass(db, player, completed=True, sx=98.0, ex=105.0)         # into box (x>=102) -> progressive
+    _pass(db, player, completed=True, sx=50.0, ex=70.0)  # +20 x -> progressive
+    _pass(db, player, completed=False, sx=50.0, ex=70.0)  # incomplete, still +20
+    _pass(db, player, completed=True, sx=95.0, ex=100.0)  # +5 -> not progressive
+    _pass(
+        db, player, completed=True, sx=98.0, ex=105.0
+    )  # into box (x>=102) -> progressive
     _coverage(db)
     db.commit()
 
     from app.queries.event_queries import get_player_events, is_progressive_pass
 
-    passes = get_player_events(db, player.id, event_type="Pass", competition_id=COMP, season=SEASON)
+    passes = get_player_events(
+        db, player.id, event_type="Pass", competition_id=COMP, season=SEASON
+    )
     assert len(passes) == 4
     assert all(p["end_x"] is not None for p in passes)
     # +20x (twice, complete + incomplete) and into-box are progressive; +5 is not.

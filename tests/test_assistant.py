@@ -55,13 +55,17 @@ def seeded_client():
     from app.api.main import app
 
     with TestClient(app) as c:
-        c.post("/api/v1/auth/register", json={"email": "analyst@example.com", "password": "hunter2hunter"})
+        c.post(
+            "/api/v1/auth/register",
+            json={"email": "analyst@example.com", "password": "hunter2hunter"},
+        )
         yield c
 
 
 # ---------------------------------------------------------------------------
 # Fake Anthropic client — emits a tool_use, then a grounded text answer
 # ---------------------------------------------------------------------------
+
 
 class FakeMessage:
     def __init__(self, content, stop_reason):
@@ -95,7 +99,12 @@ class FakeMessages:
         # First call: the model decides it needs percentile data.
         if len(owner.calls) == 1:
             content = [
-                FakeBlock("tool_use", id="toolu_1", name="get_player_percentiles", input={"name": "Player A"}),
+                FakeBlock(
+                    "tool_use",
+                    id="toolu_1",
+                    name="get_player_percentiles",
+                    input={"name": "Player A"},
+                ),
             ]
             return FakeMessage(content, "tool_use")
         # Second call: model has the tool result and states the grounded value.
@@ -122,7 +131,9 @@ def fake_anthropic(monkeypatch):
 def test_assistant_grounded_tool_call_visible(seeded_client, fake_anthropic):
     resp = seeded_client.post(
         "/api/v1/assistant/chat",
-        json={"messages": [{"role": "user", "content": "Show me Player A's radar data."}]},
+        json={
+            "messages": [{"role": "user", "content": "Show me Player A's radar data."}]
+        },
     )
     assert resp.status_code == 200, resp.text
     body = resp.json()
@@ -144,8 +155,20 @@ def test_assistant_quota_hard_cap(seeded_client, fake_anthropic):
         user = db.query(User).filter(User.email == "analyst@example.com").first()
         row = AssistantQuota(
             user_id=user.id,
-            period_start=db.query(AssistantQuota).first().period_start if db.query(AssistantQuota).first() else __import__("datetime").datetime.now(__import__("datetime").timezone.utc).replace(day=1, hour=0, minute=0, second=0, microsecond=0),
-            period_end=db.query(AssistantQuota).first().period_end if db.query(AssistantQuota).first() else __import__("datetime").datetime(2099, 1, 1, tzinfo=__import__("datetime").timezone.utc),
+            period_start=(
+                db.query(AssistantQuota).first().period_start
+                if db.query(AssistantQuota).first()
+                else __import__("datetime")
+                .datetime.now(__import__("datetime").timezone.utc)
+                .replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+            ),
+            period_end=(
+                db.query(AssistantQuota).first().period_end
+                if db.query(AssistantQuota).first()
+                else __import__("datetime").datetime(
+                    2099, 1, 1, tzinfo=__import__("datetime").timezone.utc
+                )
+            ),
             queries_used=10,
             queries_limit=10,
         )
@@ -157,7 +180,10 @@ def test_assistant_quota_hard_cap(seeded_client, fake_anthropic):
         json={"messages": [{"role": "user", "content": "Compare two players."}]},
     )
     assert resp.status_code == 429
-    assert "quota" in resp.json()["detail"].lower() or "reset" in resp.json()["detail"].lower()
+    assert (
+        "quota" in resp.json()["detail"].lower()
+        or "reset" in resp.json()["detail"].lower()
+    )
 
 
 def test_assistant_requires_signin(seeded_client, fake_anthropic):
@@ -178,8 +204,14 @@ def test_assistant_unconfigured_returns_503(monkeypatch):
     from app.api.main import app
 
     with TestClient(app) as c:
-        c.post("/api/v1/auth/register", json={"email": "a@b.com", "password": "hunter2hunter"})
-        resp = c.post("/api/v1/assistant/chat", json={"messages": [{"role": "user", "content": "hi"}]})
+        c.post(
+            "/api/v1/auth/register",
+            json={"email": "a@b.com", "password": "hunter2hunter"},
+        )
+        resp = c.post(
+            "/api/v1/assistant/chat",
+            json={"messages": [{"role": "user", "content": "hi"}]},
+        )
         assert resp.status_code == 503
         assert "not configured" in resp.json()["detail"].lower()
 

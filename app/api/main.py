@@ -12,6 +12,7 @@ Honesty by construction:
 - Coverage-dependent features (shot-map teasers) are gated on the coverage
   matrix via queries/coverage_queries.
 """
+
 from __future__ import annotations
 
 import logging
@@ -71,6 +72,7 @@ async def attach_api_rate_limit_headers(request: Request, call_next):
         pass
     return response
 
+
 VALID_POSITIONS = {"GK", "CB", "FB", "DM", "CM", "AM", "W", "ST"}
 
 
@@ -93,10 +95,15 @@ def _with_session(fn: Callable[[Any], Any], *args: Any, **kwargs: Any) -> Any:
 # Meta / health
 # ---------------------------------------------------------------------------
 
+
 @app.get("/api/v1/health")
 def health():
     settings = get_settings()
-    return {"status": "ok", "api_version": "1.0.0", "dataset_mode": settings.dataset_mode}
+    return {
+        "status": "ok",
+        "api_version": "1.0.0",
+        "dataset_mode": settings.dataset_mode,
+    }
 
 
 @app.get("/api/v1/meta")
@@ -120,6 +127,7 @@ def meta():
 # ---------------------------------------------------------------------------
 # Leagues
 # ---------------------------------------------------------------------------
+
 
 @app.get("/api/v1/leagues")
 def leagues():
@@ -147,18 +155,23 @@ def league_stats(
 ):
     from app.queries.league_queries import get_league_stats_table
 
-    return _with_session(get_league_stats_table, league_slug, metric=metric, season=season, limit=limit)
+    return _with_session(
+        get_league_stats_table, league_slug, metric=metric, season=season, limit=limit
+    )
 
 
 # ---------------------------------------------------------------------------
 # Leaderboards
 # ---------------------------------------------------------------------------
 
+
 @app.get("/api/v1/leaderboard")
 def leaderboard(
     metric: str = Query("si_index"),
     season: str = "2025-26",
-    league: str | None = Query(None, description="league slug (omitting = whole tier/all)"),
+    league: str | None = Query(
+        None, description="league slug (omitting = whole tier/all)"
+    ),
     tier: str | None = Query(None, description="tier_1|tier_2|tier_3"),
     position: str | None = Query(None, description="GK|CB|FB|DM|CM|AM|W|ST"),
     min_minutes: float | None = Query(None, ge=0),
@@ -170,7 +183,9 @@ def leaderboard(
     from app.queries.leaderboard_queries import get_leaderboard_filtered
 
     if position is not None and position not in VALID_POSITIONS:
-        raise HTTPException(status_code=400, detail=f"unknown position group '{position}'")
+        raise HTTPException(
+            status_code=400, detail=f"unknown position group '{position}'"
+        )
     if tier is not None and tier not in {"tier_1", "tier_2", "tier_3"}:
         raise HTTPException(status_code=400, detail=f"unknown tier '{tier}'")
     if sort_by not in {"value", "minutes", "name", "club"}:
@@ -196,8 +211,11 @@ def leaderboard(
 # Players
 # ---------------------------------------------------------------------------
 
+
 @app.get("/api/v1/players/search")
-def player_search(q: str = Query(..., min_length=1, max_length=64), limit: int = Query(8, ge=1, le=25)):
+def player_search(
+    q: str = Query(..., min_length=1, max_length=64), limit: int = Query(8, ge=1, le=25)
+):
     from app.queries.player_queries import search_players
 
     return _with_session(search_players, q, limit=limit)
@@ -211,7 +229,9 @@ def player_by_slug(slug: str):
     with session_scope() as db:
         resolved = resolve_player_slug(db, slug)
         if resolved is None:
-            raise HTTPException(status_code=404, detail=f"no player matches slug '{slug}'")
+            raise HTTPException(
+                status_code=404, detail=f"no player matches slug '{slug}'"
+            )
         payload = build_player_payload(db, resolved["player_id"])
         if payload is None:
             raise HTTPException(status_code=404, detail="player has no profile data")
@@ -235,6 +255,7 @@ def player_similar(player_id: int, limit: int = Query(5, ge=1, le=10)):
 # Phase 3 — trend / time-series (Part A)
 # ---------------------------------------------------------------------------
 
+
 @app.get("/api/v1/players/{player_id}/trend")
 def player_trend(
     player_id: int,
@@ -253,6 +274,7 @@ def player_trend(
 # ---------------------------------------------------------------------------
 # Phase 3 — shot / pass maps (Part B, coverage-gated)
 # ---------------------------------------------------------------------------
+
 
 @app.get("/api/v1/players/{player_id}/events")
 def player_event_coverage(player_id: int):
@@ -316,12 +338,15 @@ def player_event_passes(
 # Teams
 # ---------------------------------------------------------------------------
 
+
 @app.get("/api/v1/clubs/{league_slug}/{team_slug}")
 def team_profile(league_slug: str, team_slug: str, season: str | None = None):
     from app.queries.team_queries import get_team_profile
 
     with session_scope() as db:
-        payload = get_team_profile(db, league_slug=league_slug, team_slug=team_slug, season=season)
+        payload = get_team_profile(
+            db, league_slug=league_slug, team_slug=team_slug, season=season
+        )
         if payload is None:
             raise HTTPException(
                 status_code=404,
@@ -333,6 +358,7 @@ def team_profile(league_slug: str, team_slug: str, season: str | None = None):
 # ---------------------------------------------------------------------------
 # Coverage / methodology / positions
 # ---------------------------------------------------------------------------
+
 
 @app.get("/api/v1/coverage")
 def coverage(league_id: int | None = None):
@@ -349,7 +375,9 @@ def coverage(league_id: int | None = None):
                 "fbref": "Per-90 statistics from FBref (Sports Reference). Published as derived, normalized metrics only.",
                 "understat": "xG/xA for the Big-5 from Understat (Tier 1 model).",
             },
-            "generated": datetime.now(timezone.utc).date().isoformat(),  # UTC policy (timezone-policy.md)
+            "generated": datetime.now(timezone.utc)
+            .date()
+            .isoformat(),  # UTC policy (timezone-policy.md)
         }
 
 

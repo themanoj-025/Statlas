@@ -71,6 +71,7 @@ TOOLS: use them when the question needs data. You can call multiple tools."""
 # Tools — thin wrappers over the REAL query layer (never parallel logic)
 # ---------------------------------------------------------------------------
 
+
 def _resolve_player_id(db: Session, name: str) -> int | None:
     """Resolve a free-text player name via the alias-aware search."""
     results = player_queries.search_players(db, name, limit=5)
@@ -83,11 +84,11 @@ def tool_get_player_percentiles(db: Session, name: str) -> dict[str, Any]:
     """Radar/percentile data for one player (position-group cohort)."""
     player_id = _resolve_player_id(db, name)
     if player_id is None:
-        return {"error": f"No player found matching \"{name}\"."}
+        return {"error": f'No player found matching "{name}".'}
     profile = player_queries.get_player_profile(db, player_id)
     pct = player_queries.get_player_percentiles(db, player_id)
     if pct is None:
-        return {"error": f"No published percentile data for \"{name}\"."}
+        return {"error": f'No published percentile data for "{name}".'}
     return {
         "player": profile.get("player") if profile else None,
         "percentiles": pct,
@@ -95,12 +96,18 @@ def tool_get_player_percentiles(db: Session, name: str) -> dict[str, Any]:
 
 
 def tool_get_leaderboard(
-    db: Session, metric: str, league: str | None = None, position: str | None = None, limit: int = 10
+    db: Session,
+    metric: str,
+    league: str | None = None,
+    position: str | None = None,
+    limit: int = 10,
 ) -> dict[str, Any]:
     """Top players for a metric, optionally filtered by league/position."""
     registry = load_registry()
     if metric not in registry.get("metrics", {}):
-        return {"error": f"Unknown metric \"{metric}\". Known metrics: {sorted(registry.get('metrics', {}).keys())}"}
+        return {
+            "error": f"Unknown metric \"{metric}\". Known metrics: {sorted(registry.get('metrics', {}).keys())}"
+        }
     rows = leaderboard_queries.get_leaderboard(
         db,
         league_id=None,
@@ -110,7 +117,9 @@ def tool_get_leaderboard(
     )
     # Filter by league slug if given.
     if league:
-        rows = [r for r in rows if (r.get("league_slug") or "").lower() == league.lower()]
+        rows = [
+            r for r in rows if (r.get("league_slug") or "").lower() == league.lower()
+        ]
     return {"metric": metric, "rows": rows[:limit]}
 
 
@@ -118,20 +127,22 @@ def tool_get_similar_players(db: Session, name: str, limit: int = 5) -> dict[str
     """Nearest-neighbour similar players (cosine over percentile vectors)."""
     player_id = _resolve_player_id(db, name)
     if player_id is None:
-        return {"error": f"No player found matching \"{name}\"."}
+        return {"error": f'No player found matching "{name}".'}
     rows = similar_players.get_similar_players(db, player_id, limit=limit)
     return {"for": name, "similar": rows}
 
 
-def tool_get_player_trend(db: Session, name: str, metric: str, window: int = 5) -> dict[str, Any]:
+def tool_get_player_trend(
+    db: Session, name: str, metric: str, window: int = 5
+) -> dict[str, Any]:
     """Snapshot-history trend for one player + metric (weekly-snapshot
     granularity, not per-match — the response states that explicitly)."""
     player_id = _resolve_player_id(db, name)
     if player_id is None:
-        return {"error": f"No player found matching \"{name}\"."}
+        return {"error": f'No player found matching "{name}".'}
     trend = trend_queries.get_player_trend(db, player_id, metric, window=window)
     if trend is None:
-        return {"error": f"No trend data for \"{name}\" on metric \"{metric}\"."}
+        return {"error": f'No trend data for "{name}" on metric "{metric}".'}
     return trend
 
 
@@ -140,16 +151,30 @@ TOOLS: dict[str, dict[str, Any]] = {
     "get_player_percentiles": {
         "call": tool_get_player_percentiles,
         "description": "Percentile ranks and the Statlas Index for a named player against their position-group cohort. Use for radar data and player-vs-player comparisons.",
-        "params": {"name": {"type": "string", "description": "Player name (e.g. 'Erling Haaland')"}},
+        "params": {
+            "name": {
+                "type": "string",
+                "description": "Player name (e.g. 'Erling Haaland')",
+            }
+        },
         "required": ["name"],
     },
     "get_leaderboard": {
         "call": tool_get_leaderboard,
         "description": "Who leads a league/position in a metric this season. Returns ranked rows with values and percentiles.",
         "params": {
-            "metric": {"type": "string", "description": "Metric id (e.g. si_gls_p90, si_prgp_p90, xg_p90)"},
-            "league": {"type": "string", "description": "Optional league slug (e.g. premier-league)"},
-            "position": {"type": "string", "description": "Optional position group (GK, CB, FB, DM, CM, AM, W, ST)"},
+            "metric": {
+                "type": "string",
+                "description": "Metric id (e.g. si_gls_p90, si_prgp_p90, xg_p90)",
+            },
+            "league": {
+                "type": "string",
+                "description": "Optional league slug (e.g. premier-league)",
+            },
+            "position": {
+                "type": "string",
+                "description": "Optional position group (GK, CB, FB, DM, CM, AM, W, ST)",
+            },
             "limit": {"type": "integer", "description": "Max rows (default 10)"},
         },
         "required": ["metric"],
@@ -157,7 +182,10 @@ TOOLS: dict[str, dict[str, Any]] = {
     "get_similar_players": {
         "call": tool_get_similar_players,
         "description": "Players most similar to a named player (cosine similarity over percentile vectors, same position group).",
-        "params": {"name": {"type": "string", "description": "Player name"}, "limit": {"type": "integer", "description": "Max results (default 5)"}},
+        "params": {
+            "name": {"type": "string", "description": "Player name"},
+            "limit": {"type": "integer", "description": "Max results (default 5)"},
+        },
         "required": ["name"],
     },
     "get_player_trend": {
@@ -166,7 +194,10 @@ TOOLS: dict[str, dict[str, Any]] = {
         "params": {
             "name": {"type": "string", "description": "Player name"},
             "metric": {"type": "string", "description": "Metric id"},
-            "window": {"type": "integer", "description": "Number of snapshots (5 or 10)"},
+            "window": {
+                "type": "integer",
+                "description": "Number of snapshots (5 or 10)",
+            },
         },
         "required": ["name", "metric"],
     },
@@ -198,6 +229,7 @@ def anthropic_tool_schemas() -> list[dict[str, Any]]:
 # ---------------------------------------------------------------------------
 # Quota (Part B3) — hard cap per billing period, reset date stated
 # ---------------------------------------------------------------------------
+
 
 def _quota_window(now: datetime | None = None) -> tuple[datetime, datetime]:
     """Monthly window aligned to calendar month (simplest honest period)."""
@@ -244,7 +276,10 @@ def consume_quota(db: Session, user: User) -> dict[str, Any]:
         raise QuotaExceeded(quota["reset"])
     row = (
         db.query(AssistantQuota)
-        .filter(AssistantQuota.user_id == user.id, AssistantQuota.period_start == quota_period_start())
+        .filter(
+            AssistantQuota.user_id == user.id,
+            AssistantQuota.period_start == quota_period_start(),
+        )
         .first()
     )
     row.queries_used += 1
@@ -268,11 +303,14 @@ class QuotaExceeded(Exception):
 # Conversation (Part B1/B2) — function-calling loop
 # ---------------------------------------------------------------------------
 
+
 def assistant_configured() -> bool:
     return bool(get_settings().anthropic_api_key)
 
 
-def run_assistant_turn(db: Session, user: User, messages: list[dict[str, Any]]) -> dict[str, Any]:
+def run_assistant_turn(
+    db: Session, user: User, messages: list[dict[str, Any]]
+) -> dict[str, Any]:
     """One assistant turn: model <-> tools loop, quota consumed, every tool
     call recorded in `tool_calls` for the show-your-work UI."""
     quota = consume_quota(db, user)
@@ -305,17 +343,27 @@ def run_assistant_turn(db: Session, user: User, messages: list[dict[str, Any]]) 
             break
 
         # Collect tool uses, execute them against the real query layer, append.
-        tool_uses = [b for b in response.content if getattr(b, "type", "") == "tool_use"]
+        tool_uses = [
+            b for b in response.content if getattr(b, "type", "") == "tool_use"
+        ]
         if not tool_uses:
             break
         convo.append(
-            {"role": "assistant", "content": [{"type": b.type, "name": b.name, "id": b.id, "input": b.input} for b in response.content]}
+            {
+                "role": "assistant",
+                "content": [
+                    {"type": b.type, "name": b.name, "id": b.id, "input": b.input}
+                    for b in response.content
+                ],
+            }
         )
         tool_results = []
         with session_scope() as db2:  # fresh session per tool batch (same DB)
             for use in tool_uses:
                 result = _execute_tool(db2, user, use.name, use.input)
-                tool_calls.append({"name": use.name, "input": use.input, "result": result})
+                tool_calls.append(
+                    {"name": use.name, "input": use.input, "result": result}
+                )
                 tool_results.append(
                     {
                         "type": "tool_result",
@@ -342,7 +390,9 @@ def run_assistant_turn(db: Session, user: User, messages: list[dict[str, Any]]) 
     }
 
 
-def _execute_tool(db: Session, user: User, name: str, tool_input: dict[str, Any]) -> dict[str, Any]:
+def _execute_tool(
+    db: Session, user: User, name: str, tool_input: dict[str, Any]
+) -> dict[str, Any]:
     spec = TOOLS.get(name)
     if spec is None:
         return {"error": f"Unknown tool {name}."}

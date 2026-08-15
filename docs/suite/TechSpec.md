@@ -136,7 +136,7 @@ sequenceDiagram
     A->>Q: search_players(q)
     Q->>DB: name/alias ILIKE match + team/league/position context
     DB-->>Q: rows
-    Q-->>A: SearchResult[] 
+    Q-->>A: SearchResult[]
     A-->>C: JSON
     C-->>U: listbox (arrow-key nav, Enter selects)
 ```

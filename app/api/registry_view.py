@@ -7,6 +7,7 @@ of this: it renders whatever this view returns (methodology-as-code, §5).
 
 Unit strings mirror methodology.md §2 (e.g. goals/90, percentage).
 """
+
 from __future__ import annotations
 
 from typing import Any
@@ -73,7 +74,11 @@ POSITION_PLURALS: dict[str, str] = {
     "ST": "Strikers",
 }
 
-TIER_LABELS: dict[str, str] = {"tier_1": "Tier 1", "tier_2": "Tier 2", "tier_3": "Tier 3"}
+TIER_LABELS: dict[str, str] = {
+    "tier_1": "Tier 1",
+    "tier_2": "Tier 2",
+    "tier_3": "Tier 3",
+}
 
 
 def metric_meta(registry: dict[str, Any], mid: str) -> dict[str, Any] | None:
@@ -101,7 +106,9 @@ def public_meta() -> dict[str, Any]:
 
     position_groups = []
     for code in registry["position_groups"]:
-        metric_ids = registry["gk_metrics"] if code == "GK" else registry["outfield_metrics"]
+        metric_ids = (
+            registry["gk_metrics"] if code == "GK" else registry["outfield_metrics"]
+        )
         position_groups.append(
             {
                 "code": code,

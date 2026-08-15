@@ -11,10 +11,13 @@ player with published percentiles in the database and flags:
      actually qualify (a sign the generator lost data it should have had)
 
 Usage:
-    DATABASE_URL=sqlite+pysqlite:///F:/GITHUB/Statlas/data/dev.db python scripts/audit_sentences.py
+    # Uses the repo-default dev DB (data/dev.db) unless DATABASE_URL is set,
+    # matching scripts/seed_dev_db.py.
+    python scripts/audit_sentences.py
 
 Exit code 0 = clean, 1 = anomalies found (so CI can enforce it).
 """
+
 from __future__ import annotations
 
 import re
@@ -83,10 +86,14 @@ def audit(db: Session) -> list[str]:
         # contains names like "Fernandez", where a naive substring match
         # produces false positives (found by the first audit run).
         if "  " in sentence:
-            problems.append(f"{info['name']} (id {player_id}): double space: {sentence!r}")
+            problems.append(
+                f"{info['name']} (id {player_id}): double space: {sentence!r}"
+            )
         for bad in (r"\bNone\b", r"\bnan\b", r"\bNaN\b", r" .,", r" \."):
             if re.search(bad, sentence):
-                problems.append(f"{info['name']} (id {player_id}): literal {bad!r}: {sentence!r}")
+                problems.append(
+                    f"{info['name']} (id {player_id}): literal {bad!r}: {sentence!r}"
+                )
                 break
 
         # 2 — implausible values: percentile ranks must be 0-100, index 0-100
@@ -99,10 +106,14 @@ def audit(db: Session) -> list[str]:
         for m in re.finditer(r"Index is (\d+(?:\.\d+)?)", sentence):
             val = float(m.group(1))
             if not 0 <= val <= 100:
-                problems.append(f"{info['name']} (id {player_id}): index {val} out of range: {sentence!r}")
+                problems.append(
+                    f"{info['name']} (id {player_id}): index {val} out of range: {sentence!r}"
+                )
 
         # 3 — a qualified player must not get pending/coverage fallback copy
-        if info["minutes"] >= qualifying and any(marker in sentence for marker in PENDING_MARKERS):
+        if info["minutes"] >= qualifying and any(
+            marker in sentence for marker in PENDING_MARKERS
+        ):
             problems.append(
                 f"{info['name']} (id {player_id}): {info['minutes']} min >= {qualifying} "
                 f"threshold but got fallback copy: {sentence!r}"

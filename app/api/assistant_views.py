@@ -60,7 +60,9 @@ def chat(body: ChatBody, request: Request):
         )
 
     with session_scope() as db:
-        user = auth.user_from_session(db, request.cookies.get(settings.session_cookie_name))
+        user = auth.user_from_session(
+            db, request.cookies.get(settings.session_cookie_name)
+        )
         if user is None:
             raise HTTPException(status_code=401, detail="Sign in to use the assistant.")
         _rate_limit(user.id)
@@ -81,7 +83,9 @@ def chat(body: ChatBody, request: Request):
 def assistant_quota(request: Request):
     settings = get_settings()
     with session_scope() as db:
-        user = auth.user_from_session(db, request.cookies.get(settings.session_cookie_name))
+        user = auth.user_from_session(
+            db, request.cookies.get(settings.session_cookie_name)
+        )
         if user is None:
             raise HTTPException(status_code=401, detail="Sign in to use the assistant.")
         return assistant.get_quota(db, user)

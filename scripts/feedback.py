@@ -34,6 +34,7 @@ The same data can be mirrored into the human-readable triage log
 (docs/launch/feedback-triage-log.md) at the end of the window; the JSONL is
 the machine source of truth.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -42,7 +43,12 @@ import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
-LOG_PATH = Path(__file__).resolve().parent.parent / "docs" / "launch" / "feedback-entries.jsonl"
+LOG_PATH = (
+    Path(__file__).resolve().parent.parent
+    / "docs"
+    / "launch"
+    / "feedback-entries.jsonl"
+)
 CATEGORIES = ("accuracy", "bug", "feature", "pricing", "sentiment")
 RESOLUTIONS = ("fixed", "wontfix", "duplicate", "not-a-bug", "open")
 ACCURACY_SLA_HOURS = 24  # soft-launch-plan.md §B4
@@ -55,7 +61,11 @@ def _now() -> str:
 def _load() -> list[dict]:
     if not LOG_PATH.exists():
         return []
-    return [json.loads(line) for line in LOG_PATH.read_text(encoding="utf-8").splitlines() if line.strip()]
+    return [
+        json.loads(line)
+        for line in LOG_PATH.read_text(encoding="utf-8").splitlines()
+        if line.strip()
+    ]
 
 
 def _save(entries: list[dict]) -> None:
@@ -101,22 +111,41 @@ def cmd_resolve(args: argparse.Namespace) -> int:
         print(f"ERROR: no entry {args.id} in {LOG_PATH}", file=sys.stderr)
         return 1
     if target["resolution"] != "open" and not args.force:
-        print(f"ERROR: {args.id} already resolved as '{target['resolution']}'. Use --force to overwrite.", file=sys.stderr)
+        print(
+            f"ERROR: {args.id} already resolved as '{target['resolution']}'. Use --force to overwrite.",
+            file=sys.stderr,
+        )
         return 1
     target["resolution"] = args.resolution
     target["resolved_at"] = _now()
     if args.responded:
         target["responded_at"] = args.responded
         try:
-            received = datetime.strptime(target["received"], "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=timezone.utc)
-            responded = datetime.strptime(args.responded, "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=timezone.utc)
-            target["response_hours"] = round((responded - received).total_seconds() / 3600, 1)
+            received = datetime.strptime(
+                target["received"], "%Y-%m-%dT%H:%M:%SZ"
+            ).replace(tzinfo=timezone.utc)
+            responded = datetime.strptime(args.responded, "%Y-%m-%dT%H:%M:%SZ").replace(
+                tzinfo=timezone.utc
+            )
+            target["response_hours"] = round(
+                (responded - received).total_seconds() / 3600, 1
+            )
         except ValueError:
-            print(f"WARNING: could not parse responded timestamp '{args.responded}' (use ISO %Y-%m-%dT%H:%M:%SZ)", file=sys.stderr)
+            print(
+                f"WARNING: could not parse responded timestamp '{args.responded}' (use ISO %Y-%m-%dT%H:%M:%SZ)",
+                file=sys.stderr,
+            )
     if args.note:
         target["note"] = args.note
     _save(entries)
-    print(f"{args.id} resolved: {args.resolution}" + (f" (response in {target['response_hours']}h)" if target["response_hours"] else ""))
+    print(
+        f"{args.id} resolved: {args.resolution}"
+        + (
+            f" (response in {target['response_hours']}h)"
+            if target["response_hours"]
+            else ""
+        )
+    )
     return 0
 
 
@@ -126,7 +155,9 @@ def cmd_summary(args: argparse.Namespace) -> int:
         print("No feedback entries yet - window opens when the launch post ships.")
         return 0
 
-    print(f"Feedback rollup - {LOG_PATH.relative_to(Path(__file__).resolve().parent.parent)}")
+    print(
+        f"Feedback rollup - {LOG_PATH.relative_to(Path(__file__).resolve().parent.parent)}"
+    )
     print(f"Total entries: {len(entries)}\n")
 
     print("By category:")
@@ -143,11 +174,15 @@ def cmd_summary(args: argparse.Namespace) -> int:
         if e["category"] != "accuracy":
             continue
         try:
-            received = datetime.strptime(e["received"], "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=timezone.utc)
+            received = datetime.strptime(e["received"], "%Y-%m-%dT%H:%M:%SZ").replace(
+                tzinfo=timezone.utc
+            )
         except ValueError:
             continue
         hours = (now - received).total_seconds() / 3600
-        if hours > ACCURACY_SLA_HOURS and (e["resolution"] == "open" or not e["responded_at"]):
+        if hours > ACCURACY_SLA_HOURS and (
+            e["resolution"] == "open" or not e["responded_at"]
+        ):
             sla_breaches.append((e["id"], round(hours, 1)))
 
     if sla_breaches:
@@ -160,18 +195,25 @@ def cmd_summary(args: argparse.Namespace) -> int:
     print("Accuracy SLA: all items within 24h OK")
     print()
     print("Go/no-go progress (soft-launch-plan.md B5):")
-    critical_open = [e for e in entries if e["category"] == "accuracy" and e["resolution"] == "open"]
-    print(f"  - Critical data-accuracy bugs unresolved: {len(critical_open)} (criterion: 0 after 14 days)")
+    critical_open = [
+        e for e in entries if e["category"] == "accuracy" and e["resolution"] == "open"
+    ]
+    print(
+        f"  - Critical data-accuracy bugs unresolved: {len(critical_open)} (criterion: 0 after 14 days)"
+    )
     sentiment = [e for e in entries if e["category"] == "sentiment"]
-    pos = sum(1 for e in sentiment if e["resolution"] == "fixed")  # fixed == acted-on positive-ish; see note
-    print(f"  - Sentiment entries: {len(sentiment)} (criterion: >=60% positive of engaged users - judge in triage)")
+    print(
+        f"  - Sentiment entries: {len(sentiment)} (criterion: >=60% positive of engaged users - judge in triage)"
+    )
     print("  - Infrastructure incidents: (record separately - see triage log)")
     print("  - Organic free->Pro conversions: (record separately - Stripe dashboard)")
     return 0
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Statlas soft-launch feedback triage (docs/launch/feedback-entries.jsonl)")
+    parser = argparse.ArgumentParser(
+        description="Statlas soft-launch feedback triage (docs/launch/feedback-entries.jsonl)"
+    )
     sub = parser.add_subparsers(dest="command", required=True)
 
     add = sub.add_parser("add", help="log an incoming feedback item")
@@ -179,13 +221,19 @@ def main() -> int:
     add.add_argument("--summary", required=True)
     add.add_argument("--channel", default="")
     add.add_argument("--url", default="")
-    add.add_argument("--received", default="", help="ISO timestamp, e.g. 2026-08-15T08:00:00Z (default: now UTC)")
+    add.add_argument(
+        "--received",
+        default="",
+        help="ISO timestamp, e.g. 2026-08-15T08:00:00Z (default: now UTC)",
+    )
     add.set_defaults(fn=cmd_add)
 
     resolve = sub.add_parser("resolve", help="mark resolution + response time")
     resolve.add_argument("id")
     resolve.add_argument("--resolution", required=True, choices=RESOLUTIONS)
-    resolve.add_argument("--responded", default="", help="ISO timestamp, e.g. 2026-08-15T08:00:00Z")
+    resolve.add_argument(
+        "--responded", default="", help="ISO timestamp, e.g. 2026-08-15T08:00:00Z"
+    )
     resolve.add_argument("--note", default="")
     resolve.add_argument("--force", action="store_true")
     resolve.set_defaults(fn=cmd_resolve)

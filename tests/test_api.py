@@ -6,6 +6,7 @@ and then exercise the HTTP surface: search, slug resolution, leaderboards,
 teams, coverage, meta. Input validation errors are explicit (400), unknowns
 are 404s, and the dataset mode is reported honestly.
 """
+
 from __future__ import annotations
 
 import pytest
@@ -16,11 +17,7 @@ from app.config import load_registry
 from app.db import create_schema, session_scope
 from app.orchestration.weekly_refresh import run_weekly_refresh
 from tests.conftest import SNAPSHOT_DATE
-from tests.test_integration import (
-    FakeFBrefSource,
-    FakeUnderstatSource,
-    _fixtures,
-)
+from tests.test_integration import FakeFBrefSource, FakeUnderstatSource, _fixtures
 
 SEASON = "2025-26"
 
@@ -102,7 +99,13 @@ def test_search_and_slug_resolution(api_client):
 def test_leaderboard_endpoints(api_client):
     board = api_client.get(
         "/api/v1/leaderboard",
-        params={"position": "ST", "league": "premier-league", "metric": "si_index", "season": SEASON, "limit": 5},
+        params={
+            "position": "ST",
+            "league": "premier-league",
+            "metric": "si_index",
+            "season": SEASON,
+            "limit": 5,
+        },
     )
     assert board.status_code == 200
     body = board.json()
@@ -113,11 +116,23 @@ def test_leaderboard_endpoints(api_client):
     assert values == sorted(values, reverse=True)
 
     # validation: unknown position/tier/sort -> explicit 400, not a 500
-    assert api_client.get("/api/v1/leaderboard", params={"position": "XX"}).status_code == 400
-    assert api_client.get("/api/v1/leaderboard", params={"tier": "tier_9"}).status_code == 400
-    assert api_client.get("/api/v1/leaderboard", params={"sort_by": "nope"}).status_code == 400
+    assert (
+        api_client.get("/api/v1/leaderboard", params={"position": "XX"}).status_code
+        == 400
+    )
+    assert (
+        api_client.get("/api/v1/leaderboard", params={"tier": "tier_9"}).status_code
+        == 400
+    )
+    assert (
+        api_client.get("/api/v1/leaderboard", params={"sort_by": "nope"}).status_code
+        == 400
+    )
 
-    tier = api_client.get("/api/v1/leaderboard", params={"tier": "tier_1", "metric": "si_index", "limit": 2})
+    tier = api_client.get(
+        "/api/v1/leaderboard",
+        params={"tier": "tier_1", "metric": "si_index", "limit": 2},
+    )
     assert tier.status_code == 200
     assert tier.json()["total"] == 5
 
@@ -131,7 +146,9 @@ def test_team_endpoints(api_client):
     assert all(r["slug"] for r in body["roster"])
 
     assert api_client.get("/api/v1/clubs/premier-league/nope").status_code == 404
-    assert api_client.get("/api/v1/clubs/not-a-league/manchester-city").status_code == 404
+    assert (
+        api_client.get("/api/v1/clubs/not-a-league/manchester-city").status_code == 404
+    )
 
 
 def test_coverage_and_positions(api_client):

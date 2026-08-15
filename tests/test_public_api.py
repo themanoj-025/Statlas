@@ -55,7 +55,10 @@ def seeded_client():
     from app.api.main import app
 
     with TestClient(app) as c:
-        c.post("/api/v1/auth/register", json={"email": "dev@example.com", "password": "hunter2hunter"})
+        c.post(
+            "/api/v1/auth/register",
+            json={"email": "dev@example.com", "password": "hunter2hunter"},
+        )
         yield c
 
 

@@ -7,6 +7,7 @@ parsers are unit-tested separately against their own fixtures). This proves the
 orchestration sequence, idempotent storage, reconciliation, anomaly gating,
 percentile/index computation, publishing, and queries all work together.
 """
+
 from __future__ import annotations
 
 from app.models import League, PercentileSnapshot, Player, PlayerNameAlias, StatSnapshot
@@ -22,10 +23,18 @@ SEASON = "2025-26"
 
 def _st_raw(gls, xg, sh, prgp, prgc, xag, kp, tkl, int_, press, cmp, dis):
     return {
-        "si_gls_p90": gls, "si_xg_p90": xg, "si_sh_p90": sh,
-        "si_prgp_p90": prgp, "si_prgc_p90": prgc, "si_xag_p90": xag,
-        "si_kp_p90": kp, "si_tkl_p90": tkl, "si_int_p90": int_,
-        "si_press_p90": press, "si_cmp_pct": cmp, "si_dis_p90": dis,
+        "si_gls_p90": gls,
+        "si_xg_p90": xg,
+        "si_sh_p90": sh,
+        "si_prgp_p90": prgp,
+        "si_prgc_p90": prgc,
+        "si_xag_p90": xag,
+        "si_kp_p90": kp,
+        "si_tkl_p90": tkl,
+        "si_int_p90": int_,
+        "si_press_p90": press,
+        "si_cmp_pct": cmp,
+        "si_dis_p90": dis,
         # pass-attempt sample-floor counter (what the FBref scraper writes) so
         # the cmp% display floor (>= 50 attempts) is met for every player.
         "_cmp_attempts": 300,
@@ -34,20 +43,31 @@ def _st_raw(gls, xg, sh, prgp, prgc, xag, kp, tkl, int_, press, cmp, dis):
 
 def _st_record(name, ext_id, team, minutes, gls, xg, dis=0.5):
     return RawPlayerStatRecord(
-        source="fbref", season=SEASON, league_slug="premier-league",
-        player_name=name, team_name=team, minutes_played=minutes, matches_played=30,
-        position_group="ST", position_code="FW", raw_stats=_st_raw(
-            gls, xg, gls, 1.0, 1.0, 0.1, 0.5, 0.5, 0.5, 5.0, 80.0, dis
-        ),
+        source="fbref",
+        season=SEASON,
+        league_slug="premier-league",
+        player_name=name,
+        team_name=team,
+        minutes_played=minutes,
+        matches_played=30,
+        position_group="ST",
+        position_code="FW",
+        raw_stats=_st_raw(gls, xg, gls, 1.0, 1.0, 0.1, 0.5, 0.5, 0.5, 5.0, 80.0, dis),
         external_ids={"fbref": ext_id},
     )
 
 
 def _understat_record(name, understat_id, team, xg):
     return RawPlayerStatRecord(
-        source="understat", season=SEASON, league_slug="premier-league",
-        player_name=name, team_name=team, minutes_played=1000, matches_played=30,
-        position_group=None, raw_stats={"si_xg_p90": xg, "si_sh_p90": 2.0},
+        source="understat",
+        season=SEASON,
+        league_slug="premier-league",
+        player_name=name,
+        team_name=team,
+        minutes_played=1000,
+        matches_played=30,
+        position_group=None,
+        raw_stats={"si_xg_p90": xg, "si_sh_p90": 2.0},
         external_ids={"understat": understat_id},
     )
 
@@ -59,7 +79,11 @@ class FakeFBrefSource:
         self.records = records
 
     def fetch_league_stats(self, league_slug, season):
-        return [r for r in self.records if r.league_slug == league_slug and r.season == season]
+        return [
+            r
+            for r in self.records
+            if r.league_slug == league_slug and r.season == season
+        ]
 
     def get_rate_limit_seconds(self):
         return 10.0
@@ -72,7 +96,11 @@ class FakeUnderstatSource:
         self.records = records
 
     def fetch_league_stats(self, league_slug, season):
-        return [r for r in self.records if r.league_slug == league_slug and r.season == season]
+        return [
+            r
+            for r in self.records
+            if r.league_slug == league_slug and r.season == season
+        ]
 
     def get_rate_limit_seconds(self):
         return 5.0
@@ -127,8 +155,12 @@ def test_full_weekly_refresh_end_to_end(db, small_pool):
     assert coverage == {"fbref", "understat"}
     from app.queries.coverage_queries import has_source_coverage
 
-    assert has_source_coverage(db, source="fbref", source_identifier="premier-league", season=SEASON)
-    assert not has_source_coverage(db, source="statsbomb", source_identifier="anything", season=SEASON)
+    assert has_source_coverage(
+        db, source="fbref", source_identifier="premier-league", season=SEASON
+    )
+    assert not has_source_coverage(
+        db, source="statsbomb", source_identifier="anything", season=SEASON
+    )
 
     # -- query layer (published only) -----------------------------------------
     players = {p.canonical_name: p.id for p in db.query(Player).all()}
@@ -142,8 +174,12 @@ def test_full_weekly_refresh_end_to_end(db, small_pool):
     assert percentiles["index"] is not None
 
     leaderboard = get_leaderboard(
-        db, league_slug="premier-league", position_group="ST",
-        metric="si_index", season=SEASON, limit=50,
+        db,
+        league_slug="premier-league",
+        position_group="ST",
+        metric="si_index",
+        season=SEASON,
+        limit=50,
     )
     assert len(leaderboard) == 5
     values = [e["value"] for e in leaderboard]
@@ -160,7 +196,10 @@ def test_full_weekly_refresh_end_to_end(db, small_pool):
 def test_blocked_player_is_excluded_from_pools(db, small_pool):
     fbref, understat = _fixtures()
     run_weekly_refresh(
-        db, SEASON, snapshot_date=SNAPSHOT_DATE, league_slugs=["premier-league"],
+        db,
+        SEASON,
+        snapshot_date=SNAPSHOT_DATE,
+        league_slugs=["premier-league"],
         fbref_source=FakeFBrefSource(fbref),
         understat_source=FakeUnderstatSource(understat),
     )
@@ -176,8 +215,11 @@ def test_blocked_player_is_excluded_from_pools(db, small_pool):
     )
     db.add(
         IngestionAnomaly(
-            stat_snapshot_id=snap_a.id, field_name="si_gls_p90",
-            raw_value="99.0", expected_range="0..5", resolved=False,
+            stat_snapshot_id=snap_a.id,
+            field_name="si_gls_p90",
+            raw_value="99.0",
+            expected_range="0..5",
+            resolved=False,
         )
     )
     db.commit()
@@ -187,7 +229,10 @@ def test_blocked_player_is_excluded_from_pools(db, small_pool):
 
     later = SNAPSHOT_DATE + timedelta(days=7)
     report = run_weekly_refresh(
-        db, SEASON, snapshot_date=later, league_slugs=["premier-league"],
+        db,
+        SEASON,
+        snapshot_date=later,
+        league_slugs=["premier-league"],
         fbref_source=FakeFBrefSource(fbref),
         understat_source=FakeUnderstatSource(understat),
     )

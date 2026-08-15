@@ -22,6 +22,7 @@ Value resolution honours the registry's per-metric source precedence per date
 (the same `resolve_metric_value` the percentile job uses), so a Tier-1 xG
 trend reads Understat where the registry says Understat wins.
 """
+
 from __future__ import annotations
 
 from datetime import datetime, timezone
@@ -177,7 +178,8 @@ def get_player_trend(
         if i + 1 >= len(points):
             break
         missed = [
-            d for d in cohort_dates
+            d
+            for d in cohort_dates
             if points[i]["date"] < _iso(d) < points[i + 1]["date"]
         ]
         if missed:
@@ -238,9 +240,7 @@ def _resolve_date_value(
     """
     if tier is None:
         return None, None
-    value, winner = resolve_metric_value(
-        player_id, metric, tier, by_source, registry
-    )
+    value, winner = resolve_metric_value(player_id, metric, tier, by_source, registry)
     return winner, value
 
 
@@ -248,7 +248,11 @@ def _metric_meta(registry: dict[str, Any], metric: str) -> dict[str, Any]:
     from app.api.registry_view import metric_meta
 
     meta = metric_meta(registry, metric)
-    return meta if meta is not None else {"id": metric, "name": metric, "unit": "", "direction": ""}
+    return (
+        meta
+        if meta is not None
+        else {"id": metric, "name": metric, "unit": "", "direction": ""}
+    )
 
 
 def _iso(dt: datetime) -> str:

@@ -5,16 +5,13 @@ database is byte-identical in row counts: stat_snapshots are skipped by their
 natural key, percentile rows by (stat_snapshot_id, metric_name), fixtures by
 api_fixture_id, and coverage rows upsert.
 """
+
 from __future__ import annotations
 
 from app.models import DataCoverage, League, PercentileSnapshot, Player, StatSnapshot
 from app.orchestration.weekly_refresh import run_weekly_refresh
 from tests.conftest import SNAPSHOT_DATE
-from tests.test_integration import (
-    FakeFBrefSource,
-    FakeUnderstatSource,
-    _fixtures,
-)
+from tests.test_integration import FakeFBrefSource, FakeUnderstatSource, _fixtures
 
 SEASON = "2025-26"
 
@@ -65,5 +62,9 @@ def test_coverage_upsert_does_not_duplicate(db, small_pool):
     # fbref AND understat legitimately share the league slug as identifier.
     pairs = [(c.source, c.source_identifier) for c in coverage]
     assert len(pairs) == len(set(pairs))
-    fbref_row = db.query(DataCoverage).filter_by(source="fbref", source_identifier="premier-league").one()
+    fbref_row = (
+        db.query(DataCoverage)
+        .filter_by(source="fbref", source_identifier="premier-league")
+        .one()
+    )
     assert fbref_row.seasons_available == [SEASON]

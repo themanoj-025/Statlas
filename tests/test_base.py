@@ -6,6 +6,7 @@ pre-fix implementation infinite-looped once the delay reached the cap
 which surfaced as a MemoryError only on a live fetch. Fixture-only tests
 never exercised the fetch path, which is exactly why this unit test exists.
 """
+
 from __future__ import annotations
 
 from app.sources.base import backoff_delays

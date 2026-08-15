@@ -9,6 +9,7 @@ methodology, or a coverage claim beyond the matrix, fails the build.
 These tests read config files directly (no DB) so they run fast and are
 independent of the fixture dataset.
 """
+
 import json
 from pathlib import Path
 
@@ -38,8 +39,14 @@ def tiers():
 
 def test_registry_has_schema_version_and_required_keys(registry):
     assert isinstance(registry["schema_version"], int)
-    for key in ("qualifying_minutes", "min_pool_size", "index_metric_id",
-                "position_groups", "metrics", "position_weights"):
+    for key in (
+        "qualifying_minutes",
+        "min_pool_size",
+        "index_metric_id",
+        "position_groups",
+        "metrics",
+        "position_weights",
+    ):
         assert key in registry, f"registry missing required key {key!r}"
 
 
@@ -54,7 +61,13 @@ def test_metric_ids_are_unique_and_well_formed(registry):
 def test_every_metric_defines_direction_unit_and_bounds(registry):
     for mid, m in registry["metrics"].items():
         assert m["direction"] in {"higher_is_better", "lower_is_better"}, mid
-        assert m["kind"] in {"per90", "percent", "count", "rate", "derived"}, f"{mid} bad kind {m['kind']!r}"
+        assert m["kind"] in {
+            "per90",
+            "percent",
+            "count",
+            "rate",
+            "derived",
+        }, f"{mid} bad kind {m['kind']!r}"
         lo, hi = m["bounds"]
         assert lo < hi, f"{mid} bounds must be ordered (lo < hi)"
         if m["kind"] == "derived":
@@ -75,21 +88,23 @@ def test_every_position_weights_row_sums_to_1(registry):
     assert set(weights.keys()) == EXPECTED_POSITION_GROUPS
     for group, row in weights.items():
         total = sum(row.values())
-        assert total == pytest.approx(1.0, abs=1e-6), (
-            f"{group} weights sum to {total}, must be 1.0"
-        )
+        assert total == pytest.approx(
+            1.0, abs=1e-6
+        ), f"{group} weights sum to {total}, must be 1.0"
         # Every weight cell must reference a real metric id.
         for mid in row:
-            assert mid in registry["metrics"], f"{group} references unknown metric {mid!r}"
+            assert (
+                mid in registry["metrics"]
+            ), f"{group} references unknown metric {mid!r}"
 
 
 def test_gk_and_outfield_metric_lists_are_consistent(registry):
     outfield = set(registry["outfield_metrics"])
     gk = set(registry["gk_metrics"])
     assert outfield.isdisjoint(gk), "outfield and GK metric lists overlap"
-    assert outfield | gk == set(registry["metrics"].keys()), (
-        "metric lists do not cover the registry exactly"
-    )
+    assert outfield | gk == set(
+        registry["metrics"].keys()
+    ), "metric lists do not cover the registry exactly"
 
 
 def test_anomaly_bounds_match_metric_bounds(registry):
@@ -99,7 +114,12 @@ def test_anomaly_bounds_match_metric_bounds(registry):
         # negative values; raw per-90 metrics never should.
         if m["kind"] != "derived":
             assert bounds[0] >= 0, f"{mid} allows negative values"
-        assert m["display_floor"]["type"] in {"minutes", "count", "percent", "attempts"}, mid
+        assert m["display_floor"]["type"] in {
+            "minutes",
+            "count",
+            "percent",
+            "attempts",
+        }, mid
         # Bounds must be sane: no statistically impossible ranges (Constitution
         # anomaly gate — e.g. 50 goals in 5 matches must be outside the bounds).
         lo, hi = bounds
@@ -130,9 +150,9 @@ def test_tiers_schema(registry, tiers):
 
 
 def test_coverage_matrix_exists_and_is_valid_schema():
-    assert COVERAGE_MATRIX_PATH.exists(), (
-        "data/coverage_matrix.json missing — run scripts/seed_dev_db.py"
-    )
+    assert (
+        COVERAGE_MATRIX_PATH.exists()
+    ), "data/coverage_matrix.json missing — run scripts/seed_dev_db.py"
     matrix = json.loads(COVERAGE_MATRIX_PATH.read_text(encoding="utf-8"))
     assert matrix["schema_version"] >= 1
     assert matrix["dataset_mode"] in {"fixture-demo", "production"}
@@ -162,7 +182,9 @@ def test_ui_coverage_page_claims_match_matrix():
     # Page may only name sources that exist in the matrix.
     for source in ("fbref", "understat", "statsbomb", "api_football"):
         if source in page.lower():
-            assert source in sources, f"UI claims source {source!r} not in coverage matrix"
+            assert (
+                source in sources
+            ), f"UI claims source {source!r} not in coverage matrix"
     # An 'active' claim in the UI requires an active row in the matrix.
     if "active" in page.lower():
         assert len(active) > 0, "UI claims active coverage but matrix has none"

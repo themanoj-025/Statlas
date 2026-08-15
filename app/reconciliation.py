@@ -15,6 +15,7 @@ are traceable (who resolved them, when), correctable (delete/redirect the row),
 auditable (the queue log exists), and they make joins O(index lookup) instead
 of O(n) similarity scans on every query.
 """
+
 from __future__ import annotations
 
 import logging
@@ -107,7 +108,9 @@ class Reconciler:
         )
         return alias.player if alias else None
 
-    def _exact_match(self, source_name: str, source_team: str | None, dob_year: int | None) -> Player | None:
+    def _exact_match(
+        self, source_name: str, source_team: str | None, dob_year: int | None
+    ) -> Player | None:
         """Exact normalized-name match with two tie-breakers, in priority order:
         (1) DOB year equality, (2) current-team name equality. Neither tie-breaker
         ever blocks a name-only match when the other side has no signal."""
@@ -145,24 +148,38 @@ class Reconciler:
         player = self._alias_lookup(record.source, record.player_name)
         if player is not None:
             return player
-        return self._exact_match(record.player_name, getattr(record, "team_name", None), getattr(record, "dob_year", None))
+        return self._exact_match(
+            record.player_name,
+            getattr(record, "team_name", None),
+            getattr(record, "dob_year", None),
+        )
 
     def ensure_alias(self, player: Player, record: Any) -> None:
         exists = (
             self.db.query(PlayerNameAlias)
-            .filter_by(player_id=player.id, source=record.source, source_name_string=record.player_name)
+            .filter_by(
+                player_id=player.id,
+                source=record.source,
+                source_name_string=record.player_name,
+            )
             .first()
         )
         if exists is None:
             self.db.add(
-                PlayerNameAlias(player_id=player.id, source=record.source, source_name_string=record.player_name)
+                PlayerNameAlias(
+                    player_id=player.id,
+                    source=record.source,
+                    source_name_string=record.player_name,
+                )
             )
 
     def enqueue(self, record: Any, *, note: str | None = None) -> None:
         """Write an unmatched source record to the queue for a human decision."""
         external_ids = getattr(record, "external_ids", None) or {}
         record_key = str(
-            external_ids.get("fbref") or external_ids.get("understat") or record.player_name
+            external_ids.get("fbref")
+            or external_ids.get("understat")
+            or record.player_name
         )
         exists = (
             self.db.query(ReconciliationQueue)
@@ -177,7 +194,8 @@ class Reconciler:
                     source_name=record.player_name,
                     source_team=getattr(record, "team_name", None),
                     status="pending",
-                    notes=note or "no external id / alias / exact normalized match; review required",
+                    notes=note
+                    or "no external id / alias / exact normalized match; review required",
                 )
             )
 
@@ -209,11 +227,19 @@ def resolve_queue_item(
 
     exists = (
         db.query(PlayerNameAlias)
-        .filter_by(player_id=player_id, source=item.source, source_name_string=item.source_name)
+        .filter_by(
+            player_id=player_id, source=item.source, source_name_string=item.source_name
+        )
         .first()
     )
     if exists is None:
-        db.add(PlayerNameAlias(player_id=player_id, source=item.source, source_name_string=item.source_name))
+        db.add(
+            PlayerNameAlias(
+                player_id=player_id,
+                source=item.source,
+                source_name_string=item.source_name,
+            )
+        )
     db.commit()
     return item
 

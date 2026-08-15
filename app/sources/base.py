@@ -8,6 +8,7 @@
   self-imposed limits are the declared values, not comments).
 - `HttpCache` — local raw-response cache to minimise repeat requests.
 """
+
 from __future__ import annotations
 
 import hashlib
@@ -59,10 +60,14 @@ class RawPlayerStatRecord:
     matches_played: int
     raw_stats: dict[str, float] = field(default_factory=dict)
     position_code: str | None = None  # FBref-style Pos code (GK/DF/MF/FW...)
-    position_group: str | None = None  # GK/CB/FB/DM/CM/AM/W/ST (methodology.md §3 mapping)
+    position_group: str | None = (
+        None  # GK/CB/FB/DM/CM/AM/W/ST (methodology.md §3 mapping)
+    )
     position_label: str | None = None  # natural-language position (player pages)
     dob_year: int | None = None
-    external_ids: dict[str, Any] = field(default_factory=dict)  # {"fbref": "abc123", "understat": 42}
+    external_ids: dict[str, Any] = field(
+        default_factory=dict
+    )  # {"fbref": "abc123", "understat": 42}
     nation: str | None = None
 
 
@@ -86,7 +91,9 @@ class StatsSource(ABC):
     source_name: str = "base"
 
     @abstractmethod
-    def fetch_league_stats(self, league_slug: str, season: str) -> list[RawPlayerStatRecord]:
+    def fetch_league_stats(
+        self, league_slug: str, season: str
+    ) -> list[RawPlayerStatRecord]:
         """Fetch per-player stats for a league season.
 
         Raises SourceError subclasses loudly on any structural problem — partial
@@ -127,7 +134,9 @@ class RateLimiter:
             self._last_request = 0.0
 
 
-def backoff_delays(initial: float = 1.0, factor: float = 2.0, cap: float = 60.0) -> list[float]:
+def backoff_delays(
+    initial: float = 1.0, factor: float = 2.0, cap: float = 60.0
+) -> list[float]:
     """Exponential backoff schedule declared in data-compliance-notes.md:
     1s -> 2s -> 4s -> 8s -> 16s -> 30s -> 60s cap, then the caller aborts.
 
@@ -180,7 +189,8 @@ class HttpCache:
     def put(self, url: str, body: str, ttl: int = 86400 * 7) -> None:
         try:
             self._key_path(url).write_text(
-                json.dumps({"ts": time.time(), "ttl": ttl, "body": body}), encoding="utf-8"
+                json.dumps({"ts": time.time(), "ttl": ttl, "body": body}),
+                encoding="utf-8",
             )
         except OSError:  # cache must never take the pipeline down
             logger.warning("cache write failed for %s", url)
@@ -220,9 +230,13 @@ def fetch_with_retry(
     for delay in backoff_delays():
         limiter.wait()
         try:
-            resp = requests.request(method, url, headers=headers, params=params, data=data, timeout=timeout)
+            resp = requests.request(
+                method, url, headers=headers, params=params, data=data, timeout=timeout
+            )
             if resp.status_code in (429, 503):
-                last_error = SourceError(f"HTTP {resp.status_code} for {url} (rate limited/blocked)")
+                last_error = SourceError(
+                    f"HTTP {resp.status_code} for {url} (rate limited/blocked)"
+                )
                 time.sleep(delay)  # backoff, then retry
                 continue
             if resp.status_code == 403:

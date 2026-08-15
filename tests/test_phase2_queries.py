@@ -5,6 +5,7 @@
 - Similar players (cosine similarity, same cohort, real computation).
 - Team queries (roster + squad radar) with the not-enough-players empty case.
 """
+
 from __future__ import annotations
 
 from app.config import load_registry
@@ -43,8 +44,12 @@ def test_slug_collision_resolution(db, premier_league):
     (site-map §1.1 rule 2 — deterministic, never order-dependent)."""
     city = _seed_team(db, premier_league, "Manchester City")
     united = _seed_team(db, premier_league, "Manchester United")
-    a = Player(canonical_name="Alex Smith", position_group="ST", current_team_id=city.id)
-    b = Player(canonical_name="Alex Smith", position_group="ST", current_team_id=united.id)
+    a = Player(
+        canonical_name="Alex Smith", position_group="ST", current_team_id=city.id
+    )
+    b = Player(
+        canonical_name="Alex Smith", position_group="ST", current_team_id=united.id
+    )
     db.add_all([a, b])
     db.commit()
 
@@ -63,7 +68,9 @@ def test_slug_collision_resolution(db, premier_league):
     assert resolve_player_slug(db, "alex-smith") is None
 
     # a same-club collision falls back to the numeric id suffix
-    c = Player(canonical_name="Alex Smith", position_group="ST", current_team_id=city.id)
+    c = Player(
+        canonical_name="Alex Smith", position_group="ST", current_team_id=city.id
+    )
     db.add(c)
     db.commit()
     assert get_player_slug(db, c.id) == f"alex-smith-{c.id}"
@@ -74,7 +81,11 @@ def test_slug_collision_resolution(db, premier_league):
 def test_search_matches_aliases(db, premier_league):
     """Alternate spellings resolve through the alias table (B3)."""
     _seed_team(db, premier_league, "City")
-    player = Player(canonical_name="Kevin De Bruyne", position_group="CM", current_team_id=db.query(Team).first().id)
+    player = Player(
+        canonical_name="Kevin De Bruyne",
+        position_group="CM",
+        current_team_id=db.query(Team).first().id,
+    )
     db.add(player)
     db.commit()
     db.add(
@@ -123,12 +134,22 @@ def test_leaderboard_filtered_pagination_and_sort(db, premier_league, small_pool
     compute_and_publish(db, snapshot_date=SNAPSHOT_DATE, season=SEASON)
 
     page1 = get_leaderboard_filtered(
-        db, metric="si_index", season=SEASON, league_slugs=["premier-league"],
-        position_group="ST", limit=3, offset=0,
+        db,
+        metric="si_index",
+        season=SEASON,
+        league_slugs=["premier-league"],
+        position_group="ST",
+        limit=3,
+        offset=0,
     )
     page2 = get_leaderboard_filtered(
-        db, metric="si_index", season=SEASON, league_slugs=["premier-league"],
-        position_group="ST", limit=3, offset=3,
+        db,
+        metric="si_index",
+        season=SEASON,
+        league_slugs=["premier-league"],
+        position_group="ST",
+        limit=3,
+        offset=3,
     )
     assert page1["total"] == 5
     assert len(page1["entries"]) == 3
@@ -184,7 +205,9 @@ def test_radar_axis_status_partial_data(db, premier_league, small_pool):
     # qualified
     assert _axis_status(70.0, 0.5, 1000, raw_full, "si_gls_p90") == "qualified"
     # present but below the sample floor -> below_floor, never a zero
-    assert _axis_status(None, 80.0, 1000, raw_below_floor, "si_cmp_pct") == "below_floor"
+    assert (
+        _axis_status(None, 80.0, 1000, raw_below_floor, "si_cmp_pct") == "below_floor"
+    )
     # present but under display-floor minutes -> below_floor
     assert _axis_status(None, 0.5, 100, raw_full, "si_gls_p90") == "below_floor"
     # value qualifies but the metric's pool was under the min size -> unranked_pool

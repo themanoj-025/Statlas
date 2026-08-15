@@ -1,6 +1,7 @@
 """FBref scraper unit tests — parsing against the representative fixture HTML
 (no network). Validates combined-header parsing, metric extraction against the
 registry, position mapping, and loud schema-change failures."""
+
 from __future__ import annotations
 
 import pytest
@@ -84,7 +85,9 @@ def test_goalkeeper_extracts_gk_metrics_only():
     alisson = next(r for r in records if r.player_name == "Alisson Becker")
     assert alisson.position_group == "GK"
     assert alisson.raw_stats["si_save_pct"] == pytest.approx(78.0, abs=1e-4)
-    assert alisson.raw_stats["si_psxg_ga_p90"] == pytest.approx(0.2, abs=1e-4)  # (36-30)/2700*90
+    assert alisson.raw_stats["si_psxg_ga_p90"] == pytest.approx(
+        0.2, abs=1e-4
+    )  # (36-30)/2700*90
     assert alisson.raw_stats["si_ga_p90"] == pytest.approx(1.0, abs=1e-4)
     assert alisson.raw_stats["si_cross_pct"] == pytest.approx(50.0, abs=1e-4)
     assert alisson.raw_stats["_sota_faced"] == 100
@@ -94,7 +97,9 @@ def test_goalkeeper_extracts_gk_metrics_only():
 
 
 def test_schema_change_raises_loudly():
-    source = _source_with_html("<html><body><p>blocked or changed page</p></body></html>")
+    source = _source_with_html(
+        "<html><body><p>blocked or changed page</p></body></html>"
+    )
     with pytest.raises(FBrefSchemaChangedError):
         source.fetch_league_stats("premier-league", "2025-26")
 
@@ -106,6 +111,4 @@ def test_rate_limit_value_is_declared():
 def test_build_url():
     source = FBrefSource()
     url = source.build_url("premier-league", "2025-26")
-    assert url == (
-        "https://fbref.com/en/comps/9/2025-2026/Premier-League-Stats"
-    )
+    assert url == ("https://fbref.com/en/comps/9/2025-2026/Premier-League-Stats")

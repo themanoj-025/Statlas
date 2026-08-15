@@ -4,6 +4,7 @@ Grammar, pluralization, ranges, and boundary cases: percentile 0, tiny
 samples, league with zero qualifying players, pending qualification, and the
 ordinal helper (1st/2nd/3rd/11th/21st...).
 """
+
 from __future__ import annotations
 
 from app.models import Player, StatSnapshot, Team
@@ -88,10 +89,19 @@ def test_pluralization_per_position(db, premier_league, small_pool):
     """GK -> 'goalkeepers', W -> 'wide attackers', CB -> 'centre-backs'."""
     # five per group so each pool clears the min-pool size (5)
     for i in range(5):
-        _seed(db, premier_league, f"G{i}", "GK", 0.5,
-              si_save_pct=70 + i, si_psxg_ga_p90=0.1 + 0.05 * i,
-              si_ga_p90=1.2 - 0.1 * i, si_cross_pct=4 + i,
-              _sota_faced=60, _crosses_faced=40)
+        _seed(
+            db,
+            premier_league,
+            f"G{i}",
+            "GK",
+            0.5,
+            si_save_pct=70 + i,
+            si_psxg_ga_p90=0.1 + 0.05 * i,
+            si_ga_p90=1.2 - 0.1 * i,
+            si_cross_pct=4 + i,
+            _sota_faced=60,
+            _crosses_faced=40,
+        )
         _seed(db, premier_league, f"W{i}", "W", 0.5 + 0.1 * i)
         _seed(db, premier_league, f"C{i}", "CB", 0.5 + 0.1 * i)
     compute_and_publish(db, snapshot_date=SNAPSHOT_DATE, season=SEASON)
@@ -107,11 +117,24 @@ def test_percentile_zero_boundary(db, premier_league, small_pool):
     # A is the bottom of EVERY metric pool (all values scale with gls), so its
     # top percentile is genuinely 0 — the copy must say so honestly.
     for name, gls in [("A", 0.2), ("B", 0.4), ("C", 0.6), ("D", 0.8), ("E", 0.9)]:
-        _seed(db, premier_league, name, "ST", gls,
-              si_prgp_p90=gls * 3, si_prgc_p90=gls * 3, si_xag_p90=gls * 0.2,
-              si_kp_p90=gls * 1.5, si_tkl_p90=gls * 1.5, si_int_p90=gls * 1.5,
-              si_press_p90=gls * 10, si_sh_p90=gls * 2, si_cmp_pct=70 + gls * 10,
-              si_dis_p90=1.5 - gls * 0.8, si_xg_p90=gls * 0.9)
+        _seed(
+            db,
+            premier_league,
+            name,
+            "ST",
+            gls,
+            si_prgp_p90=gls * 3,
+            si_prgc_p90=gls * 3,
+            si_xag_p90=gls * 0.2,
+            si_kp_p90=gls * 1.5,
+            si_tkl_p90=gls * 1.5,
+            si_int_p90=gls * 1.5,
+            si_press_p90=gls * 10,
+            si_sh_p90=gls * 2,
+            si_cmp_pct=70 + gls * 10,
+            si_dis_p90=1.5 - gls * 0.8,
+            si_xg_p90=gls * 0.9,
+        )
     compute_and_publish(db, snapshot_date=SNAPSHOT_DATE, season=SEASON)
 
     player = db.query(Player).filter_by(canonical_name="A").one()  # lowest everywhere
@@ -131,7 +154,9 @@ def test_pending_qualification_sentence(db, premier_league, small_pool):
 
 def test_zero_qualifying_players(db, premier_league):
     """League with zero qualifying players -> coverage-honest sentence."""
-    player = _seed(db, premier_league, "Only", "ST", 0.5, minutes=100)  # below threshold
+    player = _seed(
+        db, premier_league, "Only", "ST", 0.5, minutes=100
+    )  # below threshold
     sentence = build_profile_sentence(db, player.id)
     assert "pending qualification" in sentence
 

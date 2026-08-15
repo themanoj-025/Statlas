@@ -1,6 +1,7 @@
 """Reconciliation unit tests — normalization edge cases (accents, suffixes,
 initials), the three match steps, the queue for unmatched records, and manual
 resolution writing a permanent alias."""
+
 from __future__ import annotations
 
 from datetime import date
@@ -48,18 +49,34 @@ def test_match_by_external_id(db):
     db.add(player)
     db.commit()
     reconciler = Reconciler(db)
-    assert reconciler.match_existing(_record("Erling Haaland", "Manchester City", ext={"fbref": "aaaaaaaa"})) is player
+    assert (
+        reconciler.match_existing(
+            _record("Erling Haaland", "Manchester City", ext={"fbref": "aaaaaaaa"})
+        )
+        is player
+    )
 
 
 def test_match_by_existing_alias(db):
     player = Player(canonical_name="Erling Haaland")
     db.add(player)
     db.flush()  # player_id must exist before the alias row references it
-    db.add(PlayerNameAlias(player_id=player.id, source="understat", source_name_string="Erling Haaland"))
+    db.add(
+        PlayerNameAlias(
+            player_id=player.id, source="understat", source_name_string="Erling Haaland"
+        )
+    )
     db.commit()
     reconciler = Reconciler(db)
     # different team spelling, no external id — resolved via the alias row
-    assert reconciler.match_existing(_record("Erling Haaland", "Man City", source="understat", ext={"understat": 123})) is player
+    assert (
+        reconciler.match_existing(
+            _record(
+                "Erling Haaland", "Man City", source="understat", ext={"understat": 123}
+            )
+        )
+        is player
+    )
 
 
 def test_match_by_exact_name_team_dob(db):
@@ -73,7 +90,9 @@ def test_match_by_exact_name_team_dob(db):
     db.add(player)
     db.commit()
     reconciler = Reconciler(db)
-    matched = reconciler.match_existing(_record("Erling Haaland", "Manchester City", dob=2000))
+    matched = reconciler.match_existing(
+        _record("Erling Haaland", "Manchester City", dob=2000)
+    )
     assert matched is player
 
 
@@ -95,7 +114,11 @@ def test_unmatched_goes_to_queue_and_resolves_permanently(db):
     assert resolved.status == "resolved"
 
     # permanent alias prevents the same mismatch from recurring
-    alias = db.query(PlayerNameAlias).filter_by(player_id=player.id, source="understat").one()
+    alias = (
+        db.query(PlayerNameAlias)
+        .filter_by(player_id=player.id, source="understat")
+        .one()
+    )
     assert alias.source_name_string == "El Bicho"
     fresh = Reconciler(db)
     assert fresh.match_existing(record) is player
@@ -109,4 +132,7 @@ def test_suffix_variation_matches(db):
     db.commit()
     reconciler = Reconciler(db)
     # 'Haaland Jr.' normalizes to the same identity
-    assert reconciler.match_existing(_record("Erling Haaland Jr.", "Borussia Dortmund")) is player
+    assert (
+        reconciler.match_existing(_record("Erling Haaland Jr.", "Borussia Dortmund"))
+        is player
+    )

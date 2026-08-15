@@ -14,6 +14,7 @@ Compliance posture (data-compliance-notes.md):
   endpoint, then fails loudly — never returns partial data.
 - Only derived per-90 values are produced; raw payloads are never republished.
 """
+
 from __future__ import annotations
 
 import json
@@ -81,9 +82,13 @@ def extract_players_json(html: str) -> list[dict[str, Any]]:
         unescaped = raw.encode("utf-8").decode("unicode_escape")
         data = json.loads(unescaped)
     except (UnicodeDecodeError, json.JSONDecodeError) as exc:
-        raise UnderstatSchemaChangedError(f"could not decode playersDataObject payload: {exc}") from exc
+        raise UnderstatSchemaChangedError(
+            f"could not decode playersDataObject payload: {exc}"
+        ) from exc
     if not isinstance(data, list):
-        raise UnderstatSchemaChangedError("playersDataObject decoded to a non-list payload")
+        raise UnderstatSchemaChangedError(
+            "playersDataObject decoded to a non-list payload"
+        )
     return data
 
 
@@ -108,25 +113,34 @@ class UnderstatSource(StatsSource):
         return self.limiter.interval
 
     def build_url(self, league_slug: str, season: str) -> str:
-        understat_id = self.tiers["leagues"][league_slug]["external_ids"].get("understat")
+        understat_id = self.tiers["leagues"][league_slug]["external_ids"].get(
+            "understat"
+        )
         if understat_id is None:
             raise SchemaChangedError(
                 f"league '{league_slug}' has no understat id — Understat covers Big-5 only"
             )
         return f"{UNDERSTAT_BASE}/league/{understat_id}/{canonical_season_to_understat(season)}"
 
-    def fetch_league_stats(self, league_slug: str, season: str) -> list[RawPlayerStatRecord]:
+    def fetch_league_stats(
+        self, league_slug: str, season: str
+    ) -> list[RawPlayerStatRecord]:
         url = self.build_url(league_slug, season)
         logger.info("fetching Understat %s %s", league_slug, season)
         html = fetch_with_retry(
-            url, limiter=self.limiter, cache=self.cache, headers={"User-Agent": get_settings().user_agent}
+            url,
+            limiter=self.limiter,
+            cache=self.cache,
+            headers={"User-Agent": get_settings().user_agent},
         )
         try:
             payload = extract_players_json(html)
         except UnderstatSchemaChangedError:
             # Live drift (2026): no embedded payload — fetch the same players
             # from the current POST endpoint before failing loudly.
-            logger.info("no embedded playersDataObject; falling back to %s", _PLAYERS_API_PATH)
+            logger.info(
+                "no embedded playersDataObject; falling back to %s", _PLAYERS_API_PATH
+            )
             payload = self._fetch_players_api(league_slug, season)
 
         records: list[RawPlayerStatRecord] = []
@@ -147,7 +161,9 @@ class UnderstatSource(StatsSource):
                 if minutes > 0:
                     raw_stats[mid] = round(total / minutes * 90, 4)
             if not raw_stats:
-                logger.debug("understat entry with no usable stats: %s", entry.get("player_name"))
+                logger.debug(
+                    "understat entry with no usable stats: %s", entry.get("player_name")
+                )
             records.append(
                 RawPlayerStatRecord(
                     source="understat",
@@ -158,7 +174,8 @@ class UnderstatSource(StatsSource):
                     minutes_played=minutes,
                     matches_played=int(entry.get("games", 0) or 0),
                     raw_stats=raw_stats,
-                    position_code=str(entry.get("position", "")) or None,  # GK/D/M/F — reconciliation hint only
+                    position_code=str(entry.get("position", ""))
+                    or None,  # GK/D/M/F — reconciliation hint only
                     dob_year=None,  # Understat does not expose DOB
                     external_ids={"understat": int(entry.get("id", 0))},
                 )
@@ -172,7 +189,9 @@ class UnderstatSource(StatsSource):
         UnderstatSchemaChangedError loudly on a non-JSON / error response —
         never a partial guess.
         """
-        understat_id = self.tiers["leagues"][league_slug]["external_ids"].get("understat")
+        understat_id = self.tiers["leagues"][league_slug]["external_ids"].get(
+            "understat"
+        )
         if understat_id is None:
             raise UnderstatSchemaChangedError(
                 f"league '{league_slug}' has no understat id — Understat covers Big-5 only"
@@ -184,7 +203,10 @@ class UnderstatSource(StatsSource):
             limiter=self.limiter,
             cache=self.cache,
             method="POST",
-            data={"league": understat_id, "season": canonical_season_to_understat(season)},
+            data={
+                "league": understat_id,
+                "season": canonical_season_to_understat(season),
+            },
             headers={
                 "User-Agent": get_settings().user_agent,
                 "Referer": f"{UNDERSTAT_BASE}/league/{understat_id}/{canonical_season_to_understat(season)}",
@@ -198,8 +220,12 @@ class UnderstatSource(StatsSource):
                 f"{_PLAYERS_API_PATH} returned non-JSON (structure changed): {exc}"
             ) from exc
         if not isinstance(data, dict) or not data.get("success"):
-            raise UnderstatSchemaChangedError(f"{_PLAYERS_API_PATH} returned an error payload")
+            raise UnderstatSchemaChangedError(
+                f"{_PLAYERS_API_PATH} returned an error payload"
+            )
         players = data.get("players")
         if not isinstance(players, list):
-            raise UnderstatSchemaChangedError(f"{_PLAYERS_API_PATH} payload has no players list")
+            raise UnderstatSchemaChangedError(
+                f"{_PLAYERS_API_PATH} payload has no players list"
+            )
         return players

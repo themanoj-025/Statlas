@@ -10,6 +10,7 @@ Versioning/immutability design (Constitution §3, §6-11):
 - percentile_snapshots are written fresh on every computation run and never
   updated in place; is_published flips only once the anomaly gate passes.
 """
+
 from __future__ import annotations
 
 from datetime import datetime
@@ -40,13 +41,22 @@ from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 # to VARCHAR, which PostgreSQL rejects ("column is of type X but expression is
 # of type character varying").
 SOURCE_ENUM = Enum("fbref", "understat", "statsbomb", "api_football", name="source")
-POSITION_GROUP_ENUM = Enum("GK", "CB", "FB", "DM", "CM", "AM", "W", "ST", name="position_group")
-SNAPSHOT_STATUS_ENUM = Enum("ingested", "flagged", "published", "failed", name="snapshot_status")
+POSITION_GROUP_ENUM = Enum(
+    "GK", "CB", "FB", "DM", "CM", "AM", "W", "ST", name="position_group"
+)
+SNAPSHOT_STATUS_ENUM = Enum(
+    "ingested", "flagged", "published", "failed", name="snapshot_status"
+)
 COVERAGE_STATUS_ENUM = Enum("active", "stale", "failed", name="coverage_status")
 TIER_ENUM = Enum("tier_1", "tier_2", "tier_3", name="league_tier")
 QUEUE_STATUS_ENUM = Enum("pending", "resolved", "ignored", name="queue_status")
 SUBSCRIPTION_STATUS_ENUM = Enum(
-    "active", "trialing", "past_due", "canceled", "incomplete", name="subscription_status"
+    "active",
+    "trialing",
+    "past_due",
+    "canceled",
+    "incomplete",
+    name="subscription_status",
 )
 # Subscription plan (Constitution §1 business model: Free / Pro / API-Business).
 PLAN_ENUM = Enum("free", "pro", "api_business", name="plan")
@@ -65,7 +75,9 @@ class League(Base):
     country: Mapped[str] = mapped_column(String(64), nullable=False)
     tier: Mapped[str] = mapped_column(TIER_ENUM, nullable=False)
     external_ids: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
-    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
+    )
 
 
 class Team(Base):
@@ -76,9 +88,13 @@ class Team(Base):
     league_id: Mapped[int] = mapped_column(ForeignKey("leagues.id"), nullable=False)
     external_ids: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
     founded_year: Mapped[int | None] = mapped_column(Integer, nullable=True)
-    logo_url: Mapped[str | None] = mapped_column(Text, nullable=True)  # null until real assets exist
+    logo_url: Mapped[str | None] = mapped_column(
+        Text, nullable=True
+    )  # null until real assets exist
 
-    __table_args__ = (UniqueConstraint("name", "league_id", name="uq_teams_name_league"),)
+    __table_args__ = (
+        UniqueConstraint("name", "league_id", name="uq_teams_name_league"),
+    )
 
 
 class Player(Base):
@@ -88,11 +104,19 @@ class Player(Base):
     canonical_name: Mapped[str] = mapped_column(String(128), nullable=False)
     date_of_birth: Mapped[datetime | None] = mapped_column(Date, nullable=True)
     nationality: Mapped[str | None] = mapped_column(String(64), nullable=True)
-    primary_position: Mapped[str | None] = mapped_column(String(64), nullable=True)  # natural-language label
-    position_group: Mapped[str | None] = mapped_column(POSITION_GROUP_ENUM, nullable=True)
+    primary_position: Mapped[str | None] = mapped_column(
+        String(64), nullable=True
+    )  # natural-language label
+    position_group: Mapped[str | None] = mapped_column(
+        POSITION_GROUP_ENUM, nullable=True
+    )
     external_ids: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
-    current_team_id: Mapped[int | None] = mapped_column(ForeignKey("teams.id"), nullable=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    current_team_id: Mapped[int | None] = mapped_column(
+        ForeignKey("teams.id"), nullable=True
+    )
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
+    )
 
     __table_args__ = (
         Index("ix_players_canonical_name", "canonical_name"),
@@ -110,7 +134,12 @@ class PlayerNameAlias(Base):
     player: Mapped[Player] = relationship()  # used by reconciliation._alias_lookup
 
     __table_args__ = (
-        UniqueConstraint("player_id", "source", "source_name_string", name="uq_alias_player_source_name"),
+        UniqueConstraint(
+            "player_id",
+            "source",
+            "source_name_string",
+            name="uq_alias_player_source_name",
+        ),
         Index("ix_aliases_source_name", "source", "source_name_string"),
     )
 
@@ -123,12 +152,18 @@ class StatSnapshot(Base):
     team_id: Mapped[int | None] = mapped_column(ForeignKey("teams.id"), nullable=True)
     league_id: Mapped[int] = mapped_column(ForeignKey("leagues.id"), nullable=False)
     season: Mapped[str] = mapped_column(String(16), nullable=False)
-    scrape_date: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)  # versioning key
+    scrape_date: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False
+    )  # versioning key
     source: Mapped[str] = mapped_column(SOURCE_ENUM, nullable=False)
-    raw_stats: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)  # metric id -> per-90 value
+    raw_stats: Mapped[dict] = mapped_column(
+        JSON, nullable=False, default=dict
+    )  # metric id -> per-90 value
     minutes_played: Mapped[float] = mapped_column(Float, nullable=False)
     matches_played: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
-    status: Mapped[str] = mapped_column(SNAPSHOT_STATUS_ENUM, nullable=False, default="ingested")
+    status: Mapped[str] = mapped_column(
+        SNAPSHOT_STATUS_ENUM, nullable=False, default="ingested"
+    )
 
     # Relationships (single-sided; the FK side owns the join). player/league are
     # used by the percentile and anomaly jobs (cohort grouping); team is not yet
@@ -140,10 +175,20 @@ class StatSnapshot(Base):
     __table_args__ = (
         # Natural key -> idempotent re-runs (scrape_date + source + identity).
         UniqueConstraint(
-            "player_id", "team_id", "league_id", "season", "source", "scrape_date",
+            "player_id",
+            "team_id",
+            "league_id",
+            "season",
+            "source",
+            "scrape_date",
             name="uq_stat_snapshot_natural_key",
         ),
-        Index("ix_stat_snapshot_league_season_scrape", "league_id", "season", "scrape_date"),
+        Index(
+            "ix_stat_snapshot_league_season_scrape",
+            "league_id",
+            "season",
+            "scrape_date",
+        ),
         Index("ix_stat_snapshot_player", "player_id"),
         Index("ix_stat_snapshot_source", "source"),
     )
@@ -153,13 +198,19 @@ class PercentileSnapshot(Base):
     __tablename__ = "percentile_snapshots"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    stat_snapshot_id: Mapped[int] = mapped_column(ForeignKey("stat_snapshots.id"), nullable=False)
-    computed_date: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    stat_snapshot_id: Mapped[int] = mapped_column(
+        ForeignKey("stat_snapshots.id"), nullable=False
+    )
+    computed_date: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False
+    )
     position_group: Mapped[str] = mapped_column(POSITION_GROUP_ENUM, nullable=False)
     league_tier: Mapped[str] = mapped_column(TIER_ENUM, nullable=False)
     metric_name: Mapped[str] = mapped_column(String(64), nullable=False)
     percentile_value: Mapped[float | None] = mapped_column(Float, nullable=True)
-    index_score: Mapped[float | None] = mapped_column(Float, nullable=True)  # denormalised per-row; see schema.sql comment
+    index_score: Mapped[float | None] = mapped_column(
+        Float, nullable=True
+    )  # denormalised per-row; see schema.sql comment
     is_published: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
 
     __table_args__ = (
@@ -168,7 +219,9 @@ class PercentileSnapshot(Base):
         # for the same metric without colliding. A stat_snapshot belongs to
         # one league/tier, so (snapshot, metric, tier) is the true identity.
         UniqueConstraint(
-            "stat_snapshot_id", "metric_name", "league_tier",
+            "stat_snapshot_id",
+            "metric_name",
+            "league_tier",
             name="uq_percentile_snapshot_metric_tier",
         ),
         Index("ix_percentile_snapshot_published", "is_published"),
@@ -182,7 +235,9 @@ class MatchEvent(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     match_id: Mapped[str] = mapped_column(String(64), nullable=False)
     event_id: Mapped[str] = mapped_column(String(64), nullable=False)
-    player_id: Mapped[int | None] = mapped_column(ForeignKey("players.id"), nullable=True)  # null if unmatched
+    player_id: Mapped[int | None] = mapped_column(
+        ForeignKey("players.id"), nullable=True
+    )  # null if unmatched
     event_type: Mapped[str] = mapped_column(String(64), nullable=False)
     x_coordinate: Mapped[float | None] = mapped_column(Float, nullable=True)
     y_coordinate: Mapped[float | None] = mapped_column(Float, nullable=True)
@@ -190,7 +245,9 @@ class MatchEvent(Base):
     outcome: Mapped[str | None] = mapped_column(String(32), nullable=True)
     source_competition_id: Mapped[str] = mapped_column(String(64), nullable=False)
     season: Mapped[str | None] = mapped_column(String(16), nullable=True)
-    extra: Mapped[dict | None] = mapped_column(JSON, nullable=True)  # source-specific payload: shot xG, pass end coords, player name (Phase 3)
+    extra: Mapped[dict | None] = mapped_column(
+        JSON, nullable=True
+    )  # source-specific payload: shot xG, pass end coords, player name (Phase 3)
 
     __table_args__ = (
         UniqueConstraint("match_id", "event_id", name="uq_match_event"),
@@ -203,16 +260,27 @@ class DataCoverage(Base):
     __tablename__ = "data_coverage"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    league_id: Mapped[int | None] = mapped_column(ForeignKey("leagues.id"), nullable=True)
+    league_id: Mapped[int | None] = mapped_column(
+        ForeignKey("leagues.id"), nullable=True
+    )
     source: Mapped[str] = mapped_column(SOURCE_ENUM, nullable=False)
     source_identifier: Mapped[str] = mapped_column(String(128), nullable=False)
     seasons_available: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
-    last_successful_scrape: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
-    status: Mapped[str] = mapped_column(COVERAGE_STATUS_ENUM, nullable=False, default="active")
+    last_successful_scrape: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    status: Mapped[str] = mapped_column(
+        COVERAGE_STATUS_ENUM, nullable=False, default="active"
+    )
 
     __table_args__ = (
-        UniqueConstraint("source", "source_identifier", name="uq_coverage_source_identifier"),
-        CheckConstraint("league_id IS NOT NULL OR source = 'statsbomb'", name="ck_coverage_league_optional"),
+        UniqueConstraint(
+            "source", "source_identifier", name="uq_coverage_source_identifier"
+        ),
+        CheckConstraint(
+            "league_id IS NOT NULL OR source = 'statsbomb'",
+            name="ck_coverage_league_optional",
+        ),
     )
 
 
@@ -220,11 +288,15 @@ class IngestionAnomaly(Base):
     __tablename__ = "ingestion_anomalies"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    stat_snapshot_id: Mapped[int | None] = mapped_column(ForeignKey("stat_snapshots.id"), nullable=True)
+    stat_snapshot_id: Mapped[int | None] = mapped_column(
+        ForeignKey("stat_snapshots.id"), nullable=True
+    )
     field_name: Mapped[str] = mapped_column(String(64), nullable=False)
     raw_value: Mapped[str | None] = mapped_column(Text, nullable=True)
     expected_range: Mapped[str | None] = mapped_column(Text, nullable=True)
-    flagged_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    flagged_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
+    )
     resolved: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
     resolution_note: Mapped[str | None] = mapped_column(Text, nullable=True)
 
@@ -239,12 +311,20 @@ class ReconciliationQueue(Base):
     source_record_key: Mapped[str] = mapped_column(String(128), nullable=False)
     source_name: Mapped[str] = mapped_column(String(128), nullable=False)
     source_team: Mapped[str | None] = mapped_column(String(128), nullable=True)
-    candidate_player_id: Mapped[int | None] = mapped_column(ForeignKey("players.id"), nullable=True)
-    status: Mapped[str] = mapped_column(QUEUE_STATUS_ENUM, nullable=False, default="pending")
+    candidate_player_id: Mapped[int | None] = mapped_column(
+        ForeignKey("players.id"), nullable=True
+    )
+    status: Mapped[str] = mapped_column(
+        QUEUE_STATUS_ENUM, nullable=False, default="pending"
+    )
     confidence: Mapped[float | None] = mapped_column(Float, nullable=True)
     notes: Mapped[str | None] = mapped_column(Text, nullable=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
-    resolved_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
+    )
+    resolved_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
 
     __table_args__ = (
         UniqueConstraint("source", "source_record_key", name="uq_queue_source_key"),
@@ -259,11 +339,17 @@ class Fixture(Base):
     league_id: Mapped[int] = mapped_column(ForeignKey("leagues.id"), nullable=False)
     season: Mapped[str] = mapped_column(String(16), nullable=False)
     api_fixture_id: Mapped[int] = mapped_column(Integer, nullable=False)
-    home_team_id: Mapped[int | None] = mapped_column(ForeignKey("teams.id"), nullable=True)
-    away_team_id: Mapped[int | None] = mapped_column(ForeignKey("teams.id"), nullable=True)
+    home_team_id: Mapped[int | None] = mapped_column(
+        ForeignKey("teams.id"), nullable=True
+    )
+    away_team_id: Mapped[int | None] = mapped_column(
+        ForeignKey("teams.id"), nullable=True
+    )
     home_team_name: Mapped[str] = mapped_column(String(128), nullable=False)
     away_team_name: Mapped[str] = mapped_column(String(128), nullable=False)
-    kickoff_utc: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    kickoff_utc: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
     status: Mapped[str | None] = mapped_column(String(32), nullable=True)
     raw: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
 
@@ -314,8 +400,12 @@ class SessionToken(Base):
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=func.now()
     )
-    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
-    revoked_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    expires_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False
+    )
+    revoked_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
 
     user: Mapped[User] = relationship(back_populates="sessions")
 
@@ -337,10 +427,18 @@ class Subscription(Base):
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), nullable=False)
     plan: Mapped[str] = mapped_column(PLAN_ENUM, nullable=False)
     stripe_customer_id: Mapped[str | None] = mapped_column(String(128), nullable=True)
-    stripe_subscription_id: Mapped[str | None] = mapped_column(String(128), nullable=True)
-    status: Mapped[str] = mapped_column(SUBSCRIPTION_STATUS_ENUM, nullable=False, default="incomplete")
-    current_period_end: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
-    grace_period_end: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    stripe_subscription_id: Mapped[str | None] = mapped_column(
+        String(128), nullable=True
+    )
+    status: Mapped[str] = mapped_column(
+        SUBSCRIPTION_STATUS_ENUM, nullable=False, default="incomplete"
+    )
+    current_period_end: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    grace_period_end: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=func.now()
     )
@@ -371,8 +469,12 @@ class ApiKey(Base):
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=func.now()
     )
-    last_used_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
-    revoked_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    last_used_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    revoked_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
 
     user: Mapped[User] = relationship(back_populates="api_keys")
 
@@ -393,7 +495,9 @@ class WebhookEvent(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     event_id: Mapped[str] = mapped_column(String(128), nullable=False)
     event_type: Mapped[str] = mapped_column(String(128), nullable=False)
-    stripe_subscription_id: Mapped[str | None] = mapped_column(String(128), nullable=True)
+    stripe_subscription_id: Mapped[str | None] = mapped_column(
+        String(128), nullable=True
+    )
     user_id: Mapped[int | None] = mapped_column(ForeignKey("users.id"), nullable=True)
     payload: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
     processed_at: Mapped[datetime] = mapped_column(
@@ -417,8 +521,12 @@ class AssistantQuota(Base):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), nullable=False)
-    period_start: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
-    period_end: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    period_start: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False
+    )
+    period_end: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False
+    )
     queries_used: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     queries_limit: Mapped[int] = mapped_column(Integer, nullable=False)
 

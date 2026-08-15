@@ -4,6 +4,7 @@ Production: PostgreSQL via DATABASE_URL (schema in `schema.sql`).
 Tests/dev: SQLite automatically when DATABASE_URL is unset — the ORM models use
 dialect-neutral types (native_enum=False, JSON) so both work.
 """
+
 from __future__ import annotations
 
 from sqlalchemy import create_engine

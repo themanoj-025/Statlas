@@ -11,6 +11,7 @@ Attribution: every consumer of this module's data must render the StatsBomb
 source statement + logo (data-compliance-notes.md §3 — a UI requirement, not a
 legal footnote). The API contract documents this; the web components enforce it.
 """
+
 from __future__ import annotations
 
 import re
@@ -162,7 +163,9 @@ def get_player_event_matches(
     season: str | None = None,
 ) -> list[dict[str, Any]]:
     """Distinct matches with events for this player (the match filter options)."""
-    query = db.query(MatchEvent.match_id, MatchEvent.source_competition_id, MatchEvent.season)
+    query = db.query(
+        MatchEvent.match_id, MatchEvent.source_competition_id, MatchEvent.season
+    )
     query = query.filter(MatchEvent.player_id == player_id)
     if competition_id is not None:
         query = query.filter(MatchEvent.source_competition_id == competition_id)
@@ -196,7 +199,11 @@ def get_player_events(
     returned — the map never renders unconfirmed data.
     """
     # SIM102: the coverage bound is one condition, not a nested if.
-    if competition_id is not None and season is not None and not _coverage_confirms(db, competition_id, season):
+    if (
+        competition_id is not None
+        and season is not None
+        and not _coverage_confirms(db, competition_id, season)
+    ):
         return []
 
     query = db.query(MatchEvent).filter(
@@ -231,7 +238,9 @@ def get_player_events(
                 # Derived, documented (methodology §2 progressive-pass rule):
                 # a pass is progressive when it moves the ball >= 10 yards
                 # toward the opponent's goal in x, or into the penalty area.
-                "progressive": is_progressive_pass(row.x_coordinate, extra.get("end_x")),
+                "progressive": is_progressive_pass(
+                    row.x_coordinate, extra.get("end_x")
+                ),
             }
         else:  # pragma: no cover — event_type is validated by the API
             payload = {}

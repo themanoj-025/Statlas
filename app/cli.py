@@ -7,6 +7,7 @@ Examples:
     python cli.py reconcile-resolve --queue-id 3 --player-id 12 --note "confirmed by agent X"
     python cli.py anomalies-list
 """
+
 from __future__ import annotations
 
 import argparse
@@ -21,15 +22,23 @@ logger = logging.getLogger(__name__)
 
 
 def _parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(prog="statlas", description="Statlas data pipeline")
+    parser = argparse.ArgumentParser(
+        prog="statlas", description="Statlas data pipeline"
+    )
     sub = parser.add_subparsers(dest="command", required=True)
 
     weekly = sub.add_parser("weekly-refresh", help="run the full weekly refresh")
     weekly.add_argument("--season", required=True)
-    weekly.add_argument("--date", default=None, help="ISO snapshot date (defaults to now)")
+    weekly.add_argument(
+        "--date", default=None, help="ISO snapshot date (defaults to now)"
+    )
     weekly.add_argument("--leagues", default=None, help="comma-separated league slugs")
-    weekly.add_argument("--statsbomb", action="store_true", help="also sync StatsBomb competitions")
-    weekly.add_argument("--fixtures", action="store_true", help="also sync API-Football fixtures")
+    weekly.add_argument(
+        "--statsbomb", action="store_true", help="also sync StatsBomb competitions"
+    )
+    weekly.add_argument(
+        "--fixtures", action="store_true", help="also sync API-Football fixtures"
+    )
     weekly.add_argument(
         "--require-tier-completeness",
         action="store_true",
@@ -38,14 +47,20 @@ def _parse_args() -> argparse.Namespace:
         "production dataset mode.",
     )
 
-    scrape = sub.add_parser("scrape", help="scrape one source and print the resulting records")
+    scrape = sub.add_parser(
+        "scrape", help="scrape one source and print the resulting records"
+    )
     scrape.add_argument("source", choices=["fbref", "understat"])
     scrape.add_argument("--league", required=True)
     scrape.add_argument("--season", required=True)
-    scrape.add_argument("--dry-run", action="store_true", help="print records without writing to DB")
+    scrape.add_argument(
+        "--dry-run", action="store_true", help="print records without writing to DB"
+    )
 
     sub.add_parser("reconcile-list", help="list pending reconciliation items")
-    resolve = sub.add_parser("reconcile-resolve", help="manually resolve a queue item to a player")
+    resolve = sub.add_parser(
+        "reconcile-resolve", help="manually resolve a queue item to a player"
+    )
     resolve.add_argument("--queue-id", type=int, required=True)
     resolve.add_argument("--player-id", type=int, required=True)
     resolve.add_argument("--note", default=None)
@@ -67,14 +82,21 @@ def main() -> int:
         from app.sources.understat import UnderstatSource
 
         create_schema()
-        snapshot_date = datetime.fromisoformat(args.date) if args.date else datetime.now(timezone.utc)
+        snapshot_date = (
+            datetime.fromisoformat(args.date)
+            if args.date
+            else datetime.now(timezone.utc)
+        )
         league_slugs = args.leagues.split(",") if args.leagues else None
         from app.config import get_settings
 
         # §1.4 tier-completeness gate: production runs withhold a tier until
         # every league in it is ingested; the flag explicitly overrides (or
         # the fixture-demo mode keeps the single-league test contract).
-        gate = args.require_tier_completeness or get_settings().dataset_mode == "production"
+        gate = (
+            args.require_tier_completeness
+            or get_settings().dataset_mode == "production"
+        )
         with session_scope() as db:
             report = run_weekly_refresh(
                 db,
@@ -100,7 +122,9 @@ def main() -> int:
         records = source.fetch_league_stats(args.league, args.season)
         if args.dry_run:
             for r in records[:20]:
-                print(r.source, r.player_name, r.team_name, r.minutes_played, r.raw_stats)
+                print(
+                    r.source, r.player_name, r.team_name, r.minutes_played, r.raw_stats
+                )
             print(f"... {len(records)} records total (dry run, nothing written)")
             return 0
         from app.reconciliation import Reconciler
@@ -127,7 +151,13 @@ def main() -> int:
 
             report = _MiniReport()
             reconciler = Reconciler(db)
-            ingest_source_records(db, records, snapshot_date=datetime.now(timezone.utc), reconciler=reconciler, report=report)
+            ingest_source_records(
+                db,
+                records,
+                snapshot_date=datetime.now(timezone.utc),
+                reconciler=reconciler,
+                report=report,
+            )
             print(report)
         return 0
 
@@ -137,7 +167,15 @@ def main() -> int:
         create_schema()
         with session_scope() as db:
             for item in list_pending(db):
-                print(item.id, item.source, item.source_name, "|", item.source_team, "|", item.status)
+                print(
+                    item.id,
+                    item.source,
+                    item.source_name,
+                    "|",
+                    item.source_team,
+                    "|",
+                    item.status,
+                )
         return 0
 
     if args.command == "reconcile-resolve":
@@ -152,17 +190,27 @@ def main() -> int:
     if args.command == "anomalies-list":
         create_schema()
         with session_scope() as db:
-            query = db.query(IngestionAnomaly).order_by(IngestionAnomaly.flagged_at.desc())
+            query = db.query(IngestionAnomaly).order_by(
+                IngestionAnomaly.flagged_at.desc()
+            )
             if not args.all:
                 query = query.filter(IngestionAnomaly.resolved.is_(False))
             for anomaly in query.limit(100).all():
                 status = "UNRESOLVED" if not anomaly.resolved else "resolved"
-                print(anomaly.id, status, anomaly.field_name, anomaly.raw_value, anomaly.expected_range)
+                print(
+                    anomaly.id,
+                    status,
+                    anomaly.field_name,
+                    anomaly.raw_value,
+                    anomaly.expected_range,
+                )
         return 0
 
     return 2
 
 
 if __name__ == "__main__":
-    logging.basicConfig(level=logging.INFO, format="%(levelname)s %(name)s: %(message)s")
+    logging.basicConfig(
+        level=logging.INFO, format="%(levelname)s %(name)s: %(message)s"
+    )
     sys.exit(main())

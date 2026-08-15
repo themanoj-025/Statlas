@@ -4,6 +4,7 @@ All reads filter `is_published = true`: values with unresolved anomalies are
 never served, and percentile values carry their snapshot date so the UI can
 render the recency line ("Data as of … · computed on …").
 """
+
 from __future__ import annotations
 
 from datetime import datetime
@@ -105,7 +106,9 @@ def slugify_name(name: str) -> str:
     import re
     import unicodedata
 
-    ascii_ = unicodedata.normalize("NFKD", name).encode("ascii", "ignore").decode("ascii")
+    ascii_ = (
+        unicodedata.normalize("NFKD", name).encode("ascii", "ignore").decode("ascii")
+    )
     slug = re.sub(r"[^a-z0-9]+", "-", ascii_.lower()).strip("-")
     return slug or "player"
 
@@ -118,7 +121,9 @@ def player_slug_map(db: Session) -> list[dict[str, Any]]:
     """
     from app.models import Team
 
-    rows = db.query(Player, Team).outerjoin(Team, Player.current_team_id == Team.id).all()
+    rows = (
+        db.query(Player, Team).outerjoin(Team, Player.current_team_id == Team.id).all()
+    )
     by_name_slug: dict[str, list[dict[str, Any]]] = {}
     players: list[dict[str, Any]] = []
     for player, team in rows:
@@ -137,7 +142,10 @@ def player_slug_map(db: Session) -> list[dict[str, Any]]:
         same_name = by_name_slug[entry["name_slug"]]
         if len(same_name) == 1:
             entry["slug"] = entry["name_slug"]
-        elif entry["club_slug"] and sum(1 for p in same_name if p["club_slug"] == entry["club_slug"]) == 1:
+        elif (
+            entry["club_slug"]
+            and sum(1 for p in same_name if p["club_slug"] == entry["club_slug"]) == 1
+        ):
             entry["slug"] = f"{entry['name_slug']}-{entry['club_slug']}"
         else:
             entry["slug"] = f"{entry['name_slug']}-{entry['player_id']}"
@@ -172,14 +180,21 @@ def resolve_player_slug(db: Session, slug: str) -> dict[str, Any] | None:
     by_slug = {p["slug"]: p for p in players}
     if slug in by_slug:
         p = by_slug[slug]
-        return {"player_id": p["player_id"], "canonical_slug": p["slug"], "canonical": True}
+        return {
+            "player_id": p["player_id"],
+            "canonical_slug": p["slug"],
+            "canonical": True,
+        }
 
     # Non-canonical but valid forms, matched against the KNOWN candidate shapes
     # ({name}-{club}, {name}-{id}) rather than parsing the requested slug —
     # rpartition-based parsing mis-splits multi-hyphen slugs like
     # 'player-a-manchester-city' (base would read 'player-a-manchester').
     for p in players:
-        if slug == f"{p['name_slug']}-{p['club_slug']}" or slug == f"{p['name_slug']}-{p['player_id']}":
+        if (
+            slug == f"{p['name_slug']}-{p['club_slug']}"
+            or slug == f"{p['name_slug']}-{p['player_id']}"
+        ):
             return {
                 "player_id": p["player_id"],
                 "canonical_slug": p["slug"],

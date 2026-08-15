@@ -6,6 +6,7 @@ from `methodology.md` / `percentile-rules.md` / `data-compliance-notes.md` enter
 the code — nothing in the pipeline hardcodes a weight, threshold, or rate limit
 elsewhere.
 """
+
 from __future__ import annotations
 
 import json

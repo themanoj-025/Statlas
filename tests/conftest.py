@@ -6,6 +6,7 @@ without needing PostgreSQL. The suite always runs on SQLite (locally AND in
 CI — see .github/workflows/ci.yml); PostgreSQL is exercised through schema.sql
 parity (native_enum=False keeps the two interchangeable).
 """
+
 from __future__ import annotations
 
 from datetime import datetime, timezone
@@ -85,6 +86,8 @@ def compute_and_publish(db, *, snapshot_date, season, **kwargs):
     from app.orchestration.weekly_refresh import publish_run
 
     now = datetime.now(timezone.utc)
-    report = compute_percentiles(db, snapshot_date=snapshot_date, season=season, now=now, **kwargs)
+    report = compute_percentiles(
+        db, snapshot_date=snapshot_date, season=season, now=now, **kwargs
+    )
     publish_run(db, now)
     return report

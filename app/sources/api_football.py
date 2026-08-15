@@ -9,6 +9,7 @@ Compliance posture (data-compliance-notes.md):
 - Raw fixture payloads are not republished; fixtures render as schedule/live
   state UI only. Attribution line is a UI requirement (Phase 2+).
 """
+
 from __future__ import annotations
 
 import json
@@ -48,7 +49,9 @@ class FileBackedBudget:
 
     def __init__(self, daily_limit: int, path: str | Path | None = None) -> None:
         self.daily_limit = daily_limit
-        self.path = Path(path or Path(get_settings().cache_dir) / "api_football_budget.json")
+        self.path = Path(
+            path or Path(get_settings().cache_dir) / "api_football_budget.json"
+        )
         self.path.parent.mkdir(parents=True, exist_ok=True)
         self._day: str | None = None
         self._used = 0
@@ -108,7 +111,9 @@ class APIFootballSource:
         settings = get_settings()
         self.key = key or settings.api_football_key
         if not self.key:
-            logger.warning("API_FOOTBALL_KEY is not set; fixtures sync will fail loudly at first request")
+            logger.warning(
+                "API_FOOTBALL_KEY is not set; fixtures sync will fail loudly at first request"
+            )
         self.budget = budget or FileBackedBudget(settings.api_football_daily_budget)
         self.limiter = limiter or RateLimiter(settings.api_football_delay_seconds)
         self.cache = cache or HttpCache()
@@ -128,7 +133,9 @@ class APIFootballSource:
         return int(season.split("-")[0])
 
     @staticmethod
-    def parse_fixtures(payload: dict[str, Any], league_slug: str, season: str) -> list[FixtureRecord]:
+    def parse_fixtures(
+        payload: dict[str, Any], league_slug: str, season: str
+    ) -> list[FixtureRecord]:
         records: list[FixtureRecord] = []
         for item in payload.get("response", []):
             teams = item.get("teams", {})
@@ -171,7 +178,9 @@ class APIFootballSource:
         try:
             payload = resp.json()
         except ValueError as exc:
-            raise SourceError(f"API-Football returned non-JSON for {url}: {exc}") from exc
+            raise SourceError(
+                f"API-Football returned non-JSON for {url}: {exc}"
+            ) from exc
         if payload.get("errors"):
             raise SourceError(f"API-Football errors: {payload['errors']}")
         return self.parse_fixtures(payload, league_slug, season)
