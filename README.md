@@ -151,7 +151,7 @@ curl "http://127.0.0.1:8000/api/v1/players/1/events"          # coverage-gated s
 
 ## ⚙️ Configuration
 
-All settings are environment variables read by [`config.py`](config.py) — there is no dotenv loader, so export them in your shell/CI or set them on the run command. Everything is optional for the fixture-demo run.
+All settings are environment variables read by [`app/config.py`](app/config.py) — there is no dotenv loader, so export them in your shell/CI or set them on the run command. Everything is optional for the fixture-demo run.
 
 | Variable | Default | Purpose |
 | --- | --- | --- |
@@ -233,7 +233,7 @@ See [`docs/suite/Testing.md`](docs/suite/Testing.md) for the full test matrix.
 
 ## 🐳 Deployment
 
-[`docker-compose.yml`](docker-compose.yml) runs the complete production stack — PostgreSQL (with [`schema.sql`](schema.sql) applied on first boot), the FastAPI layer, and the Next.js standalone server.
+[`docker-compose.yml`](docker-compose.yml) runs the complete production stack — PostgreSQL (with [`app/schema.sql`](app/schema.sql) applied on first boot), the FastAPI layer, and the Next.js standalone server.
 
 ```bash
 docker compose up -d --build --wait              # stack on :3000 (web) and :8000 (api)
@@ -346,3 +346,11 @@ If Statlas is useful to you:
 - 📄 Read the docs, run the pipeline, and tell us what breaks
 
 > **Statlas — analytics that shows its work.**
+---
+
+## ⭐ Star History
+
+[![Last Commit](https://img.shields.io/github/last-commit/themanoj-025/Statlas?style=flat-square)](https://github.com/themanoj-025/Statlas)
+[![Contributors](https://img.shields.io/github/contributors/themanoj-025/Statlas?style=flat-square)](https://github.com/themanoj-025/Statlas/graphs/contributors)
+
+[![Star History Chart](https://api.star-history.com/svg?repos=themanoj-025/Statlas&type=Date)](https://star-history.com/#Statlas&Date)
