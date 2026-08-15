@@ -39,6 +39,7 @@ _hits: defaultdict[str, list[float]] = defaultdict(list)
 # Key management (session-authenticated dashboard)
 # ---------------------------------------------------------------------------
 
+
 class KeyCreateBody(BaseModel):
     name: str = Field(min_length=1, max_length=128)
 
@@ -50,7 +51,9 @@ class KeyRotateBody(BaseModel):
 def _require_user(request: Request) -> User:
     settings = get_settings()
     with session_scope() as db:
-        user = auth.user_from_session(db, request.cookies.get(settings.session_cookie_name))
+        user = auth.user_from_session(
+            db, request.cookies.get(settings.session_cookie_name)
+        )
         if user is None:
             raise HTTPException(status_code=401, detail="Sign in to manage API keys.")
         return user
@@ -77,7 +80,9 @@ def revoke_key(key_id: int, request: Request):
     with session_scope() as db:
         ok = api_keys.revoke_api_key(db, user.id, key_id)
     if not ok:
-        raise HTTPException(status_code=404, detail="No API key with that id for this account.")
+        raise HTTPException(
+            status_code=404, detail="No API key with that id for this account."
+        )
     return {"ok": True}
 
 
@@ -85,15 +90,20 @@ def revoke_key(key_id: int, request: Request):
 def rotate_key(key_id: int, body: KeyRotateBody | None = None, request: Request = None):
     user = _require_user(request)
     with session_scope() as db:
-        result = api_keys.rotate_api_key(db, user, key_id, (body.name if body else None))
+        result = api_keys.rotate_api_key(
+            db, user, key_id, (body.name if body else None)
+        )
     if result is None:
-        raise HTTPException(status_code=404, detail="No API key with that id for this account.")
+        raise HTTPException(
+            status_code=404, detail="No API key with that id for this account."
+        )
     return result  # new raw key — one-time reveal
 
 
 # ---------------------------------------------------------------------------
 # Rate-limited public read endpoints (bearer API key)
 # ---------------------------------------------------------------------------
+
 
 def _check_rate_limit(key_hash: str, plan: str) -> dict:
     limits = api_keys.api_rate_limit_for_plan(plan)
@@ -147,16 +157,24 @@ def _run(fn: Any, *args: Any, **kwargs: Any) -> dict:
 
 
 @router.get("/public/players/search")
-def public_search(request: Request, q: str = Query(..., min_length=1, max_length=64), _: tuple = Depends(api_key_dependency)):
+def public_search(
+    request: Request,
+    q: str = Query(..., min_length=1, max_length=64),
+    _: tuple = Depends(api_key_dependency),
+):
     results = _run(player_queries.search_players, q, 10)
     return {"results": results}
 
 
 @router.get("/public/players/{player_id}/percentiles")
-def public_percentiles(request: Request, player_id: int, _: tuple = Depends(api_key_dependency)):
+def public_percentiles(
+    request: Request, player_id: int, _: tuple = Depends(api_key_dependency)
+):
     data = _run(player_queries.get_player_percentiles, player_id)
     if data is None:
-        raise HTTPException(status_code=404, detail="No published percentile data for that player.")
+        raise HTTPException(
+            status_code=404, detail="No published percentile data for that player."
+        )
     profile = _run(player_queries.get_player_profile, player_id)
     return {"player": profile, "percentiles": data}
 

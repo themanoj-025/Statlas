@@ -19,6 +19,7 @@ Value resolution honours the per-metric source precedence from the registry
 cohort, never mixed) and the per-metric display floors (a player below the
 pass-attempt/SoTA/cross floor contributes no value for that metric).
 """
+
 from __future__ import annotations
 
 import logging
@@ -55,7 +56,11 @@ class PercentileReport:
 
 
 def latest_snapshot_date(db: Session) -> datetime | None:
-    row = db.execute(select(StatSnapshot.scrape_date).order_by(StatSnapshot.scrape_date.desc()).limit(1)).first()
+    row = db.execute(
+        select(StatSnapshot.scrape_date)
+        .order_by(StatSnapshot.scrape_date.desc())
+        .limit(1)
+    ).first()
     return row[0] if row else None
 
 
@@ -122,7 +127,9 @@ def fractional_rank(value: float, all_values: list[float], invert: bool) -> floa
     return (below + 0.5 * equal) / n * 100.0
 
 
-def compute_index_score(percentiles: dict[str, float], group: str, registry: dict[str, Any]) -> float | None:
+def compute_index_score(
+    percentiles: dict[str, float], group: str, registry: dict[str, Any]
+) -> float | None:
     """Weighted mean of the player's metric percentiles for their position group.
 
     Weights come from the registry (derived from methodology.md §4). When a
@@ -142,7 +149,9 @@ def compute_index_score(percentiles: dict[str, float], group: str, registry: dic
     total_weight = sum(weights[mid] for mid in present)
     if total_weight <= 0:
         return None
-    return round(sum((weights[mid] / total_weight) * p for mid, p in present.items()), 2)
+    return round(
+        sum((weights[mid] / total_weight) * p for mid, p in present.items()), 2
+    )
 
 
 def tier_completeness(
@@ -234,7 +243,8 @@ def compute_percentiles(
                     report.skipped_incomplete_tiers.append(t)
             logger.warning(
                 "tier-completeness gate: withholding %s (incomplete leagues: %s)",
-                sorted(withheld_tiers), incomplete,
+                sorted(withheld_tiers),
+                incomplete,
             )
 
     snaps = (
@@ -256,7 +266,9 @@ def compute_percentiles(
     # means: re-running for an already-computed snapshot_date is a no-op, while
     # one fresh run computes every metric exactly once.
     index_metric_id = registry["index_metric_id"]
-    snapshots_with_rows = {r[0] for r in db.query(PercentileSnapshot.stat_snapshot_id).all()}
+    snapshots_with_rows = {
+        r[0] for r in db.query(PercentileSnapshot.stat_snapshot_id).all()
+    }
     snapshots_with_index = {
         r[0]
         for r in db.query(PercentileSnapshot.stat_snapshot_id).filter(
@@ -271,7 +283,9 @@ def compute_percentiles(
     # wrong tier's snapshot for the other cohort (and collide on the
     # percentile unique key). Each cohort resolves against ITS OWN tier's map.
     by_cohort: dict[tuple[str, str], list[StatSnapshot]] = defaultdict(list)
-    snapshots_by_tier: dict[str, dict[tuple[int, str], StatSnapshot]] = defaultdict(dict)
+    snapshots_by_tier: dict[str, dict[tuple[int, str], StatSnapshot]] = defaultdict(
+        dict
+    )
     for snap in snaps:
         group = snap.player.position_group
         league_tier = snap.league.tier
@@ -288,7 +302,9 @@ def compute_percentiles(
         snapshots_by_tier[league_tier].setdefault(key, snap)
 
     for (league_tier, group), cohort_snaps in sorted(by_cohort.items()):
-        metric_ids = registry["gk_metrics"] if group == "GK" else registry["outfield_metrics"]
+        metric_ids = (
+            registry["gk_metrics"] if group == "GK" else registry["outfield_metrics"]
+        )
         snapshots_by_player_source = snapshots_by_tier[league_tier]
 
         # Per-player primary snapshot (index row attachment target): prefer fbref.
@@ -301,13 +317,17 @@ def compute_percentiles(
             if fbref is not None:
                 primary_snapshot[player_id] = fbref
 
-        metric_values: dict[str, list[tuple[int, float, StatSnapshot]]] = defaultdict(list)
+        metric_values: dict[str, list[tuple[int, float, StatSnapshot]]] = defaultdict(
+            list
+        )
         for mid in metric_ids:
             spec = registry["metrics"][mid]
             invert = spec["direction"] == "lower_is_better"
             entries: list[tuple[int, float, StatSnapshot]] = []
             for player_id in players:
-                value, winner = resolve_metric_value(player_id, mid, league_tier, snapshots_by_player_source, registry)
+                value, winner = resolve_metric_value(
+                    player_id, mid, league_tier, snapshots_by_player_source, registry
+                )
                 if value is None or winner is None:
                     continue
                 # idempotency: skip players whose percentile rows already exist
@@ -318,7 +338,13 @@ def compute_percentiles(
             n = len(entries)
             if n < min_pool:
                 report.skipped_small_pool.append(f"{league_tier}/{group}/{mid} (N={n})")
-                logger.info("pool below %d for %s/%s/%s — skipping percentile", min_pool, league_tier, group, mid)
+                logger.info(
+                    "pool below %d for %s/%s/%s — skipping percentile",
+                    min_pool,
+                    league_tier,
+                    group,
+                    mid,
+                )
                 continue
             values = [v for _, v, _ in entries]
             for player_id, value, winner in entries:

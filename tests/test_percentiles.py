@@ -8,6 +8,7 @@ Values [0.2, 0.4, 0.6, 0.8, 0.8] (N=5) give percentiles [0, 20, 40, 70, 70]:
   0.6 -> (2 + 0.5*0)/5*100 = 40
   0.8 -> (3 + 0.5*1)/5*100 = 70  (tied pair shares the midpoint of their block)
 """
+
 from __future__ import annotations
 
 from app.compute.percentiles import compute_percentiles, fractional_rank
@@ -15,8 +16,21 @@ from app.models import Player, StatSnapshot, Team
 from tests.conftest import SNAPSHOT_DATE
 
 
-def _seed_player(db, league, name, group, gls, dis=0.5, minutes=1000, xg=None, source="fbref", team_name="City"):
-    team = db.query(Team).filter_by(name=team_name, league_id=league.id).first() or Team(name=team_name, league_id=league.id)
+def _seed_player(
+    db,
+    league,
+    name,
+    group,
+    gls,
+    dis=0.5,
+    minutes=1000,
+    xg=None,
+    source="fbref",
+    team_name="City",
+):
+    team = db.query(Team).filter_by(
+        name=team_name, league_id=league.id
+    ).first() or Team(name=team_name, league_id=league.id)
     db.add(team)
     db.flush()
     player = Player(canonical_name=name, position_group=group)
@@ -70,7 +84,9 @@ def test_fractional_rank_inverted_for_lower_is_better():
     assert fractional_rank(0.2, values, invert=True) == 80.0
     assert fractional_rank(0.4, values, invert=True) == 60.0
     assert fractional_rank(0.6, values, invert=True) == 40.0
-    assert fractional_rank(0.8, values, invert=True) == 10.0  # tied pair shares midpoint
+    assert (
+        fractional_rank(0.8, values, invert=True) == 10.0
+    )  # tied pair shares midpoint
 
 
 def test_percentiles_match_hand_calculated_values(db, premier_league, small_pool):
@@ -132,7 +148,12 @@ def test_tier1_xg_precedence_uses_understat(db, premier_league, small_pool):
                 season="2025-26",
                 scrape_date=SNAPSHOT_DATE,
                 source="understat",
-                raw_stats={"si_xg_p90": 0.9, "si_sh_p90": 2.0, "si_xag_p90": 0.3, "si_kp_p90": 1.0},
+                raw_stats={
+                    "si_xg_p90": 0.9,
+                    "si_sh_p90": 2.0,
+                    "si_xag_p90": 0.3,
+                    "si_kp_p90": 1.0,
+                },
                 minutes_played=1000,
                 matches_played=12,
                 status="ingested",

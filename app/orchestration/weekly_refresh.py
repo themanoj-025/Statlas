@@ -23,6 +23,7 @@ job: production weekly runs pass require_tier_completeness=True (the CLI does),
 so a tier missing any league is withheld entirely. It defaults to False so the
 documented single-league integration contract keeps working in tests/fixtures.
 """
+
 from __future__ import annotations
 
 import logging
@@ -75,6 +76,7 @@ class RefreshReport:
 # Catalog & entity helpers
 # --------------------------------------------------------------------------
 
+
 def ensure_league_catalog(db: Session) -> None:
     """Upsert leagues from config/tiers.json (the single list of supported leagues)."""
     for slug, cfg in load_tiers()["leagues"].items():
@@ -101,7 +103,9 @@ def get_or_create_team(db: Session, name: str, league_id: int) -> Team:
     return team
 
 
-def resolve_player_for_record(db: Session, reconciler: Reconciler, record: Any, team: Team) -> tuple[Player, bool]:
+def resolve_player_for_record(
+    db: Session, reconciler: Reconciler, record: Any, team: Team
+) -> tuple[Player, bool]:
     """Resolve a record to its canonical player; create one when nothing matches.
 
     Matching is never fuzzy (reconciliation.py): external id -> alias -> exact
@@ -123,7 +127,10 @@ def resolve_player_for_record(db: Session, reconciler: Reconciler, record: Any, 
         db.flush()
         reconciler.register_player(player)
         if not (record.external_ids or {}):
-            reconciler.enqueue(record, note="new player created without a stable external id; verify identity")
+            reconciler.enqueue(
+                record,
+                note="new player created without a stable external id; verify identity",
+            )
     else:
         reconciler.ensure_alias(player, record)
 
@@ -149,6 +156,7 @@ def resolve_player_for_record(db: Session, reconciler: Reconciler, record: Any, 
 # Ingestion
 # --------------------------------------------------------------------------
 
+
 def ingest_source_records(
     db: Session,
     records: Sequence[Any],
@@ -161,7 +169,9 @@ def ingest_source_records(
     for record in records:
         league = db.query(League).filter_by(slug=record.league_slug).first()
         if league is None:
-            report.errors.append(f"unknown league slug '{record.league_slug}' for {record.player_name}")
+            report.errors.append(
+                f"unknown league slug '{record.league_slug}' for {record.player_name}"
+            )
             continue
         team = get_or_create_team(db, record.team_name, league.id)
         player, _created = resolve_player_for_record(db, reconciler, record, team)
@@ -203,7 +213,9 @@ def ingest_source_records(
     db.commit()
 
 
-def update_coverage(db: Session, *, source: str, identifier: str, season: str, now: datetime) -> None:
+def update_coverage(
+    db: Session, *, source: str, identifier: str, season: str, now: datetime
+) -> None:
     """Upsert a data_coverage row for a scraped source.
 
     For league-scoped sources (fbref/understat/api_football) the identifier is
@@ -214,7 +226,11 @@ def update_coverage(db: Session, *, source: str, identifier: str, season: str, n
     league = None
     if source != "statsbomb":
         league = db.query(League).filter_by(slug=identifier).first()
-    row = db.query(DataCoverage).filter_by(source=source, source_identifier=identifier).first()
+    row = (
+        db.query(DataCoverage)
+        .filter_by(source=source, source_identifier=identifier)
+        .first()
+    )
     if row is None:
         db.add(
             DataCoverage(
@@ -245,7 +261,10 @@ def publish_run(db: Session, computed_date: datetime) -> int:
 
     rows = (
         db.query(PercentileSnapshot)
-        .filter(PercentileSnapshot.computed_date == computed_date, PercentileSnapshot.is_published.is_(False))
+        .filter(
+            PercentileSnapshot.computed_date == computed_date,
+            PercentileSnapshot.is_published.is_(False),
+        )
         .all()
     )
     for row in rows:
@@ -257,6 +276,7 @@ def publish_run(db: Session, computed_date: datetime) -> int:
 # --------------------------------------------------------------------------
 # The weekly job
 # --------------------------------------------------------------------------
+
 
 def run_weekly_refresh(
     db: Session,
@@ -298,8 +318,20 @@ def run_weekly_refresh(
         if fbref_source is not None:
             try:
                 records = fbref_source.fetch_league_stats(league_slug, season)
-                ingest_source_records(db, records, snapshot_date=snapshot_date, reconciler=reconciler, report=report)
-                update_coverage(db, source="fbref", identifier=league_slug, season=season, now=snapshot_date)
+                ingest_source_records(
+                    db,
+                    records,
+                    snapshot_date=snapshot_date,
+                    reconciler=reconciler,
+                    report=report,
+                )
+                update_coverage(
+                    db,
+                    source="fbref",
+                    identifier=league_slug,
+                    season=season,
+                    now=snapshot_date,
+                )
                 report.leagues_scraped.append(f"{league_slug}:fbref")
             except Exception as exc:
                 report.errors.append(f"fbref {league_slug}: {exc}")
@@ -309,22 +341,40 @@ def run_weekly_refresh(
         if understat_source is not None and league_cfg["tier"] == "tier_1":
             try:
                 records = understat_source.fetch_league_stats(league_slug, season)
-                ingest_source_records(db, records, snapshot_date=snapshot_date, reconciler=reconciler, report=report)
-                update_coverage(db, source="understat", identifier=league_slug, season=season, now=snapshot_date)
+                ingest_source_records(
+                    db,
+                    records,
+                    snapshot_date=snapshot_date,
+                    reconciler=reconciler,
+                    report=report,
+                )
+                update_coverage(
+                    db,
+                    source="understat",
+                    identifier=league_slug,
+                    season=season,
+                    now=snapshot_date,
+                )
                 report.leagues_scraped.append(f"{league_slug}:understat")
             except Exception as exc:
                 report.errors.append(f"understat {league_slug}: {exc}")
                 logger.exception("understat scrape failed for %s", league_slug)
 
         if len(report.errors) > errors_before:
-            logger.warning("league %s finished with %d error(s)", league_slug, len(report.errors) - errors_before)
+            logger.warning(
+                "league %s finished with %d error(s)",
+                league_slug,
+                len(report.errors) - errors_before,
+            )
 
     # --- 3. reconcile (unmatched records already queued by ingest) ----------
     db.commit()
 
     # --- 4. anomaly detection ----------------------------------------------
     report.anomalies_bounds = check_snapshot_bounds(db, snapshot_date=snapshot_date)
-    report.anomalies_cross_source = cross_source_spot_check(db, snapshot_date=snapshot_date)
+    report.anomalies_cross_source = cross_source_spot_check(
+        db, snapshot_date=snapshot_date
+    )
     blocked = blocked_player_ids(db, snapshot_date=snapshot_date)
     report.blocked_players = len(blocked)
 
@@ -353,7 +403,9 @@ def run_weekly_refresh(
             try:
                 statsbomb_source.sync_competition(db, competition)
             except Exception as exc:
-                report.errors.append(f"statsbomb {competition.get('competition_id')}: {exc}")
+                report.errors.append(
+                    f"statsbomb {competition.get('competition_id')}: {exc}"
+                )
 
         # Phase 3 — player-link step: resolve the NULL-player_id events to
         # canonical players by exact normalized name (ambiguous names stay
@@ -385,7 +437,10 @@ def store_fixtures(db: Session, fixtures: Sequence[Any]) -> int:
         league = db.query(League).filter_by(slug=fx.league_slug).first()
         if league is None:
             continue
-        if db.query(Fixture).filter_by(api_fixture_id=fx.api_fixture_id).first() is not None:
+        if (
+            db.query(Fixture).filter_by(api_fixture_id=fx.api_fixture_id).first()
+            is not None
+        ):
             continue
         db.add(
             Fixture(

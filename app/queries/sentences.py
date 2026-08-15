@@ -12,6 +12,7 @@ Template (populated from the database):
 plus an index sentence when the player has one:
     "Statlas Index {score}: the weighted average of their percentile ranks."
 """
+
 from __future__ import annotations
 
 from sqlalchemy.orm import Session
@@ -81,7 +82,10 @@ def build_profile_sentence(db: Session, player_id: int) -> str:
     raw = get_player_raw_stats(db, player_id)
 
     if percentiles is None or not percentiles["percentiles"]:
-        if raw is not None and raw["minutes_played"] < load_registry()["qualifying_minutes"]:
+        if (
+            raw is not None
+            and raw["minutes_played"] < load_registry()["qualifying_minutes"]
+        ):
             minutes = int(raw["minutes_played"])
             return (
                 f"{name} is pending qualification this season with {minutes} league "
@@ -92,7 +96,9 @@ def build_profile_sentence(db: Session, player_id: int) -> str:
                 f"{name} has no published percentile ranks for this season yet — "
                 f"the weekly refresh publishes them after the anomaly check passes."
             )
-        return f"{name} is not in the current data coverage (see the data coverage page)."
+        return (
+            f"{name} is not in the current data coverage (see the data coverage page)."
+        )
 
     tier_group = _tier_and_group(db, player_id)
     if tier_group is None:
@@ -105,7 +111,9 @@ def build_profile_sentence(db: Session, player_id: int) -> str:
 
     # Highest percentile among the position's own metrics (never a cross-group
     # metric that happens to be present).
-    metric_ids = registry["gk_metrics"] if group == "GK" else registry["outfield_metrics"]
+    metric_ids = (
+        registry["gk_metrics"] if group == "GK" else registry["outfield_metrics"]
+    )
     candidates = [
         (mid, pct)
         for mid, pct in percentiles["percentiles"].items()
@@ -126,9 +134,7 @@ def build_profile_sentence(db: Session, player_id: int) -> str:
             f"ranks in the {ordinal(round(top_pct))} percentile for {metric_name}"
         )
 
-    sentence = (
-        f"{name} {rank_clause} among {tier_label} {position_plural} this season."
-    )
+    sentence = f"{name} {rank_clause} among {tier_label} {position_plural} this season."
     if percentiles["index"] is not None:
         sentence += (
             f" Their Statlas Index is {percentiles['index']:.1f}, the weighted "

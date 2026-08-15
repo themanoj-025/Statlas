@@ -1,5 +1,6 @@
 """API-Football unit tests: fixture parsing and the persistent daily request
 budget (the hard stop that prevents quota exhaustion mid-run)."""
+
 from __future__ import annotations
 
 import json
@@ -15,7 +16,9 @@ FIXTURES = fixtures_dir()
 
 
 def test_parse_fixtures():
-    payload = json.loads(FIXTURES.joinpath("api_football_fixtures.json").read_text(encoding="utf-8"))
+    payload = json.loads(
+        FIXTURES.joinpath("api_football_fixtures.json").read_text(encoding="utf-8")
+    )
     records = APIFootballSource.parse_fixtures(payload, "premier-league", "2025-26")
     assert len(records) == 2
     first = records[0]

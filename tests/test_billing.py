@@ -42,6 +42,7 @@ from app.api.main import app  # noqa: E402
 # Test-mode webhook signature helper (real construct_event path)
 # ---------------------------------------------------------------------------
 
+
 def signed_event(payload: dict) -> tuple[bytes, str]:
     """Produce (raw_body, Stripe-Signature header) for a test-mode event using
     the real stripe.webhook signing algorithm against the test secret."""
@@ -50,7 +51,9 @@ def signed_event(payload: dict) -> tuple[bytes, str]:
     raw = json.dumps(payload).encode("utf-8")
     timestamp = int(time.time())
     signed_payload = f"{timestamp}.{raw.decode('utf-8')}"
-    signature = hmac.new(secret.encode("utf-8"), signed_payload.encode("utf-8"), hashlib.sha256).hexdigest()
+    signature = hmac.new(
+        secret.encode("utf-8"), signed_payload.encode("utf-8"), hashlib.sha256
+    ).hexdigest()
     header = f"t={timestamp},v1={signature}"
     return raw, header
 
@@ -70,7 +73,9 @@ def client():
 
 
 def register_user(client, email: str = "scout@example.com") -> None:
-    resp = client.post("/api/v1/auth/register", json={"email": email, "password": "hunter2hunter"})
+    resp = client.post(
+        "/api/v1/auth/register", json={"email": email, "password": "hunter2hunter"}
+    )
     assert resp.status_code == 201, resp.text
 
 
@@ -114,6 +119,7 @@ def subscription_updated_event(sub_id: str, status: str, period_end: int) -> dic
 # Auth
 # ---------------------------------------------------------------------------
 
+
 def test_register_login_logout_roundtrip(client):
     register_user(client)
     resp = client.get("/api/v1/auth/me")
@@ -125,17 +131,26 @@ def test_register_login_logout_roundtrip(client):
     resp = client.get("/api/v1/auth/me")
     assert resp.status_code == 401  # session revoked
 
-    resp = client.post("/api/v1/auth/login", json={"email": "scout@example.com", "password": "wrongpass"})
+    resp = client.post(
+        "/api/v1/auth/login",
+        json={"email": "scout@example.com", "password": "wrongpass"},
+    )
     assert resp.status_code == 401  # bad password rejected
 
-    resp = client.post("/api/v1/auth/login", json={"email": "scout@example.com", "password": "hunter2hunter"})
+    resp = client.post(
+        "/api/v1/auth/login",
+        json={"email": "scout@example.com", "password": "hunter2hunter"},
+    )
     assert resp.status_code == 200
     assert client.get("/api/v1/auth/me").json()["email"] == "scout@example.com"
 
 
 def test_duplicate_email_rejected(client):
     register_user(client)
-    resp = client.post("/api/v1/auth/register", json={"email": "scout@example.com", "password": "anotherpass1"})
+    resp = client.post(
+        "/api/v1/auth/register",
+        json={"email": "scout@example.com", "password": "anotherpass1"},
+    )
     assert resp.status_code == 409
 
 
@@ -154,8 +169,12 @@ def test_password_stored_hashed_not_plaintext(client):
 # Checkout (A2)
 # ---------------------------------------------------------------------------
 
+
 def test_checkout_requires_signin(client):
-    resp = client.post("/api/v1/billing/checkout", json={"success_url": "http://x/ok", "cancel_url": "http://x/c"})
+    resp = client.post(
+        "/api/v1/billing/checkout",
+        json={"success_url": "http://x/ok", "cancel_url": "http://x/c"},
+    )
     assert resp.status_code == 401
 
 
@@ -177,11 +196,16 @@ def test_checkout_creates_session_and_grants_on_webhook(client, monkeypatch):
     import stripe
 
     monkeypatch.setattr(stripe, "Customer", FakeCustomer)
-    monkeypatch.setattr(stripe, "checkout", type("CO", (), {"Session": FakeCheckoutSession}))
+    monkeypatch.setattr(
+        stripe, "checkout", type("CO", (), {"Session": FakeCheckoutSession})
+    )
 
     resp = client.post(
         "/api/v1/billing/checkout",
-        json={"success_url": "http://localhost:3000/account?checkout=success", "cancel_url": "http://localhost:3000/pricing?checkout=cancelled"},
+        json={
+            "success_url": "http://localhost:3000/account?checkout=success",
+            "cancel_url": "http://localhost:3000/pricing?checkout=cancelled",
+        },
     )
     assert resp.status_code == 200, resp.text
     assert resp.json()["url"] == "https://checkout.stripe.com/test"
@@ -193,7 +217,9 @@ def test_checkout_creates_session_and_grants_on_webhook(client, monkeypatch):
         user = db.query(User).filter(User.email == "scout@example.com").first()
         user_id = user.id
     raw, sig = signed_event(checkout_completed_event(user_id))
-    resp = client.post("/api/v1/billing/webhook", content=raw, headers={"stripe-signature": sig})
+    resp = client.post(
+        "/api/v1/billing/webhook", content=raw, headers={"stripe-signature": sig}
+    )
     assert resp.status_code == 200, resp.text
     assert client.get("/api/v1/auth/me").json()["has_pro"] is True
 
@@ -201,6 +227,7 @@ def test_checkout_creates_session_and_grants_on_webhook(client, monkeypatch):
 # ---------------------------------------------------------------------------
 # Webhook security (D3): signature verification is genuinely enforced
 # ---------------------------------------------------------------------------
+
 
 def test_unsigned_webhook_rejected(client):
     register_user(client)
@@ -215,7 +242,9 @@ def test_tampered_webhook_rejected(client):
     raw, sig = signed_event(event)
     # Tamper the payload AFTER signing.
     tampered = raw.replace(b"cs_test_abc", b"cs_test_TAMPERED")
-    resp = client.post("/api/v1/billing/webhook", content=tampered, headers={"stripe-signature": sig})
+    resp = client.post(
+        "/api/v1/billing/webhook", content=tampered, headers={"stripe-signature": sig}
+    )
     assert resp.status_code == 400
     # And no side effect happened.
     with session_scope() as db:
@@ -226,6 +255,7 @@ def test_tampered_webhook_rejected(client):
 # Idempotency (A3/A6): replaying an event must not double-grant
 # ---------------------------------------------------------------------------
 
+
 def test_webhook_idempotent_replay(client):
     register_user(client)
     with session_scope() as db:
@@ -233,9 +263,13 @@ def test_webhook_idempotent_replay(client):
         user_id = user.id
 
     raw, sig = signed_event(checkout_completed_event(user_id))
-    first = client.post("/api/v1/billing/webhook", content=raw, headers={"stripe-signature": sig})
+    first = client.post(
+        "/api/v1/billing/webhook", content=raw, headers={"stripe-signature": sig}
+    )
     assert first.status_code == 200
-    second = client.post("/api/v1/billing/webhook", content=raw, headers={"stripe-signature": sig})
+    second = client.post(
+        "/api/v1/billing/webhook", content=raw, headers={"stripe-signature": sig}
+    )
     assert second.status_code == 200
     assert second.json()["duplicate"] is True
 
@@ -253,9 +287,12 @@ def test_webhook_idempotent_replay(client):
 # Grace period (A3): payment failure does not cut access; recovery + cancel
 # ---------------------------------------------------------------------------
 
+
 def _grant_pro(client, user_id: int, sub_id: str = "sub_test_grace") -> None:
     raw, sig = signed_event(checkout_completed_event(user_id, sub_id))
-    resp = client.post("/api/v1/billing/webhook", content=raw, headers={"stripe-signature": sig})
+    resp = client.post(
+        "/api/v1/billing/webhook", content=raw, headers={"stripe-signature": sig}
+    )
     assert resp.status_code == 200
 
 
@@ -267,7 +304,9 @@ def test_payment_failed_enters_grace_period_and_recovery(client):
 
     # First payment failure -> past_due + grace period, access RETAINED.
     raw, sig = signed_event(payment_failed_event("sub_test_grace"))
-    resp = client.post("/api/v1/billing/webhook", content=raw, headers={"stripe-signature": sig})
+    resp = client.post(
+        "/api/v1/billing/webhook", content=raw, headers={"stripe-signature": sig}
+    )
     assert resp.status_code == 200
     assert client.get("/api/v1/auth/me").json()["has_pro"] is True  # not cut off
     with session_scope() as db:
@@ -283,8 +322,12 @@ def test_payment_failed_enters_grace_period_and_recovery(client):
 
     # Recovery: renewal succeeds -> active again, grace cleared by updated event.
     future = int((datetime.now(timezone.utc) + timedelta(days=30)).timestamp())
-    raw, sig = signed_event(subscription_updated_event("sub_test_grace", "active", future))
-    resp = client.post("/api/v1/billing/webhook", content=raw, headers={"stripe-signature": sig})
+    raw, sig = signed_event(
+        subscription_updated_event("sub_test_grace", "active", future)
+    )
+    resp = client.post(
+        "/api/v1/billing/webhook", content=raw, headers={"stripe-signature": sig}
+    )
     assert resp.status_code == 200
     assert client.get("/api/v1/auth/me").json()["has_pro"] is True
     with session_scope() as db:
@@ -300,13 +343,19 @@ def test_payment_failed_then_cancellation_revokes(client):
     _grant_pro(client, user_id)
 
     raw, sig = signed_event(payment_failed_event("sub_test_grace"))
-    client.post("/api/v1/billing/webhook", content=raw, headers={"stripe-signature": sig})
+    client.post(
+        "/api/v1/billing/webhook", content=raw, headers={"stripe-signature": sig}
+    )
 
     # Cancellation -> end-of-period retention: access persists until period
     # end, then is revoked. Simulate with a current_period_end already past.
     past = int((datetime.now(timezone.utc) - timedelta(days=1)).timestamp())
-    raw, sig = signed_event(subscription_updated_event("sub_test_grace", "canceled", past))
-    resp = client.post("/api/v1/billing/webhook", content=raw, headers={"stripe-signature": sig})
+    raw, sig = signed_event(
+        subscription_updated_event("sub_test_grace", "canceled", past)
+    )
+    resp = client.post(
+        "/api/v1/billing/webhook", content=raw, headers={"stripe-signature": sig}
+    )
     assert resp.status_code == 200
     assert client.get("/api/v1/auth/me").json()["has_pro"] is False  # revoked
 
@@ -319,14 +368,19 @@ def test_canceled_keeps_access_to_period_end(client):
     _grant_pro(client, user_id)
 
     future = int((datetime.now(timezone.utc) + timedelta(days=10)).timestamp())
-    raw, sig = signed_event(subscription_updated_event("sub_test_grace", "canceled", future))
-    client.post("/api/v1/billing/webhook", content=raw, headers={"stripe-signature": sig})
+    raw, sig = signed_event(
+        subscription_updated_event("sub_test_grace", "canceled", future)
+    )
+    client.post(
+        "/api/v1/billing/webhook", content=raw, headers={"stripe-signature": sig}
+    )
     assert client.get("/api/v1/auth/me").json()["has_pro"] is True  # until period end
 
 
 # ---------------------------------------------------------------------------
 # Access gating (A4): the single has_pro_access function
 # ---------------------------------------------------------------------------
+
 
 def test_limits_report_plan_boundaries(client):
     register_user(client)
@@ -341,7 +395,14 @@ def test_limits_report_plan_boundaries(client):
     with session_scope() as db:
         user = db.query(User).filter(User.email == "scout@example.com").first()
         user.plan = "pro"
-        db.add(Subscription(user_id=user.id, plan="pro", stripe_subscription_id="sub_x", status="active"))
+        db.add(
+            Subscription(
+                user_id=user.id,
+                plan="pro",
+                stripe_subscription_id="sub_x",
+                status="active",
+            )
+        )
         db.commit()
     resp = client.get("/api/v1/billing/limits")
     assert resp.json()["plan"] == "pro"

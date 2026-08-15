@@ -32,6 +32,7 @@ TOKEN_BYTES = 32  # 256-bit session / API key values
 # Password hashing (Part A auth; D3: never plaintext)
 # ---------------------------------------------------------------------------
 
+
 def hash_password(password: str) -> str:
     """PBKDF2-HMAC-SHA256 with a random 16-byte salt, `iterations$salt$hash`."""
     salt = secrets.token_bytes(16)
@@ -59,6 +60,7 @@ def verify_password(password: str, stored: str) -> bool:
 # Tokens (sessions + API keys) — only hashes stored
 # ---------------------------------------------------------------------------
 
+
 def generate_token() -> str:
     """Random URL-safe token; return the raw value (the ONLY time it exists)."""
     return secrets.token_urlsafe(TOKEN_BYTES)
@@ -73,12 +75,15 @@ def hash_token(token: str) -> str:
 # Sessions
 # ---------------------------------------------------------------------------
 
+
 def create_session(db: Session, user_id: int) -> tuple[str, datetime]:
     """Create a session row; returns (raw_token, expires_at). The raw token is
     returned exactly once — the DB stores only its hash."""
     settings = get_settings()
     raw = generate_token()
-    expires_at = datetime.now(timezone.utc) + timedelta(hours=settings.session_ttl_hours)
+    expires_at = datetime.now(timezone.utc) + timedelta(
+        hours=settings.session_ttl_hours
+    )
     db.add(
         SessionToken(
             user_id=user_id,
@@ -125,6 +130,7 @@ def revoke_session(db: Session, raw_token: str | None) -> None:
 # ---------------------------------------------------------------------------
 # Subscription / access gating (Part A4 — the single gate)
 # ---------------------------------------------------------------------------
+
 
 def current_subscription(db: Session, user_id: int) -> Subscription | None:
     """The user's active-or-relevant subscription row, or None."""

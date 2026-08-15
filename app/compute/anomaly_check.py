@@ -14,6 +14,7 @@ Two passes:
 blocked_player_ids() then feeds the percentile job so flagged players neither
 rank nor are ranked.
 """
+
 from __future__ import annotations
 
 import logging
@@ -27,7 +28,9 @@ from app.models import IngestionAnomaly, League, StatSnapshot
 
 logger = logging.getLogger(__name__)
 
-_AUX_KEYS_PREFIX = "_"  # raw_stats keys starting with '_' are sample-floor counts, not metrics
+_AUX_KEYS_PREFIX = (
+    "_"  # raw_stats keys starting with '_' are sample-floor counts, not metrics
+)
 
 
 def check_snapshot_bounds(db: Session, snapshot_date: datetime | None = None) -> int:
@@ -57,9 +60,17 @@ def check_snapshot_bounds(db: Session, snapshot_date: datetime | None = None) ->
         # but a wholesale rename would otherwise pass unnoticed). Partial
         # coverage is NOT flagged here — only the complete-empty case.
         if snap.source == "fbref" and snap.minutes_played > 0:
-            metric_keys = [k for k in (snap.raw_stats or {}) if not k.startswith(_AUX_KEYS_PREFIX)]
+            metric_keys = [
+                k for k in (snap.raw_stats or {}) if not k.startswith(_AUX_KEYS_PREFIX)
+            ]
             if not metric_keys:
-                violations.append(("raw_stats", "<empty>", "at least one registry metric for a played fbref snapshot"))
+                violations.append(
+                    (
+                        "raw_stats",
+                        "<empty>",
+                        "at least one registry metric for a played fbref snapshot",
+                    )
+                )
 
         for key, value in (snap.raw_stats or {}).items():
             if key.startswith(_AUX_KEYS_PREFIX):
@@ -136,7 +147,9 @@ def cross_source_spot_check(
             if abs(a - b) > tol["absolute_tolerance"] and (
                 abs(a - b) / max(abs(a), abs(b), 1e-9) > tol["relative_tolerance"]
             ):
-                if _has_unresolved(db, None, f"cross_source:{mid}", player_id=player_id):
+                if _has_unresolved(
+                    db, None, f"cross_source:{mid}", player_id=player_id
+                ):
                     continue
                 db.add(
                     IngestionAnomaly(
@@ -155,7 +168,12 @@ def cross_source_spot_check(
     return flagged
 
 
-def _has_unresolved(db: Session, stat_snapshot_id: int | None, field_name: str, player_id: int | None = None) -> bool:
+def _has_unresolved(
+    db: Session,
+    stat_snapshot_id: int | None,
+    field_name: str,
+    player_id: int | None = None,
+) -> bool:
     q = db.query(IngestionAnomaly).filter(
         IngestionAnomaly.resolved.is_(False),
         IngestionAnomaly.stat_snapshot_id == stat_snapshot_id,

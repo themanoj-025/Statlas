@@ -4,6 +4,7 @@ The deliberately constructed gap case (a player missing one scrape date while
 their league calendar has it) is the quality-gate test: the trend must mark
 the break (`gap_after` + a `gaps` span) — never interpolate through it.
 """
+
 from __future__ import annotations
 
 from datetime import datetime, timedelta, timezone
@@ -37,15 +38,27 @@ def _snap(db, player, team, date, raw, minutes=1000, status="ingested"):
 @pytest.fixture()
 def trend_env(db):
     """A league + two teams + two players, then helper builders."""
-    league = League(slug="premier-league", name="Premier League", country="England", tier="tier_1")
+    league = League(
+        slug="premier-league", name="Premier League", country="England", tier="tier_1"
+    )
     db.add(league)
     db.flush()
     t_a = Team(name="Manchester City", league_id=league.id, external_ids={})
     t_b = Team(name="Liverpool", league_id=league.id, external_ids={})
     db.add_all([t_a, t_b])
     db.flush()
-    p_a = Player(canonical_name="Player A", position_group="ST", current_team_id=t_a.id, external_ids={"fbref": "a"})
-    p_b = Player(canonical_name="Player B", position_group="ST", current_team_id=t_b.id, external_ids={"fbref": "b"})
+    p_a = Player(
+        canonical_name="Player A",
+        position_group="ST",
+        current_team_id=t_a.id,
+        external_ids={"fbref": "a"},
+    )
+    p_b = Player(
+        canonical_name="Player B",
+        position_group="ST",
+        current_team_id=t_b.id,
+        external_ids={"fbref": "b"},
+    )
     db.add_all([p_a, p_b])
     db.commit()
     p_a.league_id = league.id  # convenience for the snapshot helper

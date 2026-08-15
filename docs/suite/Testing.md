@@ -11,7 +11,7 @@
 
 ```mermaid
 graph TD
-    E2E[E2E — Playwright<br/>9 tests: radar gen, search/filter,<br/>axe, breakpoints, SSR smoke] 
+    E2E[E2E — Playwright<br/>9 tests: radar gen, search/filter,<br/>axe, breakpoints, SSR smoke]
     INT[Integration — pytest<br/>pipeline end-to-end, idempotency,<br/>query-layer contracts]
     UNIT[Unit — pytest 104 + node 12<br/>scraper parsers (fixtures), math,<br/>lib functions (share/chartSvg/format)]
     E2E --> INT --> UNIT

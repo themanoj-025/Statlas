@@ -64,9 +64,7 @@ def list_api_keys(db: Session, user_id: int) -> list[dict]:
 
 def revoke_api_key(db: Session, user_id: int, key_id: int) -> bool:
     row = (
-        db.query(ApiKey)
-        .filter(ApiKey.id == key_id, ApiKey.user_id == user_id)
-        .first()
+        db.query(ApiKey).filter(ApiKey.id == key_id, ApiKey.user_id == user_id).first()
     )
     if row is None:
         return False
@@ -75,13 +73,13 @@ def revoke_api_key(db: Session, user_id: int, key_id: int) -> bool:
     return True
 
 
-def rotate_api_key(db: Session, user: User, key_id: int, new_name: str | None = None) -> dict | None:
+def rotate_api_key(
+    db: Session, user: User, key_id: int, new_name: str | None = None
+) -> dict | None:
     """Rotate: revoke the old key, mint a new one. Returns None if the old key
     was not owned by the user. The new raw key is returned exactly once."""
     old = (
-        db.query(ApiKey)
-        .filter(ApiKey.id == key_id, ApiKey.user_id == user.id)
-        .first()
+        db.query(ApiKey).filter(ApiKey.id == key_id, ApiKey.user_id == user.id).first()
     )
     if old is None:
         return None
@@ -95,11 +93,7 @@ def authenticate_api_key(db: Session, token: str | None) -> tuple[User, str] | N
     """Resolve a bearer token to (user, plan) or None if invalid/revoked."""
     if not token:
         return None
-    row = (
-        db.query(ApiKey)
-        .filter(ApiKey.key_hash == hash_token(token))
-        .first()
-    )
+    row = db.query(ApiKey).filter(ApiKey.key_hash == hash_token(token)).first()
     if row is None or row.revoked_at is not None:
         return None
     user = db.get(User, row.user_id)

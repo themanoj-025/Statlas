@@ -4,6 +4,7 @@ Constitution §3 + Never-List #8: a screen may only claim coverage the matrix
 contains. The UI calls these functions before rendering shot maps, per-league
 tables, or any coverage-dependent feature.
 """
+
 from __future__ import annotations
 
 from typing import Any
@@ -13,10 +14,14 @@ from sqlalchemy.orm import Session
 from app.models import DataCoverage
 
 
-def get_data_coverage(db: Session, league_id: int | None = None) -> list[dict[str, Any]]:
+def get_data_coverage(
+    db: Session, league_id: int | None = None
+) -> list[dict[str, Any]]:
     """Coverage rows, optionally filtered by league. Each row states source,
     identifier, seasons, last successful scrape, and status."""
-    query = db.query(DataCoverage).order_by(DataCoverage.source, DataCoverage.source_identifier)
+    query = db.query(DataCoverage).order_by(
+        DataCoverage.source, DataCoverage.source_identifier
+    )
     if league_id is not None:
         query = query.filter(DataCoverage.league_id == league_id)
     return [

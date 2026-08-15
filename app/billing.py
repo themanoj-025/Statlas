@@ -46,6 +46,7 @@ class WebhookVerificationError(RuntimeError):
 # Stripe client (lazy, key-gated)
 # ---------------------------------------------------------------------------
 
+
 def _stripe_client():
     """Import + configure the Stripe SDK. Raises BillingNotConfiguredError
     when no secret key is present (never a silent no-op)."""
@@ -68,7 +69,10 @@ def billing_configured() -> bool:
 # Checkout (A2)
 # ---------------------------------------------------------------------------
 
-def create_checkout_session(db: Session, user: User, *, success_url: str, cancel_url: str) -> dict[str, Any]:
+
+def create_checkout_session(
+    db: Session, user: User, *, success_url: str, cancel_url: str
+) -> dict[str, Any]:
     """Create a hosted Checkout session for the Pro plan. Requires the Stripe
     price id from pricing.json/setup (docs/billing/pricing-config.md)."""
     settings = get_settings()
@@ -84,10 +88,17 @@ def create_checkout_session(db: Session, user: User, *, success_url: str, cancel
     sub = _current_sub(db, user.id)
     customer_id = sub.stripe_customer_id if sub else None
     if not customer_id:
-        customer = stripe.Customer.create(email=user.email, metadata={"statlas_user_id": str(user.id)})
+        customer = stripe.Customer.create(
+            email=user.email, metadata={"statlas_user_id": str(user.id)}
+        )
         customer_id = customer["id"]
         if sub is None:
-            sub = Subscription(user_id=user.id, plan="pro", stripe_customer_id=customer_id, status="incomplete")
+            sub = Subscription(
+                user_id=user.id,
+                plan="pro",
+                stripe_customer_id=customer_id,
+                status="incomplete",
+            )
             db.add(sub)
         else:
             sub.stripe_customer_id = customer_id
@@ -105,7 +116,9 @@ def create_checkout_session(db: Session, user: User, *, success_url: str, cancel
     return {"url": session["url"], "session_id": session["id"]}
 
 
-def create_billing_portal_session(db: Session, user: User, *, return_url: str) -> dict[str, Any]:
+def create_billing_portal_session(
+    db: Session, user: User, *, return_url: str
+) -> dict[str, Any]:
     """Stripe hosted Billing Portal (A5) — manage card, invoices, cancellation."""
     if not get_settings().billing_portal_enabled:
         raise BillingNotConfiguredError(
@@ -115,7 +128,9 @@ def create_billing_portal_session(db: Session, user: User, *, return_url: str) -
     sub = _current_sub(db, user.id)
     customer_id = sub.stripe_customer_id if sub else None
     if not customer_id:
-        raise BillingNotConfiguredError("No Stripe customer exists for this account yet.")
+        raise BillingNotConfiguredError(
+            "No Stripe customer exists for this account yet."
+        )
     session = stripe.billing_portal.Session.create(
         customer=customer_id,
         return_url=return_url,
@@ -135,6 +150,7 @@ def _current_sub(db: Session, user_id: int) -> Subscription | None:
 # ---------------------------------------------------------------------------
 # Webhooks (A3) — verify, idempotent, logged, loud on failure
 # ---------------------------------------------------------------------------
+
 
 def verify_webhook_signature(payload: bytes, sig_header: str | None) -> dict[str, Any]:
     """Verify the Stripe signature; returns the event dict. Rejects anything
@@ -169,7 +185,9 @@ def process_webhook(db: Session, event: dict[str, Any]) -> dict[str, Any]:
 
     existing = db.query(WebhookEvent).filter(WebhookEvent.event_id == event_id).first()
     if existing is not None:
-        logger.warning("webhook replay: event %s (%s) already processed", event_id, event_type)
+        logger.warning(
+            "webhook replay: event %s (%s) already processed", event_id, event_type
+        )
         return {"processed": False, "duplicate": True, "event_id": event_id}
 
     sub_id = event.get("data", {}).get("object", {}).get("subscription") or event.get(
@@ -187,7 +205,9 @@ def process_webhook(db: Session, event: dict[str, Any]) -> dict[str, Any]:
         _dispatch(db, event, row)
     except Exception:
         db.rollback()
-        logger.exception("webhook processing failed for event %s (%s)", event_id, event_type)
+        logger.exception(
+            "webhook processing failed for event %s (%s)", event_id, event_type
+        )
         raise
     db.commit()
     logger.info("webhook processed: %s (%s) for sub %s", event_id, event_type, sub_id)
@@ -203,7 +223,10 @@ def _dispatch(db: Session, event: dict[str, Any], row: WebhookEvent) -> None:
         "customer.subscription.updated": _on_subscription_updated,
     }.get(str(event.get("type", "")))
     if handler is None:
-        logger.info("webhook type %s has no handler — recorded, not processed", event.get("type"))
+        logger.info(
+            "webhook type %s has no handler — recorded, not processed",
+            event.get("type"),
+        )
         return
     handler(db, data, row)
 
@@ -228,16 +251,22 @@ def _resolve_user(db: Session, data: dict[str, Any], row: WebhookEvent) -> User 
     return None
 
 
-def _on_checkout_completed(db: Session, data: dict[str, Any], row: WebhookEvent) -> None:
+def _on_checkout_completed(
+    db: Session, data: dict[str, Any], row: WebhookEvent
+) -> None:
     """checkout.session.completed — grant access immediately (A2 optimistic
     path is confirmed here seconds later; idempotency prevents double-grant)."""
     user = _resolve_user(db, data, row)
     if user is None:
         logger.error("checkout.session.completed for unknown user: %s", data.get("id"))
-        raise ValueError("checkout.session.completed references an unknown Statlas user")
+        raise ValueError(
+            "checkout.session.completed references an unknown Statlas user"
+        )
     sub_id = data.get("subscription")
     if not sub_id:
-        logger.error("checkout.session.completed without subscription id: %s", data.get("id"))
+        logger.error(
+            "checkout.session.completed without subscription id: %s", data.get("id")
+        )
         raise ValueError("checkout.session.completed missing subscription id")
     sub = _current_sub(db, user.id)
     if sub is None:
@@ -273,7 +302,9 @@ def _on_payment_failed(db: Session, data: dict[str, Any], row: WebhookEvent) -> 
     row.user_id = sub.user_id
 
 
-def _on_subscription_deleted(db: Session, data: dict[str, Any], row: WebhookEvent) -> None:
+def _on_subscription_deleted(
+    db: Session, data: dict[str, Any], row: WebhookEvent
+) -> None:
     """customer.subscription.deleted — revoke with end-of-period retention:
     has_pro_access keeps granting until current_period_end, then revoked.
     (A5 documents this exact behaviour to users.)"""
@@ -296,7 +327,9 @@ def _on_subscription_deleted(db: Session, data: dict[str, Any], row: WebhookEven
         user.plan = "free"
 
 
-def _on_subscription_updated(db: Session, data: dict[str, Any], row: WebhookEvent) -> None:
+def _on_subscription_updated(
+    db: Session, data: dict[str, Any], row: WebhookEvent
+) -> None:
     """customer.subscription.updated — plan/status changes (e.g., a failed
     renewal that Stripe marks past_due at the period boundary, or an upgrade)."""
     sub_id = data.get("id")
@@ -312,7 +345,11 @@ def _on_subscription_updated(db: Session, data: dict[str, Any], row: WebhookEven
     status = data.get("status")
     period_end = data.get("current_period_end")
     if status:
-        sub.status = status if status in ("active", "trialing", "past_due", "canceled", "incomplete") else "incomplete"
+        sub.status = (
+            status
+            if status in ("active", "trialing", "past_due", "canceled", "incomplete")
+            else "incomplete"
+        )
     if period_end:
         sub.current_period_end = datetime.fromtimestamp(period_end, tz=timezone.utc)
     sub.updated_at = datetime.now(timezone.utc)

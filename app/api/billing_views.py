@@ -36,7 +36,9 @@ class LoginBody(BaseModel):
     password: str
 
 
-def _set_session_cookie(response: Response, raw_token: str, expires_at: datetime) -> None:
+def _set_session_cookie(
+    response: Response, raw_token: str, expires_at: datetime
+) -> None:
     settings = get_settings()
     response.set_cookie(
         key=settings.session_cookie_name,
@@ -65,12 +67,15 @@ def _require_user(request: Request) -> User:
 # Auth
 # ---------------------------------------------------------------------------
 
+
 @router.post("/auth/register", status_code=201)
 def register(body: RegisterBody, response: Response):
     with session_scope() as db:
         existing = db.query(User).filter(User.email == body.email.lower()).first()
         if existing is not None:
-            raise HTTPException(status_code=409, detail="An account with that email already exists.")
+            raise HTTPException(
+                status_code=409, detail="An account with that email already exists."
+            )
         user = User(
             email=body.email.lower(),
             password_hash=auth.hash_password(body.password),
@@ -115,6 +120,7 @@ def me(request: Request):
 # Billing — checkout / portal / webhook / status
 # ---------------------------------------------------------------------------
 
+
 class CheckoutBody(BaseModel):
     success_url: str
     cancel_url: str
@@ -138,7 +144,9 @@ def billing_portal(request: Request, body: dict[str, str] | None = None):
     return_url = (body or {}).get("return_url") or "/account"
     try:
         with session_scope() as db:
-            return billing.create_billing_portal_session(db, user, return_url=return_url)
+            return billing.create_billing_portal_session(
+                db, user, return_url=return_url
+            )
     except billing.BillingNotConfiguredError as exc:
         raise HTTPException(status_code=503, detail=str(exc)) from exc
 
@@ -171,8 +179,16 @@ def subscription_status(request: Request):
             "has_pro": auth.has_pro_access(db, user.id),
             "plan": auth.effective_plan(db, user.id),
             "status": sub.status if sub else None,
-            "current_period_end": sub.current_period_end.isoformat() if sub and sub.current_period_end else None,
-            "grace_period_end": sub.grace_period_end.isoformat() if sub and sub.grace_period_end else None,
+            "current_period_end": (
+                sub.current_period_end.isoformat()
+                if sub and sub.current_period_end
+                else None
+            ),
+            "grace_period_end": (
+                sub.grace_period_end.isoformat()
+                if sub and sub.grace_period_end
+                else None
+            ),
             "billing_configured": billing.billing_configured(),
             "portal_enabled": get_settings().billing_portal_enabled,
         }

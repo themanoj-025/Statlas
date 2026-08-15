@@ -1,6 +1,7 @@
 """StatsBomb Open Data sync unit tests — fixture JSON via an injected fetcher
 (no network). Asserts event rows are stored and data_coverage is updated so the
 UI can never imply coverage that was not actually loaded."""
+
 from __future__ import annotations
 
 import json
@@ -14,15 +15,25 @@ FIXTURES = fixtures_dir()
 def _fixture_fetcher() -> dict[str, str]:
     """A URL->body map exercising the real URL patterns."""
     return {
-        "competitions.json": FIXTURES.joinpath("statsbomb_competitions.json").read_text(encoding="utf-8"),
-        "matches/123/2024.json": FIXTURES.joinpath("statsbomb_matches.json").read_text(encoding="utf-8"),
-        "events/10001.json": FIXTURES.joinpath("statsbomb_events.json").read_text(encoding="utf-8"),
+        "competitions.json": FIXTURES.joinpath("statsbomb_competitions.json").read_text(
+            encoding="utf-8"
+        ),
+        "matches/123/2024.json": FIXTURES.joinpath("statsbomb_matches.json").read_text(
+            encoding="utf-8"
+        ),
+        "events/10001.json": FIXTURES.joinpath("statsbomb_events.json").read_text(
+            encoding="utf-8"
+        ),
     }
 
 
 def test_build_event_rows_pure():
-    events = json.loads(FIXTURES.joinpath("statsbomb_events.json").read_text(encoding="utf-8"))
-    rows = StatsBombOpenDataSource.build_event_rows(events, match_id=10001, competition_id=123, season="2024/2025")
+    events = json.loads(
+        FIXTURES.joinpath("statsbomb_events.json").read_text(encoding="utf-8")
+    )
+    rows = StatsBombOpenDataSource.build_event_rows(
+        events, match_id=10001, competition_id=123, season="2024/2025"
+    )
     assert len(rows) == 2
     assert rows[0]["event_type"] == "Shot"
     assert rows[0]["outcome"] == "Goal"

@@ -36,7 +36,7 @@ Design tokens are the single source of visual truth: components reference `var(-
 ## 2. Brand & Visual Identity
 
 - **Tone of voice:** confident, precise, understated. Copy states numbers and their limits ("ranked p37 among CMs in the Premier League"), never hype ("unlock your edge!").
-- **Imagery:** no stock photos. Player/club photos are honest placeholders (initials block) until licensed assets exist (Constitution imagery rule). Logo: `<!-- TODO: add assets/logo.svg -->` — wordmark, pitch-green on transparent (README).
+- **Imagery:** no stock photos. Player/club photos are honest placeholders (initials block) until licensed assets exist (Constitution imagery rule). Logo: `assets/logo.svg` — wordmark in pitch green (#1E7A4C) with amber (#A85F0E) accent, transparent background (README).
 - **Colors grounded in pitch: green + chalk + one amber accent.** No AI-app indigo/violet (Phase 0 mandate).
 
 ## 3. Color System

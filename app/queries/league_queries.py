@@ -7,6 +7,7 @@
   flagged values are never silently published, Constitution §3).
 - get_league_teams: team list for a league (roster links).
 """
+
 from __future__ import annotations
 
 from typing import Any
@@ -47,7 +48,9 @@ def get_league_catalog(db: Session) -> list[dict[str, Any]]:
                 "country": cfg["country"],
                 "tier": cfg["tier"],
                 "tier_label": _tier_label(cfg["tier"]),
-                "has_fbref_coverage": any(r.source == "fbref" and r.status == "active" for r in rows),
+                "has_fbref_coverage": any(
+                    r.source == "fbref" and r.status == "active" for r in rows
+                ),
                 "seasons_available": sorted(
                     {s for r in rows for s in (r.seasons_available or [])}
                 ),
@@ -132,8 +135,15 @@ def get_league_stats_table(
         return []
 
     player_ids = list(latest.keys())
-    players = {p.id: p for p in db.query(Player).filter(Player.id.in_(player_ids)).all()}
-    teams = {t.id: t for t in db.query(Team).filter(Team.id.in_([s.team_id for s in latest.values() if s.team_id])).all()}
+    players = {
+        p.id: p for p in db.query(Player).filter(Player.id.in_(player_ids)).all()
+    }
+    teams = {
+        t.id: t
+        for t in db.query(Team)
+        .filter(Team.id.in_([s.team_id for s in latest.values() if s.team_id]))
+        .all()
+    }
 
     entries: list[dict[str, Any]] = []
     for pid, snap in latest.items():
@@ -186,7 +196,9 @@ def _floor_met(raw_stats: dict[str, float], minutes: float, metric: str) -> bool
     from app.config import load_registry as _lr
 
     floor = _lr()["metrics"][metric].get("display_floor")
-    minutes_fail = floor is not None and floor["type"] == "minutes" and minutes < floor["value"]
+    minutes_fail = (
+        floor is not None and floor["type"] == "minutes" and minutes < floor["value"]
+    )
     counter = REGISTRY_FLOOR_KEYS.get(metric)
     counter_fail = counter is not None and raw_stats.get(counter[0], 0) < counter[1]
     return not (minutes_fail or counter_fail)

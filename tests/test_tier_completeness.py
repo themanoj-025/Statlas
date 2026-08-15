@@ -17,6 +17,7 @@ Two scenarios the Phase 1 fixture tests could not cover:
    as arbiter). With require_tier_completeness=True, a tier with a missing
    league is withheld entirely — no partially-populated pool is ever ranked.
 """
+
 from __future__ import annotations
 
 from app.config import load_tiers
@@ -31,7 +32,9 @@ def _seed_league(db, slug, name, country, tier) -> League:
     return league
 
 
-def _seed_player(db, league, team_name, name, group, gls, minutes=1000) -> tuple[Player, Team]:
+def _seed_player(
+    db, league, team_name, name, group, gls, minutes=1000
+) -> tuple[Player, Team]:
     team = db.query(Team).filter_by(name=team_name, league_id=league.id).first()
     if team is None:
         team = Team(name=team_name, league_id=league.id, external_ids={})
@@ -90,7 +93,9 @@ def _cover_league(db, league: League, season: str = "2025-26") -> None:
 def _seed_st_cohort(db, league: League, prefix: str, n: int = 5) -> list[Player]:
     players = []
     for i in range(n):
-        p, _ = _seed_player(db, league, f"{prefix} FC", f"{prefix} Player {i}", "ST", gls=0.2 + 0.15 * i)
+        p, _ = _seed_player(
+            db, league, f"{prefix} FC", f"{prefix} Player {i}", "ST", gls=0.2 + 0.15 * i
+        )
         players.append(p)
     return players
 
@@ -114,10 +119,18 @@ def test_cross_tier_transfer_same_season_no_collision(db, small_pool):
     team2 = db.query(Team).filter_by(name="CH FC", league_id=t2.id).first()
     transfer_player = db.get(Player, transfer.id)
     raw = {
-        "si_gls_p90": 0.9, "si_dis_p90": 0.5, "si_cmp_pct": 80.0,
-        "si_prgp_p90": 1.0, "si_prgc_p90": 1.0, "si_xag_p90": 0.1,
-        "si_kp_p90": 0.5, "si_tkl_p90": 0.5, "si_int_p90": 0.5,
-        "si_press_p90": 5.0, "si_sh_p90": 1.0, "si_xg_p90": 0.81,
+        "si_gls_p90": 0.9,
+        "si_dis_p90": 0.5,
+        "si_cmp_pct": 80.0,
+        "si_prgp_p90": 1.0,
+        "si_prgc_p90": 1.0,
+        "si_xag_p90": 0.1,
+        "si_kp_p90": 0.5,
+        "si_tkl_p90": 0.5,
+        "si_int_p90": 0.5,
+        "si_press_p90": 5.0,
+        "si_sh_p90": 1.0,
+        "si_xg_p90": 0.81,
         "_cmp_attempts": 300,
     }
     db.add(
@@ -137,7 +150,10 @@ def test_cross_tier_transfer_same_season_no_collision(db, small_pool):
     db.commit()
     t2_snapshot = (
         db.query(StatSnapshot)
-        .filter(StatSnapshot.player_id == transfer_player.id, StatSnapshot.league_id == t2.id)
+        .filter(
+            StatSnapshot.player_id == transfer_player.id,
+            StatSnapshot.league_id == t2.id,
+        )
         .one()
     )
 
@@ -193,7 +209,9 @@ def test_tier_completeness_gate_passes_when_tier_complete(db, small_pool):
     tiers = load_tiers()
     # Use tier_3 (5 leagues) but cover them ALL — build players in one league
     # and coverage rows for every tier_3 league.
-    t3_leagues = [slug for slug, cfg in tiers["leagues"].items() if cfg["tier"] == "tier_3"]
+    t3_leagues = [
+        slug for slug, cfg in tiers["leagues"].items() if cfg["tier"] == "tier_3"
+    ]
     assert len(t3_leagues) >= 5
     main = None
     for slug in t3_leagues:

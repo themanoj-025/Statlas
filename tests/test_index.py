@@ -1,6 +1,7 @@
 """Statlas Index unit tests — verifies the weighted-average formula against
 hand calculations and against the worked example in methodology.md §7
 (expected index 72.8 for the documented percentile profile)."""
+
 from __future__ import annotations
 
 from app.compute.index import compute_index, verify_index_consistency
@@ -10,10 +11,18 @@ from tests.conftest import SNAPSHOT_DATE
 
 # The methodology.md §7 worked example profile (ST weights).
 WORKED_EXAMPLE = {
-    "si_gls_p90": 88, "si_xg_p90": 82, "si_sh_p90": 71,
-    "si_prgp_p90": 55, "si_prgc_p90": 62, "si_xag_p90": 74,
-    "si_kp_p90": 68, "si_tkl_p90": 34, "si_int_p90": 41,
-    "si_press_p90": 47, "si_cmp_pct": 39, "si_dis_p90": 45,
+    "si_gls_p90": 88,
+    "si_xg_p90": 82,
+    "si_sh_p90": 71,
+    "si_prgp_p90": 55,
+    "si_prgc_p90": 62,
+    "si_xag_p90": 74,
+    "si_kp_p90": 68,
+    "si_tkl_p90": 34,
+    "si_int_p90": 41,
+    "si_press_p90": 47,
+    "si_cmp_pct": 39,
+    "si_dis_p90": 45,
 }
 
 
@@ -29,8 +38,14 @@ def test_missing_metric_renormalises_weights():
     (weight sum .87). Score = sum(w/present_sum * p) = 67.23 / 0.87 = 77.28."""
     registry = load_registry()
     partial = {
-        "si_gls_p90": 88, "si_xg_p90": 82, "si_sh_p90": 71, "si_prgp_p90": 55,
-        "si_prgc_p90": 62, "si_xag_p90": 74, "si_kp_p90": 68, "si_tkl_p90": 34,
+        "si_gls_p90": 88,
+        "si_xg_p90": 82,
+        "si_sh_p90": 71,
+        "si_prgp_p90": 55,
+        "si_prgc_p90": 62,
+        "si_xag_p90": 74,
+        "si_kp_p90": 68,
+        "si_tkl_p90": 34,
     }
     score = compute_index(partial, "ST", registry)
     assert score == 77.28
@@ -54,7 +69,9 @@ def test_gk_uses_gk_weights():
 def test_every_position_weight_row_sums_to_one():
     registry = load_registry()
     for group, weights in registry["position_weights"].items():
-        assert abs(sum(weights.values()) - 1.0) < 1e-9, f"{group} weights do not sum to 1.0"
+        assert (
+            abs(sum(weights.values()) - 1.0) < 1e-9
+        ), f"{group} weights do not sum to 1.0"
 
 
 def test_verify_index_consistency_flags_discrepancies(db):
@@ -68,8 +85,14 @@ def test_verify_index_consistency_flags_discrepancies(db):
     db.add(player)
     db.flush()
     snap = StatSnapshot(
-        player_id=player.id, team_id=team.id, league_id=1, season="2025-26",
-        scrape_date=SNAPSHOT_DATE, source="fbref", raw_stats={}, minutes_played=1000,
+        player_id=player.id,
+        team_id=team.id,
+        league_id=1,
+        season="2025-26",
+        scrape_date=SNAPSHOT_DATE,
+        source="fbref",
+        raw_stats={},
+        minutes_played=1000,
         matches_played=10,
     )
     db.add(snap)
@@ -79,17 +102,26 @@ def test_verify_index_consistency_flags_discrepancies(db):
     for mid, value in WORKED_EXAMPLE.items():
         db.add(
             PercentileSnapshot(
-                stat_snapshot_id=snap.id, computed_date=SNAPSHOT_DATE,
-                position_group="ST", league_tier="tier_1", metric_name=mid,
-                percentile_value=value, index_score=None, is_published=False,
+                stat_snapshot_id=snap.id,
+                computed_date=SNAPSHOT_DATE,
+                position_group="ST",
+                league_tier="tier_1",
+                metric_name=mid,
+                percentile_value=value,
+                index_score=None,
+                is_published=False,
             )
         )
     db.add(
         PercentileSnapshot(
-            stat_snapshot_id=snap.id, computed_date=SNAPSHOT_DATE,
-            position_group="ST", league_tier="tier_1",
+            stat_snapshot_id=snap.id,
+            computed_date=SNAPSHOT_DATE,
+            position_group="ST",
+            league_tier="tier_1",
             metric_name=registry["index_metric_id"],
-            percentile_value=None, index_score=72.8, is_published=False,
+            percentile_value=None,
+            index_score=72.8,
+            is_published=False,
         )
     )
     db.commit()

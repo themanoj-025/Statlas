@@ -15,6 +15,7 @@ the same insert-only pass. This module owns the pure calculation and a verifier
 that re-derives stored index rows to prove the database matches the formula —
 the implementation of "methodology-as-code cannot drift from the numbers".
 """
+
 from __future__ import annotations
 
 import logging
@@ -53,7 +54,9 @@ def verify_index_consistency(
     """
     registry = load_registry()
     index_id = registry["index_metric_id"]
-    rows = db.query(PercentileSnapshot).filter(PercentileSnapshot.metric_name == index_id)
+    rows = db.query(PercentileSnapshot).filter(
+        PercentileSnapshot.metric_name == index_id
+    )
     if computed_date is not None:
         rows = rows.filter(PercentileSnapshot.computed_date == computed_date)
 
@@ -70,7 +73,11 @@ def verify_index_consistency(
         )
         percentiles = {m.metric_name: m.percentile_value for m in metric_rows}
         derived = compute_index(percentiles, index_row.position_group, registry)
-        if derived is None or index_row.index_score is None or abs(derived - index_row.index_score) > 0.01:
+        if (
+            derived is None
+            or index_row.index_score is None
+            or abs(derived - index_row.index_score) > 0.01
+        ):
             discrepancies.append(
                 {
                     "percentile_snapshot_id": index_row.id,

@@ -13,6 +13,7 @@ using the SAME non-destructive rules as reconciliation.py:
 It runs right after the statsbomb sync in run_weekly_refresh and is idempotent:
 already-linked events are skipped.
 """
+
 from __future__ import annotations
 
 import logging
@@ -44,11 +45,7 @@ def link_match_events(db: Session) -> EventLinkReport:
     """
     report = EventLinkReport()
 
-    unmatched = (
-        db.query(MatchEvent)
-        .filter(MatchEvent.player_id.is_(None))
-        .all()
-    )
+    unmatched = db.query(MatchEvent).filter(MatchEvent.player_id.is_(None)).all()
     if not unmatched:
         return report
     report.events_total = len(unmatched)
@@ -56,9 +53,13 @@ def link_match_events(db: Session) -> EventLinkReport:
     # Name indexes built ONCE per run (O(1) lookups per event).
     by_norm_name: dict[str, list[Player]] = {}
     for player in db.query(Player).all():
-        by_norm_name.setdefault(strip_suffixes(player.canonical_name), []).append(player)
+        by_norm_name.setdefault(strip_suffixes(player.canonical_name), []).append(
+            player
+        )
     alias_names: dict[str, Player] = {}
-    for alias in db.query(PlayerNameAlias).filter(PlayerNameAlias.source == "statsbomb").all():
+    for alias in (
+        db.query(PlayerNameAlias).filter(PlayerNameAlias.source == "statsbomb").all()
+    ):
         alias_names.setdefault(strip_suffixes(alias.source_name_string), alias.player)
 
     for event in unmatched:

@@ -26,6 +26,7 @@ combined-header candidate lists in the metric registry against the live
 column structure. FBref actively blocks scrapers; a real run must go through
 the declared limiter and cache.
 """
+
 from __future__ import annotations
 
 import logging
@@ -97,6 +98,7 @@ def fbref_table_id(table_name: str) -> str:
     """Map a registry table name to the real FBref table id."""
     return FBREF_TABLE_IDS.get(table_name, f"stats_{table_name}")
 
+
 # Fallback Pos-code -> position group mapping (methodology.md §3).
 POSITION_GROUP_MAP = {
     "GK": "GK",
@@ -132,7 +134,9 @@ def _expand_colspans(tr: Any) -> list[str]:
     return out
 
 
-def parse_fbref_table(soup: BeautifulSoup, table_id: str) -> list[dict[str, Any]] | None:
+def parse_fbref_table(
+    soup: BeautifulSoup, table_id: str
+) -> list[dict[str, Any]] | None:
     """Parse one FBref table into a list of row dicts with combined header names.
 
     Combined names are "<group> <column>" so duplicates across sections are
@@ -244,11 +248,16 @@ class FBrefSource(StatsSource):
         )
 
     # -- Main interface ---------------------------------------------------
-    def fetch_league_stats(self, league_slug: str, season: str) -> list[RawPlayerStatRecord]:
+    def fetch_league_stats(
+        self, league_slug: str, season: str
+    ) -> list[RawPlayerStatRecord]:
         url = self.build_url(league_slug, season)
         logger.info("fetching FBref %s %s", league_slug, season)
         html = fetch_with_retry(
-            url, limiter=self.limiter, cache=self.cache, headers={"User-Agent": get_settings().user_agent}
+            url,
+            limiter=self.limiter,
+            cache=self.cache,
+            headers={"User-Agent": get_settings().user_agent},
         )
         soup = BeautifulSoup(html, "html.parser")
 
@@ -303,7 +312,9 @@ class FBrefSource(StatsSource):
             matches = _num(pt or {}, ["Playing Time MP", "MP"]) if pt else None
             if minutes is None:
                 logger.warning(
-                    "no minutes for %s (%s) — skipping; possible schema change", name, team
+                    "no minutes for %s (%s) — skipping; possible schema change",
+                    name,
+                    team,
                 )
                 continue
 
@@ -311,12 +322,20 @@ class FBrefSource(StatsSource):
             position_group = POSITION_GROUP_MAP.get(pos_code) if pos_code else None
             if position_group is None:
                 logger.info(
-                    "unmapped position code '%s' for %s -> reconciliation queue", pos_code, name
+                    "unmapped position code '%s' for %s -> reconciliation queue",
+                    pos_code,
+                    name,
                 )
 
             # Raw totals that some metric rates are derived from.
             totals: dict[str, Any] = {"minutes": minutes}
-            totals.update({name_: row.get(name_) for name_ in row if name_ not in ("__fbref_id__",)})
+            totals.update(
+                {
+                    name_: row.get(name_)
+                    for name_ in row
+                    if name_ not in ("__fbref_id__",)
+                }
+            )
 
             raw_stats = self._extract_metrics(row, tables, position_group, minutes)
 
@@ -372,7 +391,11 @@ class FBrefSource(StatsSource):
                         psxg = self._cell(row, tables, spec["inputs"]["psxg"])
                         ga = self._cell(row, tables, spec["inputs"]["ga"])
                         if psxg is not None and ga is not None:
-                            out[mid] = round((psxg - ga) / minutes * 90, 4) if minutes > 0 else 0.0
+                            out[mid] = (
+                                round((psxg - ga) / minutes * 90, 4)
+                                if minutes > 0
+                                else 0.0
+                            )
                     continue
                 fbspec = spec.get("fbref")
                 if fbspec is None:
@@ -380,7 +403,9 @@ class FBrefSource(StatsSource):
                 if kind == "per90":
                     total = self._cell(row, tables, fbspec)
                     if total is not None:
-                        out[mid] = round(total / minutes * 90, 4) if minutes > 0 else 0.0
+                        out[mid] = (
+                            round(total / minutes * 90, 4) if minutes > 0 else 0.0
+                        )
                 elif kind == "rate":
                     val = self._cell(row, tables, fbspec)
                     if val is not None:
@@ -394,7 +419,9 @@ class FBrefSource(StatsSource):
             # floor_column specs share the parent metric's table (they are counts
             # from the same stat table, e.g. pass attempts from the passing table)
             # — they do not carry their own 'table' key.
-            if mid in ("si_cmp_pct", "si_save_pct", "si_cross_pct") and fbspec.get("floor_column"):
+            if mid in ("si_cmp_pct", "si_save_pct", "si_cross_pct") and fbspec.get(
+                "floor_column"
+            ):
                 floor = dict(fbspec["floor_column"])
                 floor.setdefault("table", fbspec.get("table", "standard"))
                 count = self._cell(row, tables, floor)
@@ -437,7 +464,8 @@ class FBrefSource(StatsSource):
         for candidate_row in table_rows:
             # SIM114: both match routes are one condition — id match OR name+team.
             match = (pid and candidate_row.get("__fbref_id__") == pid) or (
-                candidate_row.get("Player") == name and candidate_row.get("Squad") == team
+                candidate_row.get("Player") == name
+                and candidate_row.get("Squad") == team
             )
             if match and self._row_has(candidate_row, candidates):
                 return _num(candidate_row, candidates)

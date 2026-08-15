@@ -7,6 +7,7 @@ parser tries the embedded payload first, then falls back to the API response
 fixture (understat_api_players.json, a labeled sample of the real live
 response), then fails loudly.
 """
+
 from __future__ import annotations
 
 import json
@@ -97,7 +98,9 @@ def test_falls_back_to_players_api_when_payload_dropped():
     assert len(records) == 2
     haaland = next(r for r in records if r.player_name == "Erling Haaland")
     assert haaland.raw_stats["si_gls_p90"] > 0
-    assert haaland.external_ids == {"understat": 8260}  # real id from the live response fixture
+    assert haaland.external_ids == {
+        "understat": 8260
+    }  # real id from the live response fixture
     salah = next(r for r in records if r.player_name == "Mohamed Salah")
     assert salah.raw_stats["si_gls_p90"] == pytest.approx(29 / 3392 * 90, abs=1e-3)
 
@@ -108,7 +111,7 @@ def test_api_fallback_raises_loudly_on_bad_payload():
 
     def fake_fetch(url, *, method="GET", data=None, **kw):
         if method == "POST":
-            return "{\"success\": false}"
+            return '{"success": false}'
         return "<html><body>no payload</body></html>"
 
     source = UnderstatSource(cache=None)

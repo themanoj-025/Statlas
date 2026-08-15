@@ -12,6 +12,7 @@ Metrics absent for either player are excluded from that pair's similarity (a
 missing percentile is N/A, never a zero — Constitution §3 null-vs-zero rule).
 A pair with fewer than `min_shared_metrics` in common is not considered.
 """
+
 from __future__ import annotations
 
 import math
@@ -58,7 +59,9 @@ def _latest_rows_per_player(
     return {pid: (vector, index) for pid, (_, vector, index) in best.items()}
 
 
-def _cosine_similarity(a: dict[str, float], b: dict[str, float], min_shared_metrics: int) -> tuple[float, int]:
+def _cosine_similarity(
+    a: dict[str, float], b: dict[str, float], min_shared_metrics: int
+) -> tuple[float, int]:
     """Cosine over the shared metric subset. Returns (similarity, shared count).
 
     `min_shared_metrics` is passed explicitly (never read from module state) so
@@ -128,7 +131,12 @@ def get_similar_players(
     from app.models import League
     from app.queries.player_queries import player_slug_map
 
-    players = {p.id: p for p in db.query(Player).filter(Player.id.in_([pid for _, pid, _ in top])).all()}
+    players = {
+        p.id: p
+        for p in db.query(Player)
+        .filter(Player.id.in_([pid for _, pid, _ in top]))
+        .all()
+    }
     teams = {t.id: t for t in db.query(Team).all()}
     leagues = {league.id: league for league in db.query(League).all()}
     slugs = {p["player_id"]: p["slug"] for p in player_slug_map(db)}
@@ -154,4 +162,3 @@ def get_similar_players(
             }
         )
     return results
-

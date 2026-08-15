@@ -5,6 +5,7 @@ The `metric` parameter accepts a registry metric id or the index id
 ("si_index"); rows are ordered by the metric's direction so 'lower is better'
 metrics sort ascending (a lower value ranks higher).
 """
+
 from __future__ import annotations
 
 from typing import Any
@@ -56,7 +57,11 @@ def get_leaderboard(
 
     entries = []
     for percentile, snap, player in best.values():
-        value = percentile.index_score if metric == registry["index_metric_id"] else percentile.percentile_value
+        value = (
+            percentile.index_score
+            if metric == registry["index_metric_id"]
+            else percentile.percentile_value
+        )
         if value is None:
             continue
         entries.append(
@@ -87,6 +92,7 @@ def _team_name(db: Session, team_id: int | None) -> str | None:
 # ---------------------------------------------------------------------------
 # Phase 2: filtered + paginated leaderboard (leaderboard page consumption)
 # ---------------------------------------------------------------------------
+
 
 def get_leaderboard_filtered(
     db: Session,
@@ -120,10 +126,15 @@ def get_leaderboard_filtered(
 
     league_filter = None
     if league_slugs:
-        league_ids = [row[0] for row in db.query(League.id).filter(League.slug.in_(league_slugs)).all()]
+        league_ids = [
+            row[0]
+            for row in db.query(League.id).filter(League.slug.in_(league_slugs)).all()
+        ]
         league_filter = StatSnapshot.league_id.in_(league_ids)
     elif tier:
-        league_ids = [row[0] for row in db.query(League.id).filter(League.tier == tier).all()]
+        league_ids = [
+            row[0] for row in db.query(League.id).filter(League.tier == tier).all()
+        ]
         league_filter = StatSnapshot.league_id.in_(league_ids)
 
     query = (
@@ -155,7 +166,11 @@ def get_leaderboard_filtered(
     entries: list[dict[str, Any]] = []
     slugs = {p["player_id"]: p["slug"] for p in player_slug_map(db)}
     for percentile, snap, player, league in best.values():
-        value = percentile.index_score if metric == registry["index_metric_id"] else percentile.percentile_value
+        value = (
+            percentile.index_score
+            if metric == registry["index_metric_id"]
+            else percentile.percentile_value
+        )
         if value is None:
             continue
         entries.append(
@@ -178,9 +193,14 @@ def get_leaderboard_filtered(
     if sort_by == "minutes":
         entries.sort(key=lambda e: e["minutes"], reverse=(sort_dir or "desc") == "desc")
     elif sort_by == "name":
-        entries.sort(key=lambda e: e["name"].lower(), reverse=(sort_dir or "asc") == "desc")
+        entries.sort(
+            key=lambda e: e["name"].lower(), reverse=(sort_dir or "asc") == "desc"
+        )
     elif sort_by == "club":
-        entries.sort(key=lambda e: (e["club"] or "").lower(), reverse=(sort_dir or "asc") == "desc")
+        entries.sort(
+            key=lambda e: (e["club"] or "").lower(),
+            reverse=(sort_dir or "asc") == "desc",
+        )
     else:  # value — direction-aware default
         if sort_dir is not None:
             entries.sort(key=lambda e: e["value"], reverse=sort_dir == "desc")

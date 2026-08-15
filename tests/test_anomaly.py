@@ -1,5 +1,6 @@
 """Anomaly detection tests (Constitution §3: flagged values are never silently
 published)."""
+
 from __future__ import annotations
 
 from app.compute.anomaly_check import (
@@ -26,8 +27,14 @@ def _snapshot(db, name, raw, source="fbref", minutes=1000, league=None):
         db.add(player)
     db.flush()
     snap = StatSnapshot(
-        player_id=player.id, team_id=team.id, league_id=league.id, season="2025-26",
-        scrape_date=SNAPSHOT_DATE, source=source, raw_stats=raw, minutes_played=minutes,
+        player_id=player.id,
+        team_id=team.id,
+        league_id=league.id,
+        season="2025-26",
+        scrape_date=SNAPSHOT_DATE,
+        source=source,
+        raw_stats=raw,
+        minutes_played=minutes,
         matches_played=12,
     )
     db.add(snap)
@@ -87,14 +94,32 @@ def test_resolution_unblocks_player(db, premier_league):
 
 
 def test_cross_source_divergence_is_flagged(db, premier_league):
-    fbref = _snapshot(db, "A", {"si_xg_p90": 0.5, "si_sh_p90": 1.0}, source="fbref", league=premier_league)
-    _snapshot(db, "A", {"si_xg_p90": 3.0, "si_sh_p90": 6.0}, source="understat", league=premier_league)
+    fbref = _snapshot(
+        db,
+        "A",
+        {"si_xg_p90": 0.5, "si_sh_p90": 1.0},
+        source="fbref",
+        league=premier_league,
+    )
+    _snapshot(
+        db,
+        "A",
+        {"si_xg_p90": 3.0, "si_sh_p90": 6.0},
+        source="understat",
+        league=premier_league,
+    )
     flagged = cross_source_spot_check(db, snapshot_date=SNAPSHOT_DATE, sample_size=100)
     # both overlapping metrics (xG 0.5 vs 3.0, shots 1.0 vs 6.0) diverge -> 2 flags
     assert flagged == 2
-    anomalies = db.query(IngestionAnomaly).filter(IngestionAnomaly.field_name.like("cross_source:%")).all()
+    anomalies = (
+        db.query(IngestionAnomaly)
+        .filter(IngestionAnomaly.field_name.like("cross_source:%"))
+        .all()
+    )
     assert len(anomalies) == 2
-    assert all(a.stat_snapshot_id is None for a in anomalies)  # relationship flag, not a row flag
+    assert all(
+        a.stat_snapshot_id is None for a in anomalies
+    )  # relationship flag, not a row flag
     xg_flag = next(a for a in anomalies if a.field_name == "cross_source:si_xg_p90")
     assert "fbref=0.5" in xg_flag.raw_value
 

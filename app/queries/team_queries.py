@@ -8,6 +8,7 @@
   qualifying players (same values the leaderboards show); N is returned so the
   UI can render the "not enough qualifying players" empty state honestly.
 """
+
 from __future__ import annotations
 
 from collections import defaultdict
@@ -60,7 +61,9 @@ def get_team_profile(
     }
 
 
-def _roster(db: Session, team: Team, *, season: str | None = None) -> list[dict[str, Any]]:
+def _roster(
+    db: Session, team: Team, *, season: str | None = None
+) -> list[dict[str, Any]]:
     """Players whose latest snapshot is with this team, with published stats.
 
     Uses the snapshot's team (a player's latest team of record), falling back
@@ -80,7 +83,9 @@ def _roster(db: Session, team: Team, *, season: str | None = None) -> list[dict[
         return []
 
     player_ids = list(latest.keys())
-    players = {p.id: p for p in db.query(Player).filter(Player.id.in_(player_ids)).all()}
+    players = {
+        p.id: p for p in db.query(Player).filter(Player.id.in_(player_ids)).all()
+    }
 
     # Latest published index per player.
     index_id = load_registry()["index_metric_id"]
@@ -98,7 +103,9 @@ def _roster(db: Session, team: Team, *, season: str | None = None) -> list[dict[
     for pct, snap in pct_rows:
         existing = best_index.get(snap.player_id)
         # SIM102: newest-snapshot + present-index is one condition.
-        if (existing is None or snap.scrape_date >= latest[snap.player_id].scrape_date) and pct.index_score is not None:
+        if (
+            existing is None or snap.scrape_date >= latest[snap.player_id].scrape_date
+        ) and pct.index_score is not None:
             best_index[snap.player_id] = pct.index_score
 
     roster: list[dict[str, Any]] = []
@@ -121,7 +128,9 @@ def _roster(db: Session, team: Team, *, season: str | None = None) -> list[dict[
                 "season": snap.season,
             }
         )
-    roster.sort(key=lambda r: (r["index"] is None, -(r["index"] or 0), r["name"].lower()))
+    roster.sort(
+        key=lambda r: (r["index"] is None, -(r["index"] or 0), r["name"].lower())
+    )
     return roster
 
 
@@ -160,4 +169,8 @@ def _squad_radar(db: Session, roster: list[dict[str, Any]]) -> dict[str, Any] | 
         for mid in sums
     ]
     metrics.sort(key=lambda m: m["avg_pct"], reverse=True)
-    return {"snapshot_date": latest_date, "n_players": len(qualified), "metrics": metrics}
+    return {
+        "snapshot_date": latest_date,
+        "n_players": len(qualified),
+        "metrics": metrics,
+    }

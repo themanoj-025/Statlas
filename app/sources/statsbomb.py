@@ -22,6 +22,7 @@ or any analysis derived from it (resolution tracked in
 pre-launch-human-actions.md item 3.1). Full analysis: data-compliance-notes.md
 section 3.
 """
+
 from __future__ import annotations
 
 import json
@@ -61,7 +62,10 @@ def _competition_seasons(competition: dict[str, Any]) -> list[tuple[int, str]]:
     """
     nested = competition.get("seasons")
     if isinstance(nested, list) and nested:
-        return [(int(s["season_id"]), str(s.get("season_name", s["season_id"]))) for s in nested]
+        return [
+            (int(s["season_id"]), str(s.get("season_name", s["season_id"])))
+            for s in nested
+        ]
     season_id = competition.get("season_id")
     if season_id is not None:
         return [(int(season_id), str(competition.get("season_name", season_id)))]
@@ -85,9 +89,14 @@ class StatsBombOpenDataSource:
         # Injecting a fetcher makes the sync testable without network; the
         # default is the shared retry/cache fetch (statsbomb is a public GitHub
         # repo, no rate-limit declaration required beyond basic politeness).
-        self._fetch = fetcher or (lambda url, **kw: fetch_with_retry(
-            url, limiter=_NOOP_LIMITER, cache=self.cache, headers={"User-Agent": get_settings().user_agent}
-        ))
+        self._fetch = fetcher or (
+            lambda url, **kw: fetch_with_retry(
+                url,
+                limiter=_NOOP_LIMITER,
+                cache=self.cache,
+                headers={"User-Agent": get_settings().user_agent},
+            )
+        )
 
     def fetch_competitions(self) -> list[dict[str, Any]]:
         """Raw competitions.json. Note the LIVE shape is a flat list of
@@ -118,9 +127,16 @@ class StatsBombOpenDataSource:
                 continue
             season = str(season)  # StatsBomb names seasons "2024/2025" -> keep as-is
             try:
-                matches = json.loads(self._fetch(matches_url(competition_id, season_id)))
+                matches = json.loads(
+                    self._fetch(matches_url(competition_id, season_id))
+                )
             except SourceError as exc:
-                logger.error("statsbomb matches fetch failed for %s/%s: %s", competition_id, season_id, exc)
+                logger.error(
+                    "statsbomb matches fetch failed for %s/%s: %s",
+                    competition_id,
+                    season_id,
+                    exc,
+                )
                 continue
 
             for match in matches:
@@ -130,9 +146,13 @@ class StatsBombOpenDataSource:
                 try:
                     events = json.loads(self._fetch(events_url(match_id)))
                 except SourceError as exc:
-                    logger.error("statsbomb events fetch failed for match %s: %s", match_id, exc)
+                    logger.error(
+                        "statsbomb events fetch failed for match %s: %s", match_id, exc
+                    )
                     continue
-                inserted = self._insert_events(db, match_id, events, competition_id, season, now)
+                inserted = self._insert_events(
+                    db, match_id, events, competition_id, season, now
+                )
                 loaded_events += inserted
                 loaded_matches += 1
 
@@ -198,7 +218,11 @@ class StatsBombOpenDataSource:
                     "event_type": event_type,
                     "x_coordinate": float(loc[0]) if len(loc) > 0 else None,
                     "y_coordinate": float(loc[1]) if len(loc) > 1 else None,
-                    "minute": float(ev.get("minute")) if ev.get("minute") is not None else None,
+                    "minute": (
+                        float(ev.get("minute"))
+                        if ev.get("minute") is not None
+                        else None
+                    ),
                     "outcome": (ev.get("shot") or {}).get("outcome", {}).get("name"),
                     "source_competition_id": str(competition_id),
                     "season": season,
@@ -261,7 +285,11 @@ class StatsBombOpenDataSource:
     ) -> None:
         from app.models import DataCoverage
 
-        row = db.query(DataCoverage).filter_by(source="statsbomb", source_identifier=source_identifier).first()
+        row = (
+            db.query(DataCoverage)
+            .filter_by(source="statsbomb", source_identifier=source_identifier)
+            .first()
+        )
         if row is None:
             row = DataCoverage(
                 source="statsbomb",
@@ -278,7 +306,9 @@ class StatsBombOpenDataSource:
             row.seasons_available = seasons
             row.last_successful_scrape = now
             row.status = "active"
-        logger.info("coverage upserted for statsbomb %s (season %s)", source_identifier, season)
+        logger.info(
+            "coverage upserted for statsbomb %s (season %s)", source_identifier, season
+        )
 
 
 class _NoopLimiter:

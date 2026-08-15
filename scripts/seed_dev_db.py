@@ -20,6 +20,7 @@ Usage:
     python scripts/seed_dev_db.py            # rebuild data/dev.db (SQLite)
     STATLAS_DATASET_MODE=production  # set only after a real pipeline run
 """
+
 from __future__ import annotations
 
 import json
@@ -35,7 +36,9 @@ sys.path.insert(0, str(PROJECT_ROOT))
 
 # The dev database is a file-based SQLite so the API server (separate process)
 # reads exactly what the seed wrote. Override with DATABASE_URL for Postgres.
-os.environ.setdefault("DATABASE_URL", f"sqlite+pysqlite:///{PROJECT_ROOT / 'data' / 'dev.db'}")
+os.environ.setdefault(
+    "DATABASE_URL", f"sqlite+pysqlite:///{PROJECT_ROOT / 'data' / 'dev.db'}"
+)
 
 
 from app.config import load_registry
@@ -56,55 +59,303 @@ DEV_DB = PROJECT_ROOT / "data" / "dev.db"
 # Real club names per league (same precedent as the Phase 1 fixtures: real team
 # names, fixture players, fake ids — all under the fixture-demo banner).
 TEAMS_BY_LEAGUE: dict[str, list[str]] = {
-    "la-liga": ["Real Madrid", "Barcelona", "Atlético Madrid", "Sevilla", "Real Sociedad", "Athletic Club", "Villarreal", "Real Betis"],
-    "serie-a": ["Juventus", "Inter", "Milan", "Napoli", "Roma", "Lazio", "Atalanta", "Fiorentina"],
-    "bundesliga": ["Bayern Munich", "Borussia Dortmund", "RB Leipzig", "Bayer Leverkusen", "Eintracht Frankfurt", "VfB Stuttgart", "Wolfsburg", "Freiburg"],
-    "ligue-1": ["Paris Saint-Germain", "Marseille", "Lyon", "Monaco", "Lille", "Nice", "Rennes", "Lens"],
+    "la-liga": [
+        "Real Madrid",
+        "Barcelona",
+        "Atlético Madrid",
+        "Sevilla",
+        "Real Sociedad",
+        "Athletic Club",
+        "Villarreal",
+        "Real Betis",
+    ],
+    "serie-a": [
+        "Juventus",
+        "Inter",
+        "Milan",
+        "Napoli",
+        "Roma",
+        "Lazio",
+        "Atalanta",
+        "Fiorentina",
+    ],
+    "bundesliga": [
+        "Bayern Munich",
+        "Borussia Dortmund",
+        "RB Leipzig",
+        "Bayer Leverkusen",
+        "Eintracht Frankfurt",
+        "VfB Stuttgart",
+        "Wolfsburg",
+        "Freiburg",
+    ],
+    "ligue-1": [
+        "Paris Saint-Germain",
+        "Marseille",
+        "Lyon",
+        "Monaco",
+        "Lille",
+        "Nice",
+        "Rennes",
+        "Lens",
+    ],
     "eredivisie": ["Ajax", "PSV", "Feyenoord", "AZ Alkmaar", "Twente", "Utrecht"],
-    "primeira-liga": ["Benfica", "Porto", "Sporting CP", "Braga", "Vitória Guimarães", "Boavista"],
-    "belgian-pro-league": ["Anderlecht", "Club Brugge", "Genk", "Gent", "Antwerp", "Standard Liège"],
-    "super-lig": ["Galatasaray", "Fenerbahçe", "Beşiktaş", "Trabzonspor", "Başakşehir", "Adana Demirspor"],
-    "scottish-premiership": ["Celtic", "Rangers", "Aberdeen", "Hearts", "Hibernian", "Dundee United"],
-    "austrian-bundesliga": ["Red Bull Salzburg", "Sturm Graz", "Rapid Wien", "LASK", "Austria Wien", "Wolfsberger AC"],
-    "swiss-super-league": ["Young Boys", "Servette", "Basel", "Zürich", "Lugano", "St. Gallen"],
-    "greek-super-league": ["Olympiacos", "PAOK", "AEK Athens", "Panathinaikos", "Aris", "Volos"],
-    "danish-superliga": ["FC Copenhagen", "Midtjylland", "Brøndby", "AGF Aarhus", "Nordsjælland", "Silkeborg"],
-    "championship": ["Leeds United", "Leicester City", "Southampton", "Norwich City", "West Brom", "Sunderland", "Stoke City", "Middlesbrough"],
-    "la-liga-2": ["Levante", "Sporting Gijón", "Racing Santander", "Espanyol", "Eibar", "Zaragoza", "Almería", "Oviedo"],
-    "serie-b": ["Parma", "Como", "Palermo", "Cremonese", "Bari", "Sampdoria", "Catanzaro", "Modena"],
-    "2-bundesliga": ["Hamburger SV", "Schalke 04", "Hannover 96", "Hertha Berlin", "Fortuna Düsseldorf", "Nürnberg", "Kaiserslautern", "Magdeburg"],
-    "ligue-2": ["Bordeaux", "Saint-Étienne", "Metz", "Guingamp", "Caen", "Amiens", "Pau", "Angers"],
+    "primeira-liga": [
+        "Benfica",
+        "Porto",
+        "Sporting CP",
+        "Braga",
+        "Vitória Guimarães",
+        "Boavista",
+    ],
+    "belgian-pro-league": [
+        "Anderlecht",
+        "Club Brugge",
+        "Genk",
+        "Gent",
+        "Antwerp",
+        "Standard Liège",
+    ],
+    "super-lig": [
+        "Galatasaray",
+        "Fenerbahçe",
+        "Beşiktaş",
+        "Trabzonspor",
+        "Başakşehir",
+        "Adana Demirspor",
+    ],
+    "scottish-premiership": [
+        "Celtic",
+        "Rangers",
+        "Aberdeen",
+        "Hearts",
+        "Hibernian",
+        "Dundee United",
+    ],
+    "austrian-bundesliga": [
+        "Red Bull Salzburg",
+        "Sturm Graz",
+        "Rapid Wien",
+        "LASK",
+        "Austria Wien",
+        "Wolfsberger AC",
+    ],
+    "swiss-super-league": [
+        "Young Boys",
+        "Servette",
+        "Basel",
+        "Zürich",
+        "Lugano",
+        "St. Gallen",
+    ],
+    "greek-super-league": [
+        "Olympiacos",
+        "PAOK",
+        "AEK Athens",
+        "Panathinaikos",
+        "Aris",
+        "Volos",
+    ],
+    "danish-superliga": [
+        "FC Copenhagen",
+        "Midtjylland",
+        "Brøndby",
+        "AGF Aarhus",
+        "Nordsjælland",
+        "Silkeborg",
+    ],
+    "championship": [
+        "Leeds United",
+        "Leicester City",
+        "Southampton",
+        "Norwich City",
+        "West Brom",
+        "Sunderland",
+        "Stoke City",
+        "Middlesbrough",
+    ],
+    "la-liga-2": [
+        "Levante",
+        "Sporting Gijón",
+        "Racing Santander",
+        "Espanyol",
+        "Eibar",
+        "Zaragoza",
+        "Almería",
+        "Oviedo",
+    ],
+    "serie-b": [
+        "Parma",
+        "Como",
+        "Palermo",
+        "Cremonese",
+        "Bari",
+        "Sampdoria",
+        "Catanzaro",
+        "Modena",
+    ],
+    "2-bundesliga": [
+        "Hamburger SV",
+        "Schalke 04",
+        "Hannover 96",
+        "Hertha Berlin",
+        "Fortuna Düsseldorf",
+        "Nürnberg",
+        "Kaiserslautern",
+        "Magdeburg",
+    ],
+    "ligue-2": [
+        "Bordeaux",
+        "Saint-Étienne",
+        "Metz",
+        "Guingamp",
+        "Caen",
+        "Amiens",
+        "Pau",
+        "Angers",
+    ],
 }
 
 TIER_1_SYNTHETIC = ["la-liga", "serie-a", "bundesliga", "ligue-1"]
 
 PL_TEAMS = [
-    "Manchester City", "Liverpool", "Arsenal", "Chelsea", "Tottenham Hotspur",
-    "Newcastle United", "Manchester United", "Aston Villa", "Brighton & Hove Albion",
-    "West Ham United", "Everton", "Brentford", "Crystal Palace", "Wolverhampton Wanderers",
-    "Fulham", "Bournemouth", "Nottingham Forest", "Burnley", "Luton Town", "Sheffield United",
+    "Manchester City",
+    "Liverpool",
+    "Arsenal",
+    "Chelsea",
+    "Tottenham Hotspur",
+    "Newcastle United",
+    "Manchester United",
+    "Aston Villa",
+    "Brighton & Hove Albion",
+    "West Ham United",
+    "Everton",
+    "Brentford",
+    "Crystal Palace",
+    "Wolverhampton Wanderers",
+    "Fulham",
+    "Bournemouth",
+    "Nottingham Forest",
+    "Burnley",
+    "Luton Town",
+    "Sheffield United",
 ]
 TIER_2_SYNTHETIC = [
-    "eredivisie", "primeira-liga", "belgian-pro-league", "super-lig",
-    "scottish-premiership", "austrian-bundesliga", "swiss-super-league",
-    "greek-super-league", "danish-superliga",
+    "eredivisie",
+    "primeira-liga",
+    "belgian-pro-league",
+    "super-lig",
+    "scottish-premiership",
+    "austrian-bundesliga",
+    "swiss-super-league",
+    "greek-super-league",
+    "danish-superliga",
 ]
 TIER_3_SYNTHETIC = ["championship", "la-liga-2", "serie-b", "2-bundesliga", "ligue-2"]
 
 FIRST_NAMES = [
-    "Luka", "Mateo", "Andrés", "Julian", "Tomas", "Viktor", "Nico", "Marco", "Piotr", "Elias",
-    "Ruben", "Sergi", "Dani", "Kai", "Yusuf", "Isak", "Mikkel", "Oscar", "Gabriel", "Hugo",
-    "Theo", "Arthur", "Emil", "Lucas", "Adrien", "Stefan", "Milan", "David", "Filip", "Andre",
-    "Jonas", "Pablo", "Ivan", "Anton", "Rafael", "Nils", "Diego", "Leon", "Felix", "Bruno",
+    "Luka",
+    "Mateo",
+    "Andrés",
+    "Julian",
+    "Tomas",
+    "Viktor",
+    "Nico",
+    "Marco",
+    "Piotr",
+    "Elias",
+    "Ruben",
+    "Sergi",
+    "Dani",
+    "Kai",
+    "Yusuf",
+    "Isak",
+    "Mikkel",
+    "Oscar",
+    "Gabriel",
+    "Hugo",
+    "Theo",
+    "Arthur",
+    "Emil",
+    "Lucas",
+    "Adrien",
+    "Stefan",
+    "Milan",
+    "David",
+    "Filip",
+    "Andre",
+    "Jonas",
+    "Pablo",
+    "Ivan",
+    "Anton",
+    "Rafael",
+    "Nils",
+    "Diego",
+    "Leon",
+    "Felix",
+    "Bruno",
 ]
 LAST_NAMES = [
-    "Moreau", "Silva", "Kovac", "Andersen", "Ferreira", "Novak", "Mendes", "Varga", "Petrov",
-    "Sousa", "Horvat", "Nielsen", "Costa", "Janssen", "Keller", "Rossi", "Larsen", "Dubois",
-    "Hansen", "Marques", "Vidal", "Ramos", "Weber", "Kowalski", "Bianchi", "Fontaine", "Ivanov",
-    "Schmidt", "Oliveira", "Fernandez", "Russo", "Moreno", "Jensen", "Berg", "Martin", "Garcia",
-    "Torres", "Kohler", "Dupont", "Krstic", "Lindberg", "Araujo",
+    "Moreau",
+    "Silva",
+    "Kovac",
+    "Andersen",
+    "Ferreira",
+    "Novak",
+    "Mendes",
+    "Varga",
+    "Petrov",
+    "Sousa",
+    "Horvat",
+    "Nielsen",
+    "Costa",
+    "Janssen",
+    "Keller",
+    "Rossi",
+    "Larsen",
+    "Dubois",
+    "Hansen",
+    "Marques",
+    "Vidal",
+    "Ramos",
+    "Weber",
+    "Kowalski",
+    "Bianchi",
+    "Fontaine",
+    "Ivanov",
+    "Schmidt",
+    "Oliveira",
+    "Fernandez",
+    "Russo",
+    "Moreno",
+    "Jensen",
+    "Berg",
+    "Martin",
+    "Garcia",
+    "Torres",
+    "Kohler",
+    "Dupont",
+    "Krstic",
+    "Lindberg",
+    "Araujo",
 ]
-NATIONS = ["England", "Spain", "France", "Germany", "Italy", "Netherlands", "Portugal", "Brazil", "Argentina", "Denmark", "Croatia", "Belgium", "Serbia", "Norway", "Sweden"]
+NATIONS = [
+    "England",
+    "Spain",
+    "France",
+    "Germany",
+    "Italy",
+    "Netherlands",
+    "Portugal",
+    "Brazil",
+    "Argentina",
+    "Denmark",
+    "Croatia",
+    "Belgium",
+    "Serbia",
+    "Norway",
+    "Sweden",
+]
 MIDDLE_INITIALS = "ABCDEFGHJKLMNPRSTVWY"
 
 POSITION_GROUPS = ["GK", "CB", "FB", "DM", "CM", "AM", "W", "ST"]
@@ -113,6 +364,7 @@ POSITION_GROUPS = ["GK", "CB", "FB", "DM", "CM", "AM", "W", "ST"]
 # ---------------------------------------------------------------------------
 # Real parsers over the Phase 1 fixtures (premier-league only)
 # ---------------------------------------------------------------------------
+
 
 def _fixture_html(filename: str) -> str:
     return (FIXTURES / filename).read_text(encoding="utf-8")
@@ -126,22 +378,31 @@ def scrape_premier_league_from_fixtures() -> list[RawPlayerStatRecord]:
     original_fbref = fbref_mod.fetch_with_retry
     original_understat = understat_mod.fetch_with_retry
     fbref_mod.fetch_with_retry = lambda *a, **k: _fixture_html("fbref_league.html")
-    understat_mod.fetch_with_retry = lambda *a, **k: _fixture_html("understat_page.html")
+    understat_mod.fetch_with_retry = lambda *a, **k: _fixture_html(
+        "understat_page.html"
+    )
     try:
         fbref_source = fbref_mod.FBrefSource()
         understat_source = understat_mod.UnderstatSource()
         fbref_records = fbref_source.fetch_league_stats("premier-league", SEASON)
-        understat_records = understat_source.fetch_league_stats("premier-league", SEASON)
+        understat_records = understat_source.fetch_league_stats(
+            "premier-league", SEASON
+        )
     finally:
         fbref_mod.fetch_with_retry = original_fbref
         understat_mod.fetch_with_retry = original_understat
-    logger.info("fixture parse: %d fbref records, %d understat records", len(fbref_records), len(understat_records))
+    logger.info(
+        "fixture parse: %d fbref records, %d understat records",
+        len(fbref_records),
+        len(understat_records),
+    )
     return fbref_records, understat_records
 
 
 # ---------------------------------------------------------------------------
 # Deterministic synthetic demo records for the other leagues
 # ---------------------------------------------------------------------------
+
 
 class _DemoPlayerGen:
     """Seeded generator producing plausible in-bounds per-group stats.
@@ -170,8 +431,13 @@ class _DemoPlayerGen:
             }
         else:
             gls = {
-                "ST": (0.08, 0.85), "W": (0.04, 0.5), "AM": (0.03, 0.45),
-                "CM": (0.0, 0.3), "DM": (0.0, 0.18), "FB": (0.0, 0.16), "CB": (0.0, 0.14),
+                "ST": (0.08, 0.85),
+                "W": (0.04, 0.5),
+                "AM": (0.03, 0.45),
+                "CM": (0.0, 0.3),
+                "DM": (0.0, 0.18),
+                "FB": (0.0, 0.16),
+                "CB": (0.0, 0.14),
             }[group]
             g = self._u(*gls)
             raw = {
@@ -215,9 +481,15 @@ class _DemoPlayerGen:
             matches_played=fbref_record.matches_played,
             raw_stats={
                 "si_xg_p90": xg_u,
-                "si_sh_p90": round((raw.get("si_sh_p90") or 1.0) * self._u(0.95, 1.1), 2),
-                "si_xag_p90": round((raw.get("si_xag_p90") or 0.05) * self._u(0.85, 1.2), 3),
-                "si_kp_p90": round((raw.get("si_kp_p90") or 0.5) * self._u(0.85, 1.2), 2),
+                "si_sh_p90": round(
+                    (raw.get("si_sh_p90") or 1.0) * self._u(0.95, 1.1), 2
+                ),
+                "si_xag_p90": round(
+                    (raw.get("si_xag_p90") or 0.05) * self._u(0.85, 1.2), 3
+                ),
+                "si_kp_p90": round(
+                    (raw.get("si_kp_p90") or 0.5) * self._u(0.85, 1.2), 2
+                ),
             },
             position_group=None,
             dob_year=fbref_record.dob_year,
@@ -226,7 +498,12 @@ class _DemoPlayerGen:
         )
 
     def player(
-        self, league_slug: str, team_name: str, group: str, index: int, used_names: set[str]
+        self,
+        league_slug: str,
+        team_name: str,
+        group: str,
+        index: int,
+        used_names: set[str],
     ) -> RawPlayerStatRecord:
         # Globally unique names (not per-league): the reconciler's _exact_match
         # falls back to a name+DOB-year match even across teams, so duplicate
@@ -296,7 +573,7 @@ SNAPSHOT_DATES = [
     SNAPSHOT_DATE,
 ]
 
-GAP_DEMO_EXTERNAL = "d000042"   # missing from the 2026-07-22 scrape (index 3)
+GAP_DEMO_EXTERNAL = "d000042"  # missing from the 2026-07-22 scrape (index 3)
 GAP_DEMO_MISSED_INDEX = 3
 TRANSFER_DEMO_EXTERNAL = "d000099"  # Man City -> Liverpool from index 4
 TRANSFER_DEMO_INDEX = 4
@@ -333,7 +610,9 @@ class _BoundClamper:
 _CLAMPER = _BoundClamper()
 
 
-def drift_record(record: RawPlayerStatRecord, rng: random.Random, progress: float) -> RawPlayerStatRecord:
+def drift_record(
+    record: RawPlayerStatRecord, rng: random.Random, progress: float
+) -> RawPlayerStatRecord:
     """Deterministic per-player, per-metric drift for one snapshot date.
 
     progress = (date_index / (n_dates - 1)) in [0, 1]. Each metric gets a fixed
@@ -370,9 +649,7 @@ def drift_record(record: RawPlayerStatRecord, rng: random.Random, progress: floa
     )
 
 
-def seed_statsbomb_demo_events(
-    db, fbref_records: list[RawPlayerStatRecord]
-) -> None:
+def seed_statsbomb_demo_events(db, fbref_records: list[RawPlayerStatRecord]) -> None:
     """Synthetic (labeled fixture-demo) shot/pass events for two fixture
     players, backed by real data_coverage rows for the competition/season — the
     coverage-gated chain (Part B1) is what makes them renderable.
@@ -401,7 +678,11 @@ def seed_statsbomb_demo_events(
     names = [r.player_name for r in fbref_records]
     players = db.query(Player).filter(Player.canonical_name.in_(names)).all()
     by_name = {p.canonical_name: p for p in players}
-    targets = [p for p in by_name.values() if p.canonical_name in ("Erling Haaland", "Mohamed Salah")]
+    targets = [
+        p
+        for p in by_name.values()
+        if p.canonical_name in ("Erling Haaland", "Mohamed Salah")
+    ]
 
     OUTCOME_SHAPES = ["Off Target"] * 4 + ["Saved"] * 3 + ["Blocked"] * 2 + ["Goal"]
     for player in targets:
@@ -426,7 +707,9 @@ def seed_statsbomb_demo_events(
                         extra={
                             "player_name": player.canonical_name,
                             "xg": xg,
-                            "body_part": rng.choice(["Right Foot", "Left Foot", "Head"]),
+                            "body_part": rng.choice(
+                                ["Right Foot", "Left Foot", "Head"]
+                            ),
                             "technique": rng.choice(["Normal", "Volley", "Lob"]),
                         },
                         source_competition_id="12",
@@ -454,7 +737,9 @@ def seed_statsbomb_demo_events(
                             "end_x": round(end_x, 1),
                             "end_y": round(end_y, 1),
                             "pass_type": rng.choice(["Pass", "Cross", "Through Ball"]),
-                            "length": round(abs(end_x - start_x) + abs(end_y - start_y), 1),
+                            "length": round(
+                                abs(end_x - start_x) + abs(end_y - start_y), 1
+                            ),
                         },
                         source_competition_id="12",
                         season=DEMO_STATSBOMB_SEASON,
@@ -463,7 +748,9 @@ def seed_statsbomb_demo_events(
     db.commit()
 
 
-def synthetic_leagues(per_league: int) -> tuple[list[RawPlayerStatRecord], list[RawPlayerStatRecord]]:
+def synthetic_leagues(
+    per_league: int,
+) -> tuple[list[RawPlayerStatRecord], list[RawPlayerStatRecord]]:
     """Returns (fbref_records, understat_records).
 
     Covers every league in tiers.json. Premier League gets a full 20-club
@@ -479,7 +766,9 @@ def synthetic_leagues(per_league: int) -> tuple[list[RawPlayerStatRecord], list[
     used_names: set[str] = set()
     index = 0
     understat_counter = 900_000
-    for league_slug in ["premier-league"] + TIER_1_SYNTHETIC + TIER_2_SYNTHETIC + TIER_3_SYNTHETIC:
+    for league_slug in (
+        ["premier-league"] + TIER_1_SYNTHETIC + TIER_2_SYNTHETIC + TIER_3_SYNTHETIC
+    ):
         if league_slug == "premier-league":
             teams = PL_TEAMS
             count = 160
@@ -506,13 +795,20 @@ def synthetic_leagues(per_league: int) -> tuple[list[RawPlayerStatRecord], list[
 # Seed runner
 # ---------------------------------------------------------------------------
 
+
 class _FakeSource:
     def __init__(self, source_name: str, records: list[RawPlayerStatRecord]):
         self.source_name = source_name
         self.records = records
 
-    def fetch_league_stats(self, league_slug: str, season: str) -> list[RawPlayerStatRecord]:
-        return [r for r in self.records if r.league_slug == league_slug and r.season == season]
+    def fetch_league_stats(
+        self, league_slug: str, season: str
+    ) -> list[RawPlayerStatRecord]:
+        return [
+            r
+            for r in self.records
+            if r.league_slug == league_slug and r.season == season
+        ]
 
     def get_rate_limit_seconds(self) -> float:
         return 1.0
@@ -560,21 +856,30 @@ def _apply_demo_cases(
     - Transfer player: team changes from the 2026-07-29 scrape onward (a real
       team_id change between consecutive snapshots — the trend annotation).
     """
+
     def _keep(records: list[RawPlayerStatRecord]) -> list[RawPlayerStatRecord]:
         # The gap demo player is dropped ONLY from the missed scrape date;
         # the transfer demo player stays present on every date (team changes).
         if date_index != GAP_DEMO_MISSED_INDEX:
             return records
-        return [r for r in records if (r.external_ids or {}).get("fbref") != GAP_DEMO_EXTERNAL]
+        return [
+            r
+            for r in records
+            if (r.external_ids or {}).get("fbref") != GAP_DEMO_EXTERNAL
+        ]
 
-    def _retarget(records: list[RawPlayerStatRecord], ext: str, team: str) -> list[RawPlayerStatRecord]:
+    def _retarget(
+        records: list[RawPlayerStatRecord], ext: str, team: str
+    ) -> list[RawPlayerStatRecord]:
         return [
             RawPlayerStatRecord(
                 source=r.source,
                 season=r.season,
                 league_slug=r.league_slug,
                 player_name=r.player_name,
-                team_name=team if (r.external_ids or {}).get("fbref") == ext else r.team_name,
+                team_name=(
+                    team if (r.external_ids or {}).get("fbref") == ext else r.team_name
+                ),
                 minutes_played=r.minutes_played,
                 matches_played=r.matches_played,
                 raw_stats=dict(r.raw_stats),
@@ -633,7 +938,9 @@ def main() -> int:
         seed_statsbomb_demo_events(db, base_fbref)
         print("seeded demo event-map data (StatsBomb coverage + synthetic events)")
 
-        print(f"=== seed complete: {total_snapshots} snapshots across {len(SNAPSHOT_DATES)} dates ===")
+        print(
+            f"=== seed complete: {total_snapshots} snapshots across {len(SNAPSHOT_DATES)} dates ==="
+        )
 
         # Sanity checks against the query layer (what the UI will see).
         from app.models import League, Player, StatSnapshot
@@ -646,7 +953,9 @@ def main() -> int:
         from app.queries.coverage_queries import get_data_coverage
 
         coverage = get_data_coverage(db)
-        print(f"coverage rows: {[(c['source'], c['source_identifier']) for c in coverage]}")
+        print(
+            f"coverage rows: {[(c['source'], c['source_identifier']) for c in coverage]}"
+        )
 
         # Honesty guard: a coverage row must be backed by at least one snapshot
         # for that (source, league) — never claim coverage the data doesn't hold.
@@ -688,8 +997,11 @@ def main() -> int:
                             "source": c["source"],
                             "source_identifier": c["source_identifier"],
                             "seasons_available": c["seasons_available"],
-                            "last_successful_scrape": c["last_successful_scrape"].isoformat()
-                            if c["last_successful_scrape"] else None,
+                            "last_successful_scrape": (
+                                c["last_successful_scrape"].isoformat()
+                                if c["last_successful_scrape"]
+                                else None
+                            ),
                             "status": c["status"],
                         }
                         for c in coverage
