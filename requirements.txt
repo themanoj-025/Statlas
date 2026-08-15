@@ -9,7 +9,7 @@ psycopg2-binary>=2.9     # PostgreSQL driver for production DATABASE_URL
 # API layer (Phase 2) — FastAPI runtime
 fastapi>=0.110
 uvicorn>=0.29
-pydantic>=2.5
+pydantic>=2.13.4
 
 # Development / tests
 pytest>=8.0
