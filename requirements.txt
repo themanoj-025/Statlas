@@ -14,7 +14,7 @@ pydantic>=2.5
 # Development / tests
 pytest>=8.0
 httpx>=0.27     # fastapi TestClient (tests/test_api.py)
-ruff>=0.6       # lint gate (CI + local); enforced set in pyproject.toml
+ruff>=0.16.2       # lint gate (CI + local); enforced set in pyproject.toml
 pip-audit>=2.7  # dependency vulnerability scan (C5 closeout; enforced in CI)
 
 # Phase 4 — billing + AI assistant
