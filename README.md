@@ -37,7 +37,7 @@
 - [📋 Prerequisites](#-prerequisites)
 - [🚀 Quick start](#-quick-start)
 - [🧭 Usage](#-usage)
-- [⚙️ Configuration](#-configuration)
+- [⚙️ Configuration](#️-configuration)
 - [🔌 API](#-api)
 - [🗂 Project structure](#-project-structure)
 - [🧪 Testing](#-testing)
@@ -116,7 +116,7 @@ cd web && npm install && npm run dev
 
 Open http://localhost:3000.
 
-> 📝 **Note:** the dataset banner is deliberate. The site labels itself `fixture-demo` until a real scrape validates the sources (`STATLAS_DATASET_MODE=production` — see [Configuration](#-configuration)). That honesty is a product feature, not a placeholder.
+> 📝 **Note:** the dataset banner is deliberate. The site labels itself `fixture-demo` until a real scrape validates the sources (`STATLAS_DATASET_MODE=production` — see [Configuration](#️-configuration)). That honesty is a product feature, not a placeholder.
 
 Full build plan and run guide: [`docs/suite/ImplementationPlan.md`](docs/suite/ImplementationPlan.md).
 
