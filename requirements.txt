@@ -19,4 +19,4 @@ pip-audit>=2.7  # dependency vulnerability scan (C5 closeout; enforced in CI)
 
 # Phase 4 — billing + AI assistant
 stripe>=8.0
-anthropic>=0.40
+anthropic>=0.121.0
