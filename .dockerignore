@@ -1,0 +1,19 @@
+# Build context for the API image. Keep the image lean — runtime only.
+.git
+.venv
+__pycache__
+*.py[cod]
+.pytest_cache
+.hypothesis
+.coverage
+.cache
+data
+*.db
+web
+node_modules
+.next
+docs
+.github
+.env
+.env.*
+!.env.example

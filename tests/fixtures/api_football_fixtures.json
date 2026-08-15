@@ -1,0 +1,33 @@
+{
+  "get": "fixtures",
+  "parameters": {"league": "39", "season": "2025"},
+  "results": 2,
+  "response": [
+    {
+      "fixture": {
+        "id": 101010,
+        "date": "2026-08-15T19:30:00+01:00",
+        "status": {"long": "Not Started", "short": "NS"}
+      },
+      "league": {"id": 39, "name": "Premier League"},
+      "teams": {
+        "home": {"id": 50, "name": "Arsenal", "winner": null},
+        "away": {"id": 40, "name": "Chelsea", "winner": null}
+      },
+      "score": {"fulltime": {"home": 0, "away": 0}}
+    },
+    {
+      "fixture": {
+        "id": 101011,
+        "date": "2026-08-16T16:00:00+01:00",
+        "status": {"long": "Match Finished", "short": "FT"}
+      },
+      "league": {"id": 39, "name": "Premier League"},
+      "teams": {
+        "home": {"id": 33, "name": "Manchester United", "winner": null},
+        "away": {"id": 42, "name": "Aston Villa", "winner": null}
+      },
+      "score": {"fulltime": {"home": 2, "away": 1}}
+    }
+  ]
+}

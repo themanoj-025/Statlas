@@ -1,0 +1,57 @@
+{
+  "schema_version": 1,
+  "generated_from": "CONSTITUTION §1 business model + suite/PRD.md REQ-021 (Phase 4)",
+  "currency": "usd",
+  "plans": {
+    "free": {
+      "label": "Free",
+      "price_monthly_cents": 0,
+      "stripe_price_id": null,
+      "limits": {
+        "leaderboard_rows": 50,
+        "comparisons_per_day": 3,
+        "trend_window": 5,
+        "assistant_queries_per_period": 10,
+        "embeds_active": 0,
+        "api_rate_limit_per_minute": 0
+      }
+    },
+    "pro": {
+      "label": "Pro",
+      "price_monthly_cents": 700,
+      "stripe_price_id": null,
+      "limits": {
+        "leaderboard_rows": null,
+        "comparisons_per_day": null,
+        "trend_window": 10,
+        "assistant_queries_per_period": 200,
+        "embeds_active": 10,
+        "api_rate_limit_per_minute": 0
+      }
+    },
+    "api_business": {
+      "label": "API Business",
+      "price_monthly_cents": 4900,
+      "stripe_price_id": null,
+      "limits": {
+        "leaderboard_rows": null,
+        "comparisons_per_day": null,
+        "trend_window": 10,
+        "assistant_queries_per_period": 1000,
+        "embeds_active": null,
+        "api_rate_limit_per_minute": 120
+      }
+    }
+  },
+  "api_tiers": {
+    "api_business": {
+      "requests_per_minute": 120,
+      "requests_per_day": 50000
+    }
+  },
+  "notes": [
+    "stripe_price_id values are filled in at setup time from the live Stripe dashboard and mirrored in docs/billing/pricing-config.md. Null means the plan is not purchasable via Stripe Checkout (Free) or not yet configured.",
+    "Limits with null mean unlimited within the tier.",
+    "The assistant quota is a HARD CAP (no silent overage billing) — the documented model per Phase 4 Part B3."
+  ]
+}

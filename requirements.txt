@@ -1,0 +1,22 @@
+# Statlas Phase 1 — data pipeline dependencies
+# Production and development. Tests run on SQLite; production targets PostgreSQL.
+
+requests>=2.31
+beautifulsoup4>=4.12
+SQLAlchemy>=2.0
+psycopg2-binary>=2.9     # PostgreSQL driver for production DATABASE_URL
+
+# API layer (Phase 2) — FastAPI runtime
+fastapi>=0.110
+uvicorn>=0.29
+pydantic>=2.5
+
+# Development / tests
+pytest>=8.0
+httpx>=0.27     # fastapi TestClient (tests/test_api.py)
+ruff>=0.6       # lint gate (CI + local); enforced set in pyproject.toml
+pip-audit>=2.7  # dependency vulnerability scan (C5 closeout; enforced in CI)
+
+# Phase 4 — billing + AI assistant
+stripe>=8.0
+anthropic>=0.40

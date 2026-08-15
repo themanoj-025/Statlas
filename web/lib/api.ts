@@ -1,0 +1,164 @@
+import type {
+  AssistantQuota,
+  ChatResponse,
+  CheckoutPayload,
+  CoveragePayload,
+  EventCoverage,
+  EventMatch,
+  LeaderboardResponse,
+  LeagueStatsRow,
+  LeagueSummary,
+  LimitsPayload,
+  MePayload,
+  Meta,
+  PassEvent,
+  PlayerPayload,
+  PortalPayload,
+  PositionGroupMeta,
+  SearchResult,
+  ShotEvent,
+  SubscriptionStatusPayload,
+  TeamPayload,
+  TrendPayload,
+} from "./types";
+
+// Server components read the API at STATLAS_API_URL (no CORS involved);
+// client components read NEXT_PUBLIC_STATLAS_API_URL (CORS configured on the
+// API for localhost). Both default to the local FastAPI dev server.
+const API_URL =
+  typeof window === "undefined"
+    ? (process.env.STATLAS_API_URL ?? "http://127.0.0.1:8000")
+    : (process.env.NEXT_PUBLIC_STATLAS_API_URL ?? "http://127.0.0.1:8000");
+
+export class ApiError extends Error {
+  status: number;
+  constructor(status: number, message: string) {
+    super(message);
+    this.status = status;
+  }
+}
+
+async function get<T>(path: string, init?: RequestInit): Promise<T> {
+  const res = await fetch(`${API_URL}${path}`, {
+    ...init,
+    cache: "no-store",
+    headers: { Accept: "application/json", ...(init?.headers ?? {}) },
+  });
+  if (!res.ok) {
+    let detail = `API ${res.status}`;
+    try {
+      const body = await res.json();
+      if (typeof body.detail === "string") detail = body.detail;
+    } catch {
+      /* non-JSON error body */
+    }
+    throw new ApiError(res.status, detail);
+  }
+  return res.json() as Promise<T>;
+}
+
+function qs(params: Record<string, string | number | undefined | null>): string {
+  const search = new URLSearchParams();
+  for (const [key, value] of Object.entries(params)) {
+    if (value !== undefined && value !== null && value !== "") {
+      search.set(key, String(value));
+    }
+  }
+  const q = search.toString();
+  return q ? `?${q}` : "";
+}
+
+export const api = {
+  meta: () => get<Meta>("/api/v1/meta"),
+  leagues: () => get<LeagueSummary[]>("/api/v1/leagues"),
+  positions: () => get<PositionGroupMeta[]>("/api/v1/positions"),
+  coverage: () => get<CoveragePayload>("/api/v1/coverage"),
+  playerBySlug: (slug: string) => get<PlayerPayload>(`/api/v1/players/by-slug/${encodeURIComponent(slug)}`),
+  playerSearch: (q: string, limit = 8) =>
+    get<SearchResult[]>(`/api/v1/players/search${qs({ q, limit })}`),
+  similarPlayers: (playerId: number, limit = 5) =>
+    get<SearchResult & { similarity: number }[]>(
+      `/api/v1/players/${playerId}/similar${qs({ limit })}`
+    ),
+  team: (leagueSlug: string, teamSlug: string) =>
+    get<TeamPayload>(`/api/v1/clubs/${encodeURIComponent(leagueSlug)}/${encodeURIComponent(teamSlug)}`),
+  leaderboard: (params: {
+    metric?: string;
+    season?: string;
+    league?: string;
+    tier?: string;
+    position?: string;
+    min_minutes?: number;
+    page?: number;
+    limit?: number;
+    sort_by?: string;
+    sort_dir?: string;
+  }) => get<LeaderboardResponse>(`/api/v1/leaderboard${qs(params)}`),
+  leagueStats: (leagueSlug: string, params: { metric?: string; season?: string; limit?: number }) =>
+    get<LeagueStatsRow[]>(
+      `/api/v1/leagues/${encodeURIComponent(leagueSlug)}/stats${qs(params)}`
+    ),
+  // Phase 3 — trends (Part A)
+  playerTrend: (
+    playerId: number,
+    params: { metric: string; window?: number },
+    init?: RequestInit
+  ) => get<TrendPayload>(`/api/v1/players/${playerId}/trend${qs(params)}`, init),
+  // Phase 3 — shot / pass maps (Part B, coverage-gated)
+  playerEventCoverage: (playerId: number) =>
+    get<EventCoverage>(`/api/v1/players/${playerId}/events`),
+  playerEventMatches: (
+    playerId: number,
+    params: { competition?: string; season?: string } = {},
+    init?: RequestInit
+  ) => get<EventMatch[]>(`/api/v1/players/${playerId}/events/matches${qs(params)}`, init),
+  playerShots: (
+    playerId: number,
+    params: { match?: string; competition?: string; season?: string } = {},
+    init?: RequestInit
+  ) => get<ShotEvent[]>(`/api/v1/players/${playerId}/events/shots${qs(params)}`, init),
+  playerPasses: (
+    playerId: number,
+    params: { match?: string; competition?: string; season?: string } = {},
+    init?: RequestInit
+  ) => get<PassEvent[]>(`/api/v1/players/${playerId}/events/passes${qs(params)}`, init),
+  // Phase 4 — accounts + billing (Part A). POST helpers use `post` which
+  // sends cookies (credentials: "include") so the session cookie is attached.
+  register: (email: string, password: string) => post<MePayload>("/api/v1/auth/register", { email, password }),
+  login: (email: string, password: string) => post<MePayload>("/api/v1/auth/login", { email, password }),
+  logout: () => post<{ ok: boolean }>("/api/v1/auth/logout", {}),
+  me: () => get<MePayload>("/api/v1/auth/me"),
+  checkout: (successUrl: string, cancelUrl: string) =>
+    post<CheckoutPayload>("/api/v1/billing/checkout", { success_url: successUrl, cancel_url: cancelUrl }),
+  billingPortal: (returnUrl: string) =>
+    post<PortalPayload>("/api/v1/billing/portal", { return_url: returnUrl }),
+  subscription: () => get<SubscriptionStatusPayload>("/api/v1/billing/subscription"),
+  planLimits: () => get<LimitsPayload>("/api/v1/billing/limits"),
+  // Phase 4 — grounded AI assistant (Part B)
+  assistantChat: (messages: { role: string; content: string }[]) =>
+    post<ChatResponse>("/api/v1/assistant/chat", { messages }),
+  assistantQuota: () => get<AssistantQuota>("/api/v1/assistant/quota"),
+  // Phase 4 — public API docs (Part C2): live OpenAPI spec, not hand-written.
+  openapi: () => get<{ paths?: Record<string, unknown>; info?: { version?: string } }>("/openapi.json"),
+};
+
+async function post<T>(path: string, body: unknown): Promise<T> {
+  const res = await fetch(`${API_URL}${path}`, {
+    method: "POST",
+    credentials: "include",
+    cache: "no-store",
+    headers: { "Content-Type": "application/json", Accept: "application/json" },
+    body: JSON.stringify(body),
+  });
+  if (!res.ok) {
+    let detail = `API ${res.status}`;
+    try {
+      const parsed = await res.json();
+      if (typeof parsed.detail === "string") detail = parsed.detail;
+    } catch {
+      /* non-JSON */
+    }
+    throw new ApiError(res.status, detail);
+  }
+  return res.json() as Promise<T>;
+}

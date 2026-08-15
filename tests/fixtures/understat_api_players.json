@@ -1,0 +1,45 @@
+{
+  "success": true,
+  "players": [
+    {
+      "id": "1250",
+      "player_name": "Mohamed Salah",
+      "games": "38",
+      "time": "3392",
+      "goals": "29",
+      "xG": "27.70626749098301",
+      "assists": "18",
+      "xA": "15.858334187418222",
+      "shots": "130",
+      "key_passes": "89",
+      "yellow_cards": "1",
+      "red_cards": "0",
+      "position": "F M",
+      "team_title": "Liverpool",
+      "npg": "20",
+      "npxG": "20.855747912079096",
+      "xGChain": "48.53588879853487",
+      "xGBuildup": "16.20675839856267"
+    },
+    {
+      "id": "8260",
+      "player_name": "Erling Haaland",
+      "games": "31",
+      "time": "2749",
+      "goals": "22",
+      "xG": "23.95459282770753",
+      "assists": "3",
+      "xA": "3.5812273556366563",
+      "shots": "109",
+      "key_passes": "29",
+      "yellow_cards": "2",
+      "red_cards": "0",
+      "position": "F",
+      "team_title": "Manchester City",
+      "npg": "19",
+      "npxG": "20.909917432814837",
+      "xGChain": "22.845245644450188",
+      "xGBuildup": "3.5353690683841705"
+    }
+  ]
+}

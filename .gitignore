@@ -1,0 +1,29 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+.hypothesis/
+.coverage
+
+# Runtime HTTP cache (sources/base.py HttpCache)
+.cache/
+
+# Generated runtime data (seed script + pipeline output). The coverage
+# matrix is tracked on purpose — Constitution §3 makes it the machine-readable
+# single source of truth, and CI validates it (tests/test_matrix_validation.py).
+data/*
+!data/coverage_matrix.json
+*.db
+
+# Node / Next.js
+node_modules/
+.next/
+out/
+*.tsbuildinfo
+next-env.d.ts
+
+# Environment / secrets (keep .env.example tracked)
+.env
+.env.*
+!.env.example

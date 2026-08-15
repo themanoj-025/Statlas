@@ -1,0 +1,199 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  python:
+    name: Python — pytest + ruff
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.14" # matches local dev (python --version)
+          cache: pip             # keyed on requirements.txt
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      # Enforced rule set lives in pyproject.toml ([tool.ruff.lint] select =
+      # F, E4/E7/E9, I) so CI lint is identical to a local `ruff check .`.
+      # Ruff respects .gitignore, so .venv/ node_modules/ .next/ data/ are out.
+      - name: Ruff lint
+        run: ruff check .
+
+      # In-memory SQLite only — no database service needed (tests/conftest.py
+      # `db` fixture; Postgres is exercised via schema.sql parity, not CI).
+      - name: Pytest
+        run: pytest -q
+
+      # C5 closeout — enforced dependency vulnerability scan. Fails the job on
+      # any known vulnerability in the Python dependency tree. Use
+      # `pip-audit --fix` locally to resolve, never a suppression.
+      - name: pip-audit (dependency vulnerabilities)
+        run: pip-audit
+
+  security:
+    name: Security — gitleaks secret scan
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # C5 closeout — secret scanning on every push/PR; a found secret blocks
+      # merge (gitleaks exit code 1 on any finding).
+      - name: gitleaks secret scan
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  web:
+    name: Web — typecheck + production build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: web
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24 # Next.js 16 requires Node >= 20.9; node --test with
+          # type stripping needs >= 22.6 (stable 23.6+, LTS 24)
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Typecheck
+        run: npx tsc --noEmit
+
+      # Pure-logic tests (share.ts / chartSvg.ts) run on Node's built-in test
+      # runner with type stripping — the permalink round-trip and OG-image
+      # data quality gates (Part C) are enforced in CI.
+      - name: Unit tests (node --test)
+        run: npm test
+
+      # C5 closeout — enforced npm dependency vulnerability scan (high severity
+      # and above fails the job).
+      - name: npm audit (dependency vulnerabilities)
+        run: npm audit --audit-level=high
+
+      # All pages are static/server-rendered; the build needs no API running.
+      - name: Production build
+        run: npm run build
+        env:
+          NEXT_TELEMETRY_DISABLED: "1"
+
+  e2e:
+    name: "Web — e2e (Playwright: radar, search/filter, axe, breakpoints)"
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    defaults:
+      run:
+        working-directory: web
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.14"
+          cache: pip
+
+      - name: Install Python deps (seed + API)
+        run: pip install -r requirements.txt
+        working-directory: .
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+
+      - name: Install web deps
+        run: npm ci
+
+      # B3 closeout — Playwright browsers for the e2e suite. Chromium only;
+      # the breakpoint matrix uses Chromium viewports (see playwright.config.ts).
+      - name: Install Playwright browsers
+        run: npx playwright install chromium --with-deps
+
+      # B2/B3/B4 closeout — the whole suite (radar generation, leaderboard
+      # search/filter, SSR player profile, axe audit on the four Phase 2 pages,
+      # and the 375/768/1440px no-overflow matrix in both themes). The
+      # webServer config boots seed -> FastAPI -> next start automatically;
+      # any axe violation or layout regression fails the job.
+      - name: Run e2e suite
+        run: npx playwright test --timeout=60000
+
+  lighthouse:
+    name: "Web — Lighthouse CI (LCP < 2.5s enforced)"
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    defaults:
+      run:
+        working-directory: web
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.14"
+          cache: pip
+
+      - name: Install Python deps (seed + API)
+        run: pip install -r requirements.txt
+        working-directory: .
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+
+      - name: Install web deps
+        run: npm ci
+
+      # B1 closeout — performance measured against the real stack on real
+      # (fixture) data: scripts/e2e-server.sh seeds the DB, boots FastAPI and
+      # `next start` (production build), then LHCI runs 3 passes over the
+      # player + team profile pages and FAILS the job unless LCP < 2.5s,
+      # CLS < 0.1 and category scores hold (see web/lighthouserc.json).
+      - name: Boot stack + run Lighthouse CI
+        run: |
+          bash scripts/e2e-server.sh > /tmp/e2e-server.log 2>&1 &
+          SERVER_PID=$!
+          trap 'kill $SERVER_PID 2>/dev/null || true' EXIT
+          for i in $(seq 1 120); do
+            if curl -sf -o /dev/null http://127.0.0.1:3000/players/erling-haaland; then
+              break
+            fi
+            sleep 2
+          done
+          curl -sf -o /dev/null http://127.0.0.1:3000/players/erling-haaland || { echo "stack did not boot"; tail -50 /tmp/e2e-server.log; exit 1; }
+          npx lhci autorun
+
+      # Reports kept as a build artifact even when assertions pass, so the
+      # baseline is inspectable from the Actions UI.
+      - name: Upload Lighthouse reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: lhci-reports
+          path: web/lhci-reports

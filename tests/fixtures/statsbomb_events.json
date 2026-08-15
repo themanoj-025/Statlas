@@ -1,0 +1,30 @@
+[
+  {
+    "id": "evt-001",
+    "index": 1,
+    "minute": 12,
+    "second": 34,
+    "type": {"id": 16, "name": "Shot"},
+    "location": [42.5, 33.2],
+    "player": {"id": 1001, "name": "Robert Lewandowski"},
+    "shot": {
+      "outcome": {"id": 97, "name": "Goal"},
+      "technique": {"name": "Left Foot"},
+      "body_part": {"name": "Left Foot"}
+    }
+  },
+  {
+    "id": "evt-002",
+    "index": 2,
+    "minute": 41,
+    "second": 5,
+    "type": {"id": 30, "name": "Pass"},
+    "location": [60.1, 40.0],
+    "player": {"id": 1002, "name": "Luka Modric"},
+    "pass": {
+      "recipient": {"id": 1003, "name": "Vinicius Junior"},
+      "length": 15.2,
+      "angle": 24.5
+    }
+  }
+]

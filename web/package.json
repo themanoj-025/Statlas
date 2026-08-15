@@ -1,0 +1,35 @@
+{
+  "name": "statlas-web",
+  "version": "0.2.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "test": "node --test lib/share.test.ts lib/chartSvg.test.ts",
+    "test:e2e": "playwright test",
+    "test:e2e:core": "playwright test --project=e2e",
+    "test:e2e:breakpoints": "playwright test --project=mobile-375 --project=tablet-768 --project=desktop-1440",
+    "perf:audit": "lhci autorun"
+  },
+  "dependencies": {
+    "lucide-react": "^0.460.0",
+    "next": "16.3.0",
+    "react": "19.2.8",
+    "react-dom": "19.2.8"
+  },
+  "devDependencies": {
+    "@axe-core/playwright": "^4.13.0",
+    "@lhci/cli": "^0.15.1",
+    "@playwright/test": "^1.62.1",
+    "@types/node": "^22.10.0",
+    "@types/react": "^19.2.0",
+    "@types/react-dom": "^19.2.0",
+    "lighthouse": "^13.4.1",
+    "typescript": "^5.7.0"
+  },
+  "overrides": {
+    "tmp": "^0.2.6",
+    "@puppeteer/browsers": "^3.2.0"
+  }
+}

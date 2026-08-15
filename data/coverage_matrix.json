@@ -1,0 +1,232 @@
+{
+  "schema_version": 1,
+  "generated_from": "data_coverage table (Phase 1 implementation of the coverage matrix)",
+  "dataset_mode": "fixture-demo",
+  "rows": [
+    {
+      "source": "fbref",
+      "source_identifier": "2-bundesliga",
+      "seasons_available": [
+        "2025-26"
+      ],
+      "last_successful_scrape": "2026-08-12T03:00:00",
+      "status": "active"
+    },
+    {
+      "source": "fbref",
+      "source_identifier": "austrian-bundesliga",
+      "seasons_available": [
+        "2025-26"
+      ],
+      "last_successful_scrape": "2026-08-12T03:00:00",
+      "status": "active"
+    },
+    {
+      "source": "fbref",
+      "source_identifier": "belgian-pro-league",
+      "seasons_available": [
+        "2025-26"
+      ],
+      "last_successful_scrape": "2026-08-12T03:00:00",
+      "status": "active"
+    },
+    {
+      "source": "fbref",
+      "source_identifier": "bundesliga",
+      "seasons_available": [
+        "2025-26"
+      ],
+      "last_successful_scrape": "2026-08-12T03:00:00",
+      "status": "active"
+    },
+    {
+      "source": "fbref",
+      "source_identifier": "championship",
+      "seasons_available": [
+        "2025-26"
+      ],
+      "last_successful_scrape": "2026-08-12T03:00:00",
+      "status": "active"
+    },
+    {
+      "source": "fbref",
+      "source_identifier": "danish-superliga",
+      "seasons_available": [
+        "2025-26"
+      ],
+      "last_successful_scrape": "2026-08-12T03:00:00",
+      "status": "active"
+    },
+    {
+      "source": "fbref",
+      "source_identifier": "eredivisie",
+      "seasons_available": [
+        "2025-26"
+      ],
+      "last_successful_scrape": "2026-08-12T03:00:00",
+      "status": "active"
+    },
+    {
+      "source": "fbref",
+      "source_identifier": "greek-super-league",
+      "seasons_available": [
+        "2025-26"
+      ],
+      "last_successful_scrape": "2026-08-12T03:00:00",
+      "status": "active"
+    },
+    {
+      "source": "fbref",
+      "source_identifier": "la-liga",
+      "seasons_available": [
+        "2025-26"
+      ],
+      "last_successful_scrape": "2026-08-12T03:00:00",
+      "status": "active"
+    },
+    {
+      "source": "fbref",
+      "source_identifier": "la-liga-2",
+      "seasons_available": [
+        "2025-26"
+      ],
+      "last_successful_scrape": "2026-08-12T03:00:00",
+      "status": "active"
+    },
+    {
+      "source": "fbref",
+      "source_identifier": "ligue-1",
+      "seasons_available": [
+        "2025-26"
+      ],
+      "last_successful_scrape": "2026-08-12T03:00:00",
+      "status": "active"
+    },
+    {
+      "source": "fbref",
+      "source_identifier": "ligue-2",
+      "seasons_available": [
+        "2025-26"
+      ],
+      "last_successful_scrape": "2026-08-12T03:00:00",
+      "status": "active"
+    },
+    {
+      "source": "fbref",
+      "source_identifier": "premier-league",
+      "seasons_available": [
+        "2025-26"
+      ],
+      "last_successful_scrape": "2026-08-12T03:00:00",
+      "status": "active"
+    },
+    {
+      "source": "fbref",
+      "source_identifier": "primeira-liga",
+      "seasons_available": [
+        "2025-26"
+      ],
+      "last_successful_scrape": "2026-08-12T03:00:00",
+      "status": "active"
+    },
+    {
+      "source": "fbref",
+      "source_identifier": "scottish-premiership",
+      "seasons_available": [
+        "2025-26"
+      ],
+      "last_successful_scrape": "2026-08-12T03:00:00",
+      "status": "active"
+    },
+    {
+      "source": "fbref",
+      "source_identifier": "serie-a",
+      "seasons_available": [
+        "2025-26"
+      ],
+      "last_successful_scrape": "2026-08-12T03:00:00",
+      "status": "active"
+    },
+    {
+      "source": "fbref",
+      "source_identifier": "serie-b",
+      "seasons_available": [
+        "2025-26"
+      ],
+      "last_successful_scrape": "2026-08-12T03:00:00",
+      "status": "active"
+    },
+    {
+      "source": "fbref",
+      "source_identifier": "super-lig",
+      "seasons_available": [
+        "2025-26"
+      ],
+      "last_successful_scrape": "2026-08-12T03:00:00",
+      "status": "active"
+    },
+    {
+      "source": "fbref",
+      "source_identifier": "swiss-super-league",
+      "seasons_available": [
+        "2025-26"
+      ],
+      "last_successful_scrape": "2026-08-12T03:00:00",
+      "status": "active"
+    },
+    {
+      "source": "statsbomb",
+      "source_identifier": "statsbomb:12:2025",
+      "seasons_available": [
+        "2025/2026"
+      ],
+      "last_successful_scrape": "2026-08-12T03:00:00",
+      "status": "active"
+    },
+    {
+      "source": "understat",
+      "source_identifier": "bundesliga",
+      "seasons_available": [
+        "2025-26"
+      ],
+      "last_successful_scrape": "2026-08-12T03:00:00",
+      "status": "active"
+    },
+    {
+      "source": "understat",
+      "source_identifier": "la-liga",
+      "seasons_available": [
+        "2025-26"
+      ],
+      "last_successful_scrape": "2026-08-12T03:00:00",
+      "status": "active"
+    },
+    {
+      "source": "understat",
+      "source_identifier": "ligue-1",
+      "seasons_available": [
+        "2025-26"
+      ],
+      "last_successful_scrape": "2026-08-12T03:00:00",
+      "status": "active"
+    },
+    {
+      "source": "understat",
+      "source_identifier": "premier-league",
+      "seasons_available": [
+        "2025-26"
+      ],
+      "last_successful_scrape": "2026-08-12T03:00:00",
+      "status": "active"
+    },
+    {
+      "source": "understat",
+      "source_identifier": "serie-a",
+      "seasons_available": [
+        "2025-26"
+      ],
+      "last_successful_scrape": "2026-08-12T03:00:00",
+      "status": "active"
+    }
+  ]
+}

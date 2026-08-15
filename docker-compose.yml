@@ -1,0 +1,84 @@
+# Statlas — production hosting stack (docker compose v2)
+#
+# Services: db (PostgreSQL, schema.sql applied on first boot), api (FastAPI),
+# web (Next.js standalone). `seed` is opt-in behind the `seed` profile: it
+# loads the labeled fixture-demo data through the REAL pipeline so a local
+# compose stack shows data immediately (never production data).
+#
+#   docker compose up -d --build --wait      # full stack on :3000
+#   docker compose --profile seed run --rm seed   # populate Postgres
+#   docker compose down -v                   # full reset (fresh schema next up)
+#
+# Overrides via .env: POSTGRES_USER/PASSWORD/DB, STATLAS_PUBLIC_API_URL.
+
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-statlas}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-statlas_dev_password}
+      POSTGRES_DB: ${POSTGRES_DB:-statlas}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      # Canonical DDL (app/schema.sql) is applied by the postgres image's initdb
+      # mechanism — but only on a FRESH volume. Schema changes after first boot
+      # need `docker compose down -v` + up (or a real migration tool).
+      - ./app/schema.sql:/docker-entrypoint-initdb.d/001-schema.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-statlas} -d ${POSTGRES_DB:-statlas}"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+    restart: unless-stopped
+
+  api:
+    build: .
+    environment:
+      DATABASE_URL: postgresql+psycopg2://${POSTGRES_USER:-statlas}:${POSTGRES_PASSWORD:-statlas_dev_password}@db:5432/${POSTGRES_DB:-statlas}
+      STATLAS_DATASET_MODE: ${STATLAS_DATASET_MODE:-fixture-demo}
+      STATLAS_LOG_LEVEL: ${STATLAS_LOG_LEVEL:-INFO}
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "8000:8000"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/v1/health', timeout=3)"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 10s
+    restart: unless-stopped
+
+  web:
+    build:
+      context: ./web
+      args:
+        # Baked into client bundles at build time — must be reachable from the
+        # browser (localhost for a local compose stack; your domain in prod).
+        NEXT_PUBLIC_STATLAS_API_URL: ${STATLAS_PUBLIC_API_URL:-http://localhost:8000}
+    environment:
+      # Server components reach the API on the compose network (runtime env —
+      # deliberately not baked at build time, see web/next.config.mjs).
+      STATLAS_API_URL: http://api:8000
+    depends_on:
+      api:
+        condition: service_healthy
+    ports:
+      - "3000:3000"
+    restart: unless-stopped
+
+  seed:
+    profiles: ["seed"]
+    build: .
+    environment:
+      DATABASE_URL: postgresql+psycopg2://${POSTGRES_USER:-statlas}:${POSTGRES_PASSWORD:-statlas_dev_password}@db:5432/${POSTGRES_DB:-statlas}
+      STATLAS_LOG_LEVEL: WARNING
+    depends_on:
+      db:
+        condition: service_healthy
+    command: ["python", "scripts/seed_dev_db.py"]
+    restart: "no"
+
+volumes:
+  pgdata:

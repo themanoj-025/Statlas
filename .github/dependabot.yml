@@ -1,0 +1,30 @@
+# Statlas — Dependabot configuration (closeout C5: dependency scanning).
+# Automated dependency updates surface known-vulnerability fixes early; the
+# enforced vulnerability gates live in .github/workflows/ci.yml
+# (pip-audit + npm audit). PRs from these jobs run the same CI gates.
+
+version: 2
+updates:
+  - package-ecosystem: "pip"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "06:00"
+      timezone: "UTC"
+    open-pull-requests-limit: 5
+    labels:
+      - "dependencies"
+      - "python"
+
+  - package-ecosystem: "npm"
+    directory: "/web"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "06:30"
+      timezone: "UTC"
+    open-pull-requests-limit: 5
+    labels:
+      - "dependencies"
+      - "javascript"

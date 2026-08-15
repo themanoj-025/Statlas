@@ -1,0 +1,37 @@
+{
+  "schema_version": 1,
+  "generated_from": "percentile-rules.md + methodology.md (Phase 0)",
+  "tiers": {
+    "tier_1": ["premier-league", "la-liga", "serie-a", "bundesliga", "ligue-1"],
+    "tier_2": [
+      "eredivisie", "primeira-liga", "belgian-pro-league", "super-lig",
+      "scottish-premiership", "austrian-bundesliga", "swiss-super-league",
+      "greek-super-league", "danish-superliga"
+    ],
+    "tier_3": [
+      "championship", "la-liga-2", "serie-b", "2-bundesliga", "ligue-2"
+    ]
+  },
+  "leagues": {
+    "premier-league":        {"name": "Premier League",        "country": "England", "tier": "tier_1", "external_ids": {"fbref_comp": 9,  "understat": "EPL",       "api_football": 39}},
+    "la-liga":               {"name": "La Liga",               "country": "Spain",   "tier": "tier_1", "external_ids": {"fbref_comp": 12, "understat": "La_liga",    "api_football": 140}},
+    "serie-a":               {"name": "Serie A",               "country": "Italy",   "tier": "tier_1", "external_ids": {"fbref_comp": 11, "understat": "Serie_A",    "api_football": 135}},
+    "bundesliga":            {"name": "Bundesliga",            "country": "Germany", "tier": "tier_1", "external_ids": {"fbref_comp": 20, "understat": "Bundesliga", "api_football": 78}},
+    "ligue-1":               {"name": "Ligue 1",               "country": "France",  "tier": "tier_1", "external_ids": {"fbref_comp": 13, "understat": "Ligue_1",    "api_football": 61}},
+    "eredivisie":            {"name": "Eredivisie",            "country": "Netherlands", "tier": "tier_2", "external_ids": {"fbref_comp": 23, "api_football": 88}},
+    "primeira-liga":         {"name": "Primeira Liga",         "country": "Portugal",   "tier": "tier_2", "external_ids": {"fbref_comp": 32, "api_football": 94}},
+    "belgian-pro-league":    {"name": "Belgian Pro League",    "country": "Belgium",    "tier": "tier_2", "external_ids": {"fbref_comp": 37, "api_football": 144}},
+    "super-lig":             {"name": "Süper Lig",             "country": "Turkey",     "tier": "tier_2", "external_ids": {"fbref_comp": 26, "api_football": 203}},
+    "scottish-premiership":  {"name": "Scottish Premiership",  "country": "Scotland",   "tier": "tier_2", "external_ids": {"fbref_comp": 40, "api_football": 179}},
+    "austrian-bundesliga":   {"name": "Austrian Bundesliga",   "country": "Austria",    "tier": "tier_2", "external_ids": {"fbref_comp": 44, "api_football": 218}},
+    "swiss-super-league":    {"name": "Swiss Super League",    "country": "Switzerland","tier": "tier_2", "external_ids": {"fbref_comp": 34, "api_football": 207}},
+    "greek-super-league":    {"name": "Greek Super League",    "country": "Greece",     "tier": "tier_2", "external_ids": {"fbref_comp": 63, "api_football": 197}},
+    "danish-superliga":      {"name": "Danish Superliga",      "country": "Denmark",    "tier": "tier_2", "external_ids": {"fbref_comp": 62, "api_football": 119}},
+    "championship":          {"name": "Championship",          "country": "England", "tier": "tier_3", "external_ids": {"fbref_comp": 10, "api_football": 180}},
+    "la-liga-2":             {"name": "La Liga 2",             "country": "Spain",   "tier": "tier_3", "external_ids": {"fbref_comp": 17, "api_football": 141}},
+    "serie-b":               {"name": "Serie B",               "country": "Italy",   "tier": "tier_3", "external_ids": {"fbref_comp": 18, "api_football": 136}},
+    "2-bundesliga":          {"name": "2. Bundesliga",         "country": "Germany", "tier": "tier_3", "external_ids": {"fbref_comp": 33, "api_football": 79}},
+    "ligue-2":               {"name": "Ligue 2",               "country": "France",  "tier": "tier_3", "external_ids": {"fbref_comp": 60, "api_football": 62}}
+  },
+  "note": "fbref_comp and api_football ids were transcribed from known public ids and MUST be verified against the live sources at first real scrape (see data-compliance-notes.md). understat slugs only exist for the Big-5 (Tier 1), which is the documented xG model rule."
+}

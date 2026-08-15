@@ -1,0 +1,463 @@
+/* ==========================================================================
+   STATLAS DESIGN TOKENS — Phase 0, C1–C3
+   The single source of truth for visual tokens. Import this file first in
+   Phase 2; no component may hardcode a color, spacing, radius, or duration.
+
+   Palette rationale (C1): "pitch green / chalk white / one confident accent".
+   Three candidates were evaluated:
+
+   1. [SELECTED] "Pitch & Chalk & Amber" — deep pine green + warm chalk + deep
+      amber accent. Football-heritage grounding (turf + whiteboard), warm chalk
+      reduces glare in long scouting sessions, and the amber carries authority
+      without the default AI-app indigo/violet look.
+   2. "Forest & Brass" — darker forest green (#0F3D28) with brass (#9A7B2D) and
+      a cooler chalk (#F5F5F2). More "trophy cabinet" and premium; kept as the
+      alt for a darker brand direction.
+   3. "Pitch-Line Blue" — pitch green (#1B6B3C) with a steely pitch-line blue
+      accent (#2F6F97) distinct from Tailwind blue-600 (#2563EB). Cooler,
+      broadcast-graphics feel; alt if the product goes colder.
+
+   ALL contrast ratios in this file were computed with the WCAG 2.x relative-
+   luminance formula (sRGB linearization) and machine-verified on 2026-08-11.
+   Every text pair meets AA (>= 4.5:1); focus indicators meet 3:1. Non-text
+   pairs that are fills/lines are documented as such — numeric labels always
+   accompany color encoding (Constitution §2).
+
+   ========================================================================== */
+
+/* ==========================================================================
+   1. COLOR — RAW SCALES
+   ========================================================================== */
+
+:root {
+  /* Pitch green — the brand's primary hue */
+  --pitch-50:  #EAF4EE;  /* green-tinted surface (success wells, selected rows) */
+  --pitch-100: #CDE4D6;  /* hover fills on green tints */
+  --pitch-200: #9CCBB1;  /* chart mid-light green */
+  --pitch-300: #5CAD82;  /* dark-theme links/positive text (7.01:1 on dark) */
+  --pitch-400: #2E8A5B;  /* strong green fills (never a text color on white) */
+  --pitch-500: #1F6E47;  /* top-decile percentile fill, dark-theme buttons */
+  --pitch-600: #1A5F3E;  /* PRIMARY button bg (white text 6.64:1) */
+  --pitch-700: #144E33;  /* link text on light (9.2:1 on surface); button hover */
+  --pitch-800: #0F3D28;  /* deep green section backgrounds */
+  --pitch-900: #0B2E1F;  /* darkest green (dark-theme green wells) */
+
+  /* Warm chalk gray scale — 11 steps; every step has a documented job.
+     Warm (not neutral) to sit beside the chalk surface. */
+  --gray-50:   #FAF9F6;  /* page background (light theme surface) */
+  --gray-100:  #F1EFE9;  /* sunken wells, table stripes, secondary surfaces */
+  --gray-200:  #E4E1D8;  /* borders, dividers, skeleton fills */
+  --gray-300:  #CFCBC0;  /* strong borders, percentile mid anchor */
+  --gray-400:  #A8A296;  /* disabled controls, placeholders */
+  --gray-500:  #6B6558;  /* muted TEXT (5.5:1 on surface; 5.79:1 on white) */
+  --gray-600:  #5C574C;  /* secondary text (6.82:1 on surface) */
+  --gray-700:  #413D34;  /* emphasis text, table headers */
+  --gray-800:  #2B2822;  /* dark-theme borders and wells */
+  --gray-900:  #1A1814;  /* primary text (light theme) — 16.84:1 on surface */
+  --gray-950:  #12100D;  /* dark-theme page background */
+
+  /* Deep amber — the accent. Deliberately NOT Tailwind's amber-600; a
+     browner, more "floodlight" amber. */
+  --amber-50:  #FDF4E7;  /* accent tinted surface */
+  --amber-100: #FAE7C8;  /* accent tint hover */
+  --amber-200: #F4CF8F;  /* chart amber (light) */
+  --amber-300: #E8B45C;  /* dark-theme accent text (10.05:1 on dark) */
+  --amber-400: #D98E2B;  /* warning text on dark (7.1:1) */
+  --amber-500: #C27413;  /* amber chart mid */
+  --amber-600: #A85F0E;  /* ACCENT base on light (4.63:1 on surface; 4.87:1 on white) */
+  --amber-700: #8A4B0B;  /* accent hover on light (6.45:1) */
+  --amber-800: #6E3B0A;
+  --amber-900: #572F0C;  /* dark-theme accent wells */
+
+  /* Focus ring — a "pitch-line blue", distinct from Tailwind blue-600. */
+  --blue-600:  #1E6FB8;  /* focus ring, light theme (4.96:1 vs surface, 3:1+ OK) */
+  --blue-300:  #8FC7EA;  /* focus ring, dark theme (10.42:1 vs dark bg) */
+
+  /* Semantic status hues */
+  --red-700:   #B3261E;  /* danger text/light (6.21:1 on surface) */
+  --red-400:   #E57368;  /* danger text/dark (6.32:1 on dark bg) */
+  --red-300:   #F0A39B;  /* danger fills on dark */
+  --green-700: #2E7D4F;  /* success text/light (4.79:1 on surface) */
+  --green-600: #1E7B4F;  /* data-positive text/light (4.98:1) */
+  --green-500: #6BC794;  /* data-positive text/dark (9.25:1) */
+  --green-400: #5CAD82;  /* success text/dark (7.01:1); same as pitch-300 by design */
+  --orange-700:#B45309;  /* warning text/light (4.77:1) */
+
+  /* Categorical chart palette — Okabe-Ito derived (colorblind-safe,
+     deuteranopia/protanopia tested); used ONLY for comparing teams, leagues,
+     positions. Never as text-only encoding. */
+  --cat-blue:       #0072B2;
+  --cat-vermillion: #D55E00;
+  --cat-orange:     #E69F00;
+  --cat-green:      #009E73;
+  --cat-sky:        #56B4E9;
+  --cat-yellow:     #F0E442;
+  --cat-purple:     #CC79A7;
+  --cat-black:      #000000; /* swapped for --cat-ink in dark theme (lines) */
+}
+
+/* ==========================================================================
+   2. COLOR — SEMANTIC TOKENS (LIGHT THEME)
+   ========================================================================== */
+
+:root {
+  /* Surfaces */
+  --color-surface:       #FAF9F6; /* page background */
+  --color-surface-raised: #FFFFFF; /* cards, modals, popovers */
+  --color-surface-sunken: #F1EFE9; /* wells, table bodies, code */
+  --color-surface-overlay: rgba(18, 16, 13, 0.45); /* scrims */
+
+  /* Text */
+  --color-text-primary:   #1A1814;
+  --color-text-secondary: #5C574C;
+  --color-text-muted:     #6B6558; /* AA-verified (5.5:1) */
+  --color-text-disabled:  #A8A296;
+  --color-text-inverse:   #F1EFE9; /* on primary buttons */
+
+  /* Interactive */
+  --color-primary:        #1A5F3E; /* primary buttons (white text 6.64:1) */
+  --color-primary-hover:  #144E33;
+  --color-primary-active: #0F3D28;
+  --color-primary-muted:  #EAF4EE; /* tinted button/focus wells */
+  --color-primary-contrast:#F1EFE9; /* text on --color-primary */
+  --color-link:           #144E33; /* inline links (9.2:1) */
+  --color-link-hover:     #0B2E1F;
+
+  --color-accent:         #A85F0E; /* brand accent (4.63:1) */
+  --color-accent-hover:   #8A4B0B;
+  --color-accent-muted:   #FDF4E7;
+  --color-accent-contrast:#FDF4E7; /* text on accent pills */
+
+  /* Semantic status */
+  --color-success:        #2E7D4F; /* 4.79:1 */
+  --color-success-muted:  #EAF4EE;
+  --color-warning:        #B45309; /* 4.77:1 */
+  --color-warning-muted:  #FDF4E7;
+  --color-danger:         #B3261E; /* 6.21:1 */
+  --color-danger-muted:   #FBEAE9;
+
+  /* Data semantics (percentile/stat coloring) — color is NEVER the only
+     signal; every use carries a numeric label (Constitution §2). */
+  --color-data-positive: #1E7B4F; /* 4.98:1 */
+  --color-data-negative: #B03A2E; /* 5.71:1 */
+
+  /* Focus — visible ring, never removed (WCAG 2.4.11, 3:1 verified) */
+  --color-focus-ring: #1E6FB8;
+  --focus-ring: 0 0 0 2px var(--color-surface), 0 0 0 4px var(--color-focus-ring);
+
+  /* Borders & dividers */
+  --color-border:        #E4E1D8;
+  --color-border-strong: #CFCBC0;
+  --color-divider:       #E4E1D8;
+
+  /* Selection */
+  --color-selection: #CDE4D6;
+  --color-row-hover: rgba(26, 24, 20, 0.04);
+  --color-row-selected: #EAF4EE;
+
+  /* Table infrastructure (mobile: sticky first column uses surface bg) */
+  --table-sticky-col-bg: #FAF9F6;
+  --table-row-odd-bg: transparent;
+  --table-row-even-bg: rgba(26, 24, 20, 0.02);
+}
+
+/* ==========================================================================
+   3. COLOR — SEMANTIC TOKENS (DARK THEME)
+   Dark mode is in scope from day one; every component is designed in both.
+   ========================================================================== */
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --color-surface:         #12100D;
+    --color-surface-raised:  #1C1A15;
+    --color-surface-sunken:  #17150F;
+    --color-surface-overlay: rgba(0, 0, 0, 0.6);
+
+    --color-text-primary:   #F1EFE9;
+    --color-text-secondary: #A8A296; /* 7.48:1 on dark */
+    --color-text-muted:     #8A8578; /* 5.16:1 on dark */
+    --color-text-disabled:  #413D34;
+    --color-text-inverse:   #FFFFFF;
+
+    --color-primary:         #1F6E47; /* white text 6.21:1 on dark bg */
+    --color-primary-hover:   #2B7A4E; /* white text 5.25:1 — verified */
+    --color-primary-active:  #1A5F3E;
+    --color-primary-muted:   #0F3D28;
+    --color-primary-contrast:#FFFFFF;
+    --color-link:            #5CAD82; /* 7.01:1 on dark */
+    --color-link-hover:      #6BC794;
+
+    --color-accent:          #E8B45C; /* 10.05:1 on dark */
+    --color-accent-hover:    #F4CF8F; /* lightens on dark (7.8:1 on amber wells) */
+    --color-accent-muted:    #572F0C;
+    --color-accent-contrast: #1A1814;
+
+    --color-success:        #5CAD82; /* 7.01:1 */
+    --color-success-muted:  #0F3D28;
+    --color-warning:        #D98E2B; /* 7.1:1 */
+    --color-warning-muted:  #572F0C;
+    --color-danger:         #E57368; /* 6.32:1 */
+    --color-danger-muted:   #3A1714;
+
+    --color-data-positive: #6BC794; /* 9.25:1 */
+    --color-data-negative: #E57368; /* 6.32:1 */
+
+    --color-focus-ring: #8FC7EA;
+    --color-border:        #2B2822;
+    --color-border-strong: #413D34;
+    --color-divider:       #2B2822;
+
+    --color-selection: #144E33;
+    --color-row-hover: rgba(241, 239, 233, 0.05);
+    --color-row-selected: #0F3D28;
+
+    --table-sticky-col-bg: #12100D;
+    --table-row-even-bg: rgba(241, 239, 233, 0.03);
+
+    /* Dark-theme chart adjustments */
+    --cat-ink: #E5E1D8; /* replaces --cat-black for lines */
+
+    /* Dark-theme text-safe percentile ramp (7.48:1 / 5.16:1 / 7.48:1 /
+    7.01:1 / 9.25:1 on dark surface). */
+    --color-pct-text-1: #A8A296;
+    --color-pct-text-2: #8A8578;
+    --color-pct-text-3: #A8A296;
+    --color-pct-text-4: #5CAD82;
+    --color-pct-text-5: #6BC794;
+  }
+}
+
+/* Manual override: force light or dark regardless of system */
+:root[data-theme="light"] {
+  --color-surface: #FAF9F6; --color-surface-raised: #FFFFFF; --color-surface-sunken: #F1EFE9;
+  --color-text-primary: #1A1814; --color-text-secondary: #5C574C; --color-text-muted: #6B6558;
+  --color-text-inverse: #F1EFE9; --color-primary: #1A5F3E; --color-primary-hover: #144E33;
+  --color-link: #144E33; --color-accent: #A85F0E; --color-accent-hover: #8A4B0B;
+  --color-success: #2E7D4F; --color-warning: #B45309; --color-danger: #B3261E;
+  --color-data-positive: #1E7B4F; --color-data-negative: #B03A2E;
+  --color-focus-ring: #1E6FB8; --color-border: #E4E1D8; --cat-ink: #000000;
+  --table-sticky-col-bg: #FAF9F6; --color-row-hover: rgba(26,24,20,0.04);
+  --color-pct-text-1: #5C574C; --color-pct-text-2: #6B6558; --color-pct-text-3: #5C574C;
+  --color-pct-text-4: #2E7D4F; --color-pct-text-5: #144E33;
+}
+:root[data-theme="dark"] {
+  --color-surface: #12100D; --color-surface-raised: #1C1A15; --color-surface-sunken: #17150F;
+  --color-text-primary: #F1EFE9; --color-text-secondary: #A8A296; --color-text-muted: #8A8578;
+  --color-text-inverse: #FFFFFF; --color-primary: #1F6E47; --color-primary-hover: #2B7A4E;
+  --color-link: #5CAD82; --color-accent: #E8B45C; --color-accent-hover: #F4CF8F;
+  --color-success: #5CAD82; --color-warning: #D98E2B; --color-danger: #E57368;
+  --color-data-positive: #6BC794; --color-data-negative: #E57368;
+  --color-focus-ring: #8FC7EA; --color-border: #2B2822; --cat-ink: #E5E1D8;
+  --table-sticky-col-bg: #12100D; --color-row-hover: rgba(241,239,233,0.05);
+  --color-pct-text-1: #A8A296; --color-pct-text-2: #8A8578; --color-pct-text-3: #A8A296;
+  --color-pct-text-4: #5CAD82; --color-pct-text-5: #6BC794;
+}
+
+/* ==========================================================================
+   4. COLOR — CHART & PERCENTILE TOKENS
+   Value axes start at zero; one gridline treatment site-wide; no 3D, no
+   gradients-on-charts, no rainbow palettes (Constitution §2).
+   ========================================================================== */
+
+:root {
+  /* Percentile diverging scale — neutral (no signal) to deep pitch green.
+     Deliberately avoids red in the ramp: the end-pairing stays legible under
+     deuteranopia/protanopia, and numeric labels are mandatory alongside. */
+  --color-pct-1: #5C574C; /* bottom decile — "no signal" */
+  --color-pct-2: #8A8578;
+  --color-pct-3: #CFCBC0; /* neutral midpoint */
+  --color-pct-4: #5CAD82;
+  --color-pct-5: #1F6E47; /* top decile */
+
+  /* Text-safe percentile ramp (WCAG AA-verified pairs): the ramp above is
+     CHART FILL only — never a text colour (it fails AA as text). Numeric
+     labels that carry the same signal use these darker theme-aware tokens.
+     Light: 6.82:1 / 5.5:1 / 6.82:1 / 4.79:1 / 9.2:1 on surface. */
+  --color-pct-text-1: #5C574C;
+  --color-pct-text-2: #6B6558;
+  --color-pct-text-3: #5C574C;
+  --color-pct-text-4: #2E7D4F;
+  --color-pct-text-5: #144E33;
+
+  /* Chart furniture */
+  --chart-axis:      #6B6558;
+  --chart-gridline:  #E4E1D8; /* one gridline treatment, everywhere */
+  --chart-zero-line: #A8A296;
+  --chart-label:     #5C574C;
+  --chart-font: var(--font-data); /* data family with tabular figures */
+
+  /* Categorical (Okabe-Ito); --cat-ink swaps with theme for line charts */
+  --cat-ink: #000000;
+}
+
+/* ==========================================================================
+   5. TYPOGRAPHY (C2) — exactly two families (Constitution §2)
+   Family 1 — Sora (SIL OFL, free incl. commercial): UI/display/body across
+     its weight range. Distinctive geometric grotesque; deliberately NOT the
+     Inter/system-ui default. Google Fonts.
+   Family 2 — IBM Plex Sans (SIL OFL): data/table family with tabular figures
+     (font-variant-numeric: tabular-nums). NOTE: self-host the full IBM Plex
+     Sans binaries from github.com/IBM/plex so the tnum OpenType feature is
+     preserved (Google Fonts' subsetted CSS API can strip optional features).
+     Fallback data family if licensing changes: Barlow (OFL, tnum since v1.5).
+   No third family is ever added (Never-List).
+   ========================================================================== */
+
+/* @import url("https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap"); */
+
+:root {
+  --font-ui:   "Sora", "Segoe UI", system-ui, sans-serif;
+  --font-data: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+
+  /* Modular type scale, ratio 1.25, base 1rem = 16px.
+     Named steps --text-xs … --text-4xl; no arbitrary per-component sizes. */
+  --text-xs:   0.75rem;   /* 12px — table cells, captions, footnotes */
+  --text-sm:   0.875rem;  /* 14px — UI labels, secondary copy, table headers */
+  --text-base: 1rem;      /* 16px — body copy */
+  --text-lg:   1.25rem;   /* 20px — lead copy, card titles */
+  --text-xl:   1.5625rem; /* 25px — section titles */
+  --text-2xl:  1.9531rem; /* 31.25px — page titles */
+  --text-3xl:  2.4414rem; /* 39.06px — display */
+  --text-4xl:  3.0518rem; /* 48.83px — hero/display */
+
+  /* Line heights */
+  --leading-tight:   1.15; /* display (3xl, 4xl) */
+  --leading-snug:    1.25; /* 2xl */
+  --leading-normal:  1.4;  /* lg, xl */
+  --leading-relaxed: 1.5;  /* base, sm, xs */
+
+  /* Letter spacing: slight negative tracking on display sizes only */
+  --tracking-display: -0.02em;
+  --tracking-heading: -0.015em;
+  --tracking-normal:  0;
+
+  /* Font weights (both families support 400/500/600/700) */
+  --weight-regular: 400;
+  --weight-medium:  500;
+  --weight-semibold: 600;
+  --weight-bold:    700;
+}
+
+/* Numeric display rule: every number — tables, badges, axes, percentiles —
+   uses the data family with tabular figures so columns align. */
+.tabular-nums,
+.tbl,
+[data-numeric],
+thead th,
+tbody td,
+.axis-label,
+.stat-badge,
+.percentile,
+.leaderboard td:nth-child(n+2) {
+  font-family: var(--font-data);
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1, "lnum" 1;
+}
+
+/* ==========================================================================
+   6. SPACING (C3) — 8px base grid; 4px reserved for dense tables/charts.
+   Every padding/margin/gap is a token; no arbitrary values (Constitution §2).
+   ========================================================================== */
+
+:root {
+  --space-1:  0.25rem;  /* 4px  — RESERVED: dense table cells, chart internals */
+  --space-2:  0.5rem;   /* 8px  — base unit: icon gaps, tight groups */
+  --space-3:  1rem;     /* 16px — card padding, form fields */
+  --space-4:  1.5rem;   /* 24px — section gaps, card grids */
+  --space-5:  2rem;     /* 32px — block separation */
+  --space-6:  2.5rem;   /* 40px — major sections */
+  --space-7:  3rem;     /* 48px — page section rhythm */
+  --space-8:  4rem;     /* 64px — hero spacing, wide gutters */
+  --space-9:  5rem;     /* 80px — page gutters (desktop) */
+  --space-10: 6rem;     /* 96px — landing rhythm */
+  --space-11: 8rem;     /* 128px */
+  --space-12: 10rem;    /* 160px */
+}
+
+/* ==========================================================================
+   7. LAYOUT — breakpoints, containers, grid (C3)
+   Layout approach (locked): CSS Grid for page structure (12-column at
+   desktop, fluid minmax columns at mobile, gaps from the spacing scale);
+   flexbox only for component-internal alignment (toolbars, button rows,
+   stat rows). Tables: sticky first column + horizontal scroll below 768px —
+   never squeeze 10 columns into 375px.
+   ========================================================================== */
+
+:root {
+  --bp-mobile:  375px;  /* design & test target (no smaller goes unsupported) */
+  --bp-tablet:  768px;  /* layout reflows; tables switch to sticky-col+scroll */
+  --bp-desktop: 1440px; /* max design canvas; content constrained below */
+
+  /* Fluid container widths */
+  --container-sm:  40rem;   /* 640px — forms, single columns */
+  --container-md:  60rem;   /* 960px — standard content */
+  --container-lg:  75rem;   /* 1200px — dashboards, leaderboards */
+  --container-xl:  90rem;   /* 1440px — full-bleed data tables */
+
+  /* Grid */
+  --grid-gutter: var(--space-4);
+  --grid-columns-desktop: 12;
+  --grid-columns-tablet:  6;
+  --grid-columns-mobile:  4;
+}
+
+/* ==========================================================================
+   8. RADIUS, SHADOW, MOTION (Constitution §2: tokens, not vibes)
+   ========================================================================== */
+
+:root {
+  --radius-sm:  0.25rem;  /* 4px — chips, badges */
+  --radius-md:  0.5rem;   /* 8px — inputs, cards */
+  --radius-lg:  0.75rem;  /* 12px — large cards, modals */
+  --radius-xl:  1rem;     /* 16px — hero cards */
+  --radius-pill: 999px;   /* pills, tags */
+
+  --shadow-sm: 0 1px 2px rgba(18, 16, 13, 0.06);
+  --shadow-md: 0 4px 12px rgba(18, 16, 13, 0.08);
+  --shadow-lg: 0 12px 32px rgba(18, 16, 13, 0.14);
+  --shadow-focus: var(--focus-ring);
+
+  /* Motion: restrained, functional only (state transitions, hover feedback).
+     No decorative flourish. */
+  --duration-fast:   120ms;
+  --duration-base:   200ms;
+  --duration-slow:   320ms;
+  --ease-out:    cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+
+  /* Z-index scale */
+  --z-base: 0;
+  --z-sticky: 100;   /* sticky table headers/columns */
+  --z-header: 200;
+  --z-overlay: 300;  /* scrims */
+  --z-modal: 400;
+  --z-toast: 500;
+}
+
+/* ==========================================================================
+   9. PRINT / EXPORT (scout reports) — clean PDF from day one.
+   Token colors survive grayscale, tabular numbers stay intact, recency line
+   and source attribution print on every report (Constitution §2).
+   ========================================================================== */
+
+@media print {
+  :root {
+    --color-surface: #FFFFFF;
+    --color-text-primary: #000000;
+    --color-text-secondary: #1A1814;
+    --color-text-muted: #5C574C;
+    --color-border: #CFCBC0;
+    --color-link: #000000;
+  }
+  * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .no-print { display: none !important; }
+  a { text-decoration: underline; }
+}
+
+/* ==========================================================================
+   10. BASELINE CONSUMPTION RULES (Phase 2 enforcement)
+   Rule zero (Constitution §2): no default framework styling unmodified.
+   If Tailwind/shadcn is used, these tokens override the default palette,
+   radii, and shadows before any screen is built. Never reference raw hex in
+   components — always var(--token).
+   ========================================================================== */
