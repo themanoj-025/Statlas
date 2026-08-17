@@ -10,6 +10,7 @@ import { ThemeToggle } from "./ThemeToggle";
 
 const NAV_ITEMS = [
   { href: "/positions", label: "Leaderboards" },
+  { href: "/search", label: "Search" },
   { href: "/compare", label: "Compare" },
   { href: "/trend", label: "Trend" },
   { href: "/methodology", label: "Methodology" },

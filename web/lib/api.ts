@@ -21,6 +21,10 @@ import type {
   ShortlistMemberships,
   SimilarPlayer,
   SubscriptionStatusPayload,
+  SavedSearchesPayload,
+  SearchHistoryPayload,
+  SearchPreset,
+  SearchResults,
   TagSuggestions,
   TeamPayload,
   TrendPayload,
@@ -187,15 +191,76 @@ export const api = {
   removeEntry: (entryId: number) => post<{ ok: boolean }>(`/api/v1/workspace/entries/${entryId}/remove`, {}),
   removeShortlist: (shortlistId: number) =>
     post<{ ok: boolean }>(`/api/v1/workspace/${shortlistId}/remove`, {}),
+  // Phase 8 — structured search. Execution is public; saved/history are
+  // session-authenticated (Phase 7 ownership pattern). Presets are public.
+  executeSearch: (
+    queryDefinition: unknown,
+    params: {
+      limit?: number;
+      offset?: number;
+      sort_by?: string;
+      sort_dir?: string;
+      log_history?: boolean;
+    } = {},
+    init?: RequestInit
+  ) =>
+    post<SearchResults>(
+      `/api/v1/search/execute${qs(params as Record<string, string | number | undefined>)}`,
+      { query_definition: queryDefinition },
+      init
+    ),
+  searchPresets: () => get<{ presets: SearchPreset[] }>("/api/v1/search/presets"),
+  savedSearches: () => get<SavedSearchesPayload>("/api/v1/search/saved"),
+  saveSearch: (name: string, queryDefinition: unknown, description?: string | null) =>
+    post<SavedSearchesPayload["searches"][number]>("/api/v1/search/saved", {
+      name,
+      description: description ?? null,
+      query_definition: queryDefinition,
+    }),
+  runSavedSearch: (searchId: number, params: { limit?: number; offset?: number; sort_by?: string; sort_dir?: string } = {}) =>
+    post<{ saved: SavedSearchesPayload["searches"][number]; results: SearchResults }>(
+      `/api/v1/search/saved/${searchId}/run${qs(params as Record<string, string | number | undefined>)}`,
+      {}
+    ),
+  deleteSavedSearch: (searchId: number) =>
+    del<{ ok: boolean }>(`/api/v1/search/saved/${searchId}`),
+  searchHistory: (limit = 20) =>
+    get<SearchHistoryPayload>(`/api/v1/search/history${qs({ limit })}`),
+  rerunHistoryEntry: (historyId: number, params: { limit?: number; offset?: number; sort_by?: string; sort_dir?: string } = {}) =>
+    post<{ reran: { history_id: number }; results: SearchResults }>(
+      `/api/v1/search/history/${historyId}/rerun${qs(params as Record<string, string | number | undefined>)}`,
+      {}
+    ),
 };
 
-async function post<T>(path: string, body: unknown): Promise<T> {
+async function del<T>(path: string): Promise<T> {
+  const res = await fetch(`${API_URL}${path}`, {
+    method: "DELETE",
+    credentials: "include",
+    cache: "no-store",
+    headers: { Accept: "application/json" },
+  });
+  if (!res.ok) {
+    let detail = `API ${res.status}`;
+    try {
+      const parsed = await res.json();
+      if (typeof parsed.detail === "string") detail = parsed.detail;
+    } catch {
+      /* non-JSON */
+    }
+    throw new ApiError(res.status, detail);
+  }
+  return res.json() as Promise<T>;
+}
+
+async function post<T>(path: string, body: unknown, init?: RequestInit): Promise<T> {
   const res = await fetch(`${API_URL}${path}`, {
     method: "POST",
     credentials: "include",
     cache: "no-store",
-    headers: { "Content-Type": "application/json", Accept: "application/json" },
+    headers: { "Content-Type": "application/json", Accept: "application/json", ...(init?.headers ?? {}) },
     body: JSON.stringify(body),
+    ...init,
   });
   if (!res.ok) {
     let detail = `API ${res.status}`;
