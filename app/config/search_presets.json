@@ -1,0 +1,145 @@
+{
+  "schema_version": 1,
+  "generated_from": "docs/product/query-builder-scope.md (Phase 8)",
+  "note": "Statlas-authored curated starting points for the structured query builder. Presets are NOT user-owned data; they are public by design. Every metric id is a canonical Metric Registry id. Validated by scripts/validate_search_presets.py (each preset must return a non-empty result set against the published population).",
+  "presets": [
+    {
+      "id": "young-progressors",
+      "name": "High-potential young progressors",
+      "rationale": "Young central and wide creators who already progress the ball at a high level.",
+      "query_definition": {
+        "position_group": ["CM", "AM", "W"],
+        "age_max": 23,
+        "league_tier": null,
+        "conditions": [
+          { "metric": "si_prgp_p90", "operator": "percentile_gte", "value": 70 },
+          { "metric": "si_xag_p90", "operator": "percentile_gte", "value": 60 },
+          { "metric": "minutes_played", "operator": "gte", "value": 900 }
+        ],
+        "condition_logic": "AND"
+      }
+    },
+    {
+      "id": "ball-winning-defensive-midfielders",
+      "name": "Ball-winning defensive midfielders",
+      "rationale": "DMs who win the ball back at an elite rate, not just midfielders who happen to sit deep.",
+      "query_definition": {
+        "position_group": ["DM"],
+        "age_max": null,
+        "league_tier": null,
+        "conditions": [
+          { "metric": "si_tkl_p90", "operator": "percentile_gte", "value": 70 },
+          { "metric": "si_int_p90", "operator": "percentile_gte", "value": 60 },
+          { "metric": "si_press_p90", "operator": "percentile_gte", "value": 60 }
+        ],
+        "condition_logic": "AND"
+      }
+    },
+    {
+      "id": "creative-wide-players",
+      "name": "Undervalued creative wide players",
+      "rationale": "Wide players in top-tier leagues creating chances at volume regardless of goal output.",
+      "query_definition": {
+        "position_group": ["W"],
+        "age_max": null,
+        "league_tier": "tier_1",
+        "conditions": [
+          { "metric": "si_kp_p90", "operator": "percentile_gte", "value": 75 },
+          { "metric": "si_xag_p90", "operator": "percentile_gte", "value": 55 }
+        ],
+        "condition_logic": "AND"
+      }
+    },
+    {
+      "id": "high-pressing-young-strikers",
+      "name": "High-pressing young strikers",
+      "rationale": "Centre-forwards under 24 who set the defensive tone from the front.",
+      "query_definition": {
+        "position_group": ["ST"],
+        "age_max": 24,
+        "league_tier": null,
+        "conditions": [
+          { "metric": "si_press_p90", "operator": "percentile_gte", "value": 65 },
+          { "metric": "si_gls_p90", "operator": "percentile_gte", "value": 50 }
+        ],
+        "condition_logic": "AND"
+      }
+    },
+    {
+      "id": "volume-shot-takers",
+      "name": "Volume shot-takers who convert",
+      "rationale": "Forwards who generate shots at an elite rate and still convert at an above-average clip.",
+      "query_definition": {
+        "position_group": ["ST", "W"],
+        "age_max": null,
+        "league_tier": null,
+        "conditions": [
+          { "metric": "si_sh_p90", "operator": "percentile_gte", "value": 75 },
+          { "metric": "si_gls_p90", "operator": "percentile_gte", "value": 50 }
+        ],
+        "condition_logic": "AND"
+      }
+    },
+    {
+      "id": "progressive-carriers",
+      "name": "Progressive carriers",
+      "rationale": "Full-backs and midfielders who carry the ball forward at a high level and keep possession.",
+      "query_definition": {
+        "position_group": ["FB", "CM"],
+        "age_max": null,
+        "league_tier": null,
+        "conditions": [
+          { "metric": "si_prgc_p90", "operator": "percentile_gte", "value": 70 },
+          { "metric": "si_cmp_pct", "operator": "percentile_gte", "value": 55 }
+        ],
+        "condition_logic": "AND"
+      }
+    },
+    {
+      "id": "durable-playmakers",
+      "name": "Durable playmakers",
+      "rationale": "Playmakers trusted with heavy minutes who still create at an above-average rate — volume plus output.",
+      "query_definition": {
+        "position_group": ["CM", "AM"],
+        "age_max": null,
+        "league_tier": null,
+        "conditions": [
+          { "metric": "minutes_played", "operator": "gte", "value": 2500 },
+          { "metric": "si_kp_p90", "operator": "percentile_gte", "value": 60 }
+        ],
+        "condition_logic": "AND"
+      }
+    },
+    {
+      "id": "ball-playing-centre-backs",
+      "name": "Ball-playing centre-backs",
+      "rationale": "Centre-backs who contribute to build-up — progressive passing at a high level with secure retention.",
+      "query_definition": {
+        "position_group": ["CB"],
+        "age_max": null,
+        "league_tier": null,
+        "conditions": [
+          { "metric": "si_prgp_p90", "operator": "percentile_gte", "value": 70 },
+          { "metric": "si_cmp_pct", "operator": "percentile_gte", "value": 60 }
+        ],
+        "condition_logic": "AND"
+      }
+    },
+    {
+      "id": "elite-shot-stoppers",
+      "name": "Elite shot-stoppers",
+      "rationale": "Goalkeepers saving above expectation at volume — the two numbers that define shot-stopping.",
+      "query_definition": {
+        "position_group": ["GK"],
+        "age_max": null,
+        "league_tier": null,
+        "conditions": [
+          { "metric": "si_save_pct", "operator": "percentile_gte", "value": 70 },
+          { "metric": "si_psxg_ga_p90", "operator": "percentile_gte", "value": 55 },
+          { "metric": "minutes_played", "operator": "gte", "value": 900 }
+        ],
+        "condition_logic": "AND"
+      }
+    }
+  ]
+}

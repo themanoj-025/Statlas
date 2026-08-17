@@ -663,6 +663,54 @@ class StatusHistory(Base):
     __table_args__ = (Index("ix_status_history_entry", "shortlist_entry_id"),)
 
 
+# ---------------------------------------------------------------------------
+# Phase 8 — structured search (saved searches + history)
+# ---------------------------------------------------------------------------
+# Grammar and rules: docs/product/query-builder-scope.md. Same ownership
+# model as Phase 7: every read/write verifies user_id; foreign/missing ids
+# return 404, never an existence-leaking 403. Presets are NOT tables — they
+# live in app/config/search_presets.json (methodology-as-code precedent) and
+# are public.
+
+
+class SavedSearch(Base):
+    __tablename__ = "saved_searches"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), nullable=False)
+    name: Mapped[str] = mapped_column(String(128), nullable=False)
+    description: Mapped[str | None] = mapped_column(Text, nullable=True)
+    query_definition: Mapped[dict] = mapped_column(JSON, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )
+    last_run_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+
+    __table_args__ = (Index("ix_saved_searches_user", "user_id"),)
+
+
+class SearchHistory(Base):
+    """Automatic log of executed queries (never the debounced builder preview).
+    Retention: newest 50 per user, enforced on insert (query-builder-scope.md §4)."""
+
+    __tablename__ = "search_history"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), nullable=False)
+    query_definition: Mapped[dict] = mapped_column(JSON, nullable=False)
+    executed_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )
+    result_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+
+    __table_args__ = (Index("ix_search_history_user", "user_id"),)
+
+
 class AssistantQuota(Base):
     """Per-user assistant query quota (Phase 4 — Part B3), tracked per billing
     period and reset on renewal. Hard cap (no silent overage) — the documented
