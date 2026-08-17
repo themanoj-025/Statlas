@@ -72,6 +72,18 @@ ENTRY_STATUS_ENUM = Enum(
     name="entry_status",
 )
 ENTRY_PRIORITY_ENUM = Enum("low", "medium", "high", name="entry_priority")
+# Phase 10 — watchlist & alerts (docs/product/alert-trigger-definitions.md).
+ENTITY_TYPE_ENUM = Enum("player", "team", name="entity_type")
+ALERT_TYPE_ENUM = Enum(
+    "percentile_movement",
+    "club_change",
+    "new_season_data",
+    "data_coverage_change",
+    name="alert_type",
+)
+DIGEST_FREQUENCY_ENUM = Enum(
+    "immediate", "daily_digest", "weekly_digest", name="digest_frequency"
+)
 
 
 class Base(DeclarativeBase):
@@ -768,6 +780,93 @@ class ReportQuota(Base):
     __table_args__ = (
         UniqueConstraint("user_id", "period_start", name="uq_report_quota_period"),
     )
+
+
+class Watch(Base):
+    """A followed entity (Phase 10 — docs/product/alert-trigger-definitions.md
+    §1/§4). One row per (user, entity_type, entity_id); followed_metrics is the
+    optional per-metric refinement (null = broad "any significant movement")."""
+
+    __tablename__ = "watches"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), nullable=False)
+    entity_type: Mapped[str] = mapped_column(ENTITY_TYPE_ENUM, nullable=False)
+    entity_id: Mapped[int] = mapped_column(Integer, nullable=False)
+    followed_metrics: Mapped[list | None] = mapped_column(JSON, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
+    )
+
+    user: Mapped[User] = relationship()
+
+    __table_args__ = (
+        UniqueConstraint(
+            "user_id", "entity_type", "entity_id", name="uq_watch_entity"
+        ),
+        Index("ix_watches_user", "user_id"),
+        Index("ix_watches_entity", "entity_type", "entity_id"),
+    )
+
+
+class WatchAlert(Base):
+    """One detected, trigger-worthy event (Phase 10). `detail` holds only real,
+    traceable values from the snapshot/coverage/anomaly data that triggered it;
+    `dedupe_key` makes detection idempotent (unique per watch+type+transition)."""
+
+    __tablename__ = "watch_alerts"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    watch_id: Mapped[int] = mapped_column(ForeignKey("watches.id"), nullable=False)
+    alert_type: Mapped[str] = mapped_column(ALERT_TYPE_ENUM, nullable=False)
+    dedupe_key: Mapped[str] = mapped_column(String(160), nullable=False)
+    triggered_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
+    )
+    detail: Mapped[dict] = mapped_column(JSON, nullable=False)
+    delivered_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    read_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    dismissed: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+
+    watch: Mapped[Watch] = relationship()
+
+    __table_args__ = (
+        UniqueConstraint(
+            "watch_id", "alert_type", "dedupe_key", name="uq_watch_alert_dedupe"
+        ),
+        Index("ix_alerts_watch", "watch_id"),
+        Index("ix_alerts_user_read", "dismissed", "read_at"),
+    )
+
+
+class NotificationPreferences(Base):
+    """Per-user notification control (Phase 10 — §5). Opt-outs are absolute:
+    delivery never sends an email for a disabled type or channel. The
+    unsubscribe_token signs one-click email links (List-Unsubscribe)."""
+
+    __tablename__ = "notification_preferences"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), nullable=False)
+    email_enabled: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
+    alert_type_preferences: Mapped[dict] = mapped_column(
+        JSON, nullable=False, default=dict
+    )
+    digest_frequency: Mapped[str] = mapped_column(
+        DIGEST_FREQUENCY_ENUM, nullable=False, default="immediate"
+    )
+    unsubscribe_token: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
+    )
+
+    user: Mapped[User] = relationship()
+
+    __table_args__ = (UniqueConstraint("user_id", name="uq_preferences_user"),)
 
 
 class AssistantQuota(Base):

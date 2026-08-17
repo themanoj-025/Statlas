@@ -248,8 +248,14 @@ Statlas/
 │   │   ├── trend_queries.py       # snapshot-history trends
 │   │   ├── workspace_queries.py   # shortlists/entries/notes/tags/history + authz (Phase 7)
 │   │   ├── structured_search.py   # Phase 8 query translation + saved/history/presets
-│   │   └── reports.py             # Phase 9 grounded report pipeline + confidence + verification gate
+│   │   ├── reports.py             # Phase 9 grounded report pipeline + confidence + verification gate
+│   │   └── watch_queries.py       # Phase 10 watches/alerts/preferences CRUD + authz + slugs
 │   ├── report_export.py           # Phase 9 JSON/PDF/CSV exports from the verified report object
+│   ├── watch/
+│   │   ├── detection.py           # Phase 10 trigger detection: batch-loaded, idempotent, threshold-exact
+│   │   └── delivery.py            # Phase 10 preference-respecting email delivery + digest batching
+│   ├── notifications/
+│   │   └── email.py               # Phase 10 Resend sender: branded, one-click unsubscribe, key-gated
 │   ├── api/
 │   │   ├── main.py                # FastAPI app — the ONLY data-access layer
 │   │   ├── player_view.py         # player profile payload builder
@@ -259,7 +265,8 @@ Statlas/
 │   │   ├── assistant_views.py     # grounded AI assistant (Phase 4)
 │   │   ├── workspace_views.py     # workspace routes, session auth (Phase 7)
 │   │   ├── search_views.py        # Phase 8 search routes, session auth
-│   │   └── report_views.py        # Phase 9 report routes, session auth (EP-35–41)
+│   │   ├── report_views.py        # Phase 9 report routes, session auth (EP-35–41)
+│   │   └── watch_views.py         # Phase 10 watch routes + sessionless signed unsubscribe (EP-42–48)
 │   ├── reconciliation.py          # player name reconciliation
 │   ├── schema.sql                 # canonical PostgreSQL DDL
 │   └── sources/
@@ -352,6 +359,7 @@ Statlas/
 │   ├── test_workspace.py
 │   ├── test_structured_search.py
 │   ├── test_reports.py
+│   ├── test_watch.py
 └── web/
     ├── .dockerignore
     ├── .gitignore
@@ -567,7 +575,9 @@ Statlas/
   report set: `Report` (report_json + verification_log, data_snapshot_date for
   reproducibility) and `ReportQuota` (a SEPARATE monthly allowance from
   `AssistantQuota` — sharing one pool would cause confusing "why did my chat quota
-  drop" experiences).
+  drop" experiences), and the Phase 10 watch set: `Watch`, `WatchAlert` (dedupe-key
+  unique constraint = the idempotency guarantee), `NotificationPreferences`
+  (email_enabled + per-type prefs + digest frequency + one-click unsubscribe token).
 - **Notable logic** *(explicit)*:
   - Enums declared `native_enum=True` (the closeout C3 parity fix) — Postgres gets real
     `CREATE TYPE` enums; SQLite falls back to VARCHAR+CHECK automatically.
@@ -866,6 +876,52 @@ Statlas/
   needs-review warning block when applicable; CSV includes statistical profile +
   comparable players only (narrative omitted by design, documented in the UI).
 
+#### `app/queries/watch_queries.py` (~420 lines)
+- **Purpose**: Phase 10 watchlist & alerts — the single service layer behind every
+  watch API route.
+- **Key exports**: `follow_entity`, `unfollow_entity`, `list_watches`, `list_alerts`,
+  `get_alert`, `mark_alert_read`, `dismiss_alert`, `get_preferences`,
+  `update_preferences`, `rotate_unsubscribe_token`, domain exceptions
+  (`WatchNotFound`, `EntityNotFound`, `WatchLimitExceeded`).
+- **Notable**: ownership verified on every read/write (foreign/missing →
+  `WatchNotFound` → HTTP 404, never an existence-leaking 403); following an
+  already-followed entity is a no-op (unique (user, type, id) constraint); Free tier
+  caps at 10 watched entities with the same honest upsell wording as Phases 7/8/9;
+  alerts carry real slug/league_slug for profile deep-links; preferences reject
+  unknown alert types / digest frequencies with specific errors.
+
+#### `app/watch/detection.py` (~560 lines)
+- **Purpose**: Phase 10 trigger detection — the step AFTER publish in the weekly
+  refresh (alert-trigger-definitions.md §2).
+- **Key exports**: `detect_watch_triggers` (+ `WatchDetectionReport`), the four
+  trigger types, and batch loaders (`_player_history`, `_team_seasons`,
+  `_statsbomb_league_seasons`, `_unresolved_anomaly_count`).
+- **Notable**: batch-loads all watched entities in a handful of queries (not N per
+  watch — scaling notes in docs/engineering/watch-detection-scaling-notes.md);
+  idempotent via (watch_id, alert_type, dedupe_key) unique constraint (re-runs
+  create nothing); club change fires once per from/to/snapshot triple; percentile
+  movement is INCLUSIVE at the documented threshold and requires BOTH snapshots
+  above the qualification floor; `detail` holds only real snapshot/coverage/anomaly
+  values.
+
+#### `app/watch/delivery.py` (~240 lines)
+- **Purpose**: Phase 10 notification delivery — preference-respecting email dispatch
+  and digest batching (notification-delivery.md).
+- **Key exports**: `deliver_immediate`, `send_digests`, `run_due_digests`.
+- **Notable**: NEVER emails an opted-out trigger type or channel (tested as
+  rigorously as an authorization check); digest users get ONE batched email per
+  period; failed deliveries leave `delivered_at` NULL for retry; unconfigured key
+  (no RESEND_API_KEY) is an honest no-email state, never a silent failure.
+
+#### `app/notifications/email.py` (~300 lines)
+- **Purpose**: Phase 10 transactional email — Resend-backed, branded, key-gated.
+- **Key exports**: `resend_sender`, `get_sender`/`set_sender` (test seam),
+  `alert_email_content`, `digest_email_content`, `_email_for` (branded shell +
+  one-click unsubscribe footer).
+- **Notable**: every email carries RFC 8058 List-Unsubscribe headers with a signed
+  sessionless URL; content is populated from real alert detail data with correct
+  ordinals (62nd, 81st — never "62th"); provider is injectable for tests.
+
 #### `app/queries/sentences.py` (137 lines)
 - **Purpose**: Data-driven profile sentences (Constitution §5, Never-List #4).
 - **Key exports**: `build_profile_sentence()`, `ordinal()`.
@@ -1013,6 +1069,7 @@ Statlas/
 | `test_workspace.py` | 707 | Phase 7 workspace: CRUD, pipeline transitions (valid + explicitly invalid), cross-user 404s on read/write (never existence-leaking 403), duplicate-add rejection, soft-delete audit preservation, free-tier caps with honest upsell, own-only tag suggestions, multi-step status-history audit, API-level auth + error mapping |
 | `test_structured_search.py` | 887 | Phase 8 structured search: hand-calculated query translation (multi-condition AND, percentile+raw mixing, lte/between), always-applied minutes floor, missing-metric exclusion, empty-result diagnostics, grammar validation (OR rejected, >8 conditions, unknown metric), saved-search CRUD + staleness-on-rerun + free cap, history auto-log + 50-cap + rerun, cross-user 404s, presets validate, API-level auth + error mapping |
 | `test_reports.py` | 800 | Phase 9 reports: the verification-rejection test (a deliberately fabricated statistic is caught by the hard gate), confidence scoring (full-season/complete → high; sparse/stale → low), risk-factor rules incl. the out-of-scope statement, full pipeline (deterministic narrator → verified → stored, evidence appendix), workspace-context inclusion/omission/ownership, cross-user 404s, Pro quota caps with honest upsell, JSON/PDF/CSV exports, API-level generation/export flow |
+| `test_watch.py` | 950 | Phase 10 watchlist: threshold boundary cases (just-below silent, just-above and exactly-at alert — inclusive), qualification-floor behavior, idempotency (re-run creates nothing), club-change fires-once across three snapshots, new-season once-per-season, coverage-gained + source-anomaly alerts, watched-metrics refinement, watch CRUD + unique-entity idempotency, cross-user 404s (read + write), free-tier cap with honest upsell, alert read/dismiss, preferences validation, THE preference-compliance test (opted-out type produces no email), digest batching (two alerts → one email), weekly-digest day logic, sessionless signed unsubscribe (valid/invalid), e2e fixture hard-disabled |
 | `test_understat.py` | 121 | Embedded-JSON extraction, POST fallback (live-drift fixture), loud schema error |
 
 **Fixtures** (`tests/fixtures/`): `fbref_league.html` (19 KB real-shaped FBref page),
@@ -1100,6 +1157,8 @@ Statlas/
 | `/workspace/[id]` | `workspace/[id]/page.tsx` (16) + `ShortlistClient.tsx` (609) | Shortlist detail: status-filter chips, entry table with deliberate status-change control (optional reason → status_history), priority select, tag chips with own-tags autocomplete, notes with relative+absolute timestamps, remove (soft) |
 | `/search` | `search/page.tsx` (26) + `SearchClient.tsx` (1057) | Phase 8 structured search: multi-condition AND-only builder (up to 8 conditions, percentile/raw visually distinct, metrics grouped from the registry, scalar position/tier/age filters), debounced live result-count preview (never logged to history), results with per-condition real values, presets, saved searches, history with re-run; Add-to-Shortlist per row + bulk add-all; loading/empty-with-guidance/error/signed-out states |
 | `/reports` | `reports/page.tsx` (20) + `ReportsClient.tsx` (460) | Phase 9 report history: quota status, report cards labelled with data-snapshot date, expandable viewer (all sections + expandable evidence appendix tracing every claim to its source call), regenerate-with-current-data (fresh verified row), delete, PDF/JSON/CSV exports (409 while needs_review), needs-review hold surfaced honestly, loading/empty/error/signed-out states |
+| `/watchlist` | `watchlist/page.tsx` (30) + `WatchlistClient.tsx` (330) | Phase 10 watchlist: followed entities with unread counts + recent alerts per entity, unfollow (alert history retained), alert-detail modal showing the full real supporting data, onboarding/empty/error states, link to notification settings |
+| `/watchlist/settings` | `watchlist/settings/page.tsx` (25) + `PreferencesClient.tsx` (180) | Phase 10 notification preferences: email on/off, per-trigger-type opt-in/out with exact threshold descriptions, digest frequency, save feedback |
 | `/login` / `/register` / `/account` | `login/`, `register/`, `account/` | Phase 4 auth surfaces (register/login forms, account dashboard with subscription/API keys) |
 | `/players/[slug]/opengraph-image` | `players/[slug]/opengraph-image.tsx` | Player OG image (real data) |
 | `/clubs/[leagueSlug]/[teamSlug]` | `clubs/[...]/page.tsx` (172) | SSR team profile: roster table, squad radar, logo placeholder |
@@ -1318,6 +1377,10 @@ No auth (internal-facing; public tier on Phase 4 roadmap). 400 on `ValueError`; 
 | GET/POST `/api/v1/search/history…` | `limit` | Phase 8 search history (session auth; newest 50, auto-logged) | `{entries: [...]}` / `{reran, results}` |
 | GET/POST/DELETE `/api/v1/reports…` | — | Phase 9 reports (session auth; Pro-gated, separate monthly quota; EP-35–41; 404 for foreign ids) | quota / report list / generate (gather→narrate→hard-verify→store) / regenerate / delete |
 | GET `/api/v1/reports/{id}/export.{json,pdf,csv}` | — | Phase 9 exports derived from the single verified report object (409 while needs_review) | JSON verbatim / branded PDF / tabular CSV |
+| GET/POST `/api/v1/watch…` | — | Phase 10 watches (session auth; free cap 10; 404 for foreign; EP-42–48) | watch list / follow (idempotent) / unfollow |
+| GET/POST `/api/v1/watch/alerts…` | `include_read`, `include_dismissed`, `limit` | Phase 10 alerts (session auth; ownership-scoped; real detail values) | alert list / detail / read / dismiss |
+| GET/PUT `/api/v1/watch/preferences…` | — | Phase 10 notification preferences (session auth; unknown types rejected) | prefs payload / update / rotate unsubscribe token |
+| GET `/api/v1/watch/unsubscribe` | `user`, `token`, `sig` | Phase 10 one-click unsubscribe (PUBLIC — signed link from email) | `{detail, preferences_url}` (sets email_enabled=false) |
 
 ---
 

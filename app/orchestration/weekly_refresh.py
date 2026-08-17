@@ -64,6 +64,8 @@ class RefreshReport:
     skipped_incomplete_tiers: list[str] = field(default_factory=list)
     events_linked: int = 0
     events_unmatched: int = 0
+    alerts_created: int = 0
+    alerts_by_type: dict[str, int] = field(default_factory=dict)
     errors: list[str] = field(default_factory=list)
 
     def add(self, **kw: Any) -> None:
@@ -396,6 +398,16 @@ def run_weekly_refresh(
 
     # --- 6. publish ----------------------------------------------------------
     report.published_rows = publish_run(db, run_computed_at)
+
+    # --- 7. watch-trigger detection (Phase 10) --------------------------------
+    # After publish: compare the freshly-published snapshot against the
+    # preceding one for every active watch and write qualifying watch_alerts.
+    # Idempotent via dedupe keys + the unique constraint (detection.py).
+    from app.watch.detection import detect_watch_triggers
+
+    watch_report = detect_watch_triggers(db, snapshot_date)
+    report.alerts_created = watch_report.alerts_created
+    report.alerts_by_type = dict(watch_report.by_type)
 
     # --- optional extra layers -----------------------------------------------
     if do_statsbomb and statsbomb_source is not None:

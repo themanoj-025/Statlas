@@ -17,7 +17,8 @@
         "api_rate_limit_per_minute": 0,
         "shortlists_max": 1,
         "shortlist_entries_max": 10,
-        "saved_searches_max": 5
+        "saved_searches_max": 5,
+        "watches_max": 10
       }
     },
     "pro": {
@@ -34,7 +35,8 @@
         "api_rate_limit_per_minute": 0,
         "shortlists_max": null,
         "shortlist_entries_max": null,
-        "saved_searches_max": null
+        "saved_searches_max": null,
+        "watches_max": null
       }
     },
     "api_business": {
@@ -51,7 +53,8 @@
         "api_rate_limit_per_minute": 120,
         "shortlists_max": null,
         "shortlist_entries_max": null,
-        "saved_searches_max": null
+        "saved_searches_max": null,
+        "watches_max": null
       }
     }
   },
@@ -67,6 +70,7 @@
     "The assistant quota is a HARD CAP (no silent overage billing) — the documented model per Phase 4 Part B3.",
     "Workspace (Phase 7): Free gets 1 shortlist and 10 entries per shortlist — a genuine taste of the workflow. Pro/API-Business: unlimited. Exceeding a cap returns an explicit, honest upsell message (403), never a generic error.",
     "Structured search (Phase 8): Free gets 5 saved searches (history + presets unlimited); Pro/API-Business unlimited saved searches. Same upsell style as the workspace caps.",
-    "Scouting reports (Phase 9): Pro feature — Free gets 0 report generations per period (honest upsell), Pro 10, API-Business 100. Reports consume a SEPARATE report_quotas allowance, never the chat assistant quota (documented in docs/product/scouting-reports.md)."
+    "Scouting reports (Phase 9): Pro feature — Free gets 0 report generations per period (honest upsell), Pro 10, API-Business 100. Reports consume a SEPARATE report_quotas allowance, never the chat assistant quota (documented in docs/product/scouting-reports.md).",
+    "Watchlist (Phase 10): Free gets 10 watched entities (players/teams) — a genuine taste of the follow workflow. Pro/API-Business: unlimited. Exceeding the cap returns the same honest, specific upsell style as Phases 7/8/9 (403)."
   ]
 }

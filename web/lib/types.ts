@@ -705,3 +705,76 @@ export type ReportQuotaPayload = {
   plan: Plan;
   has_pro: boolean;
 };
+
+// ---------------------------------------------------------------------------
+// Phase 10 — watchlist & alerts
+// ---------------------------------------------------------------------------
+// Trigger definitions documented in docs/product/alert-trigger-definitions.md.
+// Every alert `detail` holds real snapshot values — checkable, never
+// fabricated. Delivery respects preferences absolutely (docs/product/
+// notification-delivery.md).
+
+export type AlertType =
+  | "percentile_movement"
+  | "club_change"
+  | "new_season_data"
+  | "data_coverage_change";
+
+export type DigestFrequency = "immediate" | "daily_digest" | "weekly_digest";
+
+export type WatchItem = {
+  watch_id: number;
+  entity_type: "player" | "team";
+  entity_id: number;
+  entity_name: string;
+  slug: string | null;
+  league_slug?: string | null;
+  followed_metrics: string[] | null;
+  created_at: string;
+  unread_alert_count: number;
+  team?: string | null;
+  position_group?: string | null;
+  league?: string | null;
+};
+
+export type WatchAlertItem = {
+  alert_id: number;
+  watch_id: number;
+  entity_type: "player" | "team";
+  entity_id: number;
+  entity_name: string;
+  slug: string | null;
+  league_slug?: string | null;
+  alert_type: AlertType;
+  triggered_at: string;
+  detail: Record<string, unknown>;
+  delivered_at: string | null;
+  read_at: string | null;
+  dismissed: boolean;
+};
+
+export type WatchPreferences = {
+  email_enabled: boolean;
+  alert_type_preferences: Record<AlertType, boolean>;
+  digest_frequency: DigestFrequency;
+  updated_at: string;
+};
+
+export type WatchesPayload = { watches: WatchItem[] };
+export type WatchAlertsPayload = { alerts: WatchAlertItem[] };
+export type WatchAlertDetail = WatchAlertItem;
+
+// Human-readable labels for alert types + digest frequencies (single source
+// in the frontend; backend enum codes stay stable).
+export const ALERT_TYPE_LABELS: Record<AlertType, string> = {
+  percentile_movement: "Percentile movement",
+  club_change: "Club change",
+  new_season_data: "New season data",
+  data_coverage_change: "Data coverage change",
+};
+
+export const DIGEST_FREQUENCY_LABELS: Record<DigestFrequency, string> = {
+  immediate: "Immediately (per alert)",
+  daily_digest: "Daily digest",
+  weekly_digest: "Weekly digest",
+};

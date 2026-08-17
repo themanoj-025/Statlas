@@ -37,10 +37,12 @@ docs/
 │   ├── similarity-explanation-method.md  how "similar players" explanations work (Phase 6)
 │   ├── data-compliance-notes.md   per-source license/ToS/rate-limit review
 │   └── production-validation-log.md  real scrape validation + dataset-mode decision
-├── product/                       Phase 7/8/9 scouting workspace + query builder + reports
+├── product/                       Phase 7/8/9/10 scouting workspace + query builder + reports + alerts
 │   ├── scouting-pipeline.md       status pipeline rules, transitions, integrity, authz
 │   ├── query-builder-scope.md     Phase 8 condition grammar, AND-only scope, floor, missing-data rules
-│   └── scouting-reports.md        Phase 9 report structure, confidence rules, risk rules, verification design
+│   ├── scouting-reports.md        Phase 9 report structure, confidence rules, risk rules, verification design
+│   ├── alert-trigger-definitions.md  Phase 10 exact trigger thresholds, non-triggers, follow granularity
+│   └── notification-delivery.md   Phase 10 provider choice, preference compliance, digests, unsubscribe
 ├── api/                           live API verification (BLOCKED, Part A3)
 │   └── live-verification-log.md   real captured endpoint evidence or BLOCKED status
 ├── ai-assistant/                  live AI-assistant verification (BLOCKED, Part A2)
@@ -53,7 +55,8 @@ docs/
 │   ├── cleanup-audit-2026-08-14.md  repo cleanup audit
 │   ├── phase3-verification-log.md   Phase 3 (trend/maps/sharing) audit — every
 │   │                               Part A–D item mapped to code + tests
-│   └── phase4-security-review.md   Phase 4 payment/API-key security review (D3)
+│   ├── phase4-security-review.md   Phase 4 payment/API-key security review (D3)
+│   └── watch-detection-scaling-notes.md  Phase 10 batch-query strategy + scaling path
 ├── billing/                       Phase 4 billing
 │   ├── pricing-config.md          tier boundaries + Stripe Products/Prices map
 │   └── live-verification-log.md   live Stripe verification or BLOCKED status (Part A1)
@@ -99,3 +102,5 @@ docs/
 | Scouting pipeline rules | [product/scouting-pipeline.md](product/scouting-pipeline.md) |
 | Query-builder grammar/scope | [product/query-builder-scope.md](product/query-builder-scope.md) |
 | Scouting report design / confidence / risks | [product/scouting-reports.md](product/scouting-reports.md) |
+| Alert trigger definitions / thresholds | [product/alert-trigger-definitions.md](product/alert-trigger-definitions.md) |
+| Notification delivery / preferences | [product/notification-delivery.md](product/notification-delivery.md) |

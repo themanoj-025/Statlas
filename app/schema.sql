@@ -420,6 +420,50 @@ CREATE INDEX ix_search_history_user ON search_history (user_id);
 -- exports all derive from this one object. verification status is
 -- 'passed' or 'needs_review' — a report whose claims failed the hard
 -- grounding gate is never silently shipped as a normal report.
+-- Phase 10 — watchlist & alerts (docs/product/alert-trigger-definitions.md).
+
+CREATE TYPE entity_type AS ENUM ('player', 'team');
+CREATE TYPE alert_type AS ENUM ('percentile_movement', 'club_change', 'new_season_data', 'data_coverage_change');
+CREATE TYPE digest_frequency AS ENUM ('immediate', 'daily_digest', 'weekly_digest');
+
+CREATE TABLE watches (
+    id               SERIAL PRIMARY KEY,
+    user_id          INTEGER      NOT NULL REFERENCES users(id),
+    entity_type      entity_type  NOT NULL,
+    entity_id        INTEGER      NOT NULL,
+    followed_metrics JSONB,                    -- nullable; null = broad "any significant movement"
+    created_at       TIMESTAMPTZ  NOT NULL DEFAULT now(),
+    UNIQUE (user_id, entity_type, entity_id)   -- a user follows an entity once
+);
+CREATE INDEX ix_watches_user ON watches (user_id);
+CREATE INDEX ix_watches_entity ON watches (entity_type, entity_id);
+
+CREATE TABLE watch_alerts (
+    id            SERIAL PRIMARY KEY,
+    watch_id      INTEGER      NOT NULL REFERENCES watches(id),
+    alert_type    alert_type   NOT NULL,
+    dedupe_key    VARCHAR(160) NOT NULL,       -- idempotency: unique per watch+type+transition
+    triggered_at  TIMESTAMPTZ  NOT NULL DEFAULT now(),
+    detail        JSONB        NOT NULL,       -- real, traceable values from the triggering data
+    delivered_at  TIMESTAMPTZ,
+    read_at       TIMESTAMPTZ,
+    dismissed     BOOLEAN      NOT NULL DEFAULT FALSE,
+    UNIQUE (watch_id, alert_type, dedupe_key)
+);
+CREATE INDEX ix_alerts_watch ON watch_alerts (watch_id);
+CREATE INDEX ix_alerts_user_read ON watch_alerts (dismissed, read_at);
+
+CREATE TABLE notification_preferences (
+    id                     SERIAL PRIMARY KEY,
+    user_id                INTEGER         NOT NULL REFERENCES users(id),
+    email_enabled          BOOLEAN         NOT NULL DEFAULT TRUE,
+    alert_type_preferences JSONB           NOT NULL DEFAULT '{}',   -- per-trigger-type opt-in/out
+    digest_frequency       digest_frequency NOT NULL DEFAULT 'immediate',
+    unsubscribe_token      VARCHAR(64),                              -- signs one-click email links
+    updated_at             TIMESTAMPTZ     NOT NULL DEFAULT now(),
+    UNIQUE (user_id)
+);
+
 -- report_quotas is deliberately SEPARATE from assistant_quotas so report
 -- generation never silently drains the chat quota (D5 decision).
 

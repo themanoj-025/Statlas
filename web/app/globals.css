@@ -2754,3 +2754,310 @@ table,
   font-size: 0.72rem;
   word-break: break-all;
 }
+
+/* ---------------------------------------------------------------------------
+   Phase 10 — watchlist & alerts
+--------------------------------------------------------------------------- */
+
+.notification-bell {
+  position: relative;
+  display: inline-flex;
+}
+
+.notification-bell__button {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface-raised);
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  flex: none;
+}
+
+.notification-bell__button:hover {
+  color: var(--color-text-primary);
+  border-color: var(--color-accent);
+}
+
+.notification-bell__badge {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  min-width: 17px;
+  height: 17px;
+  padding: 0 4px;
+  border-radius: 999px;
+  background: var(--color-danger);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 17px;
+  text-align: center;
+}
+
+.notification-bell__menu {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 8px);
+  width: min(360px, 90vw);
+  background: var(--color-surface-raised);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
+  z-index: var(--z-modal);
+  padding: var(--space-2) 0;
+  max-height: 70vh;
+  overflow-y: auto;
+}
+
+.notification-bell__title {
+  margin: 0;
+  padding: 0 var(--space-3) var(--space-2);
+  font-weight: 700;
+  font-size: var(--text-sm);
+  border-bottom: 1px solid var(--color-divider);
+}
+
+.notification-bell__hint {
+  margin: 0;
+  padding: var(--space-3);
+  color: var(--color-text-secondary);
+  font-size: var(--text-sm);
+}
+
+.notification-bell__item {
+  padding: var(--space-2) var(--space-3);
+  border-bottom: 1px solid var(--color-divider);
+}
+
+.notification-bell__item-main a {
+  color: var(--color-text-primary);
+  text-decoration: none;
+  font-size: var(--text-sm);
+}
+
+.notification-bell__item-main a:hover {
+  color: var(--color-link);
+}
+
+.notification-bell__item-detail {
+  margin: var(--space-1) 0 0;
+  color: var(--color-text-secondary);
+  font-size: var(--text-xs);
+}
+
+.notification-bell__item-actions {
+  display: flex;
+  gap: var(--space-2);
+  margin-top: var(--space-1);
+}
+
+.notification-bell__footer {
+  display: block;
+  padding: var(--space-2) var(--space-3);
+  font-size: var(--text-sm);
+  font-weight: 600;
+}
+
+/* watchlist overview */
+.watchlist__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.watchlist__item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  background: var(--color-surface-raised);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+
+.watchlist__item-main {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  min-width: 0;
+}
+
+.watchlist__item-meta {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--color-text-secondary);
+  font-size: var(--text-sm);
+}
+
+.watchlist__alert-link {
+  background: none;
+  border: none;
+  padding: 0;
+  color: var(--color-link);
+  font: inherit;
+  font-size: var(--text-sm);
+  text-align: left;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.watchlist__alerts {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.watchlist__alerts li {
+  border-bottom: 1px solid var(--color-divider);
+}
+
+.watchlist__alerts li:last-child {
+  border-bottom: none;
+}
+
+.watchlist__alert-row {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  width: 100%;
+  text-align: left;
+  background: none;
+  border: none;
+  padding: var(--space-2) var(--space-1);
+  font: inherit;
+  cursor: pointer;
+}
+
+.watchlist__alert-unread {
+  background: color-mix(in srgb, var(--color-accent) 6%, transparent);
+}
+
+/* alert detail modal */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: var(--z-modal);
+  padding: var(--space-4);
+}
+
+.modal {
+  background: var(--color-surface-raised);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-4);
+  max-width: 520px;
+  width: 100%;
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
+.alert-detail__list {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.alert-detail__row {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-3);
+  font-size: var(--text-sm);
+}
+
+.alert-detail__row dt {
+  color: var(--color-text-secondary);
+  font-weight: 600;
+}
+
+.alert-detail__row dd {
+  margin: 0;
+  font-weight: 600;
+  text-align: right;
+}
+
+/* notification preferences */
+.prefs-fieldset {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-3) var(--space-4);
+  margin: 0 0 var(--space-4);
+}
+
+.prefs-fieldset legend {
+  font-weight: 700;
+  padding: 0 var(--space-1);
+}
+
+.prefs-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-2) 0;
+  border-bottom: 1px solid var(--color-divider);
+  cursor: pointer;
+}
+
+.prefs-row:last-child {
+  border-bottom: none;
+}
+
+.prefs-row > span {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.prefs-row .muted {
+  font-size: var(--text-xs);
+}
+
+.prefs-row input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--color-accent);
+  flex: none;
+}
+
+.prefs-radios {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.prefs-radio {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  font-size: var(--text-sm);
+  cursor: pointer;
+}
+
+.inline-message {
+  font-size: var(--text-sm);
+  margin: var(--space-2) 0;
+}
+
+.follow-button__message {
+  font-size: var(--text-xs);
+  margin: var(--space-1) 0 0;
+  max-width: 240px;
+}
