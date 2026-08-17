@@ -132,6 +132,40 @@ export default async function MethodologyPage() {
           group.&rdquo;
         </p>
 
+        <h2>Similar players — how the explanation works</h2>
+        <p>
+          The &ldquo;similar players&rdquo; list on a player profile ranks peers by{" "}
+          <strong>cosine similarity</strong> over the two players&rsquo; published percentile
+          vectors, within the same position group and league tier, on the metrics present for
+          both:
+        </p>
+        <blockquote>
+          similarity = &Sigma; p<sub>i</sub> &middot; q<sub>i</sub> / (&Vert;p&Vert; &times; &Vert;q&Vert;)
+          <br />
+          <span style={{ color: "var(--color-text-muted)" }}>
+            where p and q are the two players&rsquo; percentile vectors. A metric missing for
+            either player is excluded from the comparison — never treated as a zero.
+          </span>
+        </blockquote>
+        <p>
+          Every match is explained from the same numbers, not a separate heuristic.{" "}
+          <strong>Matched strengths</strong> are the metrics that contributed most to the score
+          where <strong>both players rank at or above the 70th percentile and sit within 20
+          percentile points of each other</strong> — a metric where both players are strong and
+          aligned, ranked by how much it moved the cosine score. <strong>Key differences</strong>{" "}
+          are the metrics with the largest percentile-point gap (<strong>at least 25 points</strong>),
+          each stating which player is stronger. If no metric has a gap that large, the UI says the
+          profiles are very similar across every measured metric instead of manufacturing a trivial
+          difference.
+        </p>
+        <p>
+          Metrics without a published percentile for either player are excluded from both the score
+          and the explanation, and the breakdown lists them so you know the comparison is not across
+          the full metric set. Every percentile shown in the explanation is the same published value
+          the radar renders — open any similar-player result and you can cross-check it against the
+          profile&rsquo;s own percentiles.
+        </p>
+
         <h2>Worked example — a real player, end to end</h2>
         <p>
           To show the arithmetic is real, here is a full walkthrough of a player currently in the
