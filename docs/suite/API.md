@@ -82,7 +82,8 @@
 | | |
 |---|---|
 | Method/Path | `GET /api/v1/players/{player_id}/similar` |
-| Response 200 | `[{ "player", "score", "basis" }]` — nearest-neighbor over percentile vectors within position group (REQ-006) |
+| Query | `limit` (1–10, default 5) |
+| Response 200 | `SimilarPlayer[]` — nearest-neighbour over percentile vectors within position group (REQ-006). Each entry carries `{ player_id, name, slug, position_group, club, league, similarity, shared_metrics, index, anchor_index, explanation }` where `explanation` is `{ matched_strengths[], key_differences[], excluded_metrics[], excluded_reason, shared_metrics }` — matched strengths are the metrics that contributed most to the cosine score where both players rank ≥ 70th percentile within 20 points; key differences are the largest gaps (≥ 25 points) with `stronger_player` (`player_a` = the profile player, `player_b` = the candidate); excluded metrics are position-group metrics without a published percentile for one/both players (Phase 6, see `docs/analytics/similarity-explanation-method.md`). |
 
 ### EP-10 Player trend
 | | |
