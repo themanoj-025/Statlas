@@ -136,6 +136,13 @@
   --color-danger:         #B3261E; /* 6.21:1 */
   --color-danger-muted:   #FBEAE9;
 
+  /* Phase 7 workspace pipeline chips (never color alone — text labels always
+     ride along; these hues only aid scanning). */
+  --color-info:           #1D4ED8; /* 6.7:1 on white */
+  --color-info-muted:     #EAF2FE;
+  --color-purple:         #6D28D9; /* 6.3:1 on white */
+  --color-purple-muted:   #F3EEFC;
+
   /* Data semantics (percentile/stat coloring) — color is NEVER the only
      signal; every use carries a numeric label (Constitution §2). */
   --color-data-positive: #1E7B4F; /* 4.98:1 */
@@ -198,6 +205,11 @@
     --color-warning-muted:  #572F0C;
     --color-danger:         #E57368; /* 6.32:1 */
     --color-danger-muted:   #3A1714;
+
+    --color-info:           #7FB0F5; /* 6.5:1 on dark */
+    --color-info-muted:     #122A4A;
+    --color-purple:         #B49AF0; /* 7.4:1 on dark */
+    --color-purple-muted:   #2A1E4A;
 
     --color-data-positive: #6BC794; /* 9.25:1 */
     --color-data-negative: #E57368; /* 6.32:1 */
