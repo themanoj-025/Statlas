@@ -381,4 +381,33 @@ CREATE TABLE status_history (
 );
 CREATE INDEX ix_status_history_entry ON status_history (shortlist_entry_id);
 
+-- ===========================================================================
+-- Phase 8 — Structured search (saved searches + history)
+-- ===========================================================================
+-- Grammar + rules in docs/product/query-builder-scope.md. Same ownership
+-- model as Phase 7: every read/write verifies user_id; foreign/missing ids
+-- return 404. search_presets is deliberately NOT a table — presets are
+-- Statlas-authored config (app/config/search_presets.json), public by design.
+
+CREATE TABLE saved_searches (
+    id               SERIAL PRIMARY KEY,
+    user_id          INTEGER     NOT NULL REFERENCES users(id),
+    name             VARCHAR(128) NOT NULL,
+    description      TEXT,
+    query_definition JSONB       NOT NULL,               -- the structured condition model
+    created_at       TIMESTAMPTZ NOT NULL DEFAULT now(),
+    updated_at       TIMESTAMPTZ NOT NULL DEFAULT now(),
+    last_run_at      TIMESTAMPTZ                         -- set on every re-run
+);
+CREATE INDEX ix_saved_searches_user ON saved_searches (user_id);
+
+CREATE TABLE search_history (
+    id               SERIAL PRIMARY KEY,
+    user_id          INTEGER     NOT NULL REFERENCES users(id),
+    query_definition JSONB       NOT NULL,
+    executed_at      TIMESTAMPTZ NOT NULL DEFAULT now(),
+    result_count     INTEGER     NOT NULL DEFAULT 0
+);
+CREATE INDEX ix_search_history_user ON search_history (user_id);
+
 COMMIT;

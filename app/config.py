@@ -47,6 +47,16 @@ def load_pricing() -> dict[str, Any]:
         return json.load(f)
 
 
+@lru_cache(maxsize=1)
+def load_search_presets() -> dict[str, Any]:
+    """Curated search presets (Phase 8) — Statlas-authored starting points for
+    the structured query builder. Public by design (not user-owned data); the
+    methodology-as-code precedent (metric_registry.json) applies. Validated by
+    scripts/validate_search_presets.py against the published population."""
+    with open(CONFIG_DIR / "search_presets.json", encoding="utf-8") as f:
+        return json.load(f)
+
+
 def plan_limits(plan: str) -> dict[str, Any]:
     """Limits dict for a plan id ("free"/"pro"/"api_business"). Unknown plans
     fall back to free — access is granted by data, never by label."""
