@@ -15,6 +15,17 @@ type Entry = {
 const ENTRIES: Entry[] = [
   {
     date: "2026-08-17",
+    phase: "Phase 7 — scouting workspace",
+    items: [
+      "Persistent per-user scouting workspace: shortlists (multiple, named), players added from any profile/leaderboard/similar-players surface, free-form tags with autocomplete from your own vocabulary, timestamped notes (relative + absolute dates), priorities, and a defined status pipeline: discovered → monitoring → scouted → shortlisted → reviewed, plus rejected and signed as terminal-but-reversible states. Forward moves may skip stages; backward moves are allowed; a rejected player can only be reconsidered via Monitoring; Signed is terminal. Every change writes a status_history row — the full audit trail (who, from, to, when, why) is queryable, so 'how long has this been in Monitoring?' is answerable (docs/product/scouting-pipeline.md).",
+      "Real authorization, not UI hiding: every workspace query verifies ownership and returns 404 (never 403) for another user's shortlist or entry, so a shortlist's existence never leaks. Soft delete for entries and shortlists (notes, tags and history preserved); a player can sit in many shortlists but never twice in one. Free tier gets a genuine taste — 1 shortlist, 10 players each — with an explicit, honest upsell message at the cap; Pro is unlimited.",
+      "Workspace UI: /workspace overview (cards with per-status breakdowns, create-new-shortlist, remove) and /workspace/[id] detail (status filter, deliberate status-change control with optional reason note — never an accidental one-click flip, priority select, tag chips with your-own-tags autocomplete, expandable notes with timestamps, add/remove). All states implemented: loading skeletons, empty-shortlist onboarding, signed-out prompt, retry-capable error. Every status/priority chip pairs colour with a text label; axe green on both pages.",
+      "Add to Shortlist is integrated where players appear: the player profile header, every leaderboard row, and every similar-players result. The component is lazy (zero requests until first click), handles multiple shortlists with a real selector plus inline create, marks already-saved players, and routes signed-out users to sign-in and capped free users to the honest Pro upsell.",
+      "43 new unit/API tests (185 total): pipeline transitions valid + explicitly invalid, cross-user 404s on read and write, duplicate-add rejection, soft-delete audit preservation, free-tier caps, own-only tag suggestions, and a multi-step status-history audit scenario.",
+    ],
+  },
+  {
+    date: "2026-08-17",
     phase: "Phase 6 — explainable similarity",
     items: [
       "Every similar-players result now carries a real explanation computed from the same percentile vectors that produced the score — never a template sentence unconnected to the numbers. Matched strengths are the metrics that contributed most to the cosine score where both players rank at or above the 70th percentile within 20 points; key differences are the largest percentile-point gaps (at least 25 points) with the stronger player stated. The decomposition reuses the dot product and norms already computed for ranking, so the explanation cannot diverge from the headline number (docs/analytics/similarity-explanation-method.md).",

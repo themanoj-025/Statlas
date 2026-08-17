@@ -226,7 +226,8 @@ Statlas/
 │   ├── config.py                  # env settings, registry/tier loaders
 │   ├── config/
 │   │   ├── metric_registry.json   # 16 metrics, weights, bounds, floors (methodology-as-code)
-│   │   └── tiers.json             # league tiers + external ids
+│   │   ├── tiers.json             # league tiers + external ids
+│   │   └── pricing.json           # plan boundaries + limits (incl. workspace caps)
 │   ├── db.py                      # engine/session management
 │   ├── models.py                  # ORM models mirroring schema.sql
 │   ├── orchestration/
@@ -243,7 +244,16 @@ Statlas/
 │   │   ├── sentences.py           # data-driven profile sentences
 │   │   ├── similar_players.py     # cosine-similarity nearest neighbours
 │   │   ├── team_queries.py        # team profiles, roster, squad radar
-│   │   └── trend_queries.py       # snapshot-history trends
+│   │   ├── trend_queries.py       # snapshot-history trends
+│   │   └── workspace_queries.py   # shortlists/entries/notes/tags/history + authz (Phase 7)
+│   ├── api/
+│   │   ├── main.py                # FastAPI app — the ONLY data-access layer
+│   │   ├── player_view.py         # player profile payload builder
+│   │   ├── public_views.py        # public API keys/rate limits
+│   │   ├── registry_view.py       # methodology meta
+│   │   ├── billing_views.py       # auth + Stripe (Phase 4)
+│   │   ├── assistant_views.py     # grounded AI assistant (Phase 4)
+│   │   └── workspace_views.py     # workspace routes, session auth (Phase 7)
 │   ├── reconciliation.py          # player name reconciliation
 │   ├── schema.sql                 # canonical PostgreSQL DDL
 │   └── sources/
@@ -276,6 +286,8 @@ Statlas/
 │   │   ├── pre-launch-human-actions.md
 │   │   ├── privacy-policy-draft.md
 │   │   └── terms-of-service-draft.md
+│   ├── product/
+│   │   └── scouting-pipeline.md    # Phase 7 status pipeline rules + integrity + authz
 │   └── suite/                     # 14-file project-documentation suite (was project-docs/)
 │       ├── API.md
 │       ├── AppFlow.md
@@ -524,11 +536,14 @@ Statlas/
 - **Side effects**: engine/session singleton globals; DB connection; table creation.
 - **Inbound deps**: imported by `app/cli.py`, `app/api/main.py`, tests, seed script.
 
-#### `app/models.py`
+#### `app/models.py` (689 lines)
 - **Type**: SQLAlchemy ORM models — the code-side mirror of `schema.sql`.
-- **Key exports**: `Base` (DeclarativeBase), enums, and 10 model classes:
+- **Key exports**: `Base` (DeclarativeBase), enums, and 15 model classes:
   `League`, `Team`, `Player`, `PlayerNameAlias`, `StatSnapshot`, `PercentileSnapshot`,
-  `MatchEvent`, `DataCoverage`, `IngestionAnomaly`, `ReconciliationQueue`, `Fixture`.
+  `MatchEvent`, `DataCoverage`, `IngestionAnomaly`, `ReconciliationQueue`, `Fixture`,
+  `User`, `SessionToken`, `Subscription`, `ApiKey`, `WebhookEvent`, `AssistantQuota`,
+  plus the Phase 7 workspace set: `Shortlist`, `ShortlistEntry`, `EntryNote`, `EntryTag`,
+  `StatusHistory`.
 - **Notable logic** *(explicit)*:
   - Enums declared `native_enum=True` (the closeout C3 parity fix) — Postgres gets real
     `CREATE TYPE` enums; SQLite falls back to VARCHAR+CHECK automatically.
@@ -537,16 +552,22 @@ Statlas/
   - `PercentileSnapshot` unique key `(stat_snapshot_id, metric_name, league_tier)` —
     the tier dimension added in closeout C1 (cross-tier transfer fix).
   - `DataCoverage` CHECK: `league_id IS NOT NULL OR source = 'statsbomb'`.
+  - Phase 7: `ShortlistEntry` UNIQUE `(shortlist_id, player_id)`; soft-delete columns
+    (`removed_at`/`deleted_at`) on entries/shortlists; `StatusHistory.from_status` NULL
+    on the initial creation row. Rules enforced in `queries/workspace_queries.py`.
 - **Side effects**: none at import (schema creation happens in `db.create_schema`).
 
-#### `app/schema.sql`
+#### `app/schema.sql` (384 lines)
 - **Type**: Canonical PostgreSQL DDL (the source of truth for production).
-- **Purpose**: 11 tables + 6 enums + indexes + the design-principles header comment
+- **Purpose**: 16 tables + 8 enums + indexes + the design-principles header comment
   (append-only, versioned by scrape date, natural keys for idempotency, publish gate,
   anomaly gate, coverage matrix).
-- **Notable**: comments document every immutability decision inline. Applied by the
-  postgres compose image on fresh volumes and by `scripts/migrations/001_*` for
-  existing volumes.
+- **Notable**: comments document every immutability decision inline. Phase 7 adds
+  `entry_status`/`entry_priority` enums and the workspace tables (shortlists,
+  shortlist_entries, entry_notes, entry_tags, status_history) with soft-delete columns
+  and the `(shortlist_id, player_id)` unique constraint. Applied by the postgres
+  compose image on fresh volumes and by `scripts/migrations/001_*` for existing
+  volumes.
 
 ### 6.3 `app/api/` — FastAPI layer
 
@@ -749,6 +770,23 @@ Statlas/
 - **Notable**: `has_source_coverage` is the single check map UIs must pass — row exists,
   status active (optional), season in `seasons_available`.
 
+#### `app/queries/workspace_queries.py` (689 lines)
+- **Purpose**: Phase 7 scouting workspace — shortlists, entries, notes, tags, history.
+- **Key exports**: `list_shortlists`, `create_shortlist`, `get_shortlist_detail`,
+  `add_player_to_shortlist`, `update_entry_status`, `set_entry_priority`,
+  `add_entry_note`, `add_entry_tag`, `remove_entry_tag`, `remove_entry`,
+  `delete_shortlist`, `get_shortlist_memberships`, `get_user_tag_suggestions`,
+  `validate_transition`, pipeline constants, and the domain exceptions
+  (`ShortlistNotFound`, `PlayerNotFound`, `InvalidStatusTransition`, `DuplicateEntry`,
+  `WorkspaceLimitExceeded`).
+- **Notable**: ownership verified on EVERY read/write (foreign/missing →
+  `ShortlistNotFound` → HTTP 404, never an existence-leaking 403); transition rules
+  from docs/product/scouting-pipeline.md (forward skips + backward moves allowed,
+  rejected exits only via monitoring, signed terminal, same-status no-op); soft delete
+  preserves notes/tags/history; Free tier caps (1 shortlist / 10 entries, pricing.json)
+  raise `WorkspaceLimitExceeded` with honest upsell copy; `get_shortlist_detail` joins
+  player summary + latest published index in a handful of queries (no N+1).
+
 #### `app/queries/sentences.py` (137 lines)
 - **Purpose**: Data-driven profile sentences (Constitution §5, Never-List #4).
 - **Key exports**: `build_profile_sentence()`, `ordinal()`.
@@ -869,7 +907,7 @@ Statlas/
 
 ### 6.10 `tests/` — test suite
 
-> 104 tests total, all on in-memory SQLite (no network). `tests/conftest.py` provides
+> 185 tests total, all on in-memory SQLite (no network). `tests/conftest.py` provides
 > the `db` fixture (ORM-built in-memory engine), `premier_league`, `small_pool`
 > (registry overrides `min_pool_size=5`), `fixtures_dir()`, and `compute_and_publish()`
 > (compute + publish — the query layer serves published rows only).
@@ -893,6 +931,7 @@ Statlas/
 | `test_statsbomb.py` | 68 | Sync stores events + coverage; no duplicate events; both competitions.json shapes |
 | `test_tier_completeness.py` | 229 | §1.4 gate withholds incomplete tiers; cross-tier-transfer percentile keys don't collide |
 | `test_trend.py` | 223 | Trend points, gaps vs cohort calendar, transfer events, windowing, insufficient state, timezone key handling |
+| `test_workspace.py` | 707 | Phase 7 workspace: CRUD, pipeline transitions (valid + explicitly invalid), cross-user 404s on read/write (never existence-leaking 403), duplicate-add rejection, soft-delete audit preservation, free-tier caps with honest upsell, own-only tag suggestions, multi-step status-history audit, API-level auth + error mapping |
 | `test_understat.py` | 121 | Embedded-JSON extraction, POST fallback (live-drift fixture), loud schema error |
 
 **Fixtures** (`tests/fixtures/`): `fbref_league.html` (19 KB real-shaped FBref page),
@@ -953,13 +992,14 @@ Statlas/
 | `EventMaps.tsx` (146) | Coverage-gated entry point: renders ShotMap/PassMap only when `has_event_data`, else the honest "no coverage" note |
 | `EmbedRadar.tsx` (72) / `EmbedTrend.tsx` (98) | iframe widget pages — bare frames, no site banner, Powered-by-Statlas attribution inside |
 | `SharePanel.tsx` (144) | Copy link / copy embed / X + LinkedIn intents with feedback states; OG-image preview |
-| `SimilarPlayers.tsx` (212) | Fetches + renders nearest neighbours with the stated similarity basis; each row's disclosure shows the real "why" (matched strengths with up indicators, key differences with the stronger player named, honest no-differences / missing-data notes) — all states: loading skeleton, empty, retry-capable error |
+| `SimilarPlayers.tsx` (216) | Fetches + renders nearest neighbours with the stated similarity basis; each row's disclosure shows the real "why" (matched strengths with up indicators, key differences with the stronger player named, honest no-differences / missing-data notes) — all states: loading skeleton, empty, retry-capable error; per-row Save-to-shortlist (Phase 7) |
+| `AddToShortlist.tsx` (255) | Lazy "Add to shortlist" everywhere players appear (profile header, leaderboard rows, similar results): zero requests until first click; real selector with inline create when multiple shortlists; marks already-saved players; signed-out → sign-in link; free-cap → honest upsell; success → link to the shortlist |
 | `KeyStats.tsx` (50) | Key-stat summary table from real raw snapshot values + percentile chips + status hints |
 | `SquadRadar.tsx` (60) | Squad-average radar with N + empty state when < 5 qualified |
-| `LeaderboardTable.tsx` (337) | Sortable/filterable/paginated table; sort indicator accessible (not color-only); loading/empty/error states |
+| `LeaderboardTable.tsx` (342) | Sortable/filterable/paginated table; sort indicator accessible (not color-only); loading/empty/error states; per-row Save-to-shortlist column (Phase 7) |
 | `RecencyLine.tsx` (26) | "Data as of {date} · computed {date}" transparency label |
 | `DatasetBanner.tsx` (42) | Client banner from `/api/v1/meta`; hidden on production mode and embed pages; "Development dataset." |
-| `Header.tsx` (73) / `Footer.tsx` (61) | Site chrome: nav (Leaderboards, positions, methodology, pricing), search combobox, theme toggle; footer with data-source honesty links |
+| `Header.tsx` (97) / `Footer.tsx` (61) | Site chrome: nav (Leaderboards, positions, methodology, pricing), search combobox, theme toggle; Workspace link when signed in; footer with data-source honesty links |
 | `ThemeToggle.tsx` (52) | Light/dark/system toggle |
 | `Breadcrumbs.tsx` (23) | Breadcrumb nav helper |
 | `LegalDoc.tsx` (55) | Renders legal sections (terms/privacy pages) |
@@ -973,7 +1013,9 @@ Statlas/
 | `/compare/og-image` | `compare/og-image/route.tsx` | Dynamic OG image: decodes query, fetches payloads, `renderOgCard` |
 | `/trend` | `trend/page.tsx` (81) | SSR shell → `TrendTool`; metadata + OG link |
 | `/trend/og-image` | `trend/og-image/route.tsx` | Trend OG image |
-| `/players/[slug]` | `players/[slug]/page.tsx` (216) | SSR profile: `generateMetadata` (dynamic title/description/OG/JSON-LD), 301 to canonical slug, radar, key stats, sentence, similar, trend card, coverage-gated maps |
+| `/players/[slug]` | `players/[slug]/page.tsx` (220) | SSR profile: `generateMetadata` (dynamic title/description/OG/JSON-LD), 301 to canonical slug, radar, key stats, sentence, similar, trend card, coverage-gated maps, Add-to-Shortlist |
+| `/workspace` | `workspace/page.tsx` (29) + `WorkspaceClient.tsx` (257) | Per-account scouting workspace: shortlist cards with per-status breakdowns, create/remove shortlist, free-cap note, empty/error/signed-out states |
+| `/workspace/[id]` | `workspace/[id]/page.tsx` (16) + `ShortlistClient.tsx` (609) | Shortlist detail: status-filter chips, entry table with deliberate status-change control (optional reason → status_history), priority select, tag chips with own-tags autocomplete, notes with relative+absolute timestamps, remove (soft) |
 | `/players/[slug]/opengraph-image` | `players/[slug]/opengraph-image.tsx` | Player OG image (real data) |
 | `/clubs/[leagueSlug]/[teamSlug]` | `clubs/[...]/page.tsx` (172) | SSR team profile: roster table, squad radar, logo placeholder |
 | `/leagues/[leagueCode]` | `leagues/[...]/page.tsx` (6) | Redirects to `/stats` |
@@ -985,7 +1027,7 @@ Statlas/
 | `/data-coverage` | `data-coverage/page.tsx` (93) | The coverage matrix rendered from the API; honesty notice |
 | `/pricing` | `pricing/page.tsx` | Pricing page (Phase 4 stub) |
 | `/legal/terms` / `/legal/privacy` | `legal/*/page.tsx` | LegalDoc-rendered drafts |
-| `/changelog` | `changelog/page.tsx` | Dated changelog entries |
+| `/changelog` | `changelog/page.tsx` | Dated changelog entries (Phase 7 entry added 2026-08-17) |
 | `/embed/radar` · `/embed/trend` | `(embed)/embed/*/page.tsx` | Widget pages (bare) |
 | 404 | `not-found.tsx` | Honest not-found with search hint |
 | `layout.tsx` (48) | Root layout: Sora + IBM Plex Sans via next/font, header, banner, footer |
@@ -1020,12 +1062,15 @@ Statlas/
   `dev`, `build`, `start`, `test` (node --test), `test:e2e*`, `perf:audit`.
 - **`web/Dockerfile`**: multi-stage (deps → builder → standalone runner), non-root
   `nextjs` user, `ARG NEXT_PUBLIC_STATLAS_API_URL`.
-- **`web/styles/tokens.css`** (463 lines): full design-token system — pitch-green brand,
+- **`web/styles/tokens.css`** (475 lines): full design-token system — pitch-green brand,
   Okabe-Ito categorical colors, 8-step gray scale, semantic tokens, spacing scale,
-  type scale, breakpoints, motion tokens, data font with tabular figures.
-- **`web/app/globals.css`** (1785 lines): all component styles; `.visually-hidden`
+  type scale, breakpoints, motion tokens, data font with tabular figures; info/purple
+  pipeline-chip tokens (Phase 7).
+- **`web/app/globals.css`** (2321 lines): all component styles; `.visually-hidden`
   (screen-reader tables positioned off-screen — closeout fix), `.table-wrap`,
-  chip/badge/button/stat-list/leaderboard styles, dataset-banner contrast fix.
+  chip/badge/button/stat-list/leaderboard styles, dataset-banner contrast fix,
+  workspace styles (Phase 7): pipeline chips, status-change panel, tag/note controls,
+  add-to-shortlist menu.
 
 ### 6.12 `docs/` — documentation
 

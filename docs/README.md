@@ -37,6 +37,8 @@ docs/
 │   ├── similarity-explanation-method.md  how "similar players" explanations work (Phase 6)
 │   ├── data-compliance-notes.md   per-source license/ToS/rate-limit review
 │   └── production-validation-log.md  real scrape validation + dataset-mode decision
+├── product/                       Phase 7 scouting workspace
+│   └── scouting-pipeline.md       status pipeline rules, transitions, integrity, authz
 ├── api/                           live API verification (BLOCKED, Part A3)
 │   └── live-verification-log.md   real captured endpoint evidence or BLOCKED status
 ├── ai-assistant/                  live AI-assistant verification (BLOCKED, Part A2)
@@ -92,3 +94,4 @@ docs/
 | Soft-launch plan / go-no-go | [launch/soft-launch-plan.md](launch/soft-launch-plan.md) |
 | Post-launch cadence | [launch/iteration-cadence.md](launch/iteration-cadence.md) |
 | Compliance / legal status | [legal/pre-launch-human-actions.md](legal/pre-launch-human-actions.md) |
+| Scouting pipeline rules | [product/scouting-pipeline.md](product/scouting-pipeline.md) |

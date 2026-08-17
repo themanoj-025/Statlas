@@ -143,6 +143,80 @@
 | Method/Path | `GET /api/v1/methodology` |
 | Response 200 | index formula, weights, normalization, threshold, limitations (REQ-015; also statically SSR'd on /methodology) |
 
+### EP-19 Workspace overview (Phase 7)
+| | |
+|---|---|
+| Method/Path | `GET /api/v1/workspace` |
+| Auth | session cookie (401 otherwise) |
+| Response 200 | `{ plan, has_pro, limits, shortlists: [{ shortlist_id, name, description, entry_count, status_breakdown, created_at, updated_at }] }` — the user's shortlists with per-status counts; lazily creates the default "My Shortlist" for a user with none |
+| Purpose | per-user scouting workspace (docs/product/scouting-pipeline.md) |
+
+### EP-20 Create shortlist
+| | |
+|---|---|
+| Method/Path | `POST /api/v1/workspace` |
+| Auth | session cookie |
+| Body | `{ name (1–128), description? (≤2000) }` |
+| Response 201 | `{ shortlist_id, name }` |
+| Errors | 403 free plan at the 1-shortlist cap (honest upsell detail); 400 validation |
+
+### EP-21 Shortlist detail
+| | |
+|---|---|
+| Method/Path | `GET /api/v1/workspace/{shortlist_id}` |
+| Auth | session cookie; ownership required |
+| Response 200 | `{ shortlist_id, name, description, plan, has_pro, limits, entry_count, status_breakdown, entries: [...] }` — each entry joins player summary (name, slug, position, club, league, latest published index + snapshot date), status, priority, added/updated dates, added-by note, notes (timestamped), tags, and the full status_history audit trail |
+| Errors | 404 unknown OR another user's shortlist (existence never leaks) |
+
+### EP-22 Add player to shortlist
+| | |
+|---|---|
+| Method/Path | `POST /api/v1/workspace/{shortlist_id}/entries` |
+| Auth | session cookie; ownership required |
+| Body | `{ player_id, initial_note? (≤2000) }` |
+| Response 201 | `{ entry_id, status }` — status defaults to `discovered`; writes the initial status_history row |
+| Errors | 404 unknown player/shortlist; 409 player already in this shortlist; 403 free plan at the 10-entry cap (honest upsell) |
+
+### EP-23 Entry status change
+| | |
+|---|---|
+| Method/Path | `POST /api/v1/workspace/entries/{entry_id}/status` |
+| Auth | session cookie; ownership required |
+| Body | `{ status, reason_note? (≤1000) }` |
+| Response 200 | `{ entry_id, status, history_written }` — transition validated against the pipeline rules; a history row is written on every real change |
+| Errors | 400 invalid transition (specific message — e.g. signed is terminal, rejected exits only via monitoring); 404 foreign entry |
+
+### EP-24 Entry priority / notes / tags / removal
+| | |
+|---|---|
+| Method/Path | `POST /api/v1/workspace/entries/{entry_id}/priority` · `/notes` · `/tags` · `/tags/remove` · `/remove` |
+| Auth | session cookie; ownership required |
+| Bodies | priority `{ priority: low|medium|high|null }`; notes `{ note_text (1–4000) }`; tags `{ tag_text (1–64) }` (lowercased; adding an existing tag is a no-op) |
+| Response | 200 / 201; `/remove` soft-deletes the entry (removed_at) — notes, tags and status_history are preserved for audit |
+| Errors | 404 foreign entry; 400 validation |
+
+### EP-25 Shortlist removal
+| | |
+|---|---|
+| Method/Path | `POST /api/v1/workspace/{shortlist_id}/remove` |
+| Auth | session cookie; ownership required |
+| Response 200 | `{ ok: true }` — soft delete (deleted_at); entries removed, history preserved |
+| Errors | 404 unknown/foreign |
+
+### EP-26 Tag suggestions
+| | |
+|---|---|
+| Method/Path | `GET /api/v1/workspace/tag-suggestions?prefix=&limit=` |
+| Auth | session cookie |
+| Response 200 | `{ tags: [...] }` — most-used tags from the user's OWN shortlists only (never another user's private vocabulary) |
+
+### EP-27 Shortlist memberships
+| | |
+|---|---|
+| Method/Path | `GET /api/v1/workspace/memberships?player_id=` |
+| Auth | session cookie |
+| Response 200 | `{ shortlist_ids: [...] }` — which of the user's shortlists already contain this player (drives the Add-to-Shortlist UI) |
+
 ## 3. Error Codes
 
 | Code | Meaning | Handling |
@@ -154,7 +228,9 @@
 
 ## 4. Auth Flow
 
-None in v1 (N/A because all data is public; Phase 4 adds API keys/rate limits — see ImplementationPlan TASK-4.4). When added, this section will document the key/refresh flow with a Mermaid sequence diagram.
+**Public read-only endpoints:** none (v1 posture).
+
+**Session endpoints (Phase 4/7 — workspace + billing + assistant):** cookie-based sessions set by the API (`statlas_session`, HttpOnly, SameSite=Lax). The web app forwards the cookie to client components; POSTs send `credentials: "include"`. Ownership is enforced at the query layer: a shortlist/entry that is missing OR owned by another user returns **404** (never 403 — a 403 would confirm the shortlist exists). Phase 4 API keys/rate limits for the public API are documented separately (key auth is for `/api/v1/` public endpoints only).
 
 ## 5. Example Request/Response
 
