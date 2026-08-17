@@ -113,7 +113,7 @@ on a credentialed FBref run plus an API-Football key.
 | HTTP | requests | >= 2.31 | All source fetching |
 | Web fonts | Sora + IBM Plex Sans | via next/font | Two-family type rule (design system §4) |
 | Icons | lucide-react | ^0.460.0 | UI icons |
-| Testing (Python) | pytest | >= 8.0 | 220 tests |
+| Testing (Python) | pytest | >= 8.0 | 252 tests |
 | Linting (Python) | ruff | via pyproject | Enforced rule set: F, E4/E7/E9, I, DTZ |
 | Testing (frontend) | node --test | Node 24 | 12 unit tests (pure modules) |
 | E2E | Playwright | ^1.62.1 | 9 e2e tests incl. axe + breakpoints |
@@ -247,7 +247,9 @@ Statlas/
 │   │   ├── team_queries.py        # team profiles, roster, squad radar
 │   │   ├── trend_queries.py       # snapshot-history trends
 │   │   ├── workspace_queries.py   # shortlists/entries/notes/tags/history + authz (Phase 7)
-│   │   └── structured_search.py   # Phase 8 query translation + saved/history/presets
+│   │   ├── structured_search.py   # Phase 8 query translation + saved/history/presets
+│   │   └── reports.py             # Phase 9 grounded report pipeline + confidence + verification gate
+│   ├── report_export.py           # Phase 9 JSON/PDF/CSV exports from the verified report object
 │   ├── api/
 │   │   ├── main.py                # FastAPI app — the ONLY data-access layer
 │   │   ├── player_view.py         # player profile payload builder
@@ -256,7 +258,8 @@ Statlas/
 │   │   ├── billing_views.py       # auth + Stripe (Phase 4)
 │   │   ├── assistant_views.py     # grounded AI assistant (Phase 4)
 │   │   ├── workspace_views.py     # workspace routes, session auth (Phase 7)
-│   │   └── search_views.py        # Phase 8 search routes, session auth
+│   │   ├── search_views.py        # Phase 8 search routes, session auth
+│   │   └── report_views.py        # Phase 9 report routes, session auth (EP-35–41)
 │   ├── reconciliation.py          # player name reconciliation
 │   ├── schema.sql                 # canonical PostgreSQL DDL
 │   └── sources/
@@ -291,7 +294,8 @@ Statlas/
 │   │   └── terms-of-service-draft.md
 │   ├── product/
 │   │   ├── scouting-pipeline.md    # Phase 7 status pipeline rules + integrity + authz
-│   │   └── query-builder-scope.md  # Phase 8 condition grammar, AND-only scope, floor, missing-data rules
+│   │   ├── query-builder-scope.md  # Phase 8 condition grammar, AND-only scope, floor, missing-data rules
+│   │   └── scouting-reports.md     # Phase 9 report structure, confidence rules, risk rules, verification design
 │   └── suite/                     # 14-file project-documentation suite (was project-docs/)
 │       ├── API.md
 │       ├── AppFlow.md
@@ -314,7 +318,8 @@ Statlas/
 ├── scripts/
 │   ├── migrations/001_percentile_tier_key.sql
 │   ├── seed_dev_db.py
-│   └── validate_search_presets.py # Phase 8 preset validation against current data
+│   ├── validate_search_presets.py # Phase 8 preset validation against current data
+│   └── verify_reports.py          # Phase 9 10-report grounding/consistency verification
 ├── tests/
 │   ├── __init__.py
 │   ├── conftest.py
@@ -345,7 +350,8 @@ Statlas/
 │   ├── test_trend.py
 │   ├── test_understat.py
 │   ├── test_workspace.py
-│   └── test_structured_search.py
+│   ├── test_structured_search.py
+│   ├── test_reports.py
 └── web/
     ├── .dockerignore
     ├── .gitignore
@@ -409,7 +415,8 @@ Statlas/
     │   ├── phase5.spec.ts
     │   ├── phase6.spec.ts
     │   ├── phase7.spec.ts
-    │   └── phase8.spec.ts
+    │   ├── phase8.spec.ts
+│   └── phase9.spec.ts
     ├── lib/
     │   ├── api.ts
     │   ├── chartSvg.test.ts
@@ -460,7 +467,7 @@ Statlas/
 - **Purpose**: Human entry point: what Statlas is, quick start, usage, config, testing,
   deployment, roadmap, FAQ, license. *(Explicit — polished per the README enhancement
   blueprint on 2026-08-14.)*
-- **Key content**: 3-command quick start, route table, env-var table, 220 pytest / 12 node
+- **Key content**: 3-command quick start, route table, env-var table, 252 pytest / 12 node
   tests, Playwright + Lighthouse CI notes, AGPL-3.0 license.
 - **Side effects**: none.
 
@@ -556,7 +563,11 @@ Statlas/
   `MatchEvent`, `DataCoverage`, `IngestionAnomaly`, `ReconciliationQueue`, `Fixture`,
   `User`, `SessionToken`, `Subscription`, `ApiKey`, `WebhookEvent`, `AssistantQuota`,
   plus the Phase 7 workspace set: `Shortlist`, `ShortlistEntry`, `EntryNote`, `EntryTag`,
-  `StatusHistory`, and the Phase 8 search set: `SavedSearch`, `SearchHistory`.
+  `StatusHistory`, the Phase 8 search set: `SavedSearch`, `SearchHistory`, and the Phase 9
+  report set: `Report` (report_json + verification_log, data_snapshot_date for
+  reproducibility) and `ReportQuota` (a SEPARATE monthly allowance from
+  `AssistantQuota` — sharing one pool would cause confusing "why did my chat quota
+  drop" experiences).
 - **Notable logic** *(explicit)*:
   - Enums declared `native_enum=True` (the closeout C3 parity fix) — Postgres gets real
     `CREATE TYPE` enums; SQLite falls back to VARCHAR+CHECK automatically.
@@ -824,6 +835,37 @@ Statlas/
   retention newest-50-per-user enforced on insert; re-running a saved search
   always executes against CURRENT data (weekly refresh, never silently stale).
 
+#### `app/queries/reports.py` (1283 lines)
+- **Purpose**: Phase 9 grounded scouting reports — the report pipeline, confidence
+  scoring, risk factors, verification gate, quota, and CRUD.
+- **Key exports**: `gather_report_context` (deterministic: every number comes from the
+  existing query layer, with a verification corpus), `compute_report_confidence`
+  (deterministic scoring over sample size / data completeness / recency),
+  `derive_risk_factors` (real signals only + the explicit out-of-scope statement),
+  `verify_report` (the hard code gate: every narrative number and metric name must
+  match the corpus), `deterministic_narrator` (tests/dev — can only emit context
+  values), `generate_report` (gather → narrate → verify → retry once → store),
+  `get_report_quota`, `list_reports`, `get_report`, `delete_report`, and the domain
+  exceptions (`ReportNotFound`, `ReportLimitExceeded`, `ReportNotConfigured`,
+  `PlayerHasNoData`).
+- **Notable**: verification is architectural, not prompt-level — a fabricated
+  statistic fails the gate, the report is retried once with the mismatch fed back,
+  and a second failure stores it `needs_review` (never silently shipped); comparables
+  come VERBATIM from Phase 6; workspace context is included only when generated from
+  a shortlist entry AND that entry belongs to the requesting user; confidence level
+  must equal the deterministic computation (checked by the gate); quota is a SEPARATE
+  monthly allowance from the Phase 4 chat quota; ownership → 404 (Phase 7/8 pattern).
+  Design: docs/product/scouting-reports.md.
+
+#### `app/report_export.py` (526 lines)
+- **Purpose**: Phase 9 export formats — JSON (verbatim canonical), PDF (reportlab,
+  design tokens, native radar chart, uncompressed content), CSV (tabular surfaces).
+- **Key exports**: `export_json`, `export_pdf`, `export_csv`.
+- **Notable**: all three derive from the single stored verified report object; the
+  PDF applies the pitch-green palette, wordmark header, data-snapshot footer, and a
+  needs-review warning block when applicable; CSV includes statistical profile +
+  comparable players only (narrative omitted by design, documented in the UI).
+
 #### `app/queries/sentences.py` (137 lines)
 - **Purpose**: Data-driven profile sentences (Constitution §5, Never-List #4).
 - **Key exports**: `build_profile_sentence()`, `ordinal()`.
@@ -944,7 +986,7 @@ Statlas/
 
 ### 6.10 `tests/` — test suite
 
-> 220 tests total, all on in-memory SQLite (no network). `tests/conftest.py` provides
+> 252 tests total, all on in-memory SQLite (no network). `tests/conftest.py` provides
 > the `db` fixture (ORM-built in-memory engine), `premier_league`, `small_pool`
 > (registry overrides `min_pool_size=5`), `fixtures_dir()`, and `compute_and_publish()`
 > (compute + publish — the query layer serves published rows only).
@@ -970,6 +1012,7 @@ Statlas/
 | `test_trend.py` | 223 | Trend points, gaps vs cohort calendar, transfer events, windowing, insufficient state, timezone key handling |
 | `test_workspace.py` | 707 | Phase 7 workspace: CRUD, pipeline transitions (valid + explicitly invalid), cross-user 404s on read/write (never existence-leaking 403), duplicate-add rejection, soft-delete audit preservation, free-tier caps with honest upsell, own-only tag suggestions, multi-step status-history audit, API-level auth + error mapping |
 | `test_structured_search.py` | 887 | Phase 8 structured search: hand-calculated query translation (multi-condition AND, percentile+raw mixing, lte/between), always-applied minutes floor, missing-metric exclusion, empty-result diagnostics, grammar validation (OR rejected, >8 conditions, unknown metric), saved-search CRUD + staleness-on-rerun + free cap, history auto-log + 50-cap + rerun, cross-user 404s, presets validate, API-level auth + error mapping |
+| `test_reports.py` | 800 | Phase 9 reports: the verification-rejection test (a deliberately fabricated statistic is caught by the hard gate), confidence scoring (full-season/complete → high; sparse/stale → low), risk-factor rules incl. the out-of-scope statement, full pipeline (deterministic narrator → verified → stored, evidence appendix), workspace-context inclusion/omission/ownership, cross-user 404s, Pro quota caps with honest upsell, JSON/PDF/CSV exports, API-level generation/export flow |
 | `test_understat.py` | 121 | Embedded-JSON extraction, POST fallback (live-drift fixture), loud schema error |
 
 **Fixtures** (`tests/fixtures/`): `fbref_league.html` (19 KB real-shaped FBref page),
@@ -1032,6 +1075,7 @@ Statlas/
 | `SharePanel.tsx` (144) | Copy link / copy embed / X + LinkedIn intents with feedback states; OG-image preview |
 | `SimilarPlayers.tsx` (216) | Fetches + renders nearest neighbours with the stated similarity basis; each row's disclosure shows the real "why" (matched strengths with up indicators, key differences with the stronger player named, honest no-differences / missing-data notes) — all states: loading skeleton, empty, retry-capable error; per-row Save-to-shortlist (Phase 7) |
 | `AddToShortlist.tsx` (255) | Lazy "Add to shortlist" everywhere players appear (profile header, leaderboard rows, similar results): zero requests until first click; real selector with inline create when multiple shortlists; marks already-saved players; signed-out → sign-in link; free-cap → honest upsell; success → link to the shortlist |
+| `GenerateReport.tsx` (170) | "Generate Report" on the player profile header and every shortlist entry: staged honest progress (gathering → comparables → verifying claims), free-tier upsell, not-configured and needs-review hold states surfaced honestly, success → report history |
 | `KeyStats.tsx` (50) | Key-stat summary table from real raw snapshot values + percentile chips + status hints |
 | `SquadRadar.tsx` (60) | Squad-average radar with N + empty state when < 5 qualified |
 | `LeaderboardTable.tsx` (342) | Sortable/filterable/paginated table; sort indicator accessible (not color-only); loading/empty/error states; per-row Save-to-shortlist column (Phase 7) |
@@ -1051,10 +1095,11 @@ Statlas/
 | `/compare/og-image` | `compare/og-image/route.tsx` | Dynamic OG image: decodes query, fetches payloads, `renderOgCard` |
 | `/trend` | `trend/page.tsx` (81) | SSR shell → `TrendTool`; metadata + OG link |
 | `/trend/og-image` | `trend/og-image/route.tsx` | Trend OG image |
-| `/players/[slug]` | `players/[slug]/page.tsx` (220) | SSR profile: `generateMetadata` (dynamic title/description/OG/JSON-LD), 301 to canonical slug, radar, key stats, sentence, similar, trend card, coverage-gated maps, Add-to-Shortlist |
+| `/players/[slug]` | `players/[slug]/page.tsx` (220) | SSR profile: `generateMetadata` (dynamic title/description/OG/JSON-LD), 301 to canonical slug, radar, key stats, sentence, similar, trend card, coverage-gated maps, Add-to-Shortlist, Generate Report |
 | `/workspace` | `workspace/page.tsx` (29) + `WorkspaceClient.tsx` (257) | Per-account scouting workspace: shortlist cards with per-status breakdowns, create/remove shortlist, free-cap note, empty/error/signed-out states |
 | `/workspace/[id]` | `workspace/[id]/page.tsx` (16) + `ShortlistClient.tsx` (609) | Shortlist detail: status-filter chips, entry table with deliberate status-change control (optional reason → status_history), priority select, tag chips with own-tags autocomplete, notes with relative+absolute timestamps, remove (soft) |
 | `/search` | `search/page.tsx` (26) + `SearchClient.tsx` (1057) | Phase 8 structured search: multi-condition AND-only builder (up to 8 conditions, percentile/raw visually distinct, metrics grouped from the registry, scalar position/tier/age filters), debounced live result-count preview (never logged to history), results with per-condition real values, presets, saved searches, history with re-run; Add-to-Shortlist per row + bulk add-all; loading/empty-with-guidance/error/signed-out states |
+| `/reports` | `reports/page.tsx` (20) + `ReportsClient.tsx` (460) | Phase 9 report history: quota status, report cards labelled with data-snapshot date, expandable viewer (all sections + expandable evidence appendix tracing every claim to its source call), regenerate-with-current-data (fresh verified row), delete, PDF/JSON/CSV exports (409 while needs_review), needs-review hold surfaced honestly, loading/empty/error/signed-out states |
 | `/login` / `/register` / `/account` | `login/`, `register/`, `account/` | Phase 4 auth surfaces (register/login forms, account dashboard with subscription/API keys) |
 | `/players/[slug]/opengraph-image` | `players/[slug]/opengraph-image.tsx` | Player OG image (real data) |
 | `/clubs/[leagueSlug]/[teamSlug]` | `clubs/[...]/page.tsx` (172) | SSR team profile: roster table, squad radar, logo placeholder |
@@ -1088,6 +1133,12 @@ Statlas/
   results with condition values), preset load, save/run/delete a saved search,
   history rerun, add-to-shortlist from results + bulk add, keyboard-only condition
   building (no mouse), axe on the builder and results.
+- **`phase9.spec.ts`**: report generation flow from a player profile with the staged
+  progress (dev narrator via REPORTS_DEV_NARRATOR), report history list + expandable
+  viewer with the evidence appendix, regenerate + delete, PDF/JSON/CSV export
+  downloads, needs-review export-block surfaced, generate-from-shortlist-entry with
+  workspace context, free-tier honest upsell, axe on the reports page with the
+  appendix open.
 - **`breakpoints.spec.ts`** (61): no-horizontal-overflow assertion at 375/768/1440px in
   light + dark themes across 8 core pages.
 
@@ -1265,6 +1316,8 @@ No auth (internal-facing; public tier on Phase 4 roadmap). 400 on `ValueError`; 
 | GET `/api/v1/search/presets` | — | Curated presets (public, not user-owned) | `{presets: [...]}` |
 | GET/POST `/api/v1/search/saved…` | — | Phase 8 saved searches (session auth; free cap 5; 404 for foreign) | saved-search payloads / `{saved, results}` on run |
 | GET/POST `/api/v1/search/history…` | `limit` | Phase 8 search history (session auth; newest 50, auto-logged) | `{entries: [...]}` / `{reran, results}` |
+| GET/POST/DELETE `/api/v1/reports…` | — | Phase 9 reports (session auth; Pro-gated, separate monthly quota; EP-35–41; 404 for foreign ids) | quota / report list / generate (gather→narrate→hard-verify→store) / regenerate / delete |
+| GET `/api/v1/reports/{id}/export.{json,pdf,csv}` | — | Phase 9 exports derived from the single verified report object (409 while needs_review) | JSON verbatim / branded PDF / tabular CSV |
 
 ---
 

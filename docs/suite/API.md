@@ -268,6 +268,62 @@
 | Response 200 | `{ reran: { history_id }, results }` — the new run is logged as a NEW history entry |
 | Errors | 404 unknown OR another user's history entry |
 
+### EP-35 Report quota (Phase 9)
+| | |
+|---|---|
+| Method/Path | `GET /api/v1/reports/quota` |
+| Auth | session cookie |
+| Response 200 | `{ used, limit, reset, remaining, plan, has_pro }` — a SEPARATE monthly allowance from the Phase 4 chat quota (sharing one pool would cause confusing "why did my chat quota drop" experiences) |
+
+### EP-36 List reports
+| | |
+|---|---|
+| Method/Path | `GET /api/v1/reports` |
+| Auth | session cookie |
+| Response 200 | `{ reports: [{ report_id, player_id, shortlist_entry_id, status, data_snapshot_date, created_at, player_name, verification_status, report }] }` — newest-first; each carries the full verified report document |
+
+### EP-37 Generate report
+| | |
+|---|---|
+| Method/Path | `POST /api/v1/reports` |
+| Auth | session cookie; **Pro required** |
+| Body | `{ player_id, shortlist_entry_id? }` |
+| Response 201 | the stored report payload — `status: "generated"` only after the verification gate passed; `"needs_review"` when a claim failed verification twice (never silently shipped) |
+| Errors | 403 Free tier (honest upsell); 503 `ANTHROPIC_API_KEY` unset (honest not-configured state, per Phase 4); 422 player has no published percentile data; 404 shortlist entry missing OR another user's; 409 on export while `needs_review` |
+| Notes | The pipeline is gather → narrate → verify (hard code gate) → store; every number in the narrative must match the verified context corpus or the report is retried once, then held. Quota is consumed on generation. |
+
+### EP-38 Report detail / regenerate / delete
+| | |
+|---|---|
+| Method/Path | `GET /api/v1/reports/{report_id}` · `POST /api/v1/reports/{report_id}/regenerate` · `DELETE /api/v1/reports/{report_id}` |
+| Auth | session cookie; ownership required |
+| Response | GET/DELETE standard; regenerate returns **201** with a FRESH report row (the stored report is never mutated — "results may have changed since last run" discipline from Phase 8) |
+| Errors | 404 unknown OR another user's report |
+
+### EP-39 Export JSON
+| | |
+|---|---|
+| Method/Path | `GET /api/v1/reports/{report_id}/export.json` |
+| Auth | session cookie; ownership required |
+| Response 200 | `application/json` attachment — the full verified report object verbatim, evidence appendix included (the canonical format PDF/CSV derive from) |
+| Errors | 404; 409 when the report is `needs_review` (export disabled) |
+
+### EP-40 Export PDF
+| | |
+|---|---|
+| Method/Path | `GET /api/v1/reports/{report_id}/export.pdf` |
+| Auth | session cookie; ownership required |
+| Response 200 | `application/pdf` attachment — branded with the Statlas design tokens, native radar chart, data-snapshot footer, uncompressed content for extractability |
+| Errors | 404; 409 when `needs_review` |
+
+### EP-41 Export CSV
+| | |
+|---|---|
+| Method/Path | `GET /api/v1/reports/{report_id}/export.csv` |
+| Auth | session cookie; ownership required |
+| Response 200 | `text/csv` attachment — statistical profile + comparable players only (narrative sections are necessarily omitted; the export UI says so) |
+| Errors | 404; 409 when `needs_review` |
+
 ## 3. Error Codes
 
 | Code | Meaning | Handling |
@@ -281,7 +337,7 @@
 
 **Public read-only endpoints:** none (v1 posture).
 
-**Session endpoints (Phase 4/7/8 — workspace, billing, assistant, saved searches):** cookie-based sessions set by the API (`statlas_session`, HttpOnly, SameSite=Lax). The web app forwards the cookie to client components; ALL credentialed requests (GET, POST, DELETE) send `credentials: "include"` — without this, cross-origin GETs omit the session cookie and every signed-in read silently 401s. Ownership is enforced at the query layer: a shortlist/entry/search that is missing OR owned by another user returns **404** (never 403 — a 403 would confirm it exists). Phase 4 API keys/rate limits for the public API are documented separately (key auth is for `/api/v1/` public endpoints only).
+**Session endpoints (Phase 4/7/8/9 — workspace, billing, assistant, saved searches, reports):** cookie-based sessions set by the API (`statlas_session`, HttpOnly, SameSite=Lax). The web app forwards the cookie to client components; ALL credentialed requests (GET, POST, DELETE) send `credentials: "include"` — without this, cross-origin GETs omit the session cookie and every signed-in read silently 401s. Ownership is enforced at the query layer: a shortlist/entry/search that is missing OR owned by another user returns **404** (never 403 — a 403 would confirm it exists). Phase 4 API keys/rate limits for the public API are documented separately (key auth is for `/api/v1/` public endpoints only).
 
 ## 5. Example Request/Response
 
