@@ -29,6 +29,7 @@ from app.api.assistant_views import router as assistant_router
 from app.api.billing_views import router as billing_router
 from app.api.public_views import router as public_api_router
 from app.api.registry_view import public_meta
+from app.api.search_views import router as search_router
 from app.api.workspace_views import router as workspace_router
 from app.config import get_settings, load_registry
 from app.db import session_scope
@@ -50,7 +51,7 @@ app.add_middleware(
     # Phase 4: auth uses cookie sessions, so credentialed requests are allowed
     # from the web app origin (billing POST routes included).
     allow_credentials=True,
-    allow_methods=["GET", "POST", "OPTIONS"],
+    allow_methods=["GET", "POST", "DELETE", "OPTIONS"],
     allow_headers=["*"],
 )
 
@@ -58,6 +59,7 @@ app.include_router(billing_router)
 app.include_router(assistant_router)
 app.include_router(public_api_router)
 app.include_router(workspace_router)
+app.include_router(search_router)
 
 
 @app.middleware("http")
