@@ -124,6 +124,12 @@ class Settings:
         # --- Phase 4: AI assistant (Part B) ------------------------------------
         self.anthropic_api_key = env("ANTHROPIC_API_KEY", "") or None
         self.assistant_model = env("ASSISTANT_MODEL", "claude-3-5-haiku-latest")
+        # --- Phase 9: reports ---------------------------------------------------
+        # Dev/e2e affordance: when set, the report API uses the deterministic
+        # narrator (which can only emit context values) instead of the LLM. The
+        # verification gate still runs on every generation. Never set in
+        # production; the LLM narrator remains the default.
+        self.reports_dev_narrator = env_bool("REPORTS_DEV_NARRATOR", False)
         # --- Phase 4: sessions / API keys --------------------------------------
         self.session_cookie_name = env("STATLAS_SESSION_COOKIE", "statlas_session")
         self.session_ttl_hours = env_int("STATLAS_SESSION_TTL_HOURS", 30 * 24)
