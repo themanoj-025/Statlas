@@ -27,8 +27,10 @@ from pydantic import BaseModel
 
 from app.api.assistant_views import router as assistant_router
 from app.api.billing_views import router as billing_router
+from app.api.e2e_views import router as e2e_router
 from app.api.public_views import router as public_api_router
 from app.api.registry_view import public_meta
+from app.api.report_views import router as report_router
 from app.api.search_views import router as search_router
 from app.api.workspace_views import router as workspace_router
 from app.config import get_settings, load_registry
@@ -56,10 +58,12 @@ app.add_middleware(
 )
 
 app.include_router(billing_router)
+app.include_router(e2e_router)
 app.include_router(assistant_router)
 app.include_router(public_api_router)
 app.include_router(workspace_router)
 app.include_router(search_router)
+app.include_router(report_router)
 
 
 @app.middleware("http")
