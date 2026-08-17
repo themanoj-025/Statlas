@@ -5,6 +5,7 @@ import { useParams } from "next/navigation";
 import { ChevronLeft, Plus, Trash2, X } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { useAuth } from "@/components/AuthProvider";
+import { GenerateReport } from "@/components/GenerateReport";
 import { api, ApiError } from "@/lib/api";
 import { formatNumber, positionGroupLabel, relativeAndAbsolute } from "@/lib/format";
 import type {
@@ -227,15 +228,23 @@ function EntryRow({
         <span className="shortlist-entry__added">{relativeAndAbsolute(entry.added_at) ?? "—"}</span>
       </td>
       <td>
-        <button
-          type="button"
-          className="button button--sm button--ghost"
-          aria-label={`Remove ${entry.name}`}
-          disabled={removing}
-          onClick={() => void remove()}
-        >
-          <Trash2 size={14} aria-hidden="true" />
-        </button>
+        <div style={{ display: "flex", gap: "var(--space-2)", justifyContent: "flex-end" }}>
+          <GenerateReport
+            playerId={entry.player_id}
+            playerName={entry.name}
+            shortlistEntryId={entry.entry_id}
+            compact
+          />
+          <button
+            type="button"
+            className="button button--sm button--ghost"
+            aria-label={`Remove ${entry.name}`}
+            disabled={removing}
+            onClick={() => void remove()}
+          >
+            <Trash2 size={14} aria-hidden="true" />
+          </button>
+        </div>
       </td>
     </tr>
   );
