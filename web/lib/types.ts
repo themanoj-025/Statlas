@@ -480,3 +480,124 @@ export type ShortlistDetail = WorkspaceOverview & {
 
 export type TagSuggestions = { tags: string[] };
 export type ShortlistMemberships = { shortlist_ids: number[] };
+
+// ---------------------------------------------------------------------------
+// Phase 8 — structured search (saved searches, presets, history)
+// ---------------------------------------------------------------------------
+// Grammar documented in docs/product/query-builder-scope.md. Backend enforces
+// AND-only logic, max 8 conditions, and the always-applied minutes floor.
+
+export type ConditionOperator =
+  | "percentile_gte"
+  | "percentile_lte"
+  | "percentile_between"
+  | "gte"
+  | "lte"
+  | "between"
+  | "eq";
+
+export type SearchCondition = {
+  metric: string;
+  operator: ConditionOperator;
+  value: number;
+  value_max?: number | null;
+};
+
+export type QueryDefinition = {
+  position_group?: string[] | null;
+  league_tier?: string | null;
+  age_max?: number | null;
+  conditions: SearchCondition[];
+  condition_logic: "AND";
+};
+
+export type ConditionValueShown = {
+  metric: string;
+  metric_name: string;
+  operator: ConditionOperator;
+  value: number;
+  value_max: number | null;
+  actual: number | null;
+  condition_type: "percentile" | "raw";
+};
+
+export type SearchResultEntry = {
+  player_id: number;
+  name: string;
+  slug: string | null;
+  position_group: string | null;
+  club: string | null;
+  league: string | null;
+  league_slug: string | null;
+  tier: string | null;
+  minutes: number;
+  matches: number;
+  age: number | null;
+  index: number | null;
+  snapshot_date: string;
+  condition_values: ConditionValueShown[];
+};
+
+export type SearchResults = {
+  query: QueryDefinition;
+  season: string;
+  snapshot_date: string;
+  qualifying_minutes: number;
+  note: string;
+  total: number;
+  limit: number;
+  offset: number;
+  has_more: boolean;
+  entries: SearchResultEntry[];
+  diagnostics: {
+    per_condition_counts: {
+      metric: string;
+      metric_name: string;
+      operator: ConditionOperator;
+      value: number;
+      value_max: number | null;
+      passing_count: number;
+    }[];
+    most_restrictive: {
+      metric: string;
+      metric_name: string;
+      operator: ConditionOperator;
+      value: number;
+      value_max: number | null;
+      passing_count: number;
+    } | null;
+  } | null;
+};
+
+export type SearchPreset = {
+  id: string;
+  name: string;
+  rationale: string;
+  query_definition: QueryDefinition;
+};
+
+export type SavedSearchSummary = {
+  search_id: number;
+  name: string;
+  description: string | null;
+  query_definition: QueryDefinition;
+  condition_count: number;
+  position_group: string[] | null;
+  league_tier: string | null;
+  age_max: number | null;
+  created_at: string;
+  updated_at: string;
+  last_run_at: string | null;
+};
+
+export type SavedSearchesPayload = { searches: SavedSearchSummary[] };
+
+export type SearchHistoryEntry = {
+  history_id: number;
+  query_definition: QueryDefinition;
+  executed_at: string;
+  result_count: number;
+  summary: string;
+};
+
+export type SearchHistoryPayload = { entries: SearchHistoryEntry[] };
