@@ -13,7 +13,9 @@
         "trend_window": 5,
         "assistant_queries_per_period": 10,
         "embeds_active": 0,
-        "api_rate_limit_per_minute": 0
+        "api_rate_limit_per_minute": 0,
+        "shortlists_max": 1,
+        "shortlist_entries_max": 10
       }
     },
     "pro": {
@@ -26,7 +28,9 @@
         "trend_window": 10,
         "assistant_queries_per_period": 200,
         "embeds_active": 10,
-        "api_rate_limit_per_minute": 0
+        "api_rate_limit_per_minute": 0,
+        "shortlists_max": null,
+        "shortlist_entries_max": null
       }
     },
     "api_business": {
@@ -39,7 +43,9 @@
         "trend_window": 10,
         "assistant_queries_per_period": 1000,
         "embeds_active": null,
-        "api_rate_limit_per_minute": 120
+        "api_rate_limit_per_minute": 120,
+        "shortlists_max": null,
+        "shortlist_entries_max": null
       }
     }
   },
@@ -52,6 +58,7 @@
   "notes": [
     "stripe_price_id values are filled in at setup time from the live Stripe dashboard and mirrored in docs/billing/pricing-config.md. Null means the plan is not purchasable via Stripe Checkout (Free) or not yet configured.",
     "Limits with null mean unlimited within the tier.",
-    "The assistant quota is a HARD CAP (no silent overage billing) — the documented model per Phase 4 Part B3."
+    "The assistant quota is a HARD CAP (no silent overage billing) — the documented model per Phase 4 Part B3.",
+    "Workspace (Phase 7): Free gets 1 shortlist and 10 entries per shortlist — a genuine taste of the workflow. Pro/API-Business: unlimited. Exceeding a cap returns an explicit, honest upsell message (403), never a generic error."
   ]
 }

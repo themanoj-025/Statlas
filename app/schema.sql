@@ -32,6 +32,8 @@ CREATE TYPE league_tier AS ENUM ('tier_1', 'tier_2', 'tier_3');
 CREATE TYPE queue_status AS ENUM ('pending', 'resolved', 'ignored');
 CREATE TYPE plan AS ENUM ('free', 'pro', 'api_business');
 CREATE TYPE subscription_status AS ENUM ('active', 'trialing', 'past_due', 'canceled', 'incomplete');
+CREATE TYPE entry_status AS ENUM ('discovered', 'monitoring', 'scouted', 'shortlisted', 'reviewed', 'rejected', 'signed');
+CREATE TYPE entry_priority AS ENUM ('low', 'medium', 'high');
 
 -- ---------------------------------------------------------------------------
 -- Core entities
@@ -306,5 +308,77 @@ CREATE TABLE assistant_quotas (
     queries_limit INTEGER     NOT NULL,
     UNIQUE (user_id, period_start)
 );
+
+-- ===========================================================================
+-- Phase 7 — Scouting workspace (shortlists, tags, notes, status pipeline)
+-- ===========================================================================
+-- Design notes (full rationale in docs/product/scouting-pipeline.md):
+-- * Ownership: every row is reachable only through shortlists.user_id. The
+--   query layer verifies ownership on EVERY read/write and returns 404 for
+--   foreign or missing ids — never a 403 that would leak a shortlist's
+--   existence to another user.
+-- * Soft delete: shortlist_entries.removed_at and shortlists.deleted_at keep
+--   scouting history auditable; notes/tags/status_history are never deleted.
+-- * UNIQUE (shortlist_id, player_id): a player can sit in many shortlists
+--   but never twice in one.
+-- * Player merges (name reconciliation): shortlist_entries.player_id follows
+--   the canonical player — a merge must reassign these rows (FK is RESTRICT,
+--   so a merge can never silently orphan scouting data).
+
+CREATE TABLE shortlists (
+    id          SERIAL PRIMARY KEY,
+    user_id     INTEGER     NOT NULL REFERENCES users(id),
+    name        VARCHAR(128) NOT NULL,
+    description TEXT,
+    created_at  TIMESTAMPTZ NOT NULL DEFAULT now(),
+    updated_at  TIMESTAMPTZ NOT NULL DEFAULT now(),
+    deleted_at  TIMESTAMPTZ                 -- soft delete — history preserved
+);
+CREATE INDEX ix_shortlists_user ON shortlists (user_id);
+
+CREATE TABLE shortlist_entries (
+    id             SERIAL PRIMARY KEY,
+    shortlist_id   INTEGER      NOT NULL REFERENCES shortlists(id),
+    player_id      INTEGER      NOT NULL REFERENCES players(id),
+    status         entry_status NOT NULL DEFAULT 'discovered',
+    priority       entry_priority,                     -- NULL = unset
+    added_at       TIMESTAMPTZ  NOT NULL DEFAULT now(),
+    updated_at     TIMESTAMPTZ  NOT NULL DEFAULT now(),
+    added_by_note  TEXT,                                -- captured at add time
+    removed_at     TIMESTAMPTZ,                         -- soft delete — audit intact
+    UNIQUE (shortlist_id, player_id)
+);
+CREATE INDEX ix_entries_shortlist ON shortlist_entries (shortlist_id);
+CREATE INDEX ix_entries_player    ON shortlist_entries (player_id);
+CREATE INDEX ix_entries_status    ON shortlist_entries (status);
+
+CREATE TABLE entry_notes (
+    id                 SERIAL PRIMARY KEY,
+    shortlist_entry_id INTEGER     NOT NULL REFERENCES shortlist_entries(id),
+    author_user_id     INTEGER     NOT NULL REFERENCES users(id),
+    note_text          TEXT        NOT NULL,
+    created_at         TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+CREATE INDEX ix_notes_entry ON entry_notes (shortlist_entry_id);
+
+CREATE TABLE entry_tags (
+    id                 SERIAL PRIMARY KEY,
+    shortlist_entry_id INTEGER     NOT NULL REFERENCES shortlist_entries(id),
+    tag_text           VARCHAR(64) NOT NULL,             -- normalized lowercase
+    created_at         TIMESTAMPTZ NOT NULL DEFAULT now(),
+    UNIQUE (shortlist_entry_id, tag_text)
+);
+CREATE INDEX ix_tags_entry ON entry_tags (shortlist_entry_id);
+
+CREATE TABLE status_history (
+    id                  SERIAL PRIMARY KEY,
+    shortlist_entry_id  INTEGER      NOT NULL REFERENCES shortlist_entries(id),
+    from_status         entry_status,                    -- NULL on initial creation
+    to_status           entry_status  NOT NULL,
+    changed_by_user_id  INTEGER      NOT NULL REFERENCES users(id),
+    changed_at          TIMESTAMPTZ  NOT NULL DEFAULT now(),
+    reason_note         TEXT
+);
+CREATE INDEX ix_status_history_entry ON status_history (shortlist_entry_id);
 
 COMMIT;

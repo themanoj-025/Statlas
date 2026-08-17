@@ -60,6 +60,18 @@ SUBSCRIPTION_STATUS_ENUM = Enum(
 )
 # Subscription plan (Constitution §1 business model: Free / Pro / API-Business).
 PLAN_ENUM = Enum("free", "pro", "api_business", name="plan")
+# Phase 7 — scouting workspace pipeline (docs/product/scouting-pipeline.md).
+ENTRY_STATUS_ENUM = Enum(
+    "discovered",
+    "monitoring",
+    "scouted",
+    "shortlisted",
+    "reviewed",
+    "rejected",
+    "signed",
+    name="entry_status",
+)
+ENTRY_PRIORITY_ENUM = Enum("low", "medium", "high", name="entry_priority")
 
 
 class Base(DeclarativeBase):
@@ -509,6 +521,146 @@ class WebhookEvent(Base):
         UniqueConstraint("event_id", name="uq_webhook_event_id"),
         Index("ix_webhook_events_type", "event_type"),
     )
+
+
+# ---------------------------------------------------------------------------
+# Phase 7 — Scouting workspace (shortlists, entries, notes, tags, history)
+# ---------------------------------------------------------------------------
+# Design notes (full rationale in docs/product/scouting-pipeline.md):
+# * Ownership: every row is reachable only through shortlists.user_id — the
+#   query layer verifies ownership on EVERY read/write and returns 404 for
+#   foreign or missing ids (no existence leak).
+# * Soft delete: remove_entry/delete_shortlist set removed_at/deleted_at —
+#   scouting history is never silently destroyed (Constitution bias). Notes,
+#   tags and status_history are retained for audit.
+# * (shortlist_id, player_id) UNIQUE: a player can appear in many shortlists
+#   but never twice in one. On a player merge/reconciliation the canonical
+#   player_id must be reassigned on shortlist_entries (documented in the
+#   pipeline doc) — the FK is RESTRICT so a merge cannot orphan rows silently.
+
+
+class Shortlist(Base):
+    __tablename__ = "shortlists"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), nullable=False)
+    name: Mapped[str] = mapped_column(String(128), nullable=False)
+    description: Mapped[str | None] = mapped_column(Text, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )
+    deleted_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )  # soft delete — history preserved
+
+    __table_args__ = (Index("ix_shortlists_user", "user_id"),)
+
+
+class ShortlistEntry(Base):
+    __tablename__ = "shortlist_entries"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    shortlist_id: Mapped[int] = mapped_column(
+        ForeignKey("shortlists.id"), nullable=False
+    )
+    player_id: Mapped[int] = mapped_column(ForeignKey("players.id"), nullable=False)
+    status: Mapped[str] = mapped_column(
+        ENTRY_STATUS_ENUM, nullable=False, default="discovered"
+    )
+    priority: Mapped[str | None] = mapped_column(
+        ENTRY_PRIORITY_ENUM, nullable=True
+    )  # None = unset
+    added_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )
+    added_by_note: Mapped[str | None] = mapped_column(
+        Text, nullable=True
+    )  # why the player was added — captured at add time
+    removed_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )  # soft delete — audit trail intact
+
+    __table_args__ = (
+        UniqueConstraint(
+            "shortlist_id", "player_id", name="uq_shortlist_entry_player"
+        ),
+        Index("ix_entries_shortlist", "shortlist_id"),
+        Index("ix_entries_player", "player_id"),
+        Index("ix_entries_status", "status"),
+    )
+
+
+class EntryNote(Base):
+    """Timestamped notes appended to an entry over time (a scouting
+    relationship spans months — never a single overwritable text field)."""
+
+    __tablename__ = "entry_notes"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    shortlist_entry_id: Mapped[int] = mapped_column(
+        ForeignKey("shortlist_entries.id"), nullable=False
+    )
+    author_user_id: Mapped[int] = mapped_column(
+        ForeignKey("users.id"), nullable=False
+    )
+    note_text: Mapped[str] = mapped_column(Text, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )
+
+    __table_args__ = (Index("ix_notes_entry", "shortlist_entry_id"),)
+
+
+class EntryTag(Base):
+    """Free-form tags ("left-footed", "contract expiring") — normalized to
+    lowercase so the same vocabulary never duplicates. Not a rigid taxonomy:
+    suggestions come from the user's OWN tags (get_user_tag_suggestions)."""
+
+    __tablename__ = "entry_tags"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    shortlist_entry_id: Mapped[int] = mapped_column(
+        ForeignKey("shortlist_entries.id"), nullable=False
+    )
+    tag_text: Mapped[str] = mapped_column(String(64), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )
+
+    __table_args__ = (
+        UniqueConstraint("shortlist_entry_id", "tag_text", name="uq_entry_tag"),
+        Index("ix_tags_entry", "shortlist_entry_id"),
+    )
+
+
+class StatusHistory(Base):
+    """Auditable status changes: who moved the entry, from where, to where,
+    when, and why. from_status is NULL for the initial creation row. This is
+    what answers "how long in Monitoring?" / "who rejected this and why?"""
+
+    __tablename__ = "status_history"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    shortlist_entry_id: Mapped[int] = mapped_column(
+        ForeignKey("shortlist_entries.id"), nullable=False
+    )
+    from_status: Mapped[str | None] = mapped_column(ENTRY_STATUS_ENUM, nullable=True)
+    to_status: Mapped[str] = mapped_column(ENTRY_STATUS_ENUM, nullable=False)
+    changed_by_user_id: Mapped[int] = mapped_column(
+        ForeignKey("users.id"), nullable=False
+    )
+    changed_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )
+    reason_note: Mapped[str | None] = mapped_column(Text, nullable=True)
+
+    __table_args__ = (Index("ix_status_history_entry", "shortlist_entry_id"),)
 
 
 class AssistantQuota(Base):
