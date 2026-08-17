@@ -54,6 +54,9 @@ export function Header() {
               <Link href="/workspace" className="header-account">
                 Workspace
               </Link>
+              <Link href="/reports" className="header-account">
+                Reports
+              </Link>
               <Link href="/account" className="header-account" aria-label={`Account — ${user?.email ?? ""}`}>
                 Account
               </Link>
@@ -85,9 +88,14 @@ export function Header() {
           </Link>
         ))}
         {status === "signed-in" && (
-          <Link href="/workspace" onClick={() => setMenuOpen(false)}>
-            Workspace
-          </Link>
+          <>
+            <Link href="/workspace" onClick={() => setMenuOpen(false)}>
+              Workspace
+            </Link>
+            <Link href="/reports" onClick={() => setMenuOpen(false)}>
+              Reports
+            </Link>
+          </>
         )}
         <Link href={status === "signed-in" ? "/account" : "/login"} onClick={() => setMenuOpen(false)}>
           {status === "signed-in" ? "Account" : "Sign in"}

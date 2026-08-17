@@ -15,6 +15,9 @@ import type {
   PlayerPayload,
   PortalPayload,
   PositionGroupMeta,
+  ReportQuotaPayload,
+  ReportsPayload,
+  ReportSummary,
   SearchResult,
   ShotEvent,
   ShortlistDetail,
@@ -231,6 +234,22 @@ export const api = {
       `/api/v1/search/history/${historyId}/rerun${qs(params as Record<string, string | number | undefined>)}`,
       {}
     ),
+  // Phase 9 — AI scouting reports. All session-authenticated; generation is
+  // Pro-gated with a separate monthly allowance (D5).
+  reportQuota: () => get<ReportQuotaPayload>("/api/v1/reports/quota"),
+  reports: () => get<ReportsPayload>("/api/v1/reports"),
+  generateReport: (playerId: number, shortlistEntryId?: number | null) =>
+    post<ReportSummary>("/api/v1/reports", {
+      player_id: playerId,
+      shortlist_entry_id: shortlistEntryId ?? null,
+    }),
+  reportDetail: (reportId: number) => get<ReportSummary>(`/api/v1/reports/${reportId}`),
+  regenerateReport: (reportId: number) =>
+    post<ReportSummary>(`/api/v1/reports/${reportId}/regenerate`, {}),
+  deleteReport: (reportId: number) => del<{ ok: boolean }>(`/api/v1/reports/${reportId}`),
+  // Exports derive from the single verified report object (C1).
+  reportExportUrl: (reportId: number, format: "json" | "pdf" | "csv") =>
+    `${API_URL}/api/v1/reports/${reportId}/export.${format}`,
 };
 
 async function del<T>(path: string): Promise<T> {
@@ -250,6 +269,8 @@ async function del<T>(path: string): Promise<T> {
     }
     throw new ApiError(res.status, detail);
   }
+  // 204 No Content (report delete) has no body — resolve to an empty object.
+  if (res.status === 204) return {} as T;
   return res.json() as Promise<T>;
 }
 
