@@ -45,6 +45,28 @@ export type Axis = MetricMeta & {
   status: "qualified" | "below_floor" | "no_data" | "unranked_pool";
 };
 
+export type SimilarityExplanation = {
+  matched_strengths: {
+    metric: string;
+    metric_name: string;
+    player_a_percentile: number;
+    player_b_percentile: number;
+    difference: number;
+    contribution: number;
+  }[];
+  key_differences: {
+    metric: string;
+    metric_name: string;
+    player_a_percentile: number;
+    player_b_percentile: number;
+    difference: number;
+    stronger_player: "player_a" | "player_b";
+  }[];
+  excluded_metrics: { metric: string; metric_name: string }[];
+  excluded_reason: string;
+  shared_metrics: number;
+};
+
 export type SimilarPlayer = {
   player_id: number;
   name: string;
@@ -56,6 +78,7 @@ export type SimilarPlayer = {
   shared_metrics: number;
   index: number | null;
   anchor_index: number | null;
+  explanation: SimilarityExplanation;
 };
 
 export type PlayerPayload = {
