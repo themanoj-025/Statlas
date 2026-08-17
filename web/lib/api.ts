@@ -17,6 +17,7 @@ import type {
   PositionGroupMeta,
   SearchResult,
   ShotEvent,
+  SimilarPlayer,
   SubscriptionStatusPayload,
   TeamPayload,
   TrendPayload,
@@ -77,9 +78,7 @@ export const api = {
   playerSearch: (q: string, limit = 8) =>
     get<SearchResult[]>(`/api/v1/players/search${qs({ q, limit })}`),
   similarPlayers: (playerId: number, limit = 5) =>
-    get<SearchResult & { similarity: number }[]>(
-      `/api/v1/players/${playerId}/similar${qs({ limit })}`
-    ),
+    get<SimilarPlayer[]>(`/api/v1/players/${playerId}/similar${qs({ limit })}`),
   team: (leagueSlug: string, teamSlug: string) =>
     get<TeamPayload>(`/api/v1/clubs/${encodeURIComponent(leagueSlug)}/${encodeURIComponent(teamSlug)}`),
   leaderboard: (params: {
