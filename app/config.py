@@ -130,6 +130,23 @@ class Settings:
         # verification gate still runs on every generation. Never set in
         # production; the LLM narrator remains the default.
         self.reports_dev_narrator = env_bool("REPORTS_DEV_NARRATOR", False)
+        # --- Phase 10: watchlist & alerts --------------------------------------
+        # The percentile-movement threshold (alert-trigger-definitions.md §2.1):
+        # inclusive, deployment-tunable without a code change.
+        self.alert_percentile_move_threshold = env_float(
+            "ALERT_PERCENTILE_MOVE_THRESHOLD", 15.0
+        )
+        # Outbound email (Resend — docs/product/notification-delivery.md).
+        # Unset = honest "email not configured" state; delivery never fails
+        # silently. The sender is injectable for tests.
+        self.resend_api_key = env("RESEND_API_KEY", "") or None
+        self.resend_from_email = env("RESEND_EMAIL_FROM", "notifications@statlas.app")
+        # Signs one-click unsubscribe links in alert emails. Production must set
+        # it; a per-process random default keeps dev links safe but invalidates
+        # them on restart (documented).
+        self.alert_signing_secret = env("ALERT_SIGNING_SECRET", "") or None
+        # Public base URL for links inside alert emails (web app).
+        self.public_base_url = env("STATLAS_PUBLIC_BASE_URL", "http://localhost:3000")
         # --- Phase 4: sessions / API keys --------------------------------------
         self.session_cookie_name = env("STATLAS_SESSION_COOKIE", "statlas_session")
         self.session_ttl_hours = env_int("STATLAS_SESSION_TTL_HOURS", 30 * 24)

@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { Menu, X } from "lucide-react";
 import { useAuth } from "./AuthProvider";
+import { NotificationBell } from "./NotificationBell";
 import { SearchCombobox } from "./SearchCombobox";
 import { ThemeToggle } from "./ThemeToggle";
 
@@ -54,12 +55,16 @@ export function Header() {
               <Link href="/workspace" className="header-account">
                 Workspace
               </Link>
+              <Link href="/watchlist" className="header-account">
+                Watchlist
+              </Link>
               <Link href="/reports" className="header-account">
                 Reports
               </Link>
               <Link href="/account" className="header-account" aria-label={`Account — ${user?.email ?? ""}`}>
                 Account
               </Link>
+              <NotificationBell />
             </>
           ) : status === "signed-out" ? (
             <Link href="/login" className="header-account">
@@ -91,6 +96,9 @@ export function Header() {
           <>
             <Link href="/workspace" onClick={() => setMenuOpen(false)}>
               Workspace
+            </Link>
+            <Link href="/watchlist" onClick={() => setMenuOpen(false)}>
+              Watchlist
             </Link>
             <Link href="/reports" onClick={() => setMenuOpen(false)}>
               Reports

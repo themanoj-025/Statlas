@@ -324,6 +324,59 @@
 | Response 200 | `text/csv` attachment — statistical profile + comparable players only (narrative sections are necessarily omitted; the export UI says so) |
 | Errors | 404; 409 when `needs_review` |
 
+### EP-42 List watches (Phase 10)
+| | |
+|---|---|
+| Method/Path | `GET /api/v1/watch` |
+| Auth | session cookie |
+| Response 200 | `{ "watches": [ { "watch_id", "entity_type", "entity_id", "entity_name", "slug", "league_slug", "followed_metrics", "created_at", "unread_alert_count", "team"/"position_group"/"league" } ] }` |
+
+### EP-43 Follow entity
+| | |
+|---|---|
+| Method/Path | `POST /api/v1/watch` |
+| Body | `{ "entity_type": "player"\|"team", "entity_id", "followed_metrics"?: [...] }` |
+| Auth | session cookie |
+| Response 201 | the watch payload; following an already-followed entity is a no-op (idempotent) |
+| Errors | 403 free-tier cap reached (honest upsell); 404 unknown entity |
+
+### EP-44 Unfollow
+| | |
+|---|---|
+| Method/Path | `POST /api/v1/watch/{watch_id}/unfollow` |
+| Auth | session cookie; ownership required |
+| Response | `{ "ok": true }` — alert history is retained (audit bias) |
+| Errors | 404 unknown OR another user's watch |
+
+### EP-45 List alerts
+| | |
+|---|---|
+| Method/Path | `GET /api/v1/watch/alerts?include_read=&include_dismissed=&limit=` |
+| Auth | session cookie |
+| Response 200 | `{ "alerts": [ { "alert_id", "watch_id", "entity_type", "entity_id", "entity_name", "slug", "league_slug", "alert_type", "triggered_at", "detail", "delivered_at", "read_at", "dismissed" } ] }` — `detail` holds only real snapshot/coverage/anomaly values |
+
+### EP-46 Alert detail / read / dismiss
+| | |
+|---|---|
+| Method/Path | `GET /api/v1/watch/alerts/{alert_id}` · `POST …/read` · `POST …/dismiss` |
+| Auth | session cookie; ownership required |
+| Errors | 404 unknown OR another user's alert (existence never leaks) |
+
+### EP-47 Notification preferences
+| | |
+|---|---|
+| Method/Path | `GET /api/v1/watch/preferences` · `PUT /api/v1/watch/preferences` · `POST /api/v1/watch/preferences/rotate-token` |
+| Auth | session cookie |
+| Body | `{ "email_enabled"?, "alert_type_preferences"?: {type: bool}, "digest_frequency"?: "immediate"\|"daily_digest"\|"weekly_digest" }` |
+| Response | the preferences row; unknown alert types / digest frequencies rejected with a specific 400 |
+
+### EP-48 One-click unsubscribe (public)
+| | |
+|---|---|
+| Method/Path | `GET /api/v1/watch/unsubscribe?user=&token=&sig=` |
+| Auth | none (clicked from email; HMAC-signed link) |
+| Response 200 | `{ "detail", "preferences_url" }` — sets `email_enabled=false`; invalid/expired signatures rejected with an honest 400 |
+
 ## 3. Error Codes
 
 | Code | Meaning | Handling |

@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { Image as ImageIcon, Users } from "lucide-react";
 import { api } from "@/lib/api";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
+import { FollowButton } from "@/components/FollowButton";
 import { RecencyLine } from "@/components/RecencyLine";
 import { ReportIssue } from "@/components/ReportIssue";
 import { SquadRadar } from "@/components/SquadRadar";
@@ -106,6 +107,7 @@ export default async function TeamPage({ params }: Props) {
         </div>
         <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: "var(--space-2)" }}>
           <RecencyLine snapshotDate={latestSnapshot} />
+          <FollowButton entityType="team" entityId={team.team_id} entityName={team.name} compact />
           <ReportIssue context={team.name} />
         </div>
       </div>

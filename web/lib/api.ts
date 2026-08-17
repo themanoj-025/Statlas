@@ -31,6 +31,10 @@ import type {
   TagSuggestions,
   TeamPayload,
   TrendPayload,
+  WatchAlertsPayload,
+  WatchAlertDetail,
+  WatchPreferences,
+  WatchesPayload,
   WorkspaceOverview,
 } from "./types";
 
@@ -250,6 +254,32 @@ export const api = {
   // Exports derive from the single verified report object (C1).
   reportExportUrl: (reportId: number, format: "json" | "pdf" | "csv") =>
     `${API_URL}/api/v1/reports/${reportId}/export.${format}`,
+  // Phase 10 — watchlist & alerts. All session-authenticated except the
+  // sessionless one-click unsubscribe link (clicked from email).
+  watches: () => get<WatchesPayload>("/api/v1/watch"),
+  follow: (entityType: "player" | "team", entityId: number, followedMetrics?: string[] | null) =>
+    post<{ watch_id: number; entity_type: string; entity_id: number; entity_name: string }>(
+      "/api/v1/watch",
+      { entity_type: entityType, entity_id: entityId, followed_metrics: followedMetrics ?? null }
+    ),
+  unfollow: (watchId: number) => post<{ ok: boolean }>(`/api/v1/watch/${watchId}/unfollow`, {}),
+  watchAlerts: (params: { include_read?: boolean; include_dismissed?: boolean; limit?: number } = {}) =>
+    get<WatchAlertsPayload>(
+      `/api/v1/watch/alerts${qs({
+        include_read: params.include_read ? "true" : undefined,
+        include_dismissed: params.include_dismissed ? "true" : undefined,
+        limit: params.limit,
+      })}`
+    ),
+  watchAlert: (alertId: number) => get<WatchAlertDetail>(`/api/v1/watch/alerts/${alertId}`),
+  markAlertRead: (alertId: number) => post<{ ok: boolean }>(`/api/v1/watch/alerts/${alertId}/read`, {}),
+  dismissAlert: (alertId: number) => post<{ ok: boolean }>(`/api/v1/watch/alerts/${alertId}/dismiss`, {}),
+  watchPreferences: () => get<WatchPreferences>("/api/v1/watch/preferences"),
+  updateWatchPreferences: (patch: {
+    email_enabled?: boolean;
+    alert_type_preferences?: Record<string, boolean>;
+    digest_frequency?: string;
+  }) => post<WatchPreferences>("/api/v1/watch/preferences", patch),
 };
 
 async function del<T>(path: string): Promise<T> {

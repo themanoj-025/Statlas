@@ -4,6 +4,7 @@ import { notFound, permanentRedirect } from "next/navigation";
 import { CalendarDays, Flag, MapPin, Shield, TrendingUp } from "lucide-react";
 import { api } from "@/lib/api";
 import { AddToShortlist } from "@/components/AddToShortlist";
+import { FollowButton } from "@/components/FollowButton";
 import { GenerateReport } from "@/components/GenerateReport";
 import { KeyStats } from "@/components/KeyStats";
 import { RadarCard } from "@/components/RadarCard";
@@ -165,6 +166,7 @@ export default async function PlayerPage({ params }: Props) {
               )}
               <AddToShortlist playerId={player.player_id} playerName={player.name} compact />
               <GenerateReport playerId={player.player_id} playerName={player.name} compact />
+              <FollowButton entityType="player" entityId={player.player_id} entityName={player.name} compact />
               <ReportIssue context={player.name} />
             </div>
           </div>
