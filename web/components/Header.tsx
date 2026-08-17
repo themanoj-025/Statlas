@@ -49,9 +49,14 @@ export function Header() {
 
         <div className="site-header__actions">
           {status === "signed-in" ? (
-            <Link href="/account" className="header-account" aria-label={`Account — ${user?.email ?? ""}`}>
-              Account
-            </Link>
+            <>
+              <Link href="/workspace" className="header-account">
+                Workspace
+              </Link>
+              <Link href="/account" className="header-account" aria-label={`Account — ${user?.email ?? ""}`}>
+                Account
+              </Link>
+            </>
           ) : status === "signed-out" ? (
             <Link href="/login" className="header-account">
               Sign in
@@ -78,6 +83,11 @@ export function Header() {
             {item.label}
           </Link>
         ))}
+        {status === "signed-in" && (
+          <Link href="/workspace" onClick={() => setMenuOpen(false)}>
+            Workspace
+          </Link>
+        )}
         <Link href={status === "signed-in" ? "/account" : "/login"} onClick={() => setMenuOpen(false)}>
           {status === "signed-in" ? "Account" : "Sign in"}
         </Link>

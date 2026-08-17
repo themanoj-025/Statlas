@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { ArrowDown, ArrowUp } from "lucide-react";
 import type { SimilarPlayer, SimilarityExplanation } from "@/lib/types";
 import { formatNumber, ordinal, percentileBand } from "@/lib/format";
+import { AddToShortlist } from "./AddToShortlist";
 
 /**
  * Similar players — nearest neighbours with a real "why" (Phase 6).
@@ -93,8 +94,11 @@ export function SimilarPlayers({ playerId, playerName }: { playerId: number; pla
                     {[player.club, player.league].filter(Boolean).join(" · ")}
                   </span>
                 </span>
-                <span className="num" style={{ color: percentileBand(player.similarity * 100), fontWeight: 600 }}>
-                  {formatNumber(player.similarity * 100, 0)}% match
+                <span className="similar-player__row-actions">
+                  <span className="num" style={{ color: percentileBand(player.similarity * 100), fontWeight: 600 }}>
+                    {formatNumber(player.similarity * 100, 0)}% match
+                  </span>
+                  <AddToShortlist playerId={player.player_id} playerName={player.name} compact />
                 </span>
               </div>
               <details className="similar-player__why">

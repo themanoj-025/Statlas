@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound, permanentRedirect } from "next/navigation";
 import { CalendarDays, Flag, MapPin, Shield, TrendingUp } from "lucide-react";
 import { api } from "@/lib/api";
+import { AddToShortlist } from "@/components/AddToShortlist";
 import { KeyStats } from "@/components/KeyStats";
 import { RadarCard } from "@/components/RadarCard";
 import { RecencyLine } from "@/components/RecencyLine";
@@ -155,12 +156,13 @@ export default async function PlayerPage({ params }: Props) {
             ) : (
               <span className="chip">Index pending</span>
             )}
-            <div className="no-print" style={{ display: "flex", gap: "var(--space-2)" }}>
+            <div className="no-print" style={{ display: "flex", gap: "var(--space-2)", flexWrap: "wrap", justifyContent: "flex-end" }}>
               {player.slug && (
                 <Link className="button button--sm" href={`/compare?players=${player.slug}`}>
                   Compare
                 </Link>
               )}
+              <AddToShortlist playerId={player.player_id} playerName={player.name} compact />
               <ReportIssue context={player.name} />
             </div>
           </div>

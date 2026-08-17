@@ -30,6 +30,7 @@ const PLANS = [
     features: [
       "Unlimited leaderboard rows",
       "Unlimited comparisons and trend history (10-snapshot window)",
+      "Unlimited scouting workspace (shortlists, notes, tags, status pipeline)",
       "Shot and pass maps for covered competitions",
       "200 assistant queries per month",
       "CSV export and PDF scout-report export",

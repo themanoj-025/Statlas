@@ -10,6 +10,7 @@ import type {
   PositionGroupMeta,
 } from "@/lib/types";
 import { formatNumber, percentileBand, positionGroupLabel, tierLabel } from "@/lib/format";
+import { AddToShortlist } from "./AddToShortlist";
 
 type SortKey = "value" | "minutes" | "name" | "club";
 
@@ -250,13 +251,14 @@ export function LeaderboardTable({
               {header("minutes", "Min")}
               <th scope="col">M</th>
               {header("value", valueLabel)}
+              <th scope="col" className="num">Save</th>
             </tr>
           </thead>
           <tbody>
             {status === "loading" &&
               Array.from({ length: 8 }, (_, i) => (
                 <tr key={`skeleton-${i}`} aria-hidden="true">
-                  {Array.from({ length: 7 }, (_, j) => (
+                  {Array.from({ length: 8 }, (_, j) => (
                     <td key={j}>
                       <span className="skeleton" style={{ display: "inline-block", width: j === 0 ? 24 : j === 6 ? 44 : 88, height: 14 }} />
                     </td>
@@ -280,13 +282,16 @@ export function LeaderboardTable({
                     <td className="num" style={{ color: percentileBand(entry.value), fontWeight: 600 }}>
                       {formatNumber(entry.value, entry.value >= 100 ? 0 : 1)}
                     </td>
+                    <td className="num">
+                      <AddToShortlist playerId={entry.player_id} playerName={entry.name} compact />
+                    </td>
                   </tr>
                 );
               })}
 
             {status !== "loading" && !data.entries.length && (
               <tr>
-                <td colSpan={7}>
+                <td colSpan={8}>
                   <div className="state-block state-block--sunken" role="status">
                     <p className="state-block__title">No players meet the qualifying threshold here yet.</p>
                     <p className="state-block__body">
