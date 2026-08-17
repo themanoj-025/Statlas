@@ -14,6 +14,15 @@ type Entry = {
 
 const ENTRIES: Entry[] = [
   {
+    date: "2026-08-17",
+    phase: "Phase 6 — explainable similarity",
+    items: [
+      "Every similar-players result now carries a real explanation computed from the same percentile vectors that produced the score — never a template sentence unconnected to the numbers. Matched strengths are the metrics that contributed most to the cosine score where both players rank at or above the 70th percentile within 20 points; key differences are the largest percentile-point gaps (at least 25 points) with the stronger player stated. The decomposition reuses the dot product and norms already computed for ranking, so the explanation cannot diverge from the headline number (docs/analytics/similarity-explanation-method.md).",
+      "Explanation UI on the player profile: each similar player expands to show matched strengths with up-indicators and key differences with the stronger player named, each with real percentile values (e.g. 'both rank highly in Progressive carries per 90 — 88th vs 85th percentile'). Honest states included: if no metric has a meaningful gap the UI says the profiles are very similar across every measured metric; metrics missing a published percentile for either player are excluded from score and explanation and listed with the reason; loading skeleton, empty, and retry-capable error states all defined. Icons carry accompanying text and every colour is a semantic token (WCAG AA, axe green).",
+      "Similarity explanation covered by 11 hand-calculated unit tests (matched-strength ranking, key-difference direction, boundary gaps, missing-metric exclusion, no-meaningful-differences edge case, contribution-sum consistency) plus integration tests through the query layer; methodology page gained a 'Similar players — how the explanation works' section with the exact thresholds; API reference updated; a verification script (scripts/verify_similarity_explanations.py) checks internal consistency across 10+ real player pairs.",
+    ],
+  },
+  {
     date: "2026-08-14",
     phase: "Phase 5 — launch readiness",
     items: [

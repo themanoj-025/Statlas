@@ -757,12 +757,22 @@ Statlas/
   pending qualification (with real minutes), no snapshot (coverage-honest copy),
   percentile < 0.5 ("bottom of the group"), index sentence appended when present.
 
-#### `app/queries/similar_players.py` (157 lines)
-- **Purpose**: Real nearest-neighbour computation (Phase 2 B4).
-- **Key exports**: `get_similar_players()`, `_cosine_similarity()`, `MIN_SHARED_METRICS=5`.
+#### `app/queries/similar_players.py` (319 lines)
+- **Purpose**: Real nearest-neighbour computation (Phase 2 B4) + the Phase 6 explanation
+  layer on top of it.
+- **Key exports**: `get_similar_players()`, `build_similarity_explanation()`,
+  `_cosine_with_components()`, `_cosine_similarity()`, `MIN_SHARED_METRICS=5`,
+  `MATCHED_STRENGTH_MIN_PERCENTILE=70`, `MATCHED_STRENGTH_MAX_DIFF=20`,
+  `KEY_DIFFERENCE_MIN_GAP=25`, `MAX_EXPLAINED_ITEMS=3`.
 - **Notable**: cosine similarity over the shared published-percentile subset within the
   same {position_group, league_tier} cohort; absent metrics excluded from that pair
   (never a zero); fewer than 5 shared metrics → not considered; `sim <= 0` filtered.
+  Each result carries an `explanation`: matched strengths are the metrics that
+  contributed most to the cosine score where both players rank >= 70th and sit within
+  20 percentile points; key differences are the largest gaps (>= 25 points) with the
+  stronger player stated. The decomposition reuses the same dot product/norms as the
+  ranking (explanation cannot diverge from the score); excluded metrics carry their
+  registry display name so the UI can name them (similarity-explanation-method.md).
 
 ### 6.8 `app/sources/` — data-source adapters
 
@@ -943,7 +953,7 @@ Statlas/
 | `EventMaps.tsx` (146) | Coverage-gated entry point: renders ShotMap/PassMap only when `has_event_data`, else the honest "no coverage" note |
 | `EmbedRadar.tsx` (72) / `EmbedTrend.tsx` (98) | iframe widget pages — bare frames, no site banner, Powered-by-Statlas attribution inside |
 | `SharePanel.tsx` (144) | Copy link / copy embed / X + LinkedIn intents with feedback states; OG-image preview |
-| `SimilarPlayers.tsx` (102) | Fetches + renders nearest neighbours with the stated similarity basis ("similar based on…") |
+| `SimilarPlayers.tsx` (212) | Fetches + renders nearest neighbours with the stated similarity basis; each row's disclosure shows the real "why" (matched strengths with up indicators, key differences with the stronger player named, honest no-differences / missing-data notes) — all states: loading skeleton, empty, retry-capable error |
 | `KeyStats.tsx` (50) | Key-stat summary table from real raw snapshot values + percentile chips + status hints |
 | `SquadRadar.tsx` (60) | Squad-average radar with N + empty state when < 5 qualified |
 | `LeaderboardTable.tsx` (337) | Sortable/filterable/paginated table; sort indicator accessible (not color-only); loading/empty/error states |

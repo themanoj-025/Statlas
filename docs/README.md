@@ -34,6 +34,7 @@ docs/
 ├── analytics/                     Phase 0/1 data rules (source of truth for the suite)
 │   ├── methodology.md             Statlas Index formula, weights, threshold
 │   ├── percentile-rules.md        grouping (tier), cadence, immutability
+│   ├── similarity-explanation-method.md  how "similar players" explanations work (Phase 6)
 │   ├── data-compliance-notes.md   per-source license/ToS/rate-limit review
 │   └── production-validation-log.md  real scrape validation + dataset-mode decision
 ├── api/                           live API verification (BLOCKED, Part A3)
