@@ -400,3 +400,83 @@ export type ChatResponse = {
   quota: AssistantQuota;
   grounded: boolean;
 };
+
+// --- Phase 7: scouting workspace --------------------------------------------
+
+export type EntryStatus =
+  | "discovered"
+  | "monitoring"
+  | "scouted"
+  | "shortlisted"
+  | "reviewed"
+  | "rejected"
+  | "signed";
+
+export type EntryPriority = "low" | "medium" | "high" | null;
+
+export type ShortlistSummary = {
+  shortlist_id: number;
+  name: string;
+  description: string | null;
+  entry_count: number;
+  status_breakdown: Record<EntryStatus, number>;
+  created_at: string;
+  updated_at: string;
+};
+
+export type WorkspaceOverview = {
+  plan: Plan;
+  has_pro: boolean;
+  limits: Record<string, number | null>;
+  shortlists: ShortlistSummary[];
+};
+
+export type EntryNote = {
+  id: number;
+  author_user_id: number;
+  note_text: string;
+  created_at: string;
+};
+
+export type StatusHistoryRow = {
+  from_status: EntryStatus | null;
+  to_status: EntryStatus;
+  changed_by_user_id: number;
+  changed_at: string;
+  reason_note: string | null;
+};
+
+export type ShortlistEntryDetail = {
+  entry_id: number;
+  player_id: number;
+  name: string;
+  slug: string | null;
+  position_group: string | null;
+  position_label: string | null;
+  club: string | null;
+  league: string | null;
+  index: number | null;
+  snapshot_date: string | null;
+  status: EntryStatus;
+  priority: EntryPriority;
+  added_at: string;
+  updated_at: string;
+  added_by_note: string | null;
+  notes: EntryNote[];
+  tags: string[];
+  status_history: StatusHistoryRow[];
+};
+
+export type ShortlistDetail = WorkspaceOverview & {
+  shortlist_id: number;
+  name: string;
+  description: string | null;
+  created_at: string;
+  updated_at: string;
+  entries: ShortlistEntryDetail[];
+  entry_count: number;
+  status_breakdown: Record<EntryStatus, number>;
+};
+
+export type TagSuggestions = { tags: string[] };
+export type ShortlistMemberships = { shortlist_ids: number[] };
