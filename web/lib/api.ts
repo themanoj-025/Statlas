@@ -17,10 +17,14 @@ import type {
   PositionGroupMeta,
   SearchResult,
   ShotEvent,
+  ShortlistDetail,
+  ShortlistMemberships,
   SimilarPlayer,
   SubscriptionStatusPayload,
+  TagSuggestions,
   TeamPayload,
   TrendPayload,
+  WorkspaceOverview,
 } from "./types";
 
 // Server components read the API at STATLAS_API_URL (no CORS involved);
@@ -42,6 +46,10 @@ export class ApiError extends Error {
 async function get<T>(path: string, init?: RequestInit): Promise<T> {
   const res = await fetch(`${API_URL}${path}`, {
     ...init,
+    // The API and web app are different origins (8000 vs 3000), so the
+    // session cookie is only sent on credentialed requests — without this,
+    // every signed-in GET (me, subscription, workspace…) silently 401s.
+    credentials: "include",
     cache: "no-store",
     headers: { Accept: "application/json", ...(init?.headers ?? {}) },
   });
@@ -139,6 +147,46 @@ export const api = {
   assistantQuota: () => get<AssistantQuota>("/api/v1/assistant/quota"),
   // Phase 4 — public API docs (Part C2): live OpenAPI spec, not hand-written.
   openapi: () => get<{ paths?: Record<string, unknown>; info?: { version?: string } }>("/openapi.json"),
+  // Phase 7 — scouting workspace. All routes are session-authenticated.
+  workspace: () => get<WorkspaceOverview>("/api/v1/workspace"),
+  createShortlist: (name: string, description?: string | null) =>
+    post<{ shortlist_id: number; name: string }>("/api/v1/workspace", {
+      name,
+      description: description ?? null,
+    }),
+  shortlistDetail: (shortlistId: number) =>
+    get<ShortlistDetail>(`/api/v1/workspace/${shortlistId}`),
+  shortlistMemberships: (playerId: number) =>
+    get<ShortlistMemberships>(`/api/v1/workspace/memberships?player_id=${playerId}`),
+  tagSuggestions: (prefix: string) =>
+    get<TagSuggestions>(`/api/v1/workspace/tag-suggestions?prefix=${encodeURIComponent(prefix)}`),
+  addToShortlist: (shortlistId: number, playerId: number, initialNote?: string | null) =>
+    post<{ entry_id: number; status: string }>(`/api/v1/workspace/${shortlistId}/entries`, {
+      player_id: playerId,
+      initial_note: initialNote ?? null,
+    }),
+  changeEntryStatus: (entryId: number, status: string, reasonNote?: string | null) =>
+    post<{ entry_id: number; status: string; history_written: boolean }>(
+      `/api/v1/workspace/entries/${entryId}/status`,
+      { status, reason_note: reasonNote ?? null }
+    ),
+  setEntryPriority: (entryId: number, priority: string | null) =>
+    post<{ entry_id: number; priority: string | null }>(
+      `/api/v1/workspace/entries/${entryId}/priority`,
+      { priority }
+    ),
+  addEntryNote: (entryId: number, noteText: string) =>
+    post<{ note_id: number; created_at: string }>(
+      `/api/v1/workspace/entries/${entryId}/notes`,
+      { note_text: noteText }
+    ),
+  addEntryTag: (entryId: number, tagText: string) =>
+    post<{ tag: string }>(`/api/v1/workspace/entries/${entryId}/tags`, { tag_text: tagText }),
+  removeEntryTag: (entryId: number, tagText: string) =>
+    post<{ ok: boolean }>(`/api/v1/workspace/entries/${entryId}/tags/remove`, { tag_text: tagText }),
+  removeEntry: (entryId: number) => post<{ ok: boolean }>(`/api/v1/workspace/entries/${entryId}/remove`, {}),
+  removeShortlist: (shortlistId: number) =>
+    post<{ ok: boolean }>(`/api/v1/workspace/${shortlistId}/remove`, {}),
 };
 
 async function post<T>(path: string, body: unknown): Promise<T> {
