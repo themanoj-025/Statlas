@@ -32,7 +32,11 @@ cd "${ROOT}" && python "${ROOT}/scripts/seed_dev_db.py" >/dev/null 2>&1 || {
 }
 
 echo "[e2e-server] starting API on :${API_PORT}..."
-cd "${ROOT}" && DATABASE_URL="${DB_URL}" python -m uvicorn app.api.main:app --host 127.0.0.1 --port "${API_PORT}" &
+# REPORTS_DEV_NARRATOR=1: the Phase 9 report pipeline runs without an
+# ANTHROPIC_API_KEY in e2e — the deterministic narrator can only emit verified
+# context values and the hard verification gate still runs on every report.
+# Never set in production; the LLM narrator remains the default.
+cd "${ROOT}" && DATABASE_URL="${DB_URL}" REPORTS_DEV_NARRATOR=1 python -m uvicorn app.api.main:app --host 127.0.0.1 --port "${API_PORT}" &
 API_PID=$!
 
 echo "[e2e-server] building web (production build, matches CI)..."
