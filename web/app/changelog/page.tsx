@@ -15,6 +15,18 @@ type Entry = {
 const ENTRIES: Entry[] = [
   {
     date: "2026-08-17",
+    phase: "Phase 8 — structured search",
+    items: [
+      "Multi-condition query builder at /search: combine up to 8 conditions (percentile thresholds relative to position group × league tier, raw minutes, age, position, tier) under AND-only logic — OR/grouped logic is a documented future enhancement (docs/product/query-builder-scope.md), not a half-built feature. Percentile and raw conditions are visually distinct in the builder, every metric comes from the same Metric Registry used by the Radar tool and similarity explanations (no second naming convention), and a debounced live preview shows how restrictive the query is before you commit. Every result row shows the real values behind each condition — the why-it-matched is checkable, never a bare list.",
+      "Correctness by construction: query translation is covered by hand-calculated tests (multi-condition AND, percentile+raw mixing, lte/between), the 900-minute qualification floor is ALWAYS applied even when the query has no minutes condition (a builder query can never surface unqualified players), and a player missing data for any condition metric is excluded — a player cannot satisfy a condition on data that doesn't exist for them. Empty-result queries return per-condition pass counts naming the most restrictive condition so the UI can say 'try lowering X' instead of a bare no-results.",
+      "Persistence with the Phase 7 ownership model: saved searches (Free tier capped at 5 with the same honest upsell wording as shortlists; Pro unlimited), automatic search history (newest 50 per user, logged on every real run — never the debounced preview), and re-running a saved search always executes against CURRENT data with the weekly-refresh caveat stated in the UI — results are never silently served stale.",
+      "Nine curated presets with real, validated query definitions and one-line scouting rationales (High-potential young progressors, Ball-winning defensive midfielders, Undervalued creative wide players, …) — each verified to return a real non-empty result set against the current population by scripts/validate_search_presets.py (9/9 OK).",
+      "Results integrate with the Phase 7 workspace: Add to Shortlist on every result row plus a bulk 'Add all to shortlist' action (one deliberate step, then a real shortlist selector), so the flow is build a query → review candidates → track the promising ones.",
+      "35 new unit/API tests (220 total) including the translation-correctness matrix, the floor, missing-metric exclusion, cross-user 404s on saved searches and history, history retention, and the free-tier cap; axe green on the builder, and full keyboard operability of the condition rows.",
+    ],
+  },
+  {
+    date: "2026-08-17",
     phase: "Phase 7 — scouting workspace",
     items: [
       "Persistent per-user scouting workspace: shortlists (multiple, named), players added from any profile/leaderboard/similar-players surface, free-form tags with autocomplete from your own vocabulary, timestamped notes (relative + absolute dates), priorities, and a defined status pipeline: discovered → monitoring → scouted → shortlisted → reviewed, plus rejected and signed as terminal-but-reversible states. Forward moves may skip stages; backward moves are allowed; a rejected player can only be reconsidered via Monitoring; Signed is terminal. Every change writes a status_history row — the full audit trail (who, from, to, when, why) is queryable, so 'how long has this been in Monitoring?' is answerable (docs/product/scouting-pipeline.md).",

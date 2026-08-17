@@ -217,6 +217,57 @@
 | Auth | session cookie |
 | Response 200 | `{ shortlist_ids: [...] }` — which of the user's shortlists already contain this player (drives the Add-to-Shortlist UI) |
 
+### EP-28 Execute structured query (Phase 8)
+| | |
+|---|---|
+| Method/Path | `POST /api/v1/search/execute` |
+| Auth | none (public); signed-in users get their run logged to search_history |
+| Body | `{ query_definition: { position_group?, league_tier?, age_max?, conditions: [{ metric, operator, value, value_max? }], condition_logic: "AND" }, limit? (1–100), offset?, sort_by? (index|minutes|age|name|metric_id), sort_dir?, log_history? }` |
+| Response 200 | `{ query, season, snapshot_date, qualifying_minutes, note, total, limit, offset, has_more, entries, diagnostics }` — every entry carries `condition_values` (the real stored value behind each condition, with `metric_name` + `condition_type: percentile|raw`); when `total == 0`, `diagnostics.per_condition_counts` + `most_restrictive` identify the condition that filtered hardest |
+| Errors | 400 grammar violation (specific message — AND-only, max 8 conditions, metric must be in the Metric Registry, value_max required for between, percentile range 0–100); 400 no season data |
+| Purpose | multi-condition structured search (docs/product/query-builder-scope.md) |
+
+### EP-29 Presets
+| | |
+|---|---|
+| Method/Path | `GET /api/v1/search/presets` |
+| Auth | none (public — presets are not user-owned) |
+| Response 200 | `{ presets: [{ id, name, rationale, query_definition }] }` — Statlas-authored, curated starting points from app/config/search_presets.json |
+
+### EP-30 Saved searches
+| | |
+|---|---|
+| Method/Path | `GET /api/v1/search/saved` · `POST /api/v1/search/saved` |
+| Auth | session cookie |
+| Bodies | POST `{ name (1–128), description? (≤2000), query_definition }` |
+| Response | GET 200 `{ searches: [...] }`; POST 201 saved-search payload incl. `condition_count`, `last_run_at` (null until first run) |
+| Errors | 401 signed out; 403 free plan at the 5-saved-searches cap (honest upsell); 400 grammar/name validation |
+
+### EP-31 Run / delete saved search
+| | |
+|---|---|
+| Method/Path | `POST /api/v1/search/saved/{search_id}/run` · `DELETE /api/v1/search/saved/{search_id}` |
+| Auth | session cookie; ownership required |
+| Body | run: `{ limit?, offset?, sort_by?, sort_dir? }` — the STORED query_definition is re-executed (no definition in the body) |
+| Response | run 200 `{ saved, results }` — results against CURRENT data (weekly refresh is explicit, never silently stale), `saved.last_run_at` updated; delete 200 `{ ok: true }` |
+| Errors | 404 unknown OR another user's search (existence never leaks) |
+
+### EP-32 Search history
+| | |
+|---|---|
+| Method/Path | `GET /api/v1/search/history?limit=` (1–50, default 20) |
+| Auth | session cookie |
+| Response 200 | `{ entries: [{ history_id, query_definition, executed_at, result_count, summary }] }` — newest-first; retention cap 50 per user (enforced on insert) |
+
+### EP-33 Re-run history entry
+| | |
+|---|---|
+| Method/Path | `POST /api/v1/search/history/{history_id}/rerun` |
+| Auth | session cookie; ownership required |
+| Body | `{ limit?, offset?, sort_by?, sort_dir? }` |
+| Response 200 | `{ reran: { history_id }, results }` — the new run is logged as a NEW history entry |
+| Errors | 404 unknown OR another user's history entry |
+
 ## 3. Error Codes
 
 | Code | Meaning | Handling |
@@ -230,7 +281,7 @@
 
 **Public read-only endpoints:** none (v1 posture).
 
-**Session endpoints (Phase 4/7 — workspace + billing + assistant):** cookie-based sessions set by the API (`statlas_session`, HttpOnly, SameSite=Lax). The web app forwards the cookie to client components; POSTs send `credentials: "include"`. Ownership is enforced at the query layer: a shortlist/entry that is missing OR owned by another user returns **404** (never 403 — a 403 would confirm the shortlist exists). Phase 4 API keys/rate limits for the public API are documented separately (key auth is for `/api/v1/` public endpoints only).
+**Session endpoints (Phase 4/7/8 — workspace, billing, assistant, saved searches):** cookie-based sessions set by the API (`statlas_session`, HttpOnly, SameSite=Lax). The web app forwards the cookie to client components; ALL credentialed requests (GET, POST, DELETE) send `credentials: "include"` — without this, cross-origin GETs omit the session cookie and every signed-in read silently 401s. Ownership is enforced at the query layer: a shortlist/entry/search that is missing OR owned by another user returns **404** (never 403 — a 403 would confirm it exists). Phase 4 API keys/rate limits for the public API are documented separately (key auth is for `/api/v1/` public endpoints only).
 
 ## 5. Example Request/Response
 

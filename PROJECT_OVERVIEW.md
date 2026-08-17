@@ -113,7 +113,7 @@ on a credentialed FBref run plus an API-Football key.
 | HTTP | requests | >= 2.31 | All source fetching |
 | Web fonts | Sora + IBM Plex Sans | via next/font | Two-family type rule (design system §4) |
 | Icons | lucide-react | ^0.460.0 | UI icons |
-| Testing (Python) | pytest | >= 8.0 | 104 tests |
+| Testing (Python) | pytest | >= 8.0 | 220 tests |
 | Linting (Python) | ruff | via pyproject | Enforced rule set: F, E4/E7/E9, I, DTZ |
 | Testing (frontend) | node --test | Node 24 | 12 unit tests (pure modules) |
 | E2E | Playwright | ^1.62.1 | 9 e2e tests incl. axe + breakpoints |
@@ -227,7 +227,8 @@ Statlas/
 │   ├── config/
 │   │   ├── metric_registry.json   # 16 metrics, weights, bounds, floors (methodology-as-code)
 │   │   ├── tiers.json             # league tiers + external ids
-│   │   └── pricing.json           # plan boundaries + limits (incl. workspace caps)
+│   │   ├── pricing.json           # plan boundaries + limits (incl. workspace/search caps)
+│   │   └── search_presets.json    # Phase 8 curated presets (public, not user-owned)
 │   ├── db.py                      # engine/session management
 │   ├── models.py                  # ORM models mirroring schema.sql
 │   ├── orchestration/
@@ -245,7 +246,8 @@ Statlas/
 │   │   ├── similar_players.py     # cosine-similarity nearest neighbours
 │   │   ├── team_queries.py        # team profiles, roster, squad radar
 │   │   ├── trend_queries.py       # snapshot-history trends
-│   │   └── workspace_queries.py   # shortlists/entries/notes/tags/history + authz (Phase 7)
+│   │   ├── workspace_queries.py   # shortlists/entries/notes/tags/history + authz (Phase 7)
+│   │   └── structured_search.py   # Phase 8 query translation + saved/history/presets
 │   ├── api/
 │   │   ├── main.py                # FastAPI app — the ONLY data-access layer
 │   │   ├── player_view.py         # player profile payload builder
@@ -253,7 +255,8 @@ Statlas/
 │   │   ├── registry_view.py       # methodology meta
 │   │   ├── billing_views.py       # auth + Stripe (Phase 4)
 │   │   ├── assistant_views.py     # grounded AI assistant (Phase 4)
-│   │   └── workspace_views.py     # workspace routes, session auth (Phase 7)
+│   │   ├── workspace_views.py     # workspace routes, session auth (Phase 7)
+│   │   └── search_views.py        # Phase 8 search routes, session auth
 │   ├── reconciliation.py          # player name reconciliation
 │   ├── schema.sql                 # canonical PostgreSQL DDL
 │   └── sources/
@@ -287,7 +290,8 @@ Statlas/
 │   │   ├── privacy-policy-draft.md
 │   │   └── terms-of-service-draft.md
 │   ├── product/
-│   │   └── scouting-pipeline.md    # Phase 7 status pipeline rules + integrity + authz
+│   │   ├── scouting-pipeline.md    # Phase 7 status pipeline rules + integrity + authz
+│   │   └── query-builder-scope.md  # Phase 8 condition grammar, AND-only scope, floor, missing-data rules
 │   └── suite/                     # 14-file project-documentation suite (was project-docs/)
 │       ├── API.md
 │       ├── AppFlow.md
@@ -309,7 +313,8 @@ Statlas/
 ├── requirements.txt
 ├── scripts/
 │   ├── migrations/001_percentile_tier_key.sql
-│   └── seed_dev_db.py
+│   ├── seed_dev_db.py
+│   └── validate_search_presets.py # Phase 8 preset validation against current data
 ├── tests/
 │   ├── __init__.py
 │   ├── conftest.py
@@ -338,7 +343,9 @@ Statlas/
 │   ├── test_statsbomb.py
 │   ├── test_tier_completeness.py
 │   ├── test_trend.py
-│   └── test_understat.py
+│   ├── test_understat.py
+│   ├── test_workspace.py
+│   └── test_structured_search.py
 └── web/
     ├── .dockerignore
     ├── .gitignore
@@ -366,6 +373,8 @@ Statlas/
     │   ├── players/[slug]/page.tsx
     │   ├── positions/page.tsx
     │   ├── pricing/page.tsx
+    │   ├── search/page.tsx
+    │   ├── search/SearchClient.tsx
     │   ├── trend/og-image/route.tsx
     │   └── trend/page.tsx
     ├── components/
@@ -396,7 +405,11 @@ Statlas/
     │   └── TrendTool.tsx
     ├── e2e/
     │   ├── breakpoints.spec.ts
-    │   └── core.spec.ts
+    │   ├── core.spec.ts
+    │   ├── phase5.spec.ts
+    │   ├── phase6.spec.ts
+    │   ├── phase7.spec.ts
+    │   └── phase8.spec.ts
     ├── lib/
     │   ├── api.ts
     │   ├── chartSvg.test.ts
@@ -447,7 +460,7 @@ Statlas/
 - **Purpose**: Human entry point: what Statlas is, quick start, usage, config, testing,
   deployment, roadmap, FAQ, license. *(Explicit — polished per the README enhancement
   blueprint on 2026-08-14.)*
-- **Key content**: 3-command quick start, route table, env-var table, 104 pytest / 12 node
+- **Key content**: 3-command quick start, route table, env-var table, 220 pytest / 12 node
   tests, Playwright + Lighthouse CI notes, AGPL-3.0 license.
 - **Side effects**: none.
 
@@ -536,14 +549,14 @@ Statlas/
 - **Side effects**: engine/session singleton globals; DB connection; table creation.
 - **Inbound deps**: imported by `app/cli.py`, `app/api/main.py`, tests, seed script.
 
-#### `app/models.py` (689 lines)
+#### `app/models.py` (737 lines)
 - **Type**: SQLAlchemy ORM models — the code-side mirror of `schema.sql`.
-- **Key exports**: `Base` (DeclarativeBase), enums, and 15 model classes:
+- **Key exports**: `Base` (DeclarativeBase), enums, and 19 model classes:
   `League`, `Team`, `Player`, `PlayerNameAlias`, `StatSnapshot`, `PercentileSnapshot`,
   `MatchEvent`, `DataCoverage`, `IngestionAnomaly`, `ReconciliationQueue`, `Fixture`,
   `User`, `SessionToken`, `Subscription`, `ApiKey`, `WebhookEvent`, `AssistantQuota`,
   plus the Phase 7 workspace set: `Shortlist`, `ShortlistEntry`, `EntryNote`, `EntryTag`,
-  `StatusHistory`.
+  `StatusHistory`, and the Phase 8 search set: `SavedSearch`, `SearchHistory`.
 - **Notable logic** *(explicit)*:
   - Enums declared `native_enum=True` (the closeout C3 parity fix) — Postgres gets real
     `CREATE TYPE` enums; SQLite falls back to VARCHAR+CHECK automatically.
@@ -555,23 +568,26 @@ Statlas/
   - Phase 7: `ShortlistEntry` UNIQUE `(shortlist_id, player_id)`; soft-delete columns
     (`removed_at`/`deleted_at`) on entries/shortlists; `StatusHistory.from_status` NULL
     on the initial creation row. Rules enforced in `queries/workspace_queries.py`.
+  - Phase 8: `SavedSearch.query_definition` + `SearchHistory.query_definition` are
+    JSONB condition models; history retention is enforced at the query layer.
 - **Side effects**: none at import (schema creation happens in `db.create_schema`).
 
-#### `app/schema.sql` (384 lines)
+#### `app/schema.sql` (413 lines)
 - **Type**: Canonical PostgreSQL DDL (the source of truth for production).
-- **Purpose**: 16 tables + 8 enums + indexes + the design-principles header comment
+- **Purpose**: 18 tables + 8 enums + indexes + the design-principles header comment
   (append-only, versioned by scrape date, natural keys for idempotency, publish gate,
   anomaly gate, coverage matrix).
 - **Notable**: comments document every immutability decision inline. Phase 7 adds
   `entry_status`/`entry_priority` enums and the workspace tables (shortlists,
   shortlist_entries, entry_notes, entry_tags, status_history) with soft-delete columns
-  and the `(shortlist_id, player_id)` unique constraint. Applied by the postgres
+  and the `(shortlist_id, player_id)` unique constraint. Phase 8 adds `saved_searches`
+  and `search_history` (JSONB query_definition, user_id indexes). Applied by the postgres
   compose image on fresh volumes and by `scripts/migrations/001_*` for existing
   volumes.
 
 ### 6.3 `app/api/` — FastAPI layer
 
-#### `app/api/main.py` (357 lines)
+#### `app/api/main.py` (365 lines)
 - **Type**: FastAPI application + routes.
 - **Purpose**: The versioned `/api/v1` surface — the ONLY data-access layer the web app
   talks to.
@@ -580,10 +596,11 @@ Statlas/
 - **Routes** (see §8 for full table): health, meta, leagues (+detail, +stats),
   leaderboard, players/search, players/by-slug, players/{id}/similar, players/{id}/trend,
   players/{id}/events (+matches/shots/passes), clubs/{league}/{team}, coverage, positions,
-  methodology.
-- **Notable logic**: CORS restricted to localhost:3000 (GET only, no credentials);
-  `ValueError` → 400 via exception handler; route params validated (`VALID_POSITIONS`,
-  tier whitelist, `sort_by` whitelist); 404s raised as `HTTPException`.
+  methodology, workspace (EP-19–27), search (EP-28–33).
+- **Notable logic**: CORS restricted to localhost:3000 (credentials allowed for the
+  session-authenticated phases); `ValueError` → 400 via exception handler; route params
+  validated (`VALID_POSITIONS`, tier whitelist, `sort_by` whitelist); 404s raised as
+  `HTTPException`; search/workspace routers mounted for the Phase 7/8 per-user features.
 - **Side effects**: opens DB sessions per request via `session_scope()`; network none.
 - **Config read**: `get_settings().dataset_mode/note` (meta endpoint).
 
@@ -787,6 +804,26 @@ Statlas/
   raise `WorkspaceLimitExceeded` with honest upsell copy; `get_shortlist_detail` joins
   player summary + latest published index in a handful of queries (no N+1).
 
+#### `app/queries/structured_search.py` (736 lines)
+- **Purpose**: Phase 8 structured search — condition grammar validation, query
+  translation, saved searches, history, presets.
+- **Key exports**: `validate_query_definition`, `execute_structured_query`,
+  `save_search`, `list_saved_searches`, `run_saved_search`, `delete_saved_search`,
+  `get_search_history`, `rerun_history_entry`, `list_presets`, `summarize_query`,
+  `MAX_CONDITIONS=8`, `HISTORY_CAP=50`, domain exceptions (`InvalidQuery`,
+  `SearchNotFound`, `SearchLimitExceeded`).
+- **Notable** *(explicit)*: AND-only logic (OR/grouped is a documented future
+  enhancement — query-builder-scope.md); metric ids must come from the Metric
+  Registry; the 900-minute qualification floor is ALWAYS applied even without a
+  minutes condition; a player missing a published percentile (or DOB for age
+  conditions) is excluded, never guessed; empty-result responses carry
+  `diagnostics.per_condition_counts` + `most_restrictive` for actionable UI
+  guidance; every result entry carries `condition_values` (the real stored values
+  behind each condition — the "why it matched" transparency); saved searches and
+  history use the Phase 7 ownership pattern (foreign/missing → 404); history
+  retention newest-50-per-user enforced on insert; re-running a saved search
+  always executes against CURRENT data (weekly refresh, never silently stale).
+
 #### `app/queries/sentences.py` (137 lines)
 - **Purpose**: Data-driven profile sentences (Constitution §5, Never-List #4).
 - **Key exports**: `build_profile_sentence()`, `ordinal()`.
@@ -907,7 +944,7 @@ Statlas/
 
 ### 6.10 `tests/` — test suite
 
-> 185 tests total, all on in-memory SQLite (no network). `tests/conftest.py` provides
+> 220 tests total, all on in-memory SQLite (no network). `tests/conftest.py` provides
 > the `db` fixture (ORM-built in-memory engine), `premier_league`, `small_pool`
 > (registry overrides `min_pool_size=5`), `fixtures_dir()`, and `compute_and_publish()`
 > (compute + publish — the query layer serves published rows only).
@@ -932,6 +969,7 @@ Statlas/
 | `test_tier_completeness.py` | 229 | §1.4 gate withholds incomplete tiers; cross-tier-transfer percentile keys don't collide |
 | `test_trend.py` | 223 | Trend points, gaps vs cohort calendar, transfer events, windowing, insufficient state, timezone key handling |
 | `test_workspace.py` | 707 | Phase 7 workspace: CRUD, pipeline transitions (valid + explicitly invalid), cross-user 404s on read/write (never existence-leaking 403), duplicate-add rejection, soft-delete audit preservation, free-tier caps with honest upsell, own-only tag suggestions, multi-step status-history audit, API-level auth + error mapping |
+| `test_structured_search.py` | 887 | Phase 8 structured search: hand-calculated query translation (multi-condition AND, percentile+raw mixing, lte/between), always-applied minutes floor, missing-metric exclusion, empty-result diagnostics, grammar validation (OR rejected, >8 conditions, unknown metric), saved-search CRUD + staleness-on-rerun + free cap, history auto-log + 50-cap + rerun, cross-user 404s, presets validate, API-level auth + error mapping |
 | `test_understat.py` | 121 | Embedded-JSON extraction, POST fallback (live-drift fixture), loud schema error |
 
 **Fixtures** (`tests/fixtures/`): `fbref_league.html` (19 KB real-shaped FBref page),
@@ -999,7 +1037,7 @@ Statlas/
 | `LeaderboardTable.tsx` (342) | Sortable/filterable/paginated table; sort indicator accessible (not color-only); loading/empty/error states; per-row Save-to-shortlist column (Phase 7) |
 | `RecencyLine.tsx` (26) | "Data as of {date} · computed {date}" transparency label |
 | `DatasetBanner.tsx` (42) | Client banner from `/api/v1/meta`; hidden on production mode and embed pages; "Development dataset." |
-| `Header.tsx` (97) / `Footer.tsx` (61) | Site chrome: nav (Leaderboards, positions, methodology, pricing), search combobox, theme toggle; Workspace link when signed in; footer with data-source honesty links |
+| `Header.tsx` (106) / `Footer.tsx` (61) | Site chrome: nav (Leaderboards, Search, Compare, Trend, Methodology, Pricing, Data coverage), search combobox, theme toggle; Workspace link when signed in; footer with data-source honesty links |
 | `ThemeToggle.tsx` (52) | Light/dark/system toggle |
 | `Breadcrumbs.tsx` (23) | Breadcrumb nav helper |
 | `LegalDoc.tsx` (55) | Renders legal sections (terms/privacy pages) |
@@ -1016,6 +1054,8 @@ Statlas/
 | `/players/[slug]` | `players/[slug]/page.tsx` (220) | SSR profile: `generateMetadata` (dynamic title/description/OG/JSON-LD), 301 to canonical slug, radar, key stats, sentence, similar, trend card, coverage-gated maps, Add-to-Shortlist |
 | `/workspace` | `workspace/page.tsx` (29) + `WorkspaceClient.tsx` (257) | Per-account scouting workspace: shortlist cards with per-status breakdowns, create/remove shortlist, free-cap note, empty/error/signed-out states |
 | `/workspace/[id]` | `workspace/[id]/page.tsx` (16) + `ShortlistClient.tsx` (609) | Shortlist detail: status-filter chips, entry table with deliberate status-change control (optional reason → status_history), priority select, tag chips with own-tags autocomplete, notes with relative+absolute timestamps, remove (soft) |
+| `/search` | `search/page.tsx` (26) + `SearchClient.tsx` (1057) | Phase 8 structured search: multi-condition AND-only builder (up to 8 conditions, percentile/raw visually distinct, metrics grouped from the registry, scalar position/tier/age filters), debounced live result-count preview (never logged to history), results with per-condition real values, presets, saved searches, history with re-run; Add-to-Shortlist per row + bulk add-all; loading/empty-with-guidance/error/signed-out states |
+| `/login` / `/register` / `/account` | `login/`, `register/`, `account/` | Phase 4 auth surfaces (register/login forms, account dashboard with subscription/API keys) |
 | `/players/[slug]/opengraph-image` | `players/[slug]/opengraph-image.tsx` | Player OG image (real data) |
 | `/clubs/[leagueSlug]/[teamSlug]` | `clubs/[...]/page.tsx` (172) | SSR team profile: roster table, squad radar, logo placeholder |
 | `/leagues/[leagueCode]` | `leagues/[...]/page.tsx` (6) | Redirects to `/stats` |
@@ -1036,6 +1076,18 @@ Statlas/
 
 - **`core.spec.ts`** (113): radar generation (search → add → chart renders), permalink
   reproduces exact state, leaderboard filtering, SSR player profile, axe audit on 4 pages.
+- **`phase6.spec.ts`**: similar-players explanation states (happy path on real data,
+  no-differences, missing-data, error), 375px no-overflow with the explanation open,
+  axe green on the expanded component.
+- **`phase7.spec.ts`**: full workspace CRUD on real data (create shortlist, add from
+  profile/leaderboard/similar, notes/tags/priority, valid + invalid status transitions
+  with the exact rejection message, soft remove), free-tier upsell, signed-out prompt,
+  axe on both workspace pages with the status panel + note/tag forms open,
+  no-overflow light+dark.
+- **`phase8.spec.ts`**: query builder happy path on real data (live preview count,
+  results with condition values), preset load, save/run/delete a saved search,
+  history rerun, add-to-shortlist from results + bulk add, keyboard-only condition
+  building (no mouse), axe on the builder and results.
 - **`breakpoints.spec.ts`** (61): no-horizontal-overflow assertion at 375/768/1440px in
   light + dark themes across 8 core pages.
 
@@ -1066,11 +1118,12 @@ Statlas/
   Okabe-Ito categorical colors, 8-step gray scale, semantic tokens, spacing scale,
   type scale, breakpoints, motion tokens, data font with tabular figures; info/purple
   pipeline-chip tokens (Phase 7).
-- **`web/app/globals.css`** (2321 lines): all component styles; `.visually-hidden`
+- **`web/app/globals.css`** (2520 lines): all component styles; `.visually-hidden`
   (screen-reader tables positioned off-screen — closeout fix), `.table-wrap`,
   chip/badge/button/stat-list/leaderboard styles, dataset-banner contrast fix,
   workspace styles (Phase 7): pipeline chips, status-change panel, tag/note controls,
-  add-to-shortlist menu.
+  add-to-shortlist menu; query-builder styles (Phase 8): condition rows, scalars,
+  presets/saved/history lists, save-search + bulk-add popovers, result condition chips.
 
 ### 6.12 `docs/` — documentation
 
@@ -1082,6 +1135,7 @@ Statlas/
 | Governance | `CONSTITUTION.md` (236) | Master constitution: data-honesty rules, design non-negotiables, never-list, §7 Definition-of-Done checklist (closed by the closeout) |
 | Contributing | `CONTRIBUTING.md` (150) | Environment setup, conventions, CI expectations |
 | Suite (14-file project docs, merged from the former `project-docs/`) | `suite/PRD.md`, `suite/TechSpec.md`, `suite/AppFlow.md`, `suite/Design.md`, `suite/Schema.md`, `suite/ImplementationPlan.md`, `suite/Tracker.md`, `suite/Rules.md`, `suite/API.md`, `suite/SecurityAndCompliance.md`, `suite/Testing.md`, `suite/Deployment.md`, `suite/Glossary.md`, `suite/RiskRegister.md`, `suite/DOC-SUITE-MAP.md` | The living product/engineering documentation set: requirements, technical spec, screens/states, design system, data model, build plan, status tracker, operating rules, API reference, security/compliance, testing, deployment, glossary, risk register. Supersedes the former `design/`, `product/`, `guides/` docs and the modernization records (`architecture.md`, `folder_structure.md`, `module_dependency.md`, `package_overview.md`, `startup_flow.md`, `analysis_report.md`, `migration_summary.md`, `cleanup-audit-2026-08-13.md`) — removed in the 2026-08-14 docs merge |
+| Product | `product/scouting-pipeline.md`, `product/query-builder-scope.md` | Phase 7 status-pipeline rules/transitions/authz; Phase 8 condition grammar, AND-only scope, qualification floor, missing-data semantics |
 | Analytics | `methodology.md` (345) | Statlas Index definition: 16 metrics, weights table, normalization, threshold, public copy |
 | | `percentile-rules.md` (107) | Grouping (tier), cadence, §1.4 completeness gate |
 | | `data-compliance-notes.md` (132) | Per-source license/ToS/rate-limit review + mitigations |
@@ -1206,6 +1260,11 @@ No auth (internal-facing; public tier on Phase 4 roadmap). 400 on `ValueError`; 
 | GET `/api/v1/coverage` | `league_id` | Coverage matrix + StatsBomb comps + attribution | `CoveragePayload` |
 | GET `/api/v1/positions` | — | Position groups + qualifying counts per tier | `PositionGroupMeta[]` |
 | GET `/api/v1/methodology` | — | Metric registry payload | `public_meta()` |
+| GET/POST `/api/v1/workspace…` | — | Phase 7 per-user scouting workspace (EP-19–27, session auth; 404 for foreign ids) | shortlists/entries/notes/tags/history payloads |
+| POST `/api/v1/search/execute` | `limit`, `offset`, `sort_by`, `sort_dir`, `log_history` | Phase 8 structured query execution (public; grammar-validated) | `SearchResults` with per-condition real values + empty-result diagnostics |
+| GET `/api/v1/search/presets` | — | Curated presets (public, not user-owned) | `{presets: [...]}` |
+| GET/POST `/api/v1/search/saved…` | — | Phase 8 saved searches (session auth; free cap 5; 404 for foreign) | saved-search payloads / `{saved, results}` on run |
+| GET/POST `/api/v1/search/history…` | `limit` | Phase 8 search history (session auth; newest 50, auto-logged) | `{entries: [...]}` / `{reran, results}` |
 
 ---
 
