@@ -711,6 +711,65 @@ class SearchHistory(Base):
     __table_args__ = (Index("ix_search_history_user", "user_id"),)
 
 
+# ---------------------------------------------------------------------------
+# Phase 9 — AI scouting reports (persisted, verified artifacts)
+# ---------------------------------------------------------------------------
+# Design (docs/product/scouting-reports.md): reports are per-user data with
+# the Phase 7/8 ownership pattern (404 on foreign/missing ids, never a 403).
+# `report_json` stores the FULL structured report (sections + evidence
+# appendix + verification log) verbatim — exports derive from this one object.
+# `verification.status` is "passed" or "needs_review" (a generated report whose
+# claims failed the hard grounding gate is never silently shipped).
+
+
+class Report(Base):
+    __tablename__ = "reports"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), nullable=False)
+    player_id: Mapped[int] = mapped_column(ForeignKey("players.id"), nullable=False)
+    shortlist_entry_id: Mapped[int | None] = mapped_column(
+        ForeignKey("shortlist_entries.id"), nullable=True
+    )  # set only when generated from a Phase 7 shortlist entry
+    status: Mapped[str] = mapped_column(
+        String(16), nullable=False, default="generated"
+    )  # generated | needs_review
+    data_snapshot_date: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False
+    )  # which stat_snapshot this report is based on (reproducibility)
+    report_json: Mapped[dict] = mapped_column(JSON, nullable=False)
+    verification_log: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )
+
+    __table_args__ = (Index("ix_reports_user", "user_id"),)
+
+
+class ReportQuota(Base):
+    """Per-user report-generation allowance (Phase 9 — D5). Deliberately
+    SEPARATE from assistant_quotas: sharing one pool would cause confusing
+    "why did my chat quota drop" experiences. Same hard-cap model and
+    calendar-month reset as the assistant quota."""
+
+    __tablename__ = "report_quotas"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), nullable=False)
+    period_start: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False
+    )
+    period_end: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False
+    )
+    reports_used: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    reports_limit: Mapped[int] = mapped_column(Integer, nullable=False)
+
+    __table_args__ = (
+        UniqueConstraint("user_id", "period_start", name="uq_report_quota_period"),
+    )
+
+
 class AssistantQuota(Base):
     """Per-user assistant query quota (Phase 4 — Part B3), tracked per billing
     period and reset on renewal. Hard cap (no silent overage) — the documented

@@ -410,4 +410,40 @@ CREATE TABLE search_history (
 );
 CREATE INDEX ix_search_history_user ON search_history (user_id);
 
+-- ===========================================================================
+-- Phase 9 — AI scouting reports (persisted, verified artifacts)
+-- ===========================================================================
+-- Design (docs/product/scouting-reports.md): reports are per-user data with
+-- the Phase 7/8 ownership pattern (foreign/missing ids -> 404, never a 403
+-- that leaks existence). report_json stores the FULL structured report
+-- (sections + evidence appendix + verification log) verbatim — JSON/PDF/CSV
+-- exports all derive from this one object. verification status is
+-- 'passed' or 'needs_review' — a report whose claims failed the hard
+-- grounding gate is never silently shipped as a normal report.
+-- report_quotas is deliberately SEPARATE from assistant_quotas so report
+-- generation never silently drains the chat quota (D5 decision).
+
+CREATE TABLE reports (
+    id                    SERIAL PRIMARY KEY,
+    user_id               INTEGER     NOT NULL REFERENCES users(id),
+    player_id             INTEGER     NOT NULL REFERENCES players(id),
+    shortlist_entry_id    INTEGER     REFERENCES shortlist_entries(id),  -- set only when generated from a workspace entry
+    status                VARCHAR(16) NOT NULL DEFAULT 'generated',      -- generated | needs_review
+    data_snapshot_date    TIMESTAMPTZ NOT NULL,                          -- which snapshot this report is based on
+    report_json           JSONB       NOT NULL,                          -- the full structured report (canonical export source)
+    verification_log      JSONB       NOT NULL DEFAULT '{}',
+    created_at            TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+CREATE INDEX ix_reports_user ON reports (user_id);
+
+CREATE TABLE report_quotas (
+    id            SERIAL PRIMARY KEY,
+    user_id       INTEGER     NOT NULL REFERENCES users(id),
+    period_start  TIMESTAMPTZ NOT NULL,
+    period_end    TIMESTAMPTZ NOT NULL,
+    reports_used  INTEGER     NOT NULL DEFAULT 0,
+    reports_limit INTEGER     NOT NULL,
+    UNIQUE (user_id, period_start)
+);
+
 COMMIT;
