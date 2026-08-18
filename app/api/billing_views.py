@@ -14,6 +14,7 @@ from fastapi import APIRouter, HTTPException, Request, Response
 from pydantic import BaseModel, EmailStr, Field
 
 from app import auth, billing
+from app.api.deps import require_user, session_token
 from app.config import get_settings
 from app.config import plan_limits as pricing_limits
 from app.db import session_scope
@@ -51,16 +52,9 @@ def _set_session_cookie(
     )
 
 
-def _session_token(request: Request) -> str | None:
-    return request.cookies.get(get_settings().session_cookie_name)
-
-
-def _require_user(request: Request) -> User:
-    with session_scope() as db:
-        user = auth.user_from_session(db, _session_token(request))
-        if user is None:
-            raise HTTPException(status_code=401, detail="Not signed in.")
-        return user
+# _session_token and _require_user consolidated into app/api/deps.py
+_session_token = session_token
+_require_user = require_user
 
 
 # ---------------------------------------------------------------------------

@@ -21,6 +21,7 @@ from fastapi.responses import Response, StreamingResponse
 from pydantic import BaseModel, Field
 
 from app import auth, report_export, reports
+from app.api.deps import require_user
 from app.config import get_settings
 from app.db import session_scope
 from app.models import User
@@ -28,14 +29,8 @@ from app.models import User
 router = APIRouter(prefix="/api/v1/reports", tags=["reports"])
 
 
-def _require_user(request: Request) -> User:
-    with session_scope() as db:
-        user = auth.user_from_session(
-            db, request.cookies.get(get_settings().session_cookie_name)
-        )
-        if user is None:
-            raise HTTPException(status_code=401, detail="Sign in to use scouting reports.")
-        return user
+# _require_user consolidated into app/api/deps.py
+_require_user = require_user
 
 
 def _narrator():

@@ -17,7 +17,7 @@ from fastapi import APIRouter, HTTPException, Query, Request
 from pydantic import BaseModel, Field
 
 from app import auth
-from app.config import get_settings
+from app.api.deps import require_user
 from app.config import plan_limits as pricing_limits
 from app.db import session_scope
 from app.models import User
@@ -26,14 +26,8 @@ from app.queries import workspace_queries as wq
 router = APIRouter(prefix="/api/v1/workspace", tags=["workspace"])
 
 
-def _require_user(request: Request) -> User:
-    with session_scope() as db:
-        user = auth.user_from_session(
-            db, request.cookies.get(get_settings().session_cookie_name)
-        )
-        if user is None:
-            raise HTTPException(status_code=401, detail="Sign in to use your workspace.")
-        return user
+# _require_user consolidated into app/api/deps.py
+_require_user = require_user
 
 
 def _plan_context(db, user_id: int) -> dict:

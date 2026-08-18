@@ -20,8 +20,7 @@ from fastapi import APIRouter, HTTPException, Query, Request
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 
-from app import auth
-from app.config import get_settings
+from app.api.deps import require_user
 from app.db import session_scope
 from app.models import NotificationPreferences, User
 from app.queries import watch_queries as wq
@@ -29,14 +28,8 @@ from app.queries import watch_queries as wq
 router = APIRouter(prefix="/api/v1/watch", tags=["watchlist"])
 
 
-def _require_user(request: Request) -> User:
-    with session_scope() as db:
-        user = auth.user_from_session(
-            db, request.cookies.get(get_settings().session_cookie_name)
-        )
-        if user is None:
-            raise HTTPException(status_code=401, detail="Sign in to use your watchlist.")
-        return user
+# _require_user consolidated into app/api/deps.py
+_require_user = require_user
 
 
 def _map_error(exc: Exception) -> HTTPException:
