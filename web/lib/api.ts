@@ -5,6 +5,8 @@ import type {
   CoveragePayload,
   EventCoverage,
   EventMatch,
+  LeagueHubPayload,
+  LeagueIndexEntry,
   LeaderboardResponse,
   LeagueStatsRow,
   LeagueSummary,
@@ -280,6 +282,10 @@ export const api = {
     alert_type_preferences?: Record<string, boolean>;
     digest_frequency?: string;
   }) => put<WatchPreferences>("/api/v1/watch/preferences", patch),
+  // Phase 11 — league hub / emerging players
+  leagueHub: (leagueSlug: string, season?: string) =>
+    get<LeagueHubPayload>(`/api/v1/leagues/${encodeURIComponent(leagueSlug)}/hub${qs({ season })}`),
+  leaguesIndex: () => get<LeagueIndexEntry[]>("/api/v1/leagues"),
 };
 
 async function del<T>(path: string): Promise<T> {

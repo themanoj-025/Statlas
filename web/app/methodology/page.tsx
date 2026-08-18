@@ -166,6 +166,35 @@ export default async function MethodologyPage() {
           profile&rsquo;s own percentiles.
         </p>
 
+        <h2 id="emerging-players">Emerging players</h2>
+        <p>
+          The &ldquo;Emerging Players&rdquo; section on league pages uses a composite score that
+          combines four real signals &mdash; no vibes, no subjective labels:
+        </p>
+        <ul>
+          <li>
+            <strong>Trend magnitude</strong> (45%): average percentile improvement across tracked
+            metrics over a 5-snapshot rolling window, normalized to 0&ndash;1.
+          </li>
+          <li>
+            <strong>Trend consistency</strong> (30%): fraction of metrics showing a sustained upward
+            trend (positive movement in at least 60% of window steps).
+          </li>
+          <li>
+            <strong>Age weight</strong> (15%): sigmoid function centred at age 24 &mdash; younger
+            players score higher, but older players with strong trends are not excluded.
+          </li>
+          <li>
+            <strong>Sample weight</strong> (10%): minutes played divided by the qualification
+            threshold, capped at 1.0.
+          </li>
+        </ul>
+        <p>
+          Only players above a composite threshold of 0.50 appear. The full methodology
+          (including the exact formula and weight justification) is documented in
+          <a href="/docs/analytics/emerging-player-methodology">analytics/emerging-player-methodology</a>.
+        </p>
+
         <h2>Worked example — a real player, end to end</h2>
         <p>
           To show the arithmetic is real, here is a full walkthrough of a player currently in the

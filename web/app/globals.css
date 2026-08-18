@@ -283,6 +283,13 @@ table,
 @media (min-width: 1024px) {
   .site-nav {
     display: flex;
+    flex-shrink: 1;
+    min-width: 0;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .site-nav::-webkit-scrollbar {
+    display: none;
   }
 }
 
