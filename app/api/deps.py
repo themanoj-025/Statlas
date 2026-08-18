@@ -1,0 +1,34 @@
+"""Shared API dependencies — eliminates duplicate _require_user across views.
+
+Every authenticated route module previously defined its own identical copy of
+this function.  Centralising it here means a single source of truth for the
+session-resolution + 401-raise pattern, consistent with the Constitution's
+bias against silent duplication (§4 code quality).
+"""
+
+from __future__ import annotations
+
+from fastapi import HTTPException, Request
+
+from app import auth
+from app.config import get_settings
+from app.db import session_scope
+from app.models import User
+
+
+def session_token(request: Request) -> str | None:
+    """Extract the session cookie value from a request."""
+    return request.cookies.get(get_settings().session_cookie_name)
+
+
+def require_user(request: Request) -> User:
+    """Resolve the current session to a User, or raise 401.
+
+    Used by every authenticated view module (billing, workspace, search,
+    reports, watch, dashboard, public API).
+    """
+    with session_scope() as db:
+        user = auth.user_from_session(db, session_token(request))
+        if user is None:
+            raise HTTPException(status_code=401, detail="Not signed in.")
+        return user

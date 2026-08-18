@@ -10,9 +10,8 @@ from __future__ import annotations
 from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel
 
-from app import auth
 from app.activity import log_activity
-from app.config import get_settings
+from app.api.deps import require_user
 from app.db import session_scope
 from app.models import User
 from app.queries import dashboard_queries as dq
@@ -20,14 +19,8 @@ from app.queries import dashboard_queries as dq
 router = APIRouter(prefix="/api/v1/dashboard", tags=["dashboard"])
 
 
-def _require_user(request: Request) -> User:
-    with session_scope() as db:
-        user = auth.user_from_session(
-            db, request.cookies.get(get_settings().session_cookie_name)
-        )
-        if user is None:
-            raise HTTPException(status_code=401, detail="Sign in to view your dashboard.")
-        return user
+# _require_user consolidated into app/api/deps.py
+_require_user = require_user
 
 
 # ---------------------------------------------------------------------------

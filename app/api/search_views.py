@@ -17,6 +17,7 @@ from fastapi import APIRouter, HTTPException, Query, Request
 from pydantic import BaseModel, Field
 
 from app import auth
+from app.api.deps import require_user, session_token
 from app.config import get_settings
 from app.db import session_scope
 from app.models import User
@@ -25,14 +26,9 @@ from app.queries import structured_search as ss
 router = APIRouter(prefix="/api/v1/search", tags=["search"])
 
 
-def _require_user(request: Request) -> User:
-    with session_scope() as db:
-        user = auth.user_from_session(
-            db, request.cookies.get(get_settings().session_cookie_name)
-        )
-        if user is None:
-            raise HTTPException(status_code=401, detail="Sign in to use saved searches.")
-        return user
+# _require_user consolidated into app/api/deps.py
+_require_user = require_user
+_session_token = session_token
 
 
 def _optional_user(request: Request) -> User | None:
