@@ -53,6 +53,9 @@ export function Header() {
         <div className="site-header__actions">
           {status === "signed-in" ? (
             <>
+              <Link href="/dashboard" className="header-account">
+                Dashboard
+              </Link>
               <Link href="/workspace" className="header-account">
                 Workspace
               </Link>

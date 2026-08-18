@@ -3,6 +3,7 @@ import type {
   ChatResponse,
   CheckoutPayload,
   CoveragePayload,
+  DashboardSummary,
   EventCoverage,
   EventMatch,
   LeagueHubPayload,
@@ -303,6 +304,25 @@ export const api = {
     post<{ detail: string }>("/api/v1/auth/delete-account", { confirm_delete: true }),
   cancelDeletion: () =>
     post<{ detail: string }>("/api/v1/auth/cancel-deletion", {}),
+  // Phase 13 — personal dashboard. Session-authenticated.
+  dashboardSummary: () => get<DashboardSummary>("/api/v1/dashboard/summary"),
+  logActivity: (entityType: string, entityId: number, actionType: string) =>
+    post<{ logged: boolean }>("/api/v1/dashboard/activity", {
+      entity_type: entityType,
+      entity_id: entityId,
+      action_type: actionType,
+    }),
+  savePlayer: (playerId: number, category?: string | null) =>
+    post<{ saved: boolean; player_id: number }>("/api/v1/dashboard/saved-players", {
+      player_id: playerId,
+      category: category ?? null,
+    }),
+  unsavePlayer: (playerId: number) =>
+    del<{ removed: boolean }>(`/api/v1/dashboard/saved-players/${playerId}`),
+  dismissRecommendation: (playerId: number) =>
+    post<{ dismissed: boolean }>("/api/v1/dashboard/dismiss-recommendation", {
+      player_id: playerId,
+    }),
 };
 
 async function del<T>(path: string): Promise<T> {
