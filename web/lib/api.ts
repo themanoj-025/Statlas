@@ -286,6 +286,23 @@ export const api = {
   leagueHub: (leagueSlug: string, season?: string) =>
     get<LeagueHubPayload>(`/api/v1/leagues/${encodeURIComponent(leagueSlug)}/hub${qs({ season })}`),
   leaguesIndex: () => get<LeagueIndexEntry[]>("/api/v1/leagues"),
+  // Phase 12 — account profile, password reset, email verification
+  requestPasswordReset: (email: string) =>
+    post<{ detail: string }>("/api/v1/auth/password-reset/request", { email }),
+  confirmPasswordReset: (token: string, newPassword: string) =>
+    post<{ detail: string }>("/api/v1/auth/password-reset/confirm", { token, new_password: newPassword }),
+  requestEmailVerification: () =>
+    post<{ detail: string }>("/api/v1/auth/verify-email/request", {}),
+  confirmEmailVerification: (token: string) =>
+    post<{ detail: string }>("/api/v1/auth/verify-email/confirm", { token }),
+  updateProfile: (patch: { display_name?: string | null; timezone?: string | null; locale?: string | null }) =>
+    put<MePayload>("/api/v1/auth/profile", patch),
+  changePassword: (currentPassword: string, newPassword: string) =>
+    post<{ detail: string }>("/api/v1/auth/change-password", { current_password: currentPassword, new_password: newPassword }),
+  deleteAccount: () =>
+    post<{ detail: string }>("/api/v1/auth/delete-account", { confirm_delete: true }),
+  cancelDeletion: () =>
+    post<{ detail: string }>("/api/v1/auth/cancel-deletion", {}),
 };
 
 async function del<T>(path: string): Promise<T> {

@@ -70,6 +70,9 @@ export function LoginForm() {
         {submitting ? "Signing in…" : "Sign in"}
       </button>
       <p className="field__hint" style={{ marginTop: "var(--space-3)" }}>
+        <Link href="/reset-password">Forgot password?</Link>
+      </p>
+      <p className="field__hint">
         No account yet? <Link href="/register">Create one</Link> — it takes a few seconds and the
         free tier needs nothing else.
       </p>
