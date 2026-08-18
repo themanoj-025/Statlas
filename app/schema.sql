@@ -538,4 +538,43 @@ CREATE TABLE emerging_player_scores (
 CREATE INDEX ix_emerging_league_date ON emerging_player_scores (league_id, computed_date);
 CREATE INDEX ix_emerging_score ON emerging_player_scores (league_id, computed_date, score DESC);
 
+-- ===========================================================================
+-- Phase 13 — Activity tracking, dashboard state, saved players
+-- ===========================================================================
+
+-- Activity log: single source of truth for "recently viewed" and user actions.
+-- Deduplication is enforced at write time (same entity within 60s = skip).
+CREATE TABLE activity_log (
+    id            SERIAL PRIMARY KEY,
+    user_id       INTEGER     NOT NULL REFERENCES users(id),
+    entity_type   VARCHAR(16) NOT NULL,   -- player | team | search | shortlist | report | watch
+    entity_id     INTEGER     NOT NULL,
+    action_type   VARCHAR(16) NOT NULL,   -- viewed | created | edited | deleted | shared | run
+    performed_at  TIMESTAMPTZ NOT NULL DEFAULT now(),
+    metadata      JSONB                        -- context-specific info (e.g. search_definition for "run")
+);
+CREATE INDEX ix_activity_user_time ON activity_log (user_id, performed_at DESC);
+CREATE INDEX ix_activity_entity ON activity_log (user_id, entity_type, entity_id, performed_at DESC);
+
+-- Dashboard state: per-user widget config + dismissed recommendations.
+CREATE TABLE dashboard_state (
+    id                          SERIAL PRIMARY KEY,
+    user_id                     INTEGER NOT NULL REFERENCES users(id),
+    widget_config               JSONB    NOT NULL DEFAULT '{}',   -- order/visibility/size per widget
+    dismissed_recommendations   JSONB    NOT NULL DEFAULT '[]',   -- [player_id, ...] dismissed for 30 days
+    updated_at                  TIMESTAMPTZ NOT NULL DEFAULT now(),
+    UNIQUE (user_id)
+);
+
+-- Saved players: lightweight bookmarks (distinct from Phase 7 shortlists).
+CREATE TABLE saved_players (
+    id        SERIAL PRIMARY KEY,
+    user_id   INTEGER NOT NULL REFERENCES users(id),
+    player_id INTEGER NOT NULL REFERENCES players(id),
+    saved_at  TIMESTAMPTZ NOT NULL DEFAULT now(),
+    category  VARCHAR(32),                          -- favorite | prospect | comparison_reference | null
+    UNIQUE (user_id, player_id)
+);
+CREATE INDEX ix_saved_players_user ON saved_players (user_id, saved_at DESC);
+
 COMMIT;
