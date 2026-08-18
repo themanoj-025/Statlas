@@ -162,6 +162,7 @@ export type LeagueSummary = {
   country: string;
   tier: string;
   tier_label: string;
+  team_count: number;
   has_fbref_coverage: boolean;
   seasons_available: string[];
   sources: string[];
@@ -760,9 +761,79 @@ export type WatchPreferences = {
   updated_at: string;
 };
 
+// ---------------------------------------------------------------------------
+// Phase 11 — league hub / emerging players
+// ---------------------------------------------------------------------------
+
+export type EmergingPlayerEntry = {
+  player_id: number;
+  name: string;
+  slug: string | null;
+  position_group: string | null;
+  team: string | null;
+  score: number;
+  trend_magnitude: number;
+  trend_consistency: number;
+  age_weight: number;
+  sample_weight: number;
+  snapshot_date: string;
+};
+
+export type LeagueCategoryEntry = {
+  player_id: number;
+  name: string;
+  slug: string | null;
+  position_group: string | null;
+  club: string | null;
+  value: number | null;
+  minutes: number;
+};
+
+export type LeagueHubPayload = {
+  slug: string;
+  name: string;
+  country: string;
+  tier: string;
+  tier_label: string;
+  season: string;
+  team_count: number;
+  player_count: number;
+  has_fbref_coverage: boolean;
+  has_understat_coverage: boolean;
+  has_statsbomb_coverage: boolean;
+  standings_available: boolean;
+  latest_snapshot_date: string | null;
+  categories: {
+    key: string;
+    label: string;
+    metric: string;
+    metric_name: string;
+    entries: LeagueCategoryEntry[];
+  }[];
+  emerging_players: EmergingPlayerEntry[];
+  teams: {
+    team_id: number;
+    name: string;
+    slug: string;
+    logo_url: string | null;
+  }[];
+  coverage: { source: string; status: string; seasons_available: string[] }[];
+};
+
 export type WatchesPayload = { watches: WatchItem[] };
 export type WatchAlertsPayload = { alerts: WatchAlertItem[] };
 export type WatchAlertDetail = WatchAlertItem;
+
+export type LeagueIndexEntry = {
+  slug: string;
+  name: string;
+  country: string;
+  tier: string;
+  tier_label: string;
+  team_count: number;
+  has_fbref_coverage: boolean;
+  seasons_available: string[];
+};
 
 // Human-readable labels for alert types + digest frequencies (single source
 // in the frontend; backend enum codes stay stable).
@@ -778,3 +849,5 @@ export const DIGEST_FREQUENCY_LABELS: Record<DigestFrequency, string> = {
   daily_digest: "Daily digest",
   weekly_digest: "Weekly digest",
 };
+
+export const EMERGING_SCORE_THRESHOLD = 0.50;
