@@ -156,6 +156,16 @@ def league_detail(league_slug: str):
     return detail
 
 
+@app.get("/api/v1/leagues/{league_slug}/hub")
+def league_hub(league_slug: str, season: str | None = None):
+    from app.queries.league_page_queries import get_league_hub_data
+
+    hub = _with_session(get_league_hub_data, league_slug, season=season)
+    if hub is None:
+        raise HTTPException(status_code=404, detail=f"unknown league '{league_slug}'")
+    return hub
+
+
 @app.get("/api/v1/leagues/{league_slug}/stats")
 def league_stats(
     league_slug: str,

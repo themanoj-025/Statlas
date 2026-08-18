@@ -377,6 +377,15 @@
 | Auth | none (clicked from email; HMAC-signed link) |
 | Response 200 | `{ "detail", "preferences_url" }` — sets `email_enabled=false`; invalid/expired signatures rejected with an honest 400 |
 
+### EP-49 League hub page data (Phase 11)
+| | |
+|---|---|
+| Method/Path | `GET /api/v1/leagues/{league_slug}/hub` |
+| Query | `season` (optional) |
+| Auth | none (public) |
+| Response 200 | `{ "slug", "name", "country", "tier", "tier_label", "season", "team_count", "player_count", "standings_available": false, "categories": [{ "key", "label", "metric", "metric_name", "entries": [...] }], "emerging_players": [{ "player_id", "name", "slug", "score", ... }], "teams": [...], "coverage", "latest_snapshot_date" }` |
+| Errors | 404 |
+
 ## 3. Error Codes
 
 | Code | Meaning | Handling |
