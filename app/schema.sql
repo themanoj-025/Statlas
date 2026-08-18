@@ -241,12 +241,20 @@ CREATE INDEX ix_fixtures_league_season ON fixtures (league_id, season);
 -- * Grace periods (grace_period_end) preserve access through Stripe's dunning
 --   retries instead of an abrupt cutoff on first payment failure.
 
+CREATE TYPE account_status AS ENUM ('active', 'suspended', 'pending_deletion');
+
 CREATE TABLE users (
-    id            SERIAL PRIMARY KEY,
-    email         VARCHAR(320) NOT NULL UNIQUE,
-    password_hash VARCHAR(255) NOT NULL,
-    plan          plan         NOT NULL DEFAULT 'free',
-    created_at    TIMESTAMPTZ  NOT NULL DEFAULT now()
+    id               SERIAL PRIMARY KEY,
+    email            VARCHAR(320)  NOT NULL UNIQUE,
+    password_hash    VARCHAR(255)  NOT NULL,
+    plan             plan          NOT NULL DEFAULT 'free',
+    display_name     VARCHAR(128),
+    email_verified_at TIMESTAMPTZ,
+    account_status   account_status NOT NULL DEFAULT 'active',
+    timezone         VARCHAR(64),
+    locale           VARCHAR(10),
+    created_at       TIMESTAMPTZ   NOT NULL DEFAULT now(),
+    updated_at       TIMESTAMPTZ   NOT NULL DEFAULT now()
 );
 CREATE INDEX ix_users_email ON users (email);
 
@@ -259,6 +267,26 @@ CREATE TABLE session_tokens (
     revoked_at TIMESTAMPTZ
 );
 CREATE INDEX ix_session_user ON session_tokens (user_id);
+
+CREATE TABLE password_reset_tokens (
+    id         SERIAL PRIMARY KEY,
+    user_id    INTEGER     NOT NULL REFERENCES users(id),
+    token_hash VARCHAR(64) NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    expires_at TIMESTAMPTZ NOT NULL,
+    used_at    TIMESTAMPTZ
+);
+CREATE INDEX ix_password_reset_user ON password_reset_tokens (user_id);
+
+CREATE TABLE email_verification_tokens (
+    id         SERIAL PRIMARY KEY,
+    user_id    INTEGER     NOT NULL REFERENCES users(id),
+    token_hash VARCHAR(64) NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    expires_at TIMESTAMPTZ NOT NULL,
+    used_at    TIMESTAMPTZ
+);
+CREATE INDEX ix_email_verification_user ON email_verification_tokens (user_id);
 
 CREATE TABLE subscriptions (
     id                      SERIAL PRIMARY KEY,

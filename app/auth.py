@@ -209,4 +209,155 @@ def user_payload(user: User) -> dict[str, Any]:
         "user_id": user.id,
         "email": user.email,
         "plan": user.plan,
+        "display_name": user.display_name,
+        "email_verified_at": (
+            user.email_verified_at.isoformat() if user.email_verified_at else None
+        ),
+        "account_status": user.account_status,
+        "timezone": user.timezone,
+        "locale": user.locale,
     }
+
+
+# ---------------------------------------------------------------------------
+# Password reset (Phase 12 — Part C3)
+# ---------------------------------------------------------------------------
+
+PASSWORD_RESET_TTL_MINUTES = 60
+
+
+def create_password_reset_token(db: Session, user_id: int) -> str:
+    """Create a single-use password-reset token. Returns the raw token
+    (shown once to the user via email). The DB stores only the hash."""
+    from app.models import PasswordResetToken
+
+    raw = generate_token()
+    expires_at = datetime.now(timezone.utc) + timedelta(minutes=PASSWORD_RESET_TTL_MINUTES)
+    db.add(
+        PasswordResetToken(
+            user_id=user_id,
+            token_hash=hash_token(raw),
+            expires_at=expires_at,
+        )
+    )
+    db.commit()
+    return raw
+
+
+def consume_password_reset_token(db: Session, raw_token: str) -> int | None:
+    """Validate and consume a password-reset token. Returns the user_id on
+    success, None if invalid/expired/already-used."""
+    from app.models import PasswordResetToken
+
+    row = (
+        db.query(PasswordResetToken)
+        .filter(PasswordResetToken.token_hash == hash_token(raw_token))
+        .first()
+    )
+    if row is None:
+        return None
+    if row.used_at is not None:
+        return None
+    now = datetime.now(timezone.utc)
+    if row.expires_at.tzinfo is None:
+        row.expires_at = row.expires_at.replace(tzinfo=timezone.utc)
+    if row.expires_at < now:
+        return None
+    row.used_at = now
+    db.commit()
+    return row.user_id
+
+
+# ---------------------------------------------------------------------------
+# Email verification (Phase 12 — Part C1)
+# ---------------------------------------------------------------------------
+
+EMAIL_VERIFICATION_TTL_MINUTES = 24 * 60  # 24 hours
+
+
+def create_email_verification_token(db: Session, user_id: int) -> str:
+    """Create an email-verification token. Returns the raw token."""
+    from app.models import EmailVerificationToken
+
+    raw = generate_token()
+    expires_at = datetime.now(timezone.utc) + timedelta(minutes=EMAIL_VERIFICATION_TTL_MINUTES)
+    db.add(
+        EmailVerificationToken(
+            user_id=user_id,
+            token_hash=hash_token(raw),
+            expires_at=expires_at,
+        )
+    )
+    db.commit()
+    return raw
+
+
+def consume_email_verification_token(db: Session, raw_token: str) -> int | None:
+    """Validate and consume an email-verification token. Returns user_id on
+    success, None if invalid/expired/already-used."""
+    from app.models import EmailVerificationToken
+
+    row = (
+        db.query(EmailVerificationToken)
+        .filter(EmailVerificationToken.token_hash == hash_token(raw_token))
+        .first()
+    )
+    if row is None:
+        return None
+    if row.used_at is not None:
+        return None
+    now = datetime.now(timezone.utc)
+    if row.expires_at.tzinfo is None:
+        row.expires_at = row.expires_at.replace(tzinfo=timezone.utc)
+    if row.expires_at < now:
+        return None
+    row.used_at = now
+    db.commit()
+    return row.user_id
+
+
+# ---------------------------------------------------------------------------
+# Login rate limiting (Phase 12 — Part C2)
+# ---------------------------------------------------------------------------
+
+_LOGIN_FAILURES: dict[str, list[datetime]] = {}  # email -> [attempt_times]
+LOGIN_MAX_FAILURES = 5
+LOGIN_WINDOW_MINUTES = 10
+LOGIN_LOCKOUT_MINUTES = 15
+
+
+def _clean_failures(email: str) -> None:
+    """Remove failures older than the window."""
+    cutoff = datetime.now(timezone.utc) - timedelta(minutes=LOGIN_WINDOW_MINUTES)
+    _LOGIN_FAILURES[email] = [
+        t for t in _LOGIN_FAILURES.get(email, [])
+        if t > cutoff
+    ]
+
+
+def record_login_failure(email: str) -> None:
+    """Record a failed login attempt."""
+    _LOGIN_FAILURES.setdefault(email, []).append(datetime.now(timezone.utc))
+
+
+def clear_login_failures(email: str) -> None:
+    """Clear failures on successful login."""
+    _LOGIN_FAILURES.pop(email, None)
+
+
+def is_login_locked(email: str) -> tuple[bool, int]:
+    """Check if an account is locked out. Returns (locked, retry_after_seconds)."""
+    _clean_failures(email)
+    failures = _LOGIN_FAILURES.get(email, [])
+    if len(failures) < LOGIN_MAX_FAILURES:
+        return False, 0
+    # Lockout until the oldest failure in the window + lockout period
+    oldest = min(failures)
+    unlock_at = oldest + timedelta(minutes=LOGIN_LOCKOUT_MINUTES)
+    now = datetime.now(timezone.utc)
+    if now < unlock_at:
+        retry_after = int((unlock_at - now).total_seconds())
+        return True, max(retry_after, 1)
+    # Lockout expired — clear and allow
+    _LOGIN_FAILURES.pop(email, None)
+    return False, 0

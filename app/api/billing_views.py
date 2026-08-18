@@ -90,10 +90,21 @@ def register(body: RegisterBody, response: Response):
 
 @router.post("/auth/login")
 def login(body: LoginBody, response: Response):
+    email_lower = body.email.lower()
+    # Rate limiting: check lockout first (Phase 12 — Part C2)
+    locked, retry_after = auth.is_login_locked(email_lower)
+    if locked:
+        raise HTTPException(
+            status_code=429,
+            detail=f"Too many failed attempts. Try again in {retry_after} seconds.",
+            headers={"Retry-After": str(retry_after)},
+        )
     with session_scope() as db:
-        user = db.query(User).filter(User.email == body.email.lower()).first()
+        user = db.query(User).filter(User.email == email_lower).first()
         if user is None or not auth.verify_password(body.password, user.password_hash):
+            auth.record_login_failure(email_lower)
             raise HTTPException(status_code=401, detail="Incorrect email or password.")
+        auth.clear_login_failures(email_lower)
         raw, expires_at = auth.create_session(db, user.id)
         _set_session_cookie(response, raw, expires_at)
         return auth.user_payload(user)
@@ -114,6 +125,167 @@ def me(request: Request):
         if user is None:
             raise HTTPException(status_code=401, detail="Not signed in.")
         return {**auth.user_payload(user), "has_pro": auth.has_pro_access(db, user.id)}
+
+
+# ---------------------------------------------------------------------------
+# Password reset (Phase 12 — Part C3)
+# ---------------------------------------------------------------------------
+
+
+class PasswordResetRequestBody(BaseModel):
+    email: EmailStr
+
+
+class PasswordResetConfirmBody(BaseModel):
+    token: str
+    new_password: str = Field(min_length=8, max_length=200)
+
+
+@router.post("/auth/password-reset/request")
+def password_reset_request(body: PasswordResetRequestBody):
+    """Request a password reset. Always returns the same response to prevent
+    account enumeration."""
+    with session_scope() as db:
+        user = db.query(User).filter(User.email == body.email.lower()).first()
+        if user is not None:
+            token = auth.create_password_reset_token(db, user.id)
+            # In production, send email here. For now, log for dev/testing.
+            logger.info("Password reset token for %s: %s", user.email, token)
+    return {"detail": "If an account with that email exists, a reset link has been sent."}
+
+
+@router.post("/auth/password-reset/confirm")
+def password_reset_confirm(body: PasswordResetConfirmBody):
+    """Confirm a password reset with the token."""
+    with session_scope() as db:
+        user_id = auth.consume_password_reset_token(db, body.token)
+        if user_id is None:
+            raise HTTPException(
+                status_code=400,
+                detail="Invalid or expired reset token.",
+            )
+        user = db.get(User, user_id)
+        if user is None:
+            raise HTTPException(status_code=400, detail="Invalid reset token.")
+        user.password_hash = auth.hash_password(body.new_password)
+        db.commit()
+    return {"detail": "Password has been reset. You can now log in."}
+
+
+# ---------------------------------------------------------------------------
+# Email verification (Phase 12 — Part C1)
+# ---------------------------------------------------------------------------
+
+
+class VerifyEmailRequestBody(BaseModel):
+    email: EmailStr
+
+
+class VerifyEmailConfirmBody(BaseModel):
+    token: str
+
+
+@router.post("/auth/verify-email/request")
+def verify_email_request(request: Request, body: VerifyEmailRequestBody | None = None):
+    """Request email verification for the signed-in user."""
+    user = _require_user(request)
+    with session_scope() as db:
+        token = auth.create_email_verification_token(db, user.id)
+        logger.info("Email verification token for %s: %s", user.email, token)
+    return {"detail": "Verification link sent."}
+
+
+@router.post("/auth/verify-email/confirm")
+def verify_email_confirm(body: VerifyEmailConfirmBody):
+    """Confirm email verification."""
+    with session_scope() as db:
+        user_id = auth.consume_email_verification_token(db, body.token)
+        if user_id is None:
+            raise HTTPException(
+                status_code=400,
+                detail="Invalid or expired verification token.",
+            )
+        user = db.get(User, user_id)
+        if user is None:
+            raise HTTPException(status_code=400, detail="Invalid token.")
+        user.email_verified_at = datetime.now(timezone.utc)
+        db.commit()
+    return {"detail": "Email verified."}
+
+
+# ---------------------------------------------------------------------------
+# Profile & preferences (Phase 12 — Part D)
+# ---------------------------------------------------------------------------
+
+
+class ProfileUpdateBody(BaseModel):
+    display_name: str | None = Field(None, max_length=128)
+    timezone: str | None = Field(None, max_length=64)
+    locale: str | None = Field(None, max_length=10)
+
+
+class ChangePasswordBody(BaseModel):
+    current_password: str
+    new_password: str = Field(min_length=8, max_length=200)
+
+
+class AccountDeleteBody(BaseModel):
+    confirm_delete: bool
+
+
+@router.put("/auth/profile")
+def update_profile(request: Request, body: ProfileUpdateBody):
+    """Update the signed-in user's profile."""
+    user = _require_user(request)
+    with session_scope() as db:
+        db_user = db.get(User, user.id)
+        if body.display_name is not None:
+            db_user.display_name = body.display_name.strip() or None
+        if body.timezone is not None:
+            db_user.timezone = body.timezone.strip() or None
+        if body.locale is not None:
+            db_user.locale = body.locale.strip() or None
+        db.commit()
+        return auth.user_payload(db_user)
+
+
+@router.post("/auth/change-password")
+def change_password(request: Request, body: ChangePasswordBody):
+    """Change password for the signed-in user."""
+    user = _require_user(request)
+    with session_scope() as db:
+        db_user = db.get(User, user.id)
+        if not auth.verify_password(body.current_password, db_user.password_hash):
+            raise HTTPException(status_code=400, detail="Current password is incorrect.")
+        db_user.password_hash = auth.hash_password(body.new_password)
+        db.commit()
+    return {"detail": "Password changed."}
+
+
+@router.post("/auth/delete-account")
+def delete_account(request: Request, body: AccountDeleteBody):
+    """Request account deletion. Sets pending_deletion with a 30-day grace period."""
+    user = _require_user(request)
+    if not body.confirm_delete:
+        raise HTTPException(status_code=400, detail="Must confirm deletion.")
+    with session_scope() as db:
+        db_user = db.get(User, user.id)
+        db_user.account_status = "pending_deletion"
+        db.commit()
+    return {"detail": "Account scheduled for deletion in 30 days. Log in to cancel."}
+
+
+@router.post("/auth/cancel-deletion")
+def cancel_deletion(request: Request):
+    """Cancel a pending account deletion."""
+    user = _require_user(request)
+    with session_scope() as db:
+        db_user = db.get(User, user.id)
+        if db_user.account_status != "pending_deletion":
+            raise HTTPException(status_code=400, detail="No pending deletion.")
+        db_user.account_status = "active"
+        db.commit()
+    return {"detail": "Account deletion cancelled."}
 
 
 # ---------------------------------------------------------------------------
