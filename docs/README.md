@@ -35,14 +35,16 @@ docs/
 │   ├── methodology.md             Statlas Index formula, weights, threshold
 │   ├── percentile-rules.md        grouping (tier), cadence, immutability
 │   ├── similarity-explanation-method.md  how "similar players" explanations work (Phase 6)
+│   ├── emerging-player-methodology.md  Phase 11 emerging-player score formula, weights, thresholds
 │   ├── data-compliance-notes.md   per-source license/ToS/rate-limit review
 │   └── production-validation-log.md  real scrape validation + dataset-mode decision
-├── product/                       Phase 7/8/9/10 scouting workspace + query builder + reports + alerts
+├── product/                       Phase 7/8/9/10/11 scouting workspace + query builder + reports + alerts + leagues
 │   ├── scouting-pipeline.md       status pipeline rules, transitions, integrity, authz
 │   ├── query-builder-scope.md     Phase 8 condition grammar, AND-only scope, floor, missing-data rules
 │   ├── scouting-reports.md        Phase 9 report structure, confidence rules, risk rules, verification design
 │   ├── alert-trigger-definitions.md  Phase 10 exact trigger thresholds, non-triggers, follow granularity
-│   └── notification-delivery.md   Phase 10 provider choice, preference compliance, digests, unsubscribe
+│   ├── notification-delivery.md   Phase 10 provider choice, preference compliance, digests, unsubscribe
+│   └── league-page-spec.md        Phase 11 league hub page structure, URL scheme, honest degradation rules
 ├── api/                           live API verification (BLOCKED, Part A3)
 │   └── live-verification-log.md   real captured endpoint evidence or BLOCKED status
 ├── ai-assistant/                  live AI-assistant verification (BLOCKED, Part A2)
