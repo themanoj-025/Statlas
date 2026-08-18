@@ -44,7 +44,9 @@ docs/
 │   ├── scouting-reports.md        Phase 9 report structure, confidence rules, risk rules, verification design
 │   ├── alert-trigger-definitions.md  Phase 10 exact trigger thresholds, non-triggers, follow granularity
 │   ├── notification-delivery.md   Phase 10 provider choice, preference compliance, digests, unsubscribe
-│   └── league-page-spec.md        Phase 11 league hub page structure, URL scheme, honest degradation rules
+│   ├── league-page-spec.md        Phase 11 league hub page structure, URL scheme, honest degradation rules
+│   ├── dashboard-scope.md         Phase 13 dashboard layout decision, widget order, data freshness
+│   └── dashboard-recommendations-logic.md  Phase 13 trending + recommendation heuristics, formulas, limitations
 ├── api/                           live API verification (BLOCKED, Part A3)
 │   └── live-verification-log.md   real captured endpoint evidence or BLOCKED status
 ├── ai-assistant/                  live AI-assistant verification (BLOCKED, Part A2)

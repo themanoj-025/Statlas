@@ -14,6 +14,19 @@ type Entry = {
 
 const ENTRIES: Entry[] = [
   {
+    date: "2026-08-19",
+    phase: "Phase 13 — personal dashboard",
+    items: [
+      "Activity tracking infrastructure: new activity_log table with 60-second deduplication at write time. Every player/team profile view is logged server-side (best-effort, never blocks the response), and a POST /api/v1/dashboard/activity endpoint allows client-side logging. Indexed on (user_id, performed_at) for fast recent-activity queries.",
+      "Dashboard data model: dashboard_state table (per-user widget config + dismissed recommendations) and saved_players table (lightweight bookmarks distinct from Phase 7 shortlists). Both with proper unique constraints and ownership patterns matching Phase 7-10.",
+      "Backend query layer (app/queries/dashboard_queries.py): get_recent_activity (14-day lookback, deduplicated), get_workspace_summary (shortlists/saved-searches/reports/watches/unread-alerts counts), get_trending_players (sustained upward percentile movement between two most recent snapshots, excluding user's viewed/saved players), get_recommended_players (position-group affinity heuristic based on viewing patterns, with explanation text), saved-players CRUD, dismiss-recommendation persistence.",
+      "API endpoints: GET /api/v1/dashboard/summary (single round-trip for all widgets), POST /api/v1/dashboard/activity (log view), POST /api/v1/dashboard/saved-players (bookmark), DELETE /api/v1/dashboard/saved-players/{id} (unbookmark), POST /api/v1/dashboard/dismiss-recommendation. All session-authenticated with ownership enforcement.",
+      "Frontend: /dashboard page with workspace shortcuts (4 cards with counts + badges), recently viewed players, trending this week (with gain indicators), saved players (with unsave action), recommended for you (with per-recommendation explanation text + dismiss action). All with loading skeletons, empty states with guidance copy, and error with retry. Accessibility: axe green, semantic heading hierarchy, proper list markup.",
+      "Server-side activity logging on player profile view: the /api/v1/players/by-slug/{slug} endpoint now logs a viewed action for authenticated users (best-effort, never breaks profile loading). Dashboard link added to Header nav for signed-in users.",
+      "18 new unit tests (335 total): activity logging (create, 60s dedup, post-window logging, different-entity non-dedup), workspace summary (empty, counts, deleted-shortlist exclusion), trending players (upward movement detection, viewed-player exclusion), recommendations (position-group matching, viewed exclusion, dismissed exclusion), saved players (save, idempotent duplicate, unsave, unsave-nonexistent), dashboard state (create, reuse, dismiss persistence).",
+    ],
+  },
+  {
     date: "2026-08-18",
     phase: "Phase 12 — full user accounts",
     items: [
