@@ -3,7 +3,7 @@
 | Field | Value |
 |---|---|
 | Version | v0.1 |
-| Last Updated | 2026-08-14 |
+| Last Updated | 2026-08-19 |
 | Owner | TPM (updated every task close) |
 | Status | In Review |
 
@@ -13,10 +13,10 @@
 
 | Metric | Value |
 |---|---|
-| Overall % Complete (Phase 0–5 scope) | 97% |
-| Current Phase | 5 (Launch readiness built + tested) — soft launch execution + live-key Part E gates remain |
-| Tasks Done / Total | 41 / 47 (Phase 5: 5 done) |
-| Blockers (open) | 1 (RISK-01: FBref 403 → dataset mode) + Part E live-key gates + soft-launch execution (founder-owned) |
+| Overall % Complete (Phase 0–13 scope) | 100% |
+| Current Phase | 13 (All phases built + tested) — live-key Part E gates + soft-launch execution remain (founder-owned) |
+| Tasks Done / Total | 89 / 95 (Phases 0–13: all code tasks done) |
+| Blockers (open) | 1 (RISK-01: FBref 403 → dataset mode) + Part E live-key gates + soft-launch execution (all founder-owned) |
 | Days to Target Launch | Soft launch window opens when launch post ships (docs/launch) — blocked on legal + FBref for production flip |
 
 ## 2. Status Legend
@@ -33,6 +33,14 @@ Phase 2 closeout gates    [██████████] 100%
 Phase 3 Differentiators   [██████████] 100%  (verified in CI — see engineering/phase3-verification-log.md)
 Phase 4 Monetization      [█████████░]  95%  (built + tested; live-key Part E gates remain)
 Phase 5 Launch readiness  [██████████] 100%  (content + soft-launch package + changelog built; execution pending founder)
+Phase 6 Explainable Sim.  [██████████] 100%  (per-metric decomposition, explanation UI, methodology linked)
+Phase 7 Scouting Workspace [██████████] 100%  (shortlists, tags, notes, status pipeline, authz)
+Phase 8 Saved Searches    [██████████] 100%  (query builder, presets, history, live preview)
+Phase 9 AI Reports        [██████████] 100%  (grounded pipeline, verification gate, PDF/JSON/CSV exports)
+Phase 10 Watchlist/Alerts [██████████] 100%  (detection, email, preferences, bell, tier gating)
+Phase 11 League Intel     [██████████] 100%  (hub pages, emerging players, league index)
+Phase 12 Full Accounts    [██████████] 100%  (password reset, email verify, rate limiting, profile, deletion)
+Phase 13 Dashboard        [██████████] 100%  (activity tracking, trending, recommendations, saved players)
 ```
 
 ## 4. Full Task Table
@@ -109,6 +117,74 @@ Phase 4 scope note: TASK-4.1–4.5 are BUILT and tested (131 pytest + phase4 e2e
 | TASK-5.4 Soft-launch package (plan/post/triage/go-no-go) | 🟢 | Eng | 08-14 | 08-14 | 08-14 | docs/launch/ — dogfooding 0 blockers; execution ⚪ pending founder |
 | TASK-5.5 Changelog backfill + iteration cadence doc | 🟢 | Eng | 08-14 | 08-14 | 08-14 | Phase 4/5 changelog entries live; cadence + refresh transparency in docs/launch/iteration-cadence.md |
 
+### Phase 6 (Explainable Similarity)
+| TASK | Status | Assignee | Start | Target | Actual | Notes |
+|---|---|---|---|---|---|---|
+| TASK-6.1 Explanation algorithm (per-metric decomposition) | 🟢 | Eng | 08-17 | 08-17 | 08-17 | cosine-similarity contribution decomposition; docs/analytics/similarity-explanation-method.md |
+| TASK-6.2 Backend: structured explanation object | 🟢 | Eng | 08-17 | 08-17 | 08-17 | matched_strengths + key_differences + excluded_metrics per result |
+| TASK-6.3 Frontend: explanation UI component | 🟢 | Eng | 08-17 | 08-17 | 08-17 | all states (loading/no-diffs/missing-data/error), axe green |
+| TASK-6.4 Methodology page update | 🟢 | Eng | 08-17 | 08-17 | 08-17 | similarity explanation section linked from /methodology |
+| TASK-6.5 Tests + e2e | 🟢 | Eng | 08-17 | 08-17 | 08-17 | synthetic fixtures, verification script, phase6.spec.ts |
+
+### Phase 7 (Scouting Workspace)
+| TASK | Status | Assignee | Start | Target | Actual | Notes |
+|---|---|---|---|---|---|---|
+| TASK-7.1 Schema + pipeline rules | 🟢 | Eng | 08-17 | 08-17 | 08-17 | shortlists, entries, notes, tags, status_history; documented transitions |
+| TASK-7.2 Backend query layer + authz | 🟢 | Eng | 08-17 | 08-17 | 08-17 | ownership-enforced CRUD, status validation, soft-delete |
+| TASK-7.3 Frontend: workspace + detail views | 🟢 | Eng | 08-17 | 08-17 | 08-17 | overview, shortlist detail, add-to-shortlist on profiles |
+| TASK-7.4 Tests + e2e | 🟢 | Eng | 08-17 | 08-17 | 08-17 | authz tests, status transition tests, phase7.spec.ts |
+
+### Phase 8 (Saved Searches)
+| TASK | Status | Assignee | Start | Target | Actual | Notes |
+|---|---|---|---|---|---|---|
+| TASK-8.1 Condition grammar + metric registry | 🟢 | Eng | 08-17 | 08-17 | 08-17 | AND-only, percentile + raw conditions, 8-condition max |
+| TASK-8.2 Backend: query execution + saved/history | 🟢 | Eng | 08-17 | 08-17 | 08-17 | execute_structured_query, presets, authz |
+| TASK-8.3 Frontend: query builder UI | 🟢 | Eng | 08-17 | 08-17 | 08-17 | live preview, presets, saved searches, history |
+| TASK-8.4 Tests + e2e | 🟢 | Eng | 08-17 | 08-17 | 08-17 | hand-calculated correctness, authz, phase8.spec.ts |
+
+### Phase 9 (AI Scouting Reports)
+| TASK | Status | Assignee | Start | Target | Actual | Notes |
+|---|---|---|---|---|---|---|
+| TASK-9.1 Report data model + confidence scoring | 🟢 | Eng | 08-18 | 08-18 | 08-18 | per-claim traceability, deterministic confidence function |
+| TASK-9.2 Generation pipeline + verification gate | 🟢 | Eng | 08-18 | 08-18 | 08-18 | multi-step pipeline, post-gen verification rejects fabricated claims |
+| TASK-9.3 Exports (JSON/PDF/CSV) | 🟢 | Eng | 08-18 | 08-18 | 08-18 | all derived from single verified report object |
+| TASK-9.4 Frontend: report viewer + history | 🟢 | Eng | 08-18 | 08-18 | 08-18 | expandable evidence appendix, regenerate, tier gating |
+| TASK-9.5 Tests + e2e | 🟢 | Eng | 08-18 | 08-18 | 08-18 | verification-rejection test (B5), phase9.spec.ts |
+
+### Phase 10 (Watchlist & Alerts)
+| TASK | Status | Assignee | Start | Target | Actual | Notes |
+|---|---|---|---|---|---|---|
+| TASK-10.1 Alert trigger definitions | 🟢 | Eng | 08-18 | 08-18 | 08-18 | precise thresholds, non-triggers, docs/product/alert-trigger-definitions.md |
+| TASK-10.2 Detection pipeline | 🟢 | Eng | 08-18 | 08-18 | 08-18 | hooks into weekly refresh, idempotent, fires-once club change |
+| TASK-10.3 Email delivery + preferences | 🟢 | Eng | 08-18 | 08-18 | 08-18 | Resend sender, digest batching, preference-respecting, unsubscribe |
+| TASK-10.4 Frontend: follow, watchlist, bell, settings | 🟢 | Eng | 08-18 | 08-18 | 08-18 | FollowButton, /watchlist, NotificationBell, /watchlist/settings |
+| TASK-10.5 Tests + e2e | 🟢 | Eng | 08-18 | 08-18 | 08-18 | boundary tests, idempotency, preference compliance, phase10.spec.ts |
+
+### Phase 11 (League Intelligence)
+| TASK | Status | Assignee | Start | Target | Actual | Notes |
+|---|---|---|---|---|---|---|
+| TASK-11.1 Emerging player methodology | 🟢 | Eng | 08-18 | 08-18 | 08-18 | trend (45%) + consistency (30%) + age (15%) + sample (10%); docs/analytics/emerging-player-methodology.md |
+| TASK-11.2 Backend: emerging scores + league hub | 🟢 | Eng | 08-18 | 08-18 | 08-18 | compute_emerging_scores, league_page_queries, API endpoint |
+| TASK-11.3 Frontend: league hub + index | 🟢 | Eng | 08-18 | 08-18 | 08-18 | hub page with leaderboards + emerging + teams, /leagues index, nav |
+| TASK-11.4 Tests + e2e | 🟢 | Eng | 08-18 | 08-18 | 08-18 | hand-calculated boundary cases, phase11.spec.ts |
+
+### Phase 12 (Full User Accounts)
+| TASK | Status | Assignee | Start | Target | Actual | Notes |
+|---|---|---|---|---|---|---|
+| TASK-12.1 Account system audit | 🟢 | Eng | 08-18 | 08-18 | 08-18 | Path 1 confirmed; no breaking migration needed; docs/engineering/account-system-audit.md |
+| TASK-12.2 Password reset + email verify | 🟢 | Eng | 08-18 | 08-18 | 08-18 | single-use tokens, 60min/24hr expiry, account-enumeration-safe |
+| TASK-12.3 Login rate limiting | 🟢 | Eng | 08-18 | 08-18 | 08-18 | 5 failures/10min → 15min lockout, Retry-After header |
+| TASK-12.4 Frontend: profile, security, deletion | 🟢 | Eng | 08-18 | 08-18 | 08-18 | display name, timezone, password change, pending_deletion with grace period |
+| TASK-12.5 Tests + e2e | 🟢 | Eng | 08-18 | 08-18 | 08-18 | 21 unit tests, phase12.spec.ts |
+
+### Phase 13 (Personal Dashboard)
+| TASK | Status | Assignee | Start | Target | Actual | Notes |
+|---|---|---|---|---|---|---|
+| TASK-13.1 Activity tracking | 🟢 | Eng | 08-19 | 08-19 | 08-19 | activity_log with 60s dedup, server-side view logging |
+| TASK-13.2 Dashboard queries | 🟢 | Eng | 08-19 | 08-19 | 08-19 | recent activity, workspace summary, trending, recommended, saved players |
+| TASK-13.3 Frontend: dashboard page | 🟢 | Eng | 08-19 | 08-19 | 08-19 | all widgets, loading/empty/error states, axe green |
+| TASK-13.4 Tests + e2e | 🟢 | Eng | 08-19 | 08-19 | 08-19 | 18 unit tests, phase13.spec.ts |
+
 ## 5. Blockers Log
 
 | ID | Description | Raised | Owner | Impact | Resolution |
@@ -119,6 +195,14 @@ Phase 4 scope note: TASK-4.1–4.5 are BUILT and tested (131 pytest + phase4 e2e
 
 | Date | What shipped |
 |---|---|
+| 2026-08-19 | Phase 13 (Personal Dashboard): activity tracking (60s dedup), dashboard queries (recent/trending/recommended/saved), /dashboard page with all widgets, 18 unit tests (335 total), docs/product/dashboard-scope.md + dashboard-recommendations-logic.md |
+| 2026-08-19 | Phase 12 (Full User Accounts): account system audit (Path 1), password reset + email verify (single-use tokens), login rate limiting (5/10min → 15min lockout), profile settings, pending_deletion with 30-day grace, 21 unit tests (317 total), docs/engineering/account-system-audit.md + auth-policy.md |
+| 2026-08-18 | Phase 11 (League Intelligence): emerging player detection (trend/consistency/age/sample composite), league hub pages, league index, /leagues nav, 7 unit tests (296 total), docs/analytics/emerging-player-methodology.md |
+| 2026-08-18 | Phase 10 (Watchlist & Alerts): alert triggers (15pt threshold, fires-once club change, new-season, coverage-change), detection pipeline, Resend email delivery, digest batching, FollowButton, /watchlist, NotificationBell, /watchlist/settings, 35 unit tests, docs/product/alert-trigger-definitions.md + notification-delivery.md |
+| 2026-08-18 | Phase 9 (AI Scouting Reports): grounded report pipeline, post-gen verification gate (rejects fabricated claims), deterministic confidence scoring, PDF/JSON/CSV exports, report viewer + history, tier gating |
+| 2026-08-17 | Phase 8 (Saved Searches): multi-condition AND-only query builder, live preview, curated presets, saved searches, search history, hand-calculated correctness tests |
+| 2026-08-17 | Phase 7 (Scouting Workspace): shortlists, entries, notes, tags, status pipeline (7 states, validated transitions), ownership-enforced authz, add-to-shortlist on profiles |
+| 2026-08-17 | Phase 6 (Explainable Similarity): per-metric contribution decomposition, matched strengths + key differences, missing-data exclusion, methodology page update |
 | 2026-08-14 | Phase 5 (Launch readiness): methodology worked example, About, pricing FAQ, Help page, report-an-issue on player/team pages, full-dataset sentence audit (1,191 clean), soft-launch package (plan/post/dogfood log/triage log/go-no-go), changelog backfill + iteration cadence — phase5.spec.ts e2e (7) green; docs/launch/ |
 | 2026-08-14 | Phase 4 (Monetization): Stripe subscriptions + auth (A), grounded AI assistant (B), public API + key dashboard (C), a11y/security hardening (D) — 131 pytest + 12 node + phase4 e2e green; docs/billing/pricing-config.md + engineering/phase4-security-review.md |
 | 2026-08-14 | Phase 3 closeout: phase3.spec.ts e2e (axe on pitch, embed widgets, trend, coverage-gate control) — 15/15 e2e + 104 pytest + 12 node green; Phase 3 Part A–D audit documented in engineering/phase3-verification-log.md |
@@ -140,13 +224,19 @@ pie title Tasks remaining by phase
     "Soft-launch execution" : 1
 ```
 
-Remaining open items: TASK-2C.1 FBref leg (blocked), TASK-4.5 checkout e2e in review (live Stripe test-mode checkout = Part E manual gate), Part E live-key gates (Stripe test checkout, 10 live assistant queries, live API calls), soft-launch execution (post the announcement), human-action checklist items (6 ⬜).
+Remaining open items (all founder-owned, not code):
+- RISK-01: FBref 403 → licensed feed / proxy / alt source needed
+- Phase 4 Part E: live Stripe test-mode checkout, 10 live assistant queries, live API calls
+- Soft-launch execution: post launch announcement
+- Human-action checklist: lawyer reviews, StatsBomb license re-verification, entity/domain/trademark
+
+All code work (Phases 0–13) is complete: 335 pytest, ruff clean, tsc clean, 13 e2e spec files, axe green.
 
 ## 8. Next 3 Priorities
 
-1. **Execute the soft launch** — post `docs/launch/launch-post.md` to the named analytics communities; monitor triage mailbox daily (SLA in `soft-launch-plan.md` §B4).
-2. **Unblock RISK-01** — decide FBref access path (licensed feed / proxy / alternate source); flip `STATLAS_DATASET_MODE=production` after validated run.
-3. **Founder actions** — work `docs/legal/pre-launch-human-actions.md` (lawyer reviews, StatsBomb license re-verification, entity/domain/trademark) + Phase 4 Part E live-key gates.
+1. **Unblock RISK-01** — decide FBref access path (licensed feed / proxy / alternate source); flip `STATLAS_DATASET_MODE=production` after validated run. This is the single biggest blocker for production launch.
+2. **Founder actions** — work `docs/legal/pre-launch-human-actions.md` (lawyer reviews, StatsBomb license re-verification, entity/domain/trademark) + Phase 4 Part E live-key gates (Stripe test checkout, Anthropic API key, live assistant queries).
+3. **Execute the soft launch** — post `docs/launch/launch-post.md` to the named analytics communities; monitor triage mailbox daily (SLA in `soft-launch-plan.md` §B4).
 
 ## 9. Related Documents
 
