@@ -52,7 +52,10 @@ export function NotificationBell() {
     setLoading(true);
     setError(null);
     try {
-      const payload = await api.watchAlerts({ limit: 20 });
+      // include_read: the dropdown keeps read alerts visible (with read
+      // styling + Dismiss) so notifications aren't un-recoverable once read;
+      // the badge still counts unread only.
+      const payload = await api.watchAlerts({ include_read: true, limit: 20 });
       setAlerts(payload.alerts);
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Could not load notifications.");
@@ -60,6 +63,29 @@ export function NotificationBell() {
       setLoading(false);
     }
   };
+
+  // Preload the unread count so the badge is accurate without opening the
+  // dropdown (Phase 10 E4: the count is announced on load, not after an
+  // interaction). Refreshes on window focus so it stays current.
+  useEffect(() => {
+    if (status !== "signed-in") return;
+    let cancelled = false;
+    const loadCount = async () => {
+      try {
+        const payload = await api.watchAlerts({ include_read: true, limit: 20 });
+        if (!cancelled) setAlerts(payload.alerts);
+      } catch {
+        /* badge stays empty on failure — the dropdown retry handles errors */
+      }
+    };
+    void loadCount();
+    const onFocus = () => void loadCount();
+    window.addEventListener("focus", onFocus);
+    return () => {
+      cancelled = true;
+      window.removeEventListener("focus", onFocus);
+    };
+  }, [status]);
 
   const markRead = async (alertId: number) => {
     await api.markAlertRead(alertId).catch(() => undefined);
@@ -89,7 +115,7 @@ export function NotificationBell() {
         type="button"
         className="notification-bell__button"
         aria-expanded={open}
-        aria-haspopup="menu"
+        aria-controls="notification-menu"
         aria-label={`Notifications${unread > 0 ? ` — ${unread} unread` : ""}`}
         onClick={() => (open ? close() : void openBell())}
       >
@@ -107,7 +133,7 @@ export function NotificationBell() {
       </span>
 
       {open && (
-        <div className="notification-bell__menu" role="menu" aria-label="Notifications">
+        <div id="notification-menu" className="notification-bell__menu" role="region" aria-label="Notifications">
           <p className="notification-bell__title">Notifications</p>
           {loading && (
             <p className="notification-bell__hint" role="status">

@@ -42,15 +42,17 @@ async function openFirstPlayerProfile(page: Page): Promise<{ playerId: number; n
   await page.locator(".position-card").first().click();
   await expect(page.locator("a[href^='/players/']").first()).toBeVisible({ timeout: 20_000 });
   await page.locator("a[href^='/players/']").first().click();
+  await page.waitForURL(/\/players\/[^/?#]+$/, { timeout: 20_000 });
   await expect(page.getByRole("heading", { level: 1 }).first()).toBeVisible({ timeout: 20_000 });
-  // The profile header has an explicit "Follow" button carrying the player id
-  // via the API; read the player id from the page's data through the API.
-  const playerId = await page.evaluate(async () => {
-    const res = await fetch(`http://127.0.0.1:8000/api/v1/players/search?q=${encodeURIComponent(document.querySelector("h1")?.textContent?.trim() ?? "")}&limit=1`);
-    const body = await res.json();
-    return Array.isArray(body) && body[0] ? body[0].player_id : null;
-  });
-  return { playerId: playerId ?? -1, name: (await page.getByRole("heading", { level: 1 }).first().textContent()) ?? "" };
+  // Read the player id from the profile URL slug via the public by-slug API
+  // (robust regardless of which player the leaderboard surfaced first).
+  const slug = page.url().split("/").pop() ?? "";
+  const res = await page.request.get(`http://127.0.0.1:8000/api/v1/players/by-slug/${slug}`);
+  const body = await res.json();
+  return {
+    playerId: body?.player?.player_id ?? -1,
+    name: (await page.getByRole("heading", { level: 1 }).first().textContent()) ?? "",
+  };
 }
 
 test("follow from a player profile -> watchlist; unfollow returns to empty", async ({ page }) => {
@@ -98,9 +100,9 @@ test("a real seeded alert appears in the bell with real values; read + dismiss w
   await page.locator(".watchlist__alert-row").first().click();
   await expect(page.getByRole("dialog")).toBeVisible();
   await expect(page.getByText("Previous percentile")).toBeVisible();
-  await expect(page.getByText("45th")).toBeVisible();
+  await expect(page.getByText("45th", { exact: true })).toBeVisible();
   await expect(page.getByText("Current percentile")).toBeVisible();
-  await expect(page.getByText("72nd")).toBeVisible();
+  await expect(page.getByText("72nd", { exact: true })).toBeVisible();
   await page.getByRole("button", { name: "Close" }).click();
 
   // Dismiss the alert -> bell badge disappears, empty alert list shows the

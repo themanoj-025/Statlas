@@ -86,8 +86,14 @@ export function WatchlistClient() {
 
   if (watches.length === 0) {
     return (
-      <div className="state-card">
-        <p className="kicker">Nothing followed yet</p>
+      <div>
+        {message && (
+          <p role="status" className="inline-message" style={{ color: message.kind === "error" ? "var(--color-danger)" : "var(--color-success)" }}>
+            {message.text}
+          </p>
+        )}
+        <div className="state-card">
+          <p className="kicker">Nothing followed yet</p>
         <h2>Start with a player or team you&apos;re tracking</h2>
         <p>
           Open any player or team profile and hit <strong>Follow</strong>. Statlas watches the
@@ -101,6 +107,7 @@ export function WatchlistClient() {
           <Link href="/search" className="button button--secondary">
             Build a search
           </Link>
+        </div>
         </div>
       </div>
     );
