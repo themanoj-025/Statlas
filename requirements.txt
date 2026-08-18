@@ -3,7 +3,7 @@
 
 requests>=2.31
 beautifulsoup4>=4.12
-SQLAlchemy>=2.0
+SQLAlchemy>=2.0.52
 psycopg2-binary>=2.9     # PostgreSQL driver for production DATABASE_URL
 
 # API layer (Phase 2) — FastAPI runtime
