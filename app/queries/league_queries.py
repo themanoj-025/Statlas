@@ -12,6 +12,7 @@ from __future__ import annotations
 
 from typing import Any
 
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from app.compute.anomaly_check import blocked_player_ids
@@ -28,7 +29,7 @@ def _current_season() -> str:
 
 
 def get_league_catalog(db: Session) -> list[dict[str, Any]]:
-    """All leagues (config tiers) with coverage + player counts per league."""
+    """All leagues (config tiers) with coverage + team counts per league."""
     tiers_cfg = load_tiers()
     leagues = {league.slug: league for league in db.query(League).all()}
     coverage = db.query(DataCoverage).all()
@@ -36,6 +37,15 @@ def get_league_catalog(db: Session) -> list[dict[str, Any]]:
     for row in coverage:
         if row.league_id is not None:
             by_league.setdefault(row.league_id, []).append(row)
+
+    # Team counts per league for the index page.
+    team_counts: dict[int, int] = {}
+    for league_id, cnt in (
+        db.query(Team.league_id, func.count(Team.id))
+        .group_by(Team.league_id)
+        .all()
+    ):
+        team_counts[league_id] = cnt
 
     catalog: list[dict[str, Any]] = []
     for slug, cfg in tiers_cfg["leagues"].items():
@@ -51,6 +61,7 @@ def get_league_catalog(db: Session) -> list[dict[str, Any]]:
                 "has_fbref_coverage": any(
                     r.source == "fbref" and r.status == "active" for r in rows
                 ),
+                "team_count": team_counts.get(league.id, 0) if league else 0,
                 "seasons_available": sorted(
                     {s for r in rows for s in (r.seasons_available or [])}
                 ),
