@@ -25,8 +25,10 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 
+from app import auth
 from app.api.assistant_views import router as assistant_router
 from app.api.billing_views import router as billing_router
+from app.api.dashboard_views import router as dashboard_router
 from app.api.e2e_views import router as e2e_router
 from app.api.public_views import router as public_api_router
 from app.api.registry_view import public_meta
@@ -66,7 +68,7 @@ app.include_router(workspace_router)
 app.include_router(search_router)
 app.include_router(report_router)
 app.include_router(watch_router)
-
+app.include_router(dashboard_router)
 
 @app.middleware("http")
 async def attach_api_rate_limit_headers(request: Request, call_next):
@@ -242,7 +244,8 @@ def player_search(
 
 
 @app.get("/api/v1/players/by-slug/{slug}")
-def player_by_slug(slug: str):
+def player_by_slug(slug: str, request: Request):
+    from app.activity import log_activity
     from app.api.player_view import build_player_payload
     from app.queries.player_queries import resolve_player_slug
 
@@ -257,6 +260,23 @@ def player_by_slug(slug: str):
             raise HTTPException(status_code=404, detail="player has no profile data")
         payload["player"]["canonical_slug"] = resolved["canonical_slug"]
         payload["player"]["is_canonical"] = resolved["canonical"]
+
+        # Phase 13: log view activity (deduplicated, best-effort)
+        try:
+            user = auth.user_from_session(
+                db, request.cookies.get(get_settings().session_cookie_name)
+            )
+            if user is not None:
+                log_activity(
+                    db,
+                    user_id=user.id,
+                    entity_type="player",
+                    entity_id=resolved["player_id"],
+                    action_type="viewed",
+                )
+        except Exception:
+            pass  # activity logging must never break profile loading
+
         return payload
 
 
