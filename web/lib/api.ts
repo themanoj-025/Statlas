@@ -279,7 +279,7 @@ export const api = {
     email_enabled?: boolean;
     alert_type_preferences?: Record<string, boolean>;
     digest_frequency?: string;
-  }) => post<WatchPreferences>("/api/v1/watch/preferences", patch),
+  }) => put<WatchPreferences>("/api/v1/watch/preferences", patch),
 };
 
 async function del<T>(path: string): Promise<T> {
@@ -301,6 +301,28 @@ async function del<T>(path: string): Promise<T> {
   }
   // 204 No Content (report delete) has no body — resolve to an empty object.
   if (res.status === 204) return {} as T;
+  return res.json() as Promise<T>;
+}
+
+async function put<T>(path: string, body: unknown, init?: RequestInit): Promise<T> {
+  const res = await fetch(`${API_URL}${path}`, {
+    method: "PUT",
+    credentials: "include",
+    cache: "no-store",
+    headers: { "Content-Type": "application/json", Accept: "application/json", ...(init?.headers ?? {}) },
+    body: JSON.stringify(body),
+    ...init,
+  });
+  if (!res.ok) {
+    let detail = `API ${res.status}`;
+    try {
+      const parsed = await res.json();
+      if (typeof parsed.detail === "string") detail = parsed.detail;
+    } catch {
+      /* non-JSON */
+    }
+    throw new ApiError(res.status, detail);
+  }
   return res.json() as Promise<T>;
 }
 

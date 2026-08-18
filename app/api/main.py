@@ -54,7 +54,7 @@ app.add_middleware(
     # Phase 4: auth uses cookie sessions, so credentialed requests are allowed
     # from the web app origin (billing POST routes included).
     allow_credentials=True,
-    allow_methods=["GET", "POST", "DELETE", "OPTIONS"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allow_headers=["*"],
 )
 

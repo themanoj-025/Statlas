@@ -32,6 +32,7 @@ from app.models import (
     Team,
     User,
     Watch,
+    WatchAlert,
 )
 
 router = APIRouter(prefix="/api/v1/e2e", tags=["e2e-fixtures"])
@@ -99,7 +100,10 @@ def seed_alert(body: SeedAlertBody):
         if player is None:
             raise HTTPException(status_code=404, detail="player not found")
 
-        # Follow (idempotent).
+        # Follow (idempotent) and pin the followed metric so the detection job
+        # evaluates THIS metric regardless of the player's position-group set
+        # (e.g. progressive_passes_p90 is not a GK metric — see
+        # alert-trigger-definitions.md §3 on metric-specific follows).
         watch = (
             db.query(Watch)
             .filter(Watch.user_id == user.id, Watch.entity_type == "player", Watch.entity_id == player.id)
@@ -108,6 +112,33 @@ def seed_alert(body: SeedAlertBody):
         if watch is None:
             watch = Watch(user_id=user.id, entity_type="player", entity_id=player.id)
             db.add(watch)
+            db.flush()
+        watch.followed_metrics = [body.metric]
+
+        # This watch's alerts are fixture-owned — purge them so re-runs are
+        # deterministic (fresh detection creates them again).
+        db.query(WatchAlert).filter(WatchAlert.watch_id == watch.id).delete(
+            synchronize_session=False
+        )
+
+        # Purge this fixture's OWN prior seeds for the player (identified by
+        # the fixture signature: empty raw_stats). Real pipeline snapshots
+        # always carry real raw_stats, so they are never touched.
+        prior = (
+            db.query(StatSnapshot)
+            .filter(
+                StatSnapshot.player_id == player.id,
+                StatSnapshot.raw_stats == {},
+            )
+            .all()
+        )
+        if prior:
+            prior_ids = [s.id for s in prior]
+            db.query(PercentileSnapshot).filter(
+                PercentileSnapshot.stat_snapshot_id.in_(prior_ids)
+            ).delete(synchronize_session=False)
+            for s in prior:
+                db.delete(s)
             db.flush()
 
         # A league/team context for the player (reuse existing snapshot data if
@@ -128,8 +159,26 @@ def seed_alert(body: SeedAlertBody):
                 raise HTTPException(status_code=500, detail="no league/team seeded — seed data first")
             team_id, league_id, season = team.id, league.id, "2025-26"
 
-        now = datetime.now(timezone.utc)
-        prev_date = now - timedelta(days=7)
+        # The fixture pair must BE the two most recent published snapshots for
+        # the player — otherwise the detection job compares against whatever
+        # real snapshot exists and the seeded movement is invisible. Both dates
+        # are anchored strictly AFTER the player's newest existing published
+        # snapshot, so no real snapshot can sit between them.
+        newest = (
+            db.query(StatSnapshot.scrape_date)
+            .join(PercentileSnapshot, PercentileSnapshot.stat_snapshot_id == StatSnapshot.id)
+            .filter(
+                StatSnapshot.player_id == player.id,
+                PercentileSnapshot.is_published.is_(True),
+            )
+            .order_by(StatSnapshot.scrape_date.desc())
+            .first()
+        )
+        anchor = newest[0] if newest and newest[0] else datetime.now(timezone.utc)
+        if anchor.tzinfo is None:
+            anchor = anchor.replace(tzinfo=timezone.utc)
+        prev_date = anchor + timedelta(days=1)
+        curr_date = anchor + timedelta(days=2)
         registry = load_registry()
         minutes = float(registry["qualifying_minutes"]) + 500
 
@@ -163,13 +212,13 @@ def seed_alert(body: SeedAlertBody):
             return snap
 
         _seed_snapshot(prev_date, body.from_percentile)
-        _seed_snapshot(now, body.to_percentile)
+        _seed_snapshot(curr_date, body.to_percentile)
         db.commit()
 
         # Run the REAL detection job (same entry point the weekly refresh calls).
         from app.watch.detection import detect_watch_triggers
 
-        report = detect_watch_triggers(db, now)
+        report = detect_watch_triggers(db, curr_date)
         return {
             "alerts_created": report.alerts_created,
             "player": player.canonical_name,
