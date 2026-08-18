@@ -15,6 +15,18 @@ type Entry = {
 const ENTRIES: Entry[] = [
   {
     date: "2026-08-18",
+    phase: "Phase 12 — full user accounts",
+    items: [
+      "Mandatory audit (docs/engineering/account-system-audit.md) confirmed Phase 4 built a real identity system: users table with email/password_hash, session_tokens with hashed values, all downstream tables (shortlists, saved_searches, reports, watches, notification_preferences) correctly referencing users.id. Path 1 (additive build) chosen — no breaking migration needed.",
+      "Password reset flow: single-use, time-limited tokens (60-min expiry, hashed before storage) via POST /api/v1/auth/password-reset/request and /confirm. The request endpoint always returns the same response regardless of email existence — account enumeration is not possible. Email verification follows the same pattern (24-hour tokens). Both are tested for single-use enforcement, expiry, and invalid-token rejection.",
+      "Login rate limiting: 5 failed attempts within 10 minutes triggers a 15-minute lockout with Retry-After header. Different emails are tracked independently. Successful login clears the failure counter. The lockout check runs before any password verification — no timing side-channel.",
+      "Profile settings on /account: display name, timezone (applied to timestamp display across the product), email verification status with one-click re-send, and password change form. Account deletion sets pending_deletion with a 30-day grace period — cancel by logging in. The danger zone is visually distinct with a left border accent.",
+      "Auth policy documented in docs/engineering/auth-policy.md: password requirements (8+ chars, PBKDF2-HMAC-SHA256, 600k iterations), session management (30-day rolling, HttpOnly/SameSite=Lax), account deletion behavior, and rate-limiting thresholds.",
+      "21 new unit tests (317 total): password-reset token lifecycle (create/consume/single-use/expiry/invalid), email-verification token lifecycle, login rate-limiting (threshold/expiry/clear/per-email independence), profile field updates, account deletion/cancellation, and post-migration data integrity (existing users retain shortlists and watches).",
+    ],
+  },
+  {
+    date: "2026-08-18",
     phase: "Phase 11 — league intelligence pages",
     items: [
       "Every league gets a proper home page at /leagues/{slug}: league header with metadata (country, tier, season, team count, qualifying player count), four curated category leaderboards (top scorers, best creators, best progressors, best defenders) built by composing the existing leaderboard query function per position group, an emerging-players section with scores and contributing factors, a teams grid linking to existing team profile pages, and honest coverage/freshness notes. Standings data is not available in MVP, and the page says so explicitly — no silently empty section that could be mistaken for a bug.",
