@@ -230,6 +230,7 @@ Statlas/
 │   │   ├── tiers.json             # league tiers + external ids
 │   │   ├── pricing.json           # plan boundaries + limits (incl. workspace/search caps)
 │   │   └── search_presets.json    # Phase 8 curated presets (public, not user-owned)
+│   ├── activity.py                # Phase 13 activity tracking (60s dedup, view logging)
 │   ├── auth.py                    # password hashing, sessions, rate limiting (Phase 4+12)
 │   ├── db.py                      # engine/session management
 │   ├── models.py                  # ORM models mirroring schema.sql
@@ -253,7 +254,8 @@ Statlas/
 │   │   ├── reports.py             # Phase 9 grounded report pipeline + confidence + verification gate
 │   │   ├── watch_queries.py       # Phase 10 watches/alerts/preferences CRUD + authz + slugs
 │   │   ├── emerging_queries.py    # Phase 11 emerging-player scores read
-│   │   └── league_page_queries.py # Phase 11 league hub aggregation (compose existing queries)
+│   │   ├── league_page_queries.py # Phase 11 league hub aggregation (compose existing queries)
+│   │   └── dashboard_queries.py   # Phase 13 dashboard queries (activity, workspace, trending, recommended, saved)
 │   ├── report_export.py           # Phase 9 JSON/PDF/CSV exports from the verified report object
 │   ├── watch/
 │   │   ├── detection.py           # Phase 10 trigger detection: batch-loaded, idempotent, threshold-exact
@@ -270,7 +272,8 @@ Statlas/
 │   │   ├── workspace_views.py     # workspace routes, session auth (Phase 7)
 │   │   ├── search_views.py        # Phase 8 search routes, session auth
 │   │   ├── report_views.py        # Phase 9 report routes, session auth (EP-35–41)
-│   │   └── watch_views.py         # Phase 10 watch routes + sessionless signed unsubscribe (EP-42–48)
+│   │   ├── watch_views.py         # Phase 10 watch routes + sessionless signed unsubscribe (EP-42–48)
+│   │   └── dashboard_views.py     # Phase 13 dashboard routes (activity, summary, saved, dismiss)
 │   ├── reconciliation.py          # player name reconciliation
 │   ├── schema.sql                 # canonical PostgreSQL DDL
 │   └── sources/
@@ -365,6 +368,7 @@ Statlas/
 │   ├── test_reports.py
 │   ├── test_league_hub.py          # Phase 11 emerging-player + league hub tests
 │   ├── test_accounts.py            # Phase 12 account system tests (317 total)
+│   ├── test_dashboard.py           # Phase 13 dashboard tests (335 total)
 │   └── test_watch.py
 └── web/
     ├── .dockerignore
@@ -433,6 +437,7 @@ Statlas/
 │   ├── phase10.spec.ts
     │   ├── phase11.spec.ts
     │   ├── phase12.spec.ts
+    │   ├── phase13.spec.ts
     │   └── phase9.spec.ts
     ├── lib/
     │   ├── api.ts
@@ -1081,6 +1086,7 @@ Statlas/
 | `test_watch.py` | 950 | Phase 10 watchlist: threshold boundary cases (just-below silent, just-above and exactly-at alert — inclusive), qualification-floor behavior, idempotency (re-run creates nothing), club-change fires-once across three snapshots, new-season once-per-season, coverage-gained + source-anomaly alerts, watched-metrics refinement, watch CRUD + unique-entity idempotency, cross-user 404s (read + write), free-tier cap with honest upsell, alert read/dismiss, preferences validation, THE preference-compliance test (opted-out type produces no email), digest batching (two alerts → one email), weekly-digest day logic, sessionless signed unsubscribe (valid/invalid), e2e fixture hard-disabled |
 | `test_league_hub.py` | 303 | Phase 11 league hub: emerging-player score computation (strong upward trend → above threshold, flat → below, unqualified excluded, idempotent rerun, younger > older with same trend), league hub aggregation (standings_available: false, 404 for unknown league) |
 | `test_accounts.py` | 21 tests | Phase 12 account system: password-reset token lifecycle (create/consume/single-use/expiry/invalid), email-verification token lifecycle, login rate-limiting (threshold/expiry/clear/per-email independence), profile field updates, account deletion/cancellation, and post-migration data integrity (existing users retain shortlists and watches) |
+| `test_dashboard.py` | 18 tests | Phase 13 dashboard: activity logging (create, 60s dedup, post-window, different-entity), workspace summary (empty, counts, deleted-shortlist exclusion), trending players (upward movement, viewed exclusion), recommendations (position-group matching, viewed exclusion, dismissed exclusion), saved players (save, idempotent duplicate, unsave, unsave-nonexistent), dashboard state (create, reuse, dismiss persistence) |
 | `test_understat.py` | 121 | Embedded-JSON extraction, POST fallback (live-drift fixture), loud schema error |
 
 **Fixtures** (`tests/fixtures/`): `fbref_league.html` (19 KB real-shaped FBref page),
@@ -1170,6 +1176,7 @@ Statlas/
 | `/reports` | `reports/page.tsx` (20) + `ReportsClient.tsx` (460) | Phase 9 report history: quota status, report cards labelled with data-snapshot date, expandable viewer (all sections + expandable evidence appendix tracing every claim to its source call), regenerate-with-current-data (fresh verified row), delete, PDF/JSON/CSV exports (409 while needs_review), needs-review hold surfaced honestly, loading/empty/error/signed-out states |
 | `/watchlist` | `watchlist/page.tsx` (30) + `WatchlistClient.tsx` (330) | Phase 10 watchlist: followed entities with unread counts + recent alerts per entity, unfollow (alert history retained), alert-detail modal showing the full real supporting data, onboarding/empty/error states, link to notification settings |
 | `/watchlist/settings` | `watchlist/settings/page.tsx` (25) + `PreferencesClient.tsx` (180) | Phase 10 notification preferences: email on/off, per-trigger-type opt-in/out with exact threshold descriptions, digest frequency, save feedback |
+| `/dashboard` | `dashboard/page.tsx` (16) + `DashboardClient.tsx` (310) | Phase 13 personal dashboard: workspace shortcuts (shortlist/search/report/watch counts + badges), recently viewed (activity log), trending this week (sustained percentile gains), saved players (bookmarks with unsave), recommended for you (position-group heuristic with per-rec explanation + dismiss). All with loading skeleton, empty-state guidance, error retry. Signed-out onboarding prompt. |
 | `/login` / `/register` / `/account` | `login/`, `register/`, `account/` | Phase 4 auth surfaces (register/login forms, account dashboard with subscription/API keys) |
 | `/players/[slug]/opengraph-image` | `players/[slug]/opengraph-image.tsx` | Player OG image (real data) |
 | `/clubs/[leagueSlug]/[teamSlug]` | `clubs/[...]/page.tsx` (172) | SSR team profile: roster table, squad radar, logo placeholder |
