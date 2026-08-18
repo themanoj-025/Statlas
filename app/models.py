@@ -383,11 +383,17 @@ class Fixture(Base):
     )
 
 
+ACCOUNT_STATUS_ENUM = Enum(
+    "active", "suspended", "pending_deletion", name="account_status"
+)
+
+
 class User(Base):
-    """Statlas account (Phase 4 — Part A). Passwords are stored as PBKDF2-HMAC
-    hashes (never plaintext — Constitution §4 security, D3); sessions are
-    separate token rows. The `plan` column is a convenience mirror of the
-    subscriptions table; access decisions always read `has_pro_access`."""
+    """Statlas account (Phase 4 — Part A, extended Phase 12). Passwords are
+    stored as PBKDF2-HMAC hashes (never plaintext — Constitution §4 security,
+    D3); sessions are separate token rows. The `plan` column is a convenience
+    mirror of the subscriptions table; access decisions always read
+    `has_pro_access`."""
 
     __tablename__ = "users"
 
@@ -395,8 +401,22 @@ class User(Base):
     email: Mapped[str] = mapped_column(String(320), nullable=False)
     password_hash: Mapped[str] = mapped_column(String(255), nullable=False)
     plan: Mapped[str] = mapped_column(PLAN_ENUM, nullable=False, default="free")
+    # Phase 12 — full identity fields
+    display_name: Mapped[str | None] = mapped_column(String(128), nullable=True)
+    email_verified_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    account_status: Mapped[str] = mapped_column(
+        ACCOUNT_STATUS_ENUM, nullable=False, default="active"
+    )
+    timezone: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    locale: Mapped[str | None] = mapped_column(String(10), nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=func.now()
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now(),
+        onupdate=func.now(),
     )
 
     subscriptions: Mapped[list["Subscription"]] = relationship(
@@ -436,6 +456,52 @@ class SessionToken(Base):
     __table_args__ = (
         UniqueConstraint("token_hash", name="uq_session_token_hash"),
         Index("ix_session_user", "user_id"),
+    )
+
+
+class PasswordResetToken(Base):
+    """Single-use, time-limited password-reset token (Phase 12 — Part B)."""
+
+    __tablename__ = "password_reset_tokens"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), nullable=False)
+    token_hash: Mapped[str] = mapped_column(String(64), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )
+    expires_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False
+    )
+    used_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+
+    __table_args__ = (
+        Index("ix_password_reset_user", "user_id"),
+    )
+
+
+class EmailVerificationToken(Base):
+    """Single-use, time-limited email-verification token (Phase 12 — Part B)."""
+
+    __tablename__ = "email_verification_tokens"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), nullable=False)
+    token_hash: Mapped[str] = mapped_column(String(64), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )
+    expires_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False
+    )
+    used_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+
+    __table_args__ = (
+        Index("ix_email_verification_user", "user_id"),
     )
 
 

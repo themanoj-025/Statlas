@@ -386,6 +386,72 @@
 | Response 200 | `{ "slug", "name", "country", "tier", "tier_label", "season", "team_count", "player_count", "standings_available": false, "categories": [{ "key", "label", "metric", "metric_name", "entries": [...] }], "emerging_players": [{ "player_id", "name", "slug", "score", ... }], "teams": [...], "coverage", "latest_snapshot_date" }` |
 | Errors | 404 |
 
+### EP-50 Password reset request (Phase 12)
+| | |
+|---|---|
+| Method/Path | `POST /api/v1/auth/password-reset/request` |
+| Body | `{ "email" }` |
+| Auth | none |
+| Response 200 | `{ "detail": "If an account with that email exists, a reset link has been sent." }` — same response whether email exists or not (prevents enumeration) |
+
+### EP-51 Password reset confirm (Phase 12)
+| | |
+|---|---|
+| Method/Path | `POST /api/v1/auth/password-reset/confirm` |
+| Body | `{ "token", "new_password" }` |
+| Auth | none (token is the auth) |
+| Response 200 | `{ "detail": "Password has been reset."` |
+| Errors | 400 invalid/expired/used token |
+
+### EP-52 Email verification request (Phase 12)
+| | |
+|---|---|
+| Method/Path | `POST /api/v1/auth/verify-email/request` |
+| Auth | session cookie |
+| Response 200 | `{ "detail": "Verification link sent."` |
+
+### EP-53 Email verification confirm (Phase 12)
+| | |
+|---|---|
+| Method/Path | `POST /api/v1/auth/verify-email/confirm` |
+| Body | `{ "token" }` |
+| Auth | none (token is the auth) |
+| Response 200 | `{ "detail": "Email verified."` |
+| Errors | 400 invalid/expired/used token |
+
+### EP-54 Update profile (Phase 12)
+| | |
+|---|---|
+| Method/Path | `PUT /api/v1/auth/profile` |
+| Body | `{ "display_name"?, "timezone"?, "locale"? }` |
+| Auth | session cookie |
+| Response 200 | user payload with updated fields |
+
+### EP-55 Change password (Phase 12)
+| | |
+|---|---|
+| Method/Path | `POST /api/v1/auth/change-password` |
+| Body | `{ "current_password", "new_password" }` |
+| Auth | session cookie |
+| Response 200 | `{ "detail": "Password changed."` |
+| Errors | 400 incorrect current password |
+
+### EP-56 Delete account (Phase 12)
+| | |
+|---|---|
+| Method/Path | `POST /api/v1/auth/delete-account` |
+| Body | `{ "confirm_delete": true }` |
+| Auth | session cookie |
+| Response 200 | `{ "detail": "Account scheduled for deletion in 30 days."` |
+
+### EP-57 Cancel deletion (Phase 12)
+| | |
+|---|---|
+| Method/Path | `POST /api/v1/auth/cancel-deletion` |
+| Auth | session cookie |
+| Response 200 | `{ "detail": "Account deletion cancelled."` |
+| Errors | 400 no pending deletion |
+
 ## 3. Error Codes
 
 | Code | Meaning | Handling |
