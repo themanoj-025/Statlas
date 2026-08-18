@@ -893,3 +893,38 @@ class AssistantQuota(Base):
     __table_args__ = (
         UniqueConstraint("user_id", "period_start", name="uq_assistant_quota_period"),
     )
+
+
+# ---------------------------------------------------------------------------
+# Phase 11 — Emerging player scores (computed during weekly refresh)
+# ---------------------------------------------------------------------------
+# One row per (player, league, computed_date). The score is a weighted
+# composite of trend magnitude, consistency, age, and sample size — see
+# docs/analytics/emerging-player-methodology.md for the full formula.
+# Idempotency: re-running for the same computed_date replaces rows.
+
+class EmergingPlayerScore(Base):
+    __tablename__ = "emerging_player_scores"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    player_id: Mapped[int] = mapped_column(ForeignKey("players.id"), nullable=False)
+    league_id: Mapped[int] = mapped_column(ForeignKey("leagues.id"), nullable=False)
+    computed_date: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False
+    )
+    score: Mapped[float] = mapped_column(Float, nullable=False)
+    contributing_factors: Mapped[dict] = mapped_column(
+        JSON, nullable=False, default=dict
+    )  # {trend_magnitude, trend_consistency, age_weight, sample_weight, ...}
+
+    player: Mapped[Player] = relationship()
+    league: Mapped[League] = relationship()
+
+    __table_args__ = (
+        UniqueConstraint(
+            "player_id", "league_id", "computed_date",
+            name="uq_emerging_player_league_date",
+        ),
+        Index("ix_emerging_league_date", "league_id", "computed_date"),
+        Index("ix_emerging_score", "league_id", "computed_date", "score"),
+    )
