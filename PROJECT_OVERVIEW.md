@@ -230,6 +230,7 @@ Statlas/
 │   │   ├── tiers.json             # league tiers + external ids
 │   │   ├── pricing.json           # plan boundaries + limits (incl. workspace/search caps)
 │   │   └── search_presets.json    # Phase 8 curated presets (public, not user-owned)
+│   ├── auth.py                    # password hashing, sessions, rate limiting (Phase 4+12)
 │   ├── db.py                      # engine/session management
 │   ├── models.py                  # ORM models mirroring schema.sql
 │   ├── orchestration/
@@ -264,7 +265,7 @@ Statlas/
 │   │   ├── player_view.py         # player profile payload builder
 │   │   ├── public_views.py        # public API keys/rate limits
 │   │   ├── registry_view.py       # methodology meta
-│   │   ├── billing_views.py       # auth + Stripe (Phase 4)
+│   │   ├── billing_views.py       # auth + billing + profile + password-reset (Phase 4+12)
 │   │   ├── assistant_views.py     # grounded AI assistant (Phase 4)
 │   │   ├── workspace_views.py     # workspace routes, session auth (Phase 7)
 │   │   ├── search_views.py        # Phase 8 search routes, session auth
@@ -362,7 +363,9 @@ Statlas/
 │   ├── test_workspace.py
 │   ├── test_structured_search.py
 │   ├── test_reports.py
-│   ├── test_watch.py
+│   ├── test_league_hub.py          # Phase 11 emerging-player + league hub tests
+│   ├── test_accounts.py            # Phase 12 account system tests (317 total)
+│   └── test_watch.py
 └── web/
     ├── .dockerignore
     ├── .gitignore
@@ -429,6 +432,7 @@ Statlas/
     │   ├── phase8.spec.ts
 │   ├── phase10.spec.ts
     │   ├── phase11.spec.ts
+    │   ├── phase12.spec.ts
     │   └── phase9.spec.ts
     ├── lib/
     │   ├── api.ts
@@ -1076,6 +1080,7 @@ Statlas/
 | `test_reports.py` | 800 | Phase 9 reports: the verification-rejection test (a deliberately fabricated statistic is caught by the hard gate), confidence scoring (full-season/complete → high; sparse/stale → low), risk-factor rules incl. the out-of-scope statement, full pipeline (deterministic narrator → verified → stored, evidence appendix), workspace-context inclusion/omission/ownership, cross-user 404s, Pro quota caps with honest upsell, JSON/PDF/CSV exports, API-level generation/export flow |
 | `test_watch.py` | 950 | Phase 10 watchlist: threshold boundary cases (just-below silent, just-above and exactly-at alert — inclusive), qualification-floor behavior, idempotency (re-run creates nothing), club-change fires-once across three snapshots, new-season once-per-season, coverage-gained + source-anomaly alerts, watched-metrics refinement, watch CRUD + unique-entity idempotency, cross-user 404s (read + write), free-tier cap with honest upsell, alert read/dismiss, preferences validation, THE preference-compliance test (opted-out type produces no email), digest batching (two alerts → one email), weekly-digest day logic, sessionless signed unsubscribe (valid/invalid), e2e fixture hard-disabled |
 | `test_league_hub.py` | 303 | Phase 11 league hub: emerging-player score computation (strong upward trend → above threshold, flat → below, unqualified excluded, idempotent rerun, younger > older with same trend), league hub aggregation (standings_available: false, 404 for unknown league) |
+| `test_accounts.py` | 21 tests | Phase 12 account system: password-reset token lifecycle (create/consume/single-use/expiry/invalid), email-verification token lifecycle, login rate-limiting (threshold/expiry/clear/per-email independence), profile field updates, account deletion/cancellation, and post-migration data integrity (existing users retain shortlists and watches) |
 | `test_understat.py` | 121 | Embedded-JSON extraction, POST fallback (live-drift fixture), loud schema error |
 
 **Fixtures** (`tests/fixtures/`): `fbref_league.html` (19 KB real-shaped FBref page),
@@ -1211,6 +1216,9 @@ Statlas/
   hub page renders category leaderboards + teams grid + honest standings note,
   emerging-player section links to methodology, player links navigate to profiles,
   header nav contains Leagues link, axe green on index and hub pages.
+- **`phase12.spec.ts`**: register → account page shows profile fields, login page has
+  forgot-password link, reset-password page renders form, security section with password
+  change, danger zone with delete button, axe green on account, reset-password, and login pages.
 - **`breakpoints.spec.ts`** (61): no-horizontal-overflow assertion at 375/768/1440px in
   light + dark themes across 8 core pages.
 

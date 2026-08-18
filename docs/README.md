@@ -58,7 +58,9 @@ docs/
 │   ├── phase3-verification-log.md   Phase 3 (trend/maps/sharing) audit — every
 │   │                               Part A–D item mapped to code + tests
 │   ├── phase4-security-review.md   Phase 4 payment/API-key security review (D3)
-│   └── watch-detection-scaling-notes.md  Phase 10 batch-query strategy + scaling path
+│   ├── watch-detection-scaling-notes.md  Phase 10 batch-query strategy + scaling path
+│   ├── account-system-audit.md    Phase 12 account system audit (Path 1 — additive build)
+│   └── auth-policy.md             Phase 12 auth policy (password, session, rate-limit, deletion)
 ├── billing/                       Phase 4 billing
 │   ├── pricing-config.md          tier boundaries + Stripe Products/Prices map
 │   └── live-verification-log.md   live Stripe verification or BLOCKED status (Part A1)
