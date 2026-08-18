@@ -856,3 +856,57 @@ export const DIGEST_FREQUENCY_LABELS: Record<DigestFrequency, string> = {
 };
 
 export const EMERGING_SCORE_THRESHOLD = 0.50;
+
+// Phase 13 — dashboard types
+export type DashboardActivityItem = {
+  entity_type: string;
+  entity_id: number;
+  action_type: string;
+  performed_at: string;
+  player_name?: string;
+  team_name?: string | null;
+  position_group?: string;
+};
+
+export type DashboardWorkspace = {
+  shortlist_count: number;
+  saved_search_count: number;
+  report_count: number;
+  watch_count: number;
+  unread_alert_count: number;
+};
+
+export type DashboardTrendingPlayer = {
+  player_id: number;
+  player_name: string;
+  team_name: string | null;
+  position_group: string | null;
+  avg_gain: number;
+  explanation: string;
+};
+
+export type DashboardRecommendedPlayer = {
+  player_id: number;
+  player_name: string;
+  team_name: string | null;
+  position_group: string | null;
+  avg_percentile: number;
+  explanation: string;
+};
+
+export type DashboardSavedPlayer = {
+  player_id: number;
+  player_name: string;
+  team_name: string | null;
+  position_group: string | null;
+  saved_at: string;
+  category: string | null;
+};
+
+export type DashboardSummary = {
+  recent_activity: DashboardActivityItem[];
+  workspace: DashboardWorkspace;
+  trending_players: DashboardTrendingPlayer[];
+  recommended_players: DashboardRecommendedPlayer[];
+  saved_players: DashboardSavedPlayer[];
+};

@@ -3068,3 +3068,211 @@ table,
   margin: var(--space-1) 0 0;
   max-width: 240px;
 }
+
+/* =====================================================================
+   Phase 13 — Dashboard
+   ===================================================================== */
+
+.dashboard {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: var(--space-4) var(--space-3);
+}
+
+.dashboard__title {
+  font-size: var(--text-2xl);
+  font-weight: 700;
+  margin: 0 0 var(--space-4);
+}
+
+.dashboard__section {
+  margin-bottom: var(--space-4);
+}
+
+.dashboard__section-title {
+  font-size: var(--text-base);
+  font-weight: 600;
+  margin: 0 0 var(--space-2);
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.dashboard__icon {
+  opacity: 0.6;
+}
+
+/* Shortcuts row */
+
+.dashboard__shortcuts {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--space-2);
+  margin-bottom: var(--space-4);
+}
+
+@media (max-width: 768px) {
+  .dashboard__shortcuts {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.dashboard__shortcut-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-1);
+  padding: var(--space-3) var(--space-2);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  text-decoration: none;
+  color: inherit;
+  transition: border-color 0.15s;
+}
+
+.dashboard__shortcut-card:hover {
+  border-color: var(--color-accent);
+}
+
+.dashboard__shortcut-icon {
+  opacity: 0.5;
+}
+
+.dashboard__shortcut-label {
+  font-size: var(--text-sm);
+  font-weight: 500;
+}
+
+.dashboard__shortcut-count {
+  font-size: var(--text-xl);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.dashboard__shortcut-badge {
+  font-size: var(--text-xs);
+  background: var(--color-danger);
+  color: #fff;
+  padding: 2px 6px;
+  border-radius: 999px;
+  font-weight: 600;
+}
+
+/* Two-column layout */
+
+.dashboard__columns {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-4);
+}
+
+@media (max-width: 768px) {
+  .dashboard__columns {
+    grid-template-columns: 1fr;
+  }
+}
+
+.dashboard__main,
+.dashboard__side {
+  min-width: 0;
+}
+
+/* Player list */
+
+.dashboard__player-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.dashboard__player-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-2);
+  border-bottom: 1px solid var(--color-border);
+  gap: var(--space-2);
+}
+
+.dashboard__player-row:last-child {
+  border-bottom: none;
+}
+
+.dashboard__player-link {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  text-decoration: none;
+  color: inherit;
+  min-width: 0;
+  flex: 1;
+}
+
+.dashboard__player-link:hover .dashboard__player-name {
+  color: var(--color-accent);
+}
+
+.dashboard__player-name {
+  font-size: var(--text-sm);
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.dashboard__player-meta {
+  display: flex;
+  gap: var(--space-1);
+  font-size: var(--text-xs);
+  opacity: 0.6;
+}
+
+.dashboard__player-pos {
+  font-weight: 500;
+}
+
+.dashboard__player-action {
+  font-size: var(--text-xs);
+  opacity: 0.5;
+  white-space: nowrap;
+}
+
+.dashboard__trending-gain {
+  font-size: var(--text-xs);
+  font-weight: 600;
+  color: var(--color-data-positive);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.dashboard__recommendation-why {
+  font-size: var(--text-xs);
+  opacity: 0.6;
+  margin-top: 2px;
+}
+
+.dashboard__empty {
+  font-size: var(--text-sm);
+  opacity: 0.5;
+  padding: var(--space-3);
+  text-align: center;
+  background: var(--color-surface);
+  border: 1px dashed var(--color-border);
+  border-radius: var(--radius-md);
+}
+
+/* Skeleton extras */
+
+.skeleton--text {
+  height: 16px;
+  border-radius: var(--radius-sm);
+}
+
+.skeleton--block {
+  height: 80px;
+  border-radius: var(--radius-md);
+}
