@@ -221,6 +221,7 @@ Statlas/
 │   ├── compute/
 │   │   ├── __init__.py
 │   │   ├── anomaly_check.py       # bounds + cross-source anomaly detection
+│   │   ├── emerging.py            # Phase 11 emerging-player score (weekly refresh step)
 │   │   ├── index.py               # Statlas Index pure calc + verifier
 │   │   └── percentiles.py         # percentile + index computation job
 │   ├── config.py                  # env settings, registry/tier loaders
@@ -249,7 +250,9 @@ Statlas/
 │   │   ├── workspace_queries.py   # shortlists/entries/notes/tags/history + authz (Phase 7)
 │   │   ├── structured_search.py   # Phase 8 query translation + saved/history/presets
 │   │   ├── reports.py             # Phase 9 grounded report pipeline + confidence + verification gate
-│   │   └── watch_queries.py       # Phase 10 watches/alerts/preferences CRUD + authz + slugs
+│   │   ├── watch_queries.py       # Phase 10 watches/alerts/preferences CRUD + authz + slugs
+│   │   ├── emerging_queries.py    # Phase 11 emerging-player scores read
+│   │   └── league_page_queries.py # Phase 11 league hub aggregation (compose existing queries)
 │   ├── report_export.py           # Phase 9 JSON/PDF/CSV exports from the verified report object
 │   ├── watch/
 │   │   ├── detection.py           # Phase 10 trigger detection: batch-loaded, idempotent, threshold-exact
@@ -424,7 +427,9 @@ Statlas/
     │   ├── phase6.spec.ts
     │   ├── phase7.spec.ts
     │   ├── phase8.spec.ts
-│   └── phase9.spec.ts
+│   ├── phase10.spec.ts
+    │   ├── phase11.spec.ts
+    │   └── phase9.spec.ts
     ├── lib/
     │   ├── api.ts
     │   ├── chartSvg.test.ts
@@ -1070,6 +1075,7 @@ Statlas/
 | `test_structured_search.py` | 887 | Phase 8 structured search: hand-calculated query translation (multi-condition AND, percentile+raw mixing, lte/between), always-applied minutes floor, missing-metric exclusion, empty-result diagnostics, grammar validation (OR rejected, >8 conditions, unknown metric), saved-search CRUD + staleness-on-rerun + free cap, history auto-log + 50-cap + rerun, cross-user 404s, presets validate, API-level auth + error mapping |
 | `test_reports.py` | 800 | Phase 9 reports: the verification-rejection test (a deliberately fabricated statistic is caught by the hard gate), confidence scoring (full-season/complete → high; sparse/stale → low), risk-factor rules incl. the out-of-scope statement, full pipeline (deterministic narrator → verified → stored, evidence appendix), workspace-context inclusion/omission/ownership, cross-user 404s, Pro quota caps with honest upsell, JSON/PDF/CSV exports, API-level generation/export flow |
 | `test_watch.py` | 950 | Phase 10 watchlist: threshold boundary cases (just-below silent, just-above and exactly-at alert — inclusive), qualification-floor behavior, idempotency (re-run creates nothing), club-change fires-once across three snapshots, new-season once-per-season, coverage-gained + source-anomaly alerts, watched-metrics refinement, watch CRUD + unique-entity idempotency, cross-user 404s (read + write), free-tier cap with honest upsell, alert read/dismiss, preferences validation, THE preference-compliance test (opted-out type produces no email), digest batching (two alerts → one email), weekly-digest day logic, sessionless signed unsubscribe (valid/invalid), e2e fixture hard-disabled |
+| `test_league_hub.py` | 303 | Phase 11 league hub: emerging-player score computation (strong upward trend → above threshold, flat → below, unqualified excluded, idempotent rerun, younger > older with same trend), league hub aggregation (standings_available: false, 404 for unknown league) |
 | `test_understat.py` | 121 | Embedded-JSON extraction, POST fallback (live-drift fixture), loud schema error |
 
 **Fixtures** (`tests/fixtures/`): `fbref_league.html` (19 KB real-shaped FBref page),
@@ -1198,6 +1204,13 @@ Statlas/
   downloads, needs-review export-block surfaced, generate-from-shortlist-entry with
   workspace context, free-tier honest upsell, axe on the reports page with the
   appendix open.
+- **`phase10.spec.ts`**: follow/unfollow from a player profile (toggle state), seeded
+  alert detail with real percentile values, bell notification dropdown, notification
+  preferences save, signed-out prompt, axe on watchlist page and bell dropdown.
+- **`phase11.spec.ts`**: league index page lists leagues by tier with links, league
+  hub page renders category leaderboards + teams grid + honest standings note,
+  emerging-player section links to methodology, player links navigate to profiles,
+  header nav contains Leagues link, axe green on index and hub pages.
 - **`breakpoints.spec.ts`** (61): no-horizontal-overflow assertion at 375/768/1440px in
   light + dark themes across 8 core pages.
 
