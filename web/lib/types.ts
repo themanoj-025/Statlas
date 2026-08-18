@@ -354,6 +354,11 @@ export type MePayload = {
   email: string;
   plan: Plan;
   has_pro: boolean;
+  display_name: string | null;
+  email_verified_at: string | null;
+  account_status: string;
+  timezone: string | null;
+  locale: string | null;
 };
 
 export type SubscriptionStatusPayload = {
