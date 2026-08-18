@@ -66,6 +66,7 @@ class RefreshReport:
     events_unmatched: int = 0
     alerts_created: int = 0
     alerts_by_type: dict[str, int] = field(default_factory=dict)
+    emerging_scores: int = 0
     errors: list[str] = field(default_factory=list)
 
     def add(self, **kw: Any) -> None:
@@ -408,6 +409,18 @@ def run_weekly_refresh(
     watch_report = detect_watch_triggers(db, snapshot_date)
     report.alerts_created = watch_report.alerts_created
     report.alerts_by_type = dict(watch_report.by_type)
+
+    # --- 8. emerging player scores (Phase 11) --------------------------------
+    # After publish: compute emerging-player scores for all leagues.
+    # Idempotent: re-running for the same computed_date replaces rows.
+    from app.compute.emerging import compute_emerging_scores
+
+    emerging_count = compute_emerging_scores(
+        db,
+        snapshot_date=snapshot_date,
+        season=season,
+    )
+    report.emerging_scores = emerging_count
 
     # --- optional extra layers -----------------------------------------------
     if do_statsbomb and statsbomb_source is not None:

@@ -490,4 +490,24 @@ CREATE TABLE report_quotas (
     UNIQUE (user_id, period_start)
 );
 
+-- ===========================================================================
+-- Phase 11 — Emerging player scores (computed during weekly refresh)
+-- ===========================================================================
+-- One row per (player, league, computed_date). The score is a weighted
+-- composite of trend magnitude, consistency, age, and sample size — see
+-- docs/analytics/emerging-player-methodology.md for the full formula.
+-- Idempotency: re-running for the same computed_date replaces rows.
+
+CREATE TABLE emerging_player_scores (
+    id                   SERIAL PRIMARY KEY,
+    player_id            INTEGER     NOT NULL REFERENCES players(id),
+    league_id            INTEGER     NOT NULL REFERENCES leagues(id),
+    computed_date        TIMESTAMPTZ NOT NULL,
+    score                DOUBLE PRECISION NOT NULL,           -- 0.0-1.0
+    contributing_factors JSONB       NOT NULL DEFAULT '{}',   -- per-factor breakdown for transparency
+    UNIQUE (player_id, league_id, computed_date)
+);
+CREATE INDEX ix_emerging_league_date ON emerging_player_scores (league_id, computed_date);
+CREATE INDEX ix_emerging_score ON emerging_player_scores (league_id, computed_date, score DESC);
+
 COMMIT;
