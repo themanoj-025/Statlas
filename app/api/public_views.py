@@ -20,9 +20,8 @@ from typing import Any
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from pydantic import BaseModel, Field
 
-from app import api_keys, auth
+from app import api_keys
 from app.api.deps import require_user, session_token
-from app.config import get_settings
 from app.db import session_scope
 from app.models import User
 from app.queries import leaderboard_queries, player_queries
