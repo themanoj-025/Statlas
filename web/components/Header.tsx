@@ -18,6 +18,7 @@ const NAV_ITEMS = [
   { href: "/search", label: "Search" },
   { href: "/compare", label: "Compare" },
   { href: "/trend", label: "Trend" },
+  { href: "/tactical", label: "Tactical" },
   { href: "/methodology", label: "Methodology" },
   { href: "/pricing", label: "Pricing" },
   { href: "/data-coverage", label: "Data coverage" },
