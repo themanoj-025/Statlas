@@ -9,14 +9,12 @@ defensive density, possession density, and pressure success rate per zone.
 
 from __future__ import annotations
 
-import math
 from collections import defaultdict
 from typing import Any
 
 from sqlalchemy.orm import Session
 
 from app.models import MatchEvent
-
 
 # ---------------------------------------------------------------------------
 # C1 — Pitch zone definitions (StatsBomb 120x80 coordinate system)
@@ -304,7 +302,6 @@ def has_tactical_data(
         event_count: int
         message: str
     """
-    from app.models import DataCoverage
 
     event_count = (
         db.query(MatchEvent)

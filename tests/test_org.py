@@ -23,19 +23,15 @@ from sqlalchemy.orm import Session
 
 from app import auth
 from app.models import (
-    Organization,
-    OrgMembership,
-    OrgSettings,
-    OrgInvite,
-    AuditLog,
     Comment,
     Mention,
-    Player,
+    Organization,
+    OrgInvite,
+    OrgMembership,
+    OrgSettings,
     Shortlist,
-    ShortlistEntry,
     User,
 )
-
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -134,8 +130,8 @@ class TestOrganizationCRUD:
         from app.queries.org_queries import list_user_organizations
 
         owner = _make_user(db)
-        org1 = _make_org(db, owner, name="Org One")
-        org2 = _make_org(db, owner, name="Org Two")
+        _make_org(db, owner, name="Org One")
+        _make_org(db, owner, name="Org Two")
 
         result = list_user_organizations(db, owner.id)
         assert len(result) == 2
@@ -268,7 +264,7 @@ class TestMemberManagement:
             invite_member(db, org.id, owner.id, "overflow@test.com")
 
     def test_accept_invite(self, db: Session):
-        from app.queries.org_queries import invite_member, accept_invite
+        from app.queries.org_queries import accept_invite, invite_member
 
         owner = _make_user(db)
         new_user = _make_user(db, email="new@test.com", name="New User")
@@ -281,7 +277,6 @@ class TestMemberManagement:
 
     def test_accept_expired_invite_fails(self, db: Session):
         from app.queries.org_queries import accept_invite
-        from app.models import OrgInvite
 
         owner = _make_user(db)
         new_user = _make_user(db, email="expired@test.com")
@@ -305,7 +300,7 @@ class TestMemberManagement:
             accept_invite(db, raw_token, new_user.id)
 
     def test_remove_member(self, db: Session):
-        from app.queries.org_queries import remove_member, list_members
+        from app.queries.org_queries import list_members, remove_member
 
         owner = _make_user(db)
         scout = _make_user(db, email="scout@test.com")
@@ -341,8 +336,8 @@ class TestMemberManagement:
         assert result["new_role"] == "manager"
 
     def test_transfer_ownership(self, db: Session):
-        from app.queries.org_queries import change_member_role
         from app.models import Organization
+        from app.queries.org_queries import change_member_role
 
         owner = _make_user(db)
         successor = _make_user(db, email="successor@test.com")

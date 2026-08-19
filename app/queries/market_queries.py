@@ -9,21 +9,20 @@ Constitution §5: Every derived metric has a published methodology.
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import datetime
 from typing import Any
 
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from app.models import (
+    League,
     MarketValuation,
-    Player,
     PercentileSnapshot,
+    Player,
     StatSnapshot,
     Team,
-    League,
 )
-
 
 # ---------------------------------------------------------------------------
 # Age-adjustment factors (docs/analytics/player-valuation-age-curves.md)

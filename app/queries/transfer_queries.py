@@ -10,17 +10,16 @@ from __future__ import annotations
 from datetime import datetime, timezone
 from typing import Any
 
-from sqlalchemy import and_, or_
 from sqlalchemy.orm import Session
 
 from app.models import (
     ContractStatus,
-    MarketValuation,
-    Player,
-    Team,
     League,
-    StatSnapshot,
+    MarketValuation,
     PercentileSnapshot,
+    Player,
+    StatSnapshot,
+    Team,
 )
 
 
