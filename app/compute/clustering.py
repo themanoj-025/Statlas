@@ -26,7 +26,7 @@ from typing import Any
 import joblib
 import numpy as np
 from sklearn.cluster import KMeans
-from sklearn.metrics import silhouette_score, davies_bouldin_score
+from sklearn.metrics import davies_bouldin_score, silhouette_score
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
 from sqlalchemy.orm import Session
@@ -37,7 +37,6 @@ from app.models import (
     ArchetypeDefinition,
     ClusteringModel,
     ClusteringMonitoringLog,
-    League,
     Player,
     StatSnapshot,
 )
@@ -290,8 +289,6 @@ def train_clustering_model(
 
     X_train = X[train_idx]
     X_test = X[test_idx]
-    train_player_ids = [player_ids[i] for i in train_idx]
-    test_player_ids = [player_ids[i] for i in test_idx]
 
     # 3. Find optimal k (on training set)
     if n_clusters is None:
@@ -618,7 +615,7 @@ def _generate_archetype_description(distinguishing_features: list[dict], player_
         parts.append(f"{direction}-average {label}")
 
     description = f"Players in this archetype tend to have {', '.join(parts)} "
-    description += f"compared to the global average. "
+    description += "compared to the global average. "
     description += f"Based on {player_count} players in this cluster."
 
     return description
@@ -726,9 +723,6 @@ def assign_player_to_archetype(
 
     # Inverse scale to get original values for explanation
     center_original = scaler.inverse_transform(kmeans.cluster_centers_)[cluster_id]
-    global_mean = np.mean(scaler.inverse_transform(
-        np.random.RandomState(42).randn(100, len(features))
-    ), axis=0)  # approximation — better to use actual training data mean
 
     distinguishing = [
         {
