@@ -42,6 +42,22 @@ import type {
   ArchetypeOverview,
   ArchetypeDetail,
   PlayerArchetype,
+  ValuationComparison,
+  TransferCandidateResult,
+  CandidateTemplate,
+  OpportunityCard,
+  TransferRisk,
+  ValuationConfidence,
+  ValuationGapPlayer,
+  PositionScarcityOpportunity,
+  OrgSummary,
+  OrgDetail,
+  OrgMember,
+  OrgInviteResult,
+  OrgJoinResult,
+  OrgSettings,
+  AuditEntry,
+  Comment,
 } from "./types";
 
 // Server components read the API at STATLAS_API_URL (no CORS involved);
@@ -332,6 +348,82 @@ export const api = {
     get<ArchetypeDetail>(`/api/v1/archetypes/${clusterId}${qs({ limit })}`),
   playerArchetype: (playerId: number) =>
     get<PlayerArchetype>(`/api/v1/archetypes/player/${playerId}`),
+  // Phase 15 — Transfer Intelligence
+  valuationComparison: (playerId: number) =>
+    get<ValuationComparison>(`/api/v1/transfers/valuation/${playerId}`),
+  undervaluedPlayers: (params: {
+    league_id?: number;
+    position_group?: string;
+    threshold?: number;
+    limit?: number;
+  }) => get<ValuationGapPlayer[]>(`/api/v1/transfers/undervalued${qs(params)}`),
+  overvaluedPlayers: (params: {
+    league_id?: number;
+    position_group?: string;
+    threshold?: number;
+    limit?: number;
+  }) => get<ValuationGapPlayer[]>(`/api/v1/transfers/overvalued${qs(params)}`),
+  transferCandidates: (params: {
+    position_group?: string;
+    min_age?: number;
+    max_age?: number;
+    league_id?: number;
+    min_value?: number;
+    max_value?: number;
+    contract_expiring?: boolean;
+    min_minutes?: number;
+    limit?: number;
+  }) => get<TransferCandidateResult>(`/api/v1/transfers/candidates${qs({
+    ...params,
+    contract_expiring: params.contract_expiring !== undefined ? (params.contract_expiring ? "true" : "false") : undefined,
+  })}`),
+  candidateTemplates: () =>
+    get<{ templates: CandidateTemplate[] }>("/api/v1/transfers/templates"),
+  hiddenGems: (params?: {
+    min_stat_percentile?: number;
+    max_market_value?: number;
+    limit?: number;
+  }) => get<{ opportunities: OpportunityCard[] }>(`/api/v1/transfers/opportunities/hidden-gems${qs(params ?? {})}`),
+  ageOpportunities: (params?: {
+    max_age?: number;
+    min_stat_percentile?: number;
+    limit?: number;
+  }) => get<{ opportunities: OpportunityCard[] }>(`/api/v1/transfers/opportunities/age-opportunity${qs(params ?? {})}`),
+  transferRisk: (playerId: number, params?: {
+    target_league_tier?: string;
+    target_position_group?: string;
+  }) => get<TransferRisk>(`/api/v1/transfers/risk/${playerId}${qs(params ?? {})}`),
+  valuationConfidence: (playerId: number) =>
+    get<ValuationConfidence>(`/api/v1/transfers/confidence/${playerId}`),
+  positionScarcity: (params?: {
+    min_stat_percentile?: number;
+    limit?: number;
+  }) => get<{ opportunities: PositionScarcityOpportunity[] }>(`/api/v1/transfers/opportunities/position-scarcity${qs(params ?? {})}`),
+  // Phase 16 — Organizations
+  listOrganizations: () => get<OrgSummary[]>("/api/v1/orgs"),
+  createOrganization: (name: string, opts?: { slug?: string; country?: string }) =>
+    post<OrgSummary>("/api/v1/orgs", { name, ...opts }),
+  getOrganization: (orgId: number) => get<OrgDetail>(`/api/v1/orgs/${orgId}`),
+  inviteMember: (orgId: number, email: string, role: string) =>
+    post<OrgInviteResult>(`/api/v1/orgs/${orgId}/invite`, { email, role }),
+  acceptInvite: (orgId: number, token: string) =>
+    post<OrgJoinResult>(`/api/v1/orgs/${orgId}/accept-invite`, { token }),
+  listMembers: (orgId: number) => get<OrgMember[]>(`/api/v1/orgs/${orgId}/members`),
+  changeRole: (orgId: number, userId: number, role: string) =>
+    post<{ changed: boolean }>(`/api/v1/orgs/${orgId}/members/${userId}/role`, { role }),
+  removeMember: (orgId: number, userId: number) =>
+    post<{ removed: boolean }>(`/api/v1/orgs/${orgId}/members/${userId}/remove`, {}),
+  getOrgSettings: (orgId: number) => get<OrgSettings>(`/api/v1/orgs/${orgId}/settings`),
+  updateOrgSettings: (orgId: number, patch: Partial<OrgSettings>) =>
+    put<OrgSettings>(`/api/v1/orgs/${orgId}/settings`, patch),
+  getAuditLog: (orgId: number, params?: { limit?: number; offset?: number }) =>
+    get<AuditEntry[]>(`/api/v1/orgs/${orgId}/audit${qs(params ?? {})}`),
+  // Phase 16 — Comments
+  listComments: (resourceType: string, resourceId: number, orgId: number) =>
+    get<Comment[]>(`/api/v1/comments/${resourceType}/${resourceId}${qs({ org_id: orgId })}`),
+  addComment: (resourceType: string, resourceId: number, orgId: number, text: string, parentId?: number) =>
+    post<{ comment_id: number }>(`/api/v1/comments/${resourceType}/${resourceId}${qs({ org_id: orgId })}`,
+      { text, parent_id: parentId ?? null }),
 };
 
 async function del<T>(path: string): Promise<T> {

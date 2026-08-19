@@ -77,12 +77,30 @@ def dashboard_summary(request: Request):
         recommended = dq.get_recommended_players(db, user.id)
         saved = dq.get_saved_players(db, user.id)
 
+        # Transfer opportunities (top 3 hidden gems from most-viewed positions)
+        transfer_opportunities: list[dict] = []
+        try:
+            from app.compute.opportunity import detect_hidden_gems
+
+            # Get most-viewed position groups from recent activity
+            viewed_positions = dq.get_top_viewed_positions(db, user.id)
+            seen_player_ids: set[int] = set()
+            for pos in viewed_positions[:3]:
+                gems = detect_hidden_gems(db, min_stat_percentile=75, max_market_value=30_000_000, limit=3)
+                for gem in gems:
+                    if gem["player_id"] not in seen_player_ids and len(transfer_opportunities) < 3:
+                        transfer_opportunities.append(gem)
+                        seen_player_ids.add(gem["player_id"])
+        except Exception:
+            pass  # Transfer data may not exist yet — non-critical
+
     return {
         "recent_activity": recent,
         "workspace": workspace,
         "trending_players": trending,
         "recommended_players": recommended,
         "saved_players": saved,
+        "transfer_opportunities": transfer_opportunities,
     }
 
 
