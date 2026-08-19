@@ -21,8 +21,9 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 
 from app.api.deps import require_user
+from app.config import get_settings
 from app.db import session_scope
-from app.models import NotificationPreferences, User
+from app.models import NotificationPreferences
 from app.queries import watch_queries as wq
 
 router = APIRouter(prefix="/api/v1/watch", tags=["watchlist"])

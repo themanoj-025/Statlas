@@ -13,6 +13,7 @@ import { SimilarPlayers } from "@/components/SimilarPlayers";
 import { TrendCard } from "@/components/TrendCard";
 import { EventMaps } from "@/components/EventMaps";
 import { ReportIssue } from "@/components/ReportIssue";
+import { PlayerArchetypeSection } from "@/components/PlayerArchetypeSection";
 import { formatDate, formatNumber, positionGroupLabel, tierLabel } from "@/lib/format";
 
 type Props = {
