@@ -17,19 +17,17 @@ from __future__ import annotations
 
 from datetime import datetime, timedelta, timezone
 
-import pytest
 from sqlalchemy.orm import Session
 
 from app.models import (
     ContractStatus,
+    League,
     MarketValuation,
+    PercentileSnapshot,
     Player,
     StatSnapshot,
-    PercentileSnapshot,
     Team,
-    League,
 )
-
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -569,7 +567,7 @@ class TestValuationConfidence:
 
         league = _make_league(db)
         player = _make_player(db, dob=datetime(2000, 1, 1, tzinfo=timezone.utc))
-        snap = _make_snapshot(db, player, minutes=2500, league=league)
+        _make_snapshot(db, player, minutes=2500, league=league)
 
         # Multiple valuations
         for i in range(5):

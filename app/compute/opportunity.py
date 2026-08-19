@@ -16,18 +16,14 @@ from typing import Any
 from sqlalchemy.orm import Session
 
 from app.models import (
-    ContractStatus,
-    MarketValuation,
-    Player,
-    Team,
     League,
+    MarketValuation,
     PercentileSnapshot,
+    Player,
     StatSnapshot,
-    ArchetypeAssignment,
-    ClusteringModel,
+    Team,
 )
-from app.queries.market_queries import compute_stat_value_proxy, compute_age_at_date
-
+from app.queries.market_queries import compute_age_at_date, compute_stat_value_proxy
 
 # ---------------------------------------------------------------------------
 # Hidden gem detection (Part D1)

@@ -23,7 +23,6 @@ from __future__ import annotations
 from fastapi import APIRouter, HTTPException, Query, Request
 from pydantic import BaseModel, Field
 
-from app import auth
 from app.api.deps import require_user
 from app.db import session_scope
 from app.queries import org_queries as oq

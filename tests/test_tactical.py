@@ -18,22 +18,16 @@ Constitution §7: Testing minimum bar — critical UI paths tested.
 from __future__ import annotations
 
 import math
-from datetime import datetime, timezone
 
-import pytest
 from sqlalchemy.orm import Session
 
 from app.models import (
+    DataCoverage,
+    League,
     MatchEvent,
     Player,
     Team,
-    League,
-    MatchPassingNetwork,
-    MatchSpatialAnalysis,
-    MatchFormation,
-    DataCoverage,
 )
-
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -186,7 +180,7 @@ class TestZoneAssignment:
         assert assign_zone(120, 80) == (3, 2)
 
     def test_all_zones_covered(self):
-        from app.compute.spatial_analysis import ZONE_NAMES, assign_zone_name
+        from app.compute.spatial_analysis import assign_zone_name
         found_zones = set()
         for x in range(0, 121, 10):
             for y in range(0, 81, 10):
@@ -229,7 +223,10 @@ class TestPassingNetwork:
         assert len(result["edges"]) == 2
 
     def test_network_metrics(self, db: Session):
-        from app.compute.passing_network import build_passing_network, compute_network_metrics
+        from app.compute.passing_network import (
+            build_passing_network,
+            compute_network_metrics,
+        )
 
         league = _make_league(db)
         team = _make_team(db, league)
@@ -262,7 +259,7 @@ class TestPassingNetwork:
         league = _make_league(db)
         team = _make_team(db, league)
         p1 = _make_player(db, team, "Alice")
-        p2 = _make_player(db, team, "Bob")
+        _make_player(db, team, "Bob")
 
         # Complete pass
         _make_pass_event(db, "m1", p1, x=50, y=40, end_x=70, end_y=35, recipient="Bob")
@@ -344,7 +341,7 @@ class TestHeatmaps:
         assert all(v == 0 for v in result["zone_densities"].values())
 
     def test_pressure_heatmap_with_data(self, db: Session):
-        from app.compute.spatial_analysis import compute_pressure_heatmap, ZONE_NAMES
+        from app.compute.spatial_analysis import compute_pressure_heatmap
 
         league = _make_league(db)
         team = _make_team(db, league)
@@ -539,9 +536,5 @@ class TestAPIEndpoints:
         assert any("coverage" in p for p in routes)
 
     def test_main_includes_tactical(self):
-        from app.api.main import app
-        # Check that the app includes the tactical router
-        router_names = [getattr(r, "name", None) for r in app.routes]
-        # The router will be included as "tactical" tag
         from app.api.tactical_views import router as t
         assert t.prefix == "/api/v1/tactical"

@@ -27,18 +27,18 @@ from pydantic import BaseModel
 
 from app import auth
 from app.api.archetype_views import router as archetype_router
-from app.api.transfer_views import router as transfer_router
-from app.api.tactical_views import router as tactical_router
-from app.api.org_views import router as org_router
-from app.api.comment_views import router as comment_router
 from app.api.assistant_views import router as assistant_router
 from app.api.billing_views import router as billing_router
+from app.api.comment_views import router as comment_router
 from app.api.dashboard_views import router as dashboard_router
 from app.api.e2e_views import router as e2e_router
+from app.api.org_views import router as org_router
 from app.api.public_views import router as public_api_router
 from app.api.registry_view import public_meta
 from app.api.report_views import router as report_router
 from app.api.search_views import router as search_router
+from app.api.tactical_views import router as tactical_router
+from app.api.transfer_views import router as transfer_router
 from app.api.watch_views import router as watch_router
 from app.api.workspace_views import router as workspace_router
 from app.config import get_settings, load_registry
