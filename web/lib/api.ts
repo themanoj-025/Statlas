@@ -39,6 +39,9 @@ import type {
   WatchPreferences,
   WatchesPayload,
   WorkspaceOverview,
+  ArchetypeOverview,
+  ArchetypeDetail,
+  PlayerArchetype,
 } from "./types";
 
 // Server components read the API at STATLAS_API_URL (no CORS involved);
@@ -323,6 +326,12 @@ export const api = {
     post<{ dismissed: boolean }>("/api/v1/dashboard/dismiss-recommendation", {
       player_id: playerId,
     }),
+  // Phase 14 — player archetypes (ML clustering). Public endpoints.
+  archetypeOverview: () => get<ArchetypeOverview>("/api/v1/archetypes"),
+  archetypeDetail: (clusterId: number, limit = 50) =>
+    get<ArchetypeDetail>(`/api/v1/archetypes/${clusterId}${qs({ limit })}`),
+  playerArchetype: (playerId: number) =>
+    get<PlayerArchetype>(`/api/v1/archetypes/player/${playerId}`),
 };
 
 async function del<T>(path: string): Promise<T> {

@@ -216,6 +216,8 @@ export default async function PlayerPage({ params }: Props) {
         initialCoverage={payload.event_coverage}
       />
 
+      <PlayerArchetypeSection playerId={player.player_id} playerName={player.name} />
+
       <div style={{ marginTop: "var(--space-4)" }}>
         <SimilarPlayers playerId={player.player_id} playerName={player.name} />
       </div>
