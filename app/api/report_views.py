@@ -20,11 +20,10 @@ from fastapi import APIRouter, HTTPException, Request
 from fastapi.responses import Response, StreamingResponse
 from pydantic import BaseModel, Field
 
-from app import auth, report_export, reports
+from app import report_export, reports
 from app.api.deps import require_user
 from app.config import get_settings
 from app.db import session_scope
-from app.models import User
 
 router = APIRouter(prefix="/api/v1/reports", tags=["reports"])
 

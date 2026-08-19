@@ -20,7 +20,6 @@ from app import auth
 from app.api.deps import require_user
 from app.config import plan_limits as pricing_limits
 from app.db import session_scope
-from app.models import User
 from app.queries import workspace_queries as wq
 
 router = APIRouter(prefix="/api/v1/workspace", tags=["workspace"])

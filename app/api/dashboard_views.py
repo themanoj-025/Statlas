@@ -13,7 +13,6 @@ from pydantic import BaseModel
 from app.activity import log_activity
 from app.api.deps import require_user
 from app.db import session_scope
-from app.models import User
 from app.queries import dashboard_queries as dq
 
 router = APIRouter(prefix="/api/v1/dashboard", tags=["dashboard"])
