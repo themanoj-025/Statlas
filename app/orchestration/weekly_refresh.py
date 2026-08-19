@@ -430,8 +430,8 @@ def run_weekly_refresh(
     # Idempotent: re-running for the same snapshot_date replaces assignments.
     try:
         from app.compute.clustering import (
-            check_model_staleness,
             assign_all_players,
+            check_model_staleness,
         )
         from app.models import ClusteringModel
 
