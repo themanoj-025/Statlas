@@ -15,25 +15,18 @@ from __future__ import annotations
 from datetime import datetime, timedelta, timezone
 from typing import Any
 
-from sqlalchemy import and_, or_
 from sqlalchemy.orm import Session
 
 from app import auth
 from app.models import (
+    AuditLog,
     Organization,
+    OrgInvite,
     OrgMembership,
     OrgSettings,
-    OrgInvite,
-    AuditLog,
-    User,
     Shortlist,
-    SavedSearch,
-    Report,
-    Watch,
-    Comment,
-    Mention,
+    User,
 )
-
 
 # ---------------------------------------------------------------------------
 # RBAC Permission Matrix (Addendum Part 3.1)
@@ -643,7 +636,7 @@ def get_user_shortlists(
     If org_id is provided, returns shortlists in that org context.
     If org_id is None, returns all accessible shortlists across all contexts.
     """
-    from app.models import ShortlistEntry, Player, Team
+    from app.models import ShortlistEntry
 
     # Personal shortlists (always visible to the owner)
     personal = (

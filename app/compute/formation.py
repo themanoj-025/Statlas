@@ -13,14 +13,12 @@ tracking over time, and formation effectiveness analysis.
 
 from __future__ import annotations
 
-import math
 from collections import defaultdict
 from typing import Any
 
 from sqlalchemy.orm import Session
 
 from app.models import MatchEvent
-
 
 # ---------------------------------------------------------------------------
 # D1 — Formation detection from player positions
@@ -330,9 +328,9 @@ def analyze_formation_conformity(
 
     if nominal_formation:
         parts = nominal_formation.split("-")
-        nominal = tuple(int(p) for p in parts) if len(parts) == 3 else detected
+        _nominal = tuple(int(p) for p in parts) if len(parts) == 3 else detected
     else:
-        nominal = detected
+        _nominal = detected
 
     # For each player, check if their detected line matches their nominal line
     conformity = {}

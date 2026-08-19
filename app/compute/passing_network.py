@@ -18,7 +18,6 @@ from sqlalchemy.orm import Session
 
 from app.models import MatchEvent
 
-
 # ---------------------------------------------------------------------------
 # Pitch constants (StatsBomb coordinate system)
 # ---------------------------------------------------------------------------
@@ -74,8 +73,6 @@ def build_passing_network(
             continue
         extra = ev.extra or {}
         recipient_name = extra.get("recipient")
-        end_x = extra.get("end_x")
-        end_y = extra.get("end_y")
 
         sender = ev.player_id
         player_pass_attempts[sender] += 1
@@ -522,8 +519,8 @@ def detect_network_anomalies(
                 "player_id": pid,
                 "severity": "warning",
                 "detail": (
-                    f"Player has no completed passes in network — "
-                    f"possible data error, limited playing time, or isolated role"
+                    "Player has no completed passes in network — "
+                    "possible data error, limited playing time, or isolated role"
                 ),
             })
 

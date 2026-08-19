@@ -17,7 +17,6 @@ import re
 
 from fastapi import APIRouter, HTTPException, Query, Request
 from pydantic import BaseModel, Field
-from sqlalchemy.orm import Session
 
 from app.api.deps import require_user
 from app.db import session_scope

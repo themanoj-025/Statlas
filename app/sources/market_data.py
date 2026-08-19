@@ -18,11 +18,6 @@ import random
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
-from typing import Any
-
-from sqlalchemy.orm import Session
-
-from app.models import MarketValuation, TransferHistory, ContractStatus
 
 
 @dataclass

@@ -140,7 +140,6 @@ def profile_match(
     a specific tactical need.
     """
     from app.queries.transfer_queries import get_transfer_candidate_search
-    from app.queries.market_queries import compute_stat_value_proxy
 
     with session_scope() as db:
         attr_list = [a.strip() for a in attributes.split(",") if a.strip()]

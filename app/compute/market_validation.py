@@ -17,7 +17,6 @@ from sqlalchemy.orm import Session
 
 from app.models import MarketValuation, Player, Team
 
-
 # ---------------------------------------------------------------------------
 # Plausibility bounds (documented, auditable)
 # ---------------------------------------------------------------------------

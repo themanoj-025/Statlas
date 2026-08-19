@@ -15,13 +15,12 @@ from typing import Any
 from sqlalchemy.orm import Session
 
 from app.models import (
-    Player,
-    Team,
-    League,
-    StatSnapshot,
-    PercentileSnapshot,
     ArchetypeAssignment,
     ClusteringModel,
+    League,
+    Player,
+    StatSnapshot,
+    Team,
 )
 
 

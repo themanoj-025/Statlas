@@ -471,8 +471,7 @@ def run_weekly_refresh(
     # Idempotent: valuations use (player_id, source, valuation_date) natural
     # key — re-running for the same date skips duplicates.
     try:
-        from app.sources.market_data import MarketDataSource
-        from app.models import MarketValuation, ContractStatus
+        from app.models import ContractStatus, MarketValuation
 
         # Collect all player IDs that have qualifying snapshots this run
         qualifying_player_ids = [
@@ -493,7 +492,7 @@ def run_weekly_refresh(
             valuation_records = market_source.fetch_valuations(
                 qualifying_player_ids, as_of=snapshot_date
             )
-            from app.compute.market_validation import validate_batch, validate_valuation
+            from app.compute.market_validation import validate_valuation
             val_inserted = 0
             val_flagged = 0
             for rec in valuation_records:

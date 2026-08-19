@@ -47,8 +47,8 @@ def get_passing_network(
     from app.compute.passing_network import (
         build_passing_network,
         compute_network_metrics,
-        detect_tactical_style,
         detect_network_anomalies,
+        detect_tactical_style,
     )
 
     with session_scope() as db:
@@ -85,8 +85,8 @@ def get_cached_passing_network(
     from app.compute.passing_network import (
         build_passing_network,
         compute_network_metrics,
-        detect_tactical_style,
         detect_network_anomalies,
+        detect_tactical_style,
     )
     from app.models import MatchPassingNetwork
 
@@ -190,7 +190,7 @@ def get_zone_definitions(
     match_id: str,
 ):
     """Get zone definitions and a blank heatmap grid for the match."""
-    from app.compute.spatial_analysis import ZONE_NAMES, assign_zone_name
+    from app.compute.spatial_analysis import ZONE_NAMES
 
     zones = list(ZONE_NAMES.values())
     return {
@@ -222,7 +222,7 @@ def get_formation(
     Returns the detected formation, stability analysis across time windows,
     and any detected formation changes.
     """
-    from app.compute.formation import detect_formation, analyze_formation_stability
+    from app.compute.formation import analyze_formation_stability, detect_formation
 
     with session_scope() as db:
         _check_tactical_coverage(db, match_id, min_events=50)
@@ -268,17 +268,17 @@ def get_tactical_overview(
     Single endpoint for the tactical analysis page — combines all Phase 17
     analyses for a match into one response.
     """
+    from app.compute.formation import analyze_formation_stability, detect_formation
     from app.compute.passing_network import (
         build_passing_network,
         compute_network_metrics,
-        detect_tactical_style,
         detect_network_anomalies,
+        detect_tactical_style,
     )
     from app.compute.spatial_analysis import (
-        compute_pressure_heatmap,
         compute_possession_heatmap,
+        compute_pressure_heatmap,
     )
-    from app.compute.formation import detect_formation, analyze_formation_stability
 
     with session_scope() as db:
         _check_tactical_coverage(db, match_id)
