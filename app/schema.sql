@@ -774,6 +774,50 @@ CREATE TABLE mentions (
 CREATE INDEX ix_mentions_user ON mentions (mentioned_user_id, status);
 CREATE INDEX ix_mentions_comment ON mentions (comment_id);
 
+-- ===========================================================================
+-- Phase 17 — Tactical Intelligence (passing networks, heatmaps, formations)
+-- ===========================================================================
+-- All tactical data is derived from StatsBomb event data.
+-- Coverage-gating: only matches with sufficient event data are analyzed.
+-- Cached per match to avoid recomputation.
+
+CREATE TABLE match_passing_networks (
+    id              SERIAL PRIMARY KEY,
+    match_id        VARCHAR(64)  NOT NULL,
+    team_id         INTEGER      REFERENCES teams(id),
+    phase           VARCHAR(32)  NOT NULL DEFAULT 'full_match',
+    network_json    JSONB        NOT NULL,
+    metrics_json    JSONB        NOT NULL DEFAULT '{}',
+    style_json      JSONB        NOT NULL DEFAULT '{}',
+    anomalies_json  JSONB        NOT NULL DEFAULT '[]',
+    computed_at     TIMESTAMPTZ  NOT NULL DEFAULT now(),
+    UNIQUE (match_id, team_id, phase)
+);
+CREATE INDEX ix_passing_network_match ON match_passing_networks (match_id);
+
+CREATE TABLE match_spatial_analyses (
+    id              SERIAL PRIMARY KEY,
+    match_id        VARCHAR(64)  NOT NULL,
+    team_id         INTEGER      REFERENCES teams(id),
+    analysis_type   VARCHAR(32)  NOT NULL,
+    result_json     JSONB        NOT NULL,
+    computed_at     TIMESTAMPTZ  NOT NULL DEFAULT now(),
+    UNIQUE (match_id, team_id, analysis_type)
+);
+CREATE INDEX ix_spatial_analysis_match ON match_spatial_analyses (match_id);
+
+CREATE TABLE match_formations (
+    id                    SERIAL PRIMARY KEY,
+    match_id              VARCHAR(64)  NOT NULL,
+    team_id               INTEGER      REFERENCES teams(id),
+    detected_formation    VARCHAR(16)  NOT NULL,
+    stability_json        JSONB        NOT NULL,
+    conformity_json       JSONB,
+    computed_at           TIMESTAMPTZ  NOT NULL DEFAULT now(),
+    UNIQUE (match_id, team_id)
+);
+CREATE INDEX ix_formation_match ON match_formations (match_id);
+
 COMMIT;
 
 -- ============================================================================
