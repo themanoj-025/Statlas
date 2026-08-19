@@ -50,6 +50,27 @@ SNAPSHOT_STATUS_ENUM = Enum(
 COVERAGE_STATUS_ENUM = Enum("active", "stale", "failed", name="coverage_status")
 TIER_ENUM = Enum("tier_1", "tier_2", "tier_3", name="league_tier")
 QUEUE_STATUS_ENUM = Enum("pending", "resolved", "ignored", name="queue_status")
+# Phase 15 — Transfer Intelligence & Market Data
+MARKET_SOURCE_ENUM = Enum(
+    "transfermarkt", "understat_transfer", "instat", "manual",
+    name="market_source",
+)
+TRANSFER_TYPE_ENUM = Enum(
+    "permanent", "loan", "free_agent", name="transfer_type",
+)
+TRANSFER_STATUS_ENUM = Enum(
+    "confirmed", "reported", name="transfer_status",
+)
+CONTRACT_STATUS_ENUM = Enum(
+    "active", "expiring_next_season", "expired", "on_loan",
+    name="contract_status",
+)
+VALUATION_CONFIDENCE_ENUM = Enum(
+    "high", "medium", "low", name="valuation_confidence",
+)
+RISK_TIER_ENUM = Enum(
+    "low", "medium", "high", name="risk_tier",
+)
 SUBSCRIPTION_STATUS_ENUM = Enum(
     "active",
     "trialing",
@@ -82,6 +103,8 @@ ALERT_TYPE_ENUM = Enum(
     name="alert_type",
 )
 DIGEST_FREQUENCY_ENUM = Enum(
+
+
     "immediate", "daily_digest", "weekly_digest", name="digest_frequency"
 )
 
@@ -616,6 +639,11 @@ class WebhookEvent(Base):
 #   player_id must be reassigned on shortlist_entries (documented in the
 #   pipeline doc) — the FK is RESTRICT so a merge cannot orphan rows silently.
 
+# Phase 16 enums (used by Shortlist, SavedSearch, Report, Watch org columns)
+ORG_ROLE_ENUM = Enum("owner", "manager", "scout", "viewer", name="org_role")
+VISIBILITY_ENUM = Enum("personal", "org_members", "restricted", name="resource_visibility")
+ORG_TIER_ENUM = Enum("free", "pro", "enterprise", name="org_tier")
+
 
 class Shortlist(Base):
     __tablename__ = "shortlists"
@@ -633,6 +661,17 @@ class Shortlist(Base):
     deleted_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True), nullable=True
     )  # soft delete — history preserved
+    # Phase 16 — org ownership (null = personal, existing behavior)
+    owner_org_id: Mapped[int | None] = mapped_column(
+        ForeignKey("organizations.id"), nullable=True
+    )
+    visibility: Mapped[str] = mapped_column(
+        VISIBILITY_ENUM, nullable=False, default="personal"
+    )
+    created_by_user_id: Mapped[int | None] = mapped_column(
+        ForeignKey("users.id"), nullable=True
+    )
+    restricted_access: Mapped[list | None] = mapped_column(JSON, nullable=True)
 
     __table_args__ = (Index("ix_shortlists_user", "user_id"),)
 
@@ -768,6 +807,16 @@ class SavedSearch(Base):
     last_run_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True), nullable=True
     )
+    # Phase 16 — org ownership (null = personal, existing behavior)
+    owner_org_id: Mapped[int | None] = mapped_column(
+        ForeignKey("organizations.id"), nullable=True
+    )
+    visibility: Mapped[str] = mapped_column(
+        VISIBILITY_ENUM, nullable=False, default="personal"
+    )
+    created_by_user_id: Mapped[int | None] = mapped_column(
+        ForeignKey("users.id"), nullable=True
+    )
 
     __table_args__ = (Index("ix_saved_searches_user", "user_id"),)
 
@@ -820,6 +869,16 @@ class Report(Base):
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=func.now()
     )
+    # Phase 16 — org ownership (null = personal, existing behavior)
+    owner_org_id: Mapped[int | None] = mapped_column(
+        ForeignKey("organizations.id"), nullable=True
+    )
+    visibility: Mapped[str] = mapped_column(
+        VISIBILITY_ENUM, nullable=False, default="personal"
+    )
+    created_by_user_id: Mapped[int | None] = mapped_column(
+        ForeignKey("users.id"), nullable=True
+    )
 
     __table_args__ = (Index("ix_reports_user", "user_id"),)
 
@@ -863,8 +922,18 @@ class Watch(Base):
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now()
     )
+    # Phase 16 — org ownership (null = personal, existing behavior)
+    owner_org_id: Mapped[int | None] = mapped_column(
+        ForeignKey("organizations.id"), nullable=True
+    )
+    visibility: Mapped[str] = mapped_column(
+        VISIBILITY_ENUM, nullable=False, default="personal"
+    )
+    created_by_user_id: Mapped[int | None] = mapped_column(
+        ForeignKey("users.id"), nullable=True
+    )
 
-    user: Mapped[User] = relationship()
+    user: Mapped[User] = relationship(foreign_keys=[user_id])
 
     __table_args__ = (
         UniqueConstraint(
@@ -1224,4 +1293,323 @@ class ClusteringMonitoringLog(Base):
     __table_args__ = (
         Index("ix_monitoring_model_time", "model_id", "logged_at"),
         Index("ix_monitoring_alerts", "alert_triggered"),
+    )
+
+
+# ---------------------------------------------------------------------------
+# Phase 15 — Transfer Intelligence & Market Data
+# ---------------------------------------------------------------------------
+# Design (docs/product/transfer-intelligence.md):
+# * All market data is versioned and append-only (Constitution §3).
+# * Valuations carry a confidence level and source attribution.
+# * Transfer history is real, confirmed data — never fabricated.
+# * Contract status is a snapshot, not live data.
+
+class MarketValuation(Base):
+    """Market valuation for a player from a specific source.
+    Idempotent per (player, source, valuation_date). Historical valuations
+    are preserved — never overwritten. Every valuation carries source
+    attribution and a confidence level."""
+
+    __tablename__ = "market_valuations"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    player_id: Mapped[int] = mapped_column(ForeignKey("players.id"), nullable=False)
+    source: Mapped[str] = mapped_column(MARKET_SOURCE_ENUM, nullable=False)
+    valuation_amount_eur: Mapped[float] = mapped_column(Float, nullable=False)
+    valuation_date: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    low_range: Mapped[float | None] = mapped_column(Float, nullable=True)
+    high_range: Mapped[float | None] = mapped_column(Float, nullable=True)
+    confidence_level: Mapped[str] = mapped_column(
+        VALUATION_CONFIDENCE_ENUM, nullable=False, default="medium"
+    )
+    raw: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )
+
+    player: Mapped[Player] = relationship()
+
+    __table_args__ = (
+        UniqueConstraint(
+            "player_id", "source", "valuation_date",
+            name="uq_market_valuation_player_source_date",
+        ),
+        Index("ix_market_valuation_player", "player_id", "valuation_date"),
+        Index("ix_market_valuation_date", "valuation_date"),
+    )
+
+
+class TransferHistory(Base):
+    """Confirmed or reported transfer record. Status distinguishes confirmed
+    deals from reported/approximate information."""
+
+    __tablename__ = "transfer_history"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    player_id: Mapped[int] = mapped_column(ForeignKey("players.id"), nullable=False)
+    from_team_id: Mapped[int | None] = mapped_column(
+        ForeignKey("teams.id"), nullable=True
+    )
+    to_team_id: Mapped[int] = mapped_column(ForeignKey("teams.id"), nullable=False)
+    transfer_date: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    reported_fee_eur: Mapped[float | None] = mapped_column(Float, nullable=True)
+    transfer_type: Mapped[str] = mapped_column(TRANSFER_TYPE_ENUM, nullable=False)
+    status: Mapped[str] = mapped_column(TRANSFER_STATUS_ENUM, nullable=False, default="reported")
+    source: Mapped[str] = mapped_column(MARKET_SOURCE_ENUM, nullable=False)
+    raw: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )
+
+    player: Mapped[Player] = relationship()
+    from_team: Mapped[Team | None] = relationship(foreign_keys=[from_team_id])
+    to_team: Mapped[Team] = relationship(foreign_keys=[to_team_id])
+
+    __table_args__ = (
+        Index("ix_transfer_player", "player_id"),
+        Index("ix_transfer_date", "transfer_date"),
+        Index("ix_transfer_to_team", "to_team_id"),
+    )
+
+
+class ContractStatus(Base):
+    """Contract status snapshot for a player. Updated periodically, not live."""
+
+    __tablename__ = "contract_status"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    player_id: Mapped[int] = mapped_column(ForeignKey("players.id"), nullable=False)
+    current_team_id: Mapped[int | None] = mapped_column(
+        ForeignKey("teams.id"), nullable=True
+    )
+    contract_end_date: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    contract_value_per_year_eur: Mapped[float | None] = mapped_column(Float, nullable=True)
+    contract_status: Mapped[str] = mapped_column(
+        CONTRACT_STATUS_ENUM, nullable=False, default="active"
+    )
+    source: Mapped[str] = mapped_column(MARKET_SOURCE_ENUM, nullable=False)
+    snapshot_date: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    raw: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )
+
+    player: Mapped[Player] = relationship()
+    current_team: Mapped[Team | None] = relationship()
+
+    __table_args__ = (
+        UniqueConstraint(
+            "player_id", "source", "snapshot_date",
+            name="uq_contract_status_player_source_date",
+        ),
+        Index("ix_contract_player", "player_id"),
+    )
+
+
+# ---------------------------------------------------------------------------
+# Phase 16 — Organization / Multi-Tenant Architecture
+# ---------------------------------------------------------------------------
+# Design (Multi-Tenant Architecture Addendum):
+# * Every existing user-owned resource (shortlists, searches, reports, watches)
+#   gains an optional owner_org_id column. null = personal (existing behavior).
+# * RBAC is enforced at the query layer via user_has_permission() — every
+#   read/write checks membership + role before returning data.
+# * Org membership is opt-in: solo users continue working unchanged.
+# * Audit logging captures all team-structure changes.
+
+ORG_ROLE_ENUM = Enum("owner", "manager", "scout", "viewer", name="org_role")
+VISIBILITY_ENUM = Enum("personal", "org_members", "restricted", name="resource_visibility")
+ORG_TIER_ENUM = Enum("free", "pro", "enterprise", name="org_tier")
+
+
+class Organization(Base):
+    """Top-level organization entity. Owners are users who created the org.
+    Slug is for org branding/public URLs. Tier governs seat limits and features."""
+
+    __tablename__ = "organizations"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    name: Mapped[str] = mapped_column(String(256), nullable=False)
+    slug: Mapped[str] = mapped_column(String(128), unique=True, nullable=False)
+    owner_user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), nullable=False)
+    tier: Mapped[str] = mapped_column(ORG_TIER_ENUM, nullable=False, default="free")
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now(),
+        onupdate=func.now(),
+    )
+    plan_expires_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    primary_contact_email: Mapped[str | None] = mapped_column(String(320), nullable=True)
+    billing_contact_email: Mapped[str | None] = mapped_column(String(320), nullable=True)
+    country: Mapped[str | None] = mapped_column(String(64), nullable=True)
+
+    __table_args__ = (
+        Index("ix_organizations_slug", "slug"),
+        Index("ix_organizations_owner", "owner_user_id"),
+    )
+
+
+class OrgMembership(Base):
+    """Org membership with role. One row per (org, user). The role governs
+    what the user can do within the org (RBAC permission matrix)."""
+
+    __tablename__ = "org_memberships"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    org_id: Mapped[int] = mapped_column(ForeignKey("organizations.id"), nullable=False)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), nullable=False)
+    role: Mapped[str] = mapped_column(ORG_ROLE_ENUM, nullable=False, default="scout")
+    joined_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )
+    invited_by_user_id: Mapped[int | None] = mapped_column(
+        ForeignKey("users.id"), nullable=True
+    )
+    permissions_override: Mapped[dict | None] = mapped_column(JSON, nullable=True)
+
+    __table_args__ = (
+        UniqueConstraint("org_id", "user_id", name="uq_org_membership"),
+        Index("ix_org_memberships_org", "org_id"),
+        Index("ix_org_memberships_user", "user_id"),
+    )
+
+
+class OrgSettings(Base):
+    """Per-org configuration. One row per org (created on org creation)."""
+
+    __tablename__ = "org_settings"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    org_id: Mapped[int] = mapped_column(
+        ForeignKey("organizations.id"), unique=True, nullable=False
+    )
+    data_retention_days: Mapped[int] = mapped_column(Integer, nullable=False, default=90)
+    workspace_name: Mapped[str | None] = mapped_column(String(128), nullable=True)
+    enable_audit_logging: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
+    allow_public_reporting: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    require_2fa: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now(),
+        onupdate=func.now(),
+    )
+
+    __table_args__ = (Index("ix_org_settings_org", "org_id"),)
+
+
+ORG_INVITE_STATUS_ENUM = Enum("pending", "accepted", "expired", name="org_invite_status")
+
+
+class OrgInvite(Base):
+    """Pending org invitation. Time-limited token, single-use."""
+
+    __tablename__ = "org_invites"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    org_id: Mapped[int] = mapped_column(ForeignKey("organizations.id"), nullable=False)
+    email: Mapped[str] = mapped_column(String(320), nullable=False)
+    role: Mapped[str] = mapped_column(ORG_ROLE_ENUM, nullable=False)
+    token_hash: Mapped[str] = mapped_column(String(64), nullable=False)
+    invited_by_user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), nullable=False)
+    status: Mapped[str] = mapped_column(ORG_INVITE_STATUS_ENUM, nullable=False, default="pending")
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    accepted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+
+    __table_args__ = (
+        Index("ix_org_invites_org", "org_id"),
+        Index("ix_org_invites_token", "token_hash"),
+    )
+
+
+AUDIT_ACTION_ENUM = Enum(
+    "user_added", "user_removed", "role_changed",
+    "resource_created", "resource_shared", "resource_deleted",
+    "comment_added",
+    name="audit_action",
+)
+
+
+class AuditLog(Base):
+    """Append-only audit trail for org events. Only readable by owner/manager."""
+
+    __tablename__ = "org_audit_log"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    org_id: Mapped[int] = mapped_column(ForeignKey("organizations.id"), nullable=False)
+    action: Mapped[str] = mapped_column(AUDIT_ACTION_ENUM, nullable=False)
+    performed_by_user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), nullable=False)
+    target_user_id: Mapped[int | None] = mapped_column(ForeignKey("users.id"), nullable=True)
+    resource_type: Mapped[str | None] = mapped_column(String(32), nullable=True)
+    resource_id: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    detail: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )
+
+    __table_args__ = (
+        Index("ix_audit_log_org", "org_id", "created_at"),
+        Index("ix_audit_log_performed_by", "performed_by_user_id"),
+    )
+
+
+# ---------------------------------------------------------------------------
+# Phase 16 — Comments & Collaboration
+# ---------------------------------------------------------------------------
+
+
+class Comment(Base):
+    """Comment on a shared resource (shortlist, report, search). Supports
+    threading (parent_id = null for top-level, parent_id = comment.id for reply).
+    Soft-deleted via deleted_at."""
+
+    __tablename__ = "comments"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    resource_type: Mapped[str] = mapped_column(String(32), nullable=False)
+    resource_id: Mapped[int] = mapped_column(Integer, nullable=False)
+    org_id: Mapped[int] = mapped_column(ForeignKey("organizations.id"), nullable=False)
+    author_user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), nullable=False)
+    parent_id: Mapped[int | None] = mapped_column(ForeignKey("comments.id"), nullable=True)
+    text: Mapped[str] = mapped_column(Text, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )
+    edited_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    deleted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+
+    __table_args__ = (
+        Index("ix_comments_resource", "resource_type", "resource_id"),
+        Index("ix_comments_org", "org_id", "created_at"),
+        Index("ix_comments_author", "author_user_id"),
+    )
+
+
+MENTION_STATUS_ENUM = Enum("pending", "read", name="mention_status")
+
+
+class Mention(Base):
+    """A @username mention in a comment. Triggers a notification."""
+
+    __tablename__ = "mentions"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    comment_id: Mapped[int] = mapped_column(ForeignKey("comments.id"), nullable=False)
+    mentioned_user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), nullable=False)
+    org_id: Mapped[int] = mapped_column(ForeignKey("organizations.id"), nullable=False)
+    status: Mapped[str] = mapped_column(MENTION_STATUS_ENUM, nullable=False, default="pending")
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )
+
+    __table_args__ = (
+        Index("ix_mentions_user", "mentioned_user_id", "status"),
+        Index("ix_mentions_comment", "comment_id"),
     )

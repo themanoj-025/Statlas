@@ -6,12 +6,14 @@ import { useState } from "react";
 import { Menu, X } from "lucide-react";
 import { useAuth } from "./AuthProvider";
 import { NotificationBell } from "./NotificationBell";
+import { OrgSelector } from "./OrgSelector";
 import { SearchCombobox } from "./SearchCombobox";
 import { ThemeToggle } from "./ThemeToggle";
 
 const NAV_ITEMS = [
   { href: "/positions", label: "Leaderboards" },
   { href: "/archetypes", label: "Archetypes" },
+  { href: "/transfers", label: "Transfers" },
   { href: "/leagues", label: "Leagues" },
   { href: "/search", label: "Search" },
   { href: "/compare", label: "Compare" },
@@ -66,6 +68,7 @@ export function Header() {
               <Link href="/reports" className="header-account">
                 Reports
               </Link>
+              <OrgSelector />
               <Link href="/account" className="header-account" aria-label={`Account — ${user?.email ?? ""}`}>
                 Account
               </Link>

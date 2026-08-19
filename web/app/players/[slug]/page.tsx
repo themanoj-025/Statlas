@@ -14,6 +14,7 @@ import { TrendCard } from "@/components/TrendCard";
 import { EventMaps } from "@/components/EventMaps";
 import { ReportIssue } from "@/components/ReportIssue";
 import { PlayerArchetypeSection } from "@/components/PlayerArchetypeSection";
+import { PlayerTransferSection } from "@/components/PlayerTransferSection";
 import { formatDate, formatNumber, positionGroupLabel, tierLabel } from "@/lib/format";
 
 type Props = {
@@ -218,6 +219,8 @@ export default async function PlayerPage({ params }: Props) {
       />
 
       <PlayerArchetypeSection playerId={player.player_id} playerName={player.name} />
+
+      <PlayerTransferSection playerId={player.player_id} />
 
       <div style={{ marginTop: "var(--space-4)" }}>
         <SimilarPlayers playerId={player.player_id} playerName={player.name} />

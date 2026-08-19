@@ -120,7 +120,7 @@ export function DashboardClient() {
 
   if (!data) return <DashboardSkeleton />;
 
-  const { recent_activity, workspace, trending_players, recommended_players, saved_players } =
+  const { recent_activity, workspace, trending_players, recommended_players, saved_players, transfer_opportunities } =
     data;
 
   return (
@@ -262,6 +262,42 @@ export function DashboardClient() {
               </ul>
             )}
           </section>
+
+          {/* Transfer opportunities */}
+          {transfer_opportunities.length > 0 && (
+            <section className="dashboard__section" aria-label="Transfer opportunities">
+              <h2 className="dashboard__section-title">
+                <TrendingUp size={18} className="dashboard__icon" />
+                Transfer opportunities
+              </h2>
+              <ul className="dashboard__player-list" role="list">
+                {transfer_opportunities.map((opp) => (
+                  <li key={opp.player_id} className="dashboard__player-row">
+                    <Link href={`/players/${opp.player_id}`} className="dashboard__player-link">
+                      <span className="dashboard__player-name">{opp.name}</span>
+                      <span className="dashboard__player-meta">
+                        {opp.position_group && (
+                          <span className="dashboard__player-pos">{posLabel(opp.position_group)}</span>
+                        )}
+                        {opp.club && <span className="dashboard__player-team">{opp.club}</span>}
+                        <span className="dashboard__recommendation-why">
+                          {opp.opportunity_summary}
+                        </span>
+                      </span>
+                    </Link>
+                    {opp.upside_eur > 0 && (
+                      <span className="dashboard__trending-gain" aria-label={`Upside €${(opp.upside_eur / 1e6).toFixed(1)}M`}>
+                        +€{(opp.upside_eur / 1e6).toFixed(1)}M
+                      </span>
+                    )}
+                  </li>
+                ))}
+              </ul>
+              <Link href="/transfers/opportunities?type=hidden-gems" style={{ fontSize: "0.85rem" }}>
+                View all opportunities →
+              </Link>
+            </section>
+          )}
         </div>
       </div>
     </div>
