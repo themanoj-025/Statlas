@@ -24,6 +24,7 @@ export function Footer() {
             <p className="site-footer__title">Product</p>
             <ul>
               <li><Link href="/positions">Leaderboards</Link></li>
+              <li><Link href="/archetypes">Archetypes</Link></li>
               <li><Link href="/compare">Compare</Link></li>
               <li><Link href="/methodology">Methodology</Link></li>
               <li><Link href="/pricing">Pricing</Link></li>

@@ -11,6 +11,7 @@ import { ThemeToggle } from "./ThemeToggle";
 
 const NAV_ITEMS = [
   { href: "/positions", label: "Leaderboards" },
+  { href: "/archetypes", label: "Archetypes" },
   { href: "/leagues", label: "Leagues" },
   { href: "/search", label: "Search" },
   { href: "/compare", label: "Compare" },

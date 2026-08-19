@@ -1074,3 +1074,154 @@ class SavedPlayer(Base):
         UniqueConstraint("user_id", "player_id", name="uq_saved_player_user_player"),
         Index("ix_saved_players_user", "user_id", "saved_at"),
     )
+
+
+# ---------------------------------------------------------------------------
+# Phase 14 — Player Clustering & Archetypes (ML platform)
+# ---------------------------------------------------------------------------
+# Design (ML Constitution Addendum §3):
+# * Every model has a registry entry documenting provenance, metrics, and
+#   governance status. Models are versioned — never silently overwritten.
+# * Archetype assignments are deterministic per (player, model_version):
+#   the same player with the same snapshot always gets the same archetype.
+# * Archetype definitions are human-authored names + descriptions grounded
+#   in cluster center statistics (Constitution §1.3 burden of explainability).
+# * All training data is reproducible from a documented query/script.
+
+CLUSTERING_STATUS_ENUM = Enum(
+    "candidate", "in_production", "archived", name="clustering_status"
+)
+
+
+class ClusteringModel(Base):
+    """Model registry entry (ML Constitution Addendum §3.1).
+    Every production ML model has a unique versioned ID — never silently
+    overwrite; every update is a new version number."""
+
+    __tablename__ = "clustering_models"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    model_name: Mapped[str] = mapped_column(String(128), nullable=False)
+    version: Mapped[str] = mapped_column(String(32), nullable=False)
+    description: Mapped[str | None] = mapped_column(Text, nullable=True)
+    algorithm: Mapped[str] = mapped_column(String(64), nullable=False)  # e.g. 'k-means'
+    hyperparameters: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    n_clusters: Mapped[int] = mapped_column(Integer, nullable=False)
+    training_data_source: Mapped[str] = mapped_column(String(256), nullable=False)
+    training_data_size: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    training_data_features: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    silhouette_score: Mapped[float | None] = mapped_column(Float, nullable=True)
+    davies_bouldin_index: Mapped[float | None] = mapped_column(Float, nullable=True)
+    per_subgroup_scores: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    bias_audit_results: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    training_code_commit: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    training_date: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    staleness_months: Mapped[int] = mapped_column(Integer, nullable=False, default=6)
+    status: Mapped[str] = mapped_column(
+        CLUSTERING_STATUS_ENUM, nullable=False, default="candidate"
+    )
+    deployed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    owner: Mapped[str | None] = mapped_column(String(128), nullable=True)
+    known_limitations: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    rollback_plan: Mapped[str | None] = mapped_column(Text, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )
+
+    __table_args__ = (
+        UniqueConstraint("model_name", "version", name="uq_clustering_model_name_version"),
+        Index("ix_clustering_model_status", "status"),
+    )
+
+
+class ArchetypeDefinition(Base):
+    """Human-authored archetype cluster definitions (Constitution §1.3).
+    One row per (model_id, cluster_id). Names and descriptions are grounded
+    in cluster center statistics — never arbitrary labels."""
+
+    __tablename__ = "archetype_definitions"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    model_id: Mapped[int] = mapped_column(
+        ForeignKey("clustering_models.id"), nullable=False
+    )
+    cluster_id: Mapped[int] = mapped_column(Integer, nullable=False)
+    name: Mapped[str] = mapped_column(String(128), nullable=False)
+    description: Mapped[str] = mapped_column(Text, nullable=False)
+    cluster_center: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    distinguishing_features: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    example_players: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    player_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )
+
+    model: Mapped["ClusteringModel"] = relationship()
+
+    __table_args__ = (
+        UniqueConstraint("model_id", "cluster_id", name="uq_archetype_model_cluster"),
+        Index("ix_archetype_model", "model_id"),
+    )
+
+
+class ArchetypeAssignment(Base):
+    """Per-player archetype assignment from a specific model version.
+    Deterministic: same (player, model_version, snapshot_date) always yields
+    the same archetype. distance_to_center is the confidence measure — lower
+    means more typical of the archetype."""
+
+    __tablename__ = "archetype_assignments"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    player_id: Mapped[int] = mapped_column(ForeignKey("players.id"), nullable=False)
+    model_id: Mapped[int] = mapped_column(
+        ForeignKey("clustering_models.id"), nullable=False
+    )
+    cluster_id: Mapped[int] = mapped_column(Integer, nullable=False)
+    distance_to_center: Mapped[float] = mapped_column(Float, nullable=False)
+    top_distinguishing_features: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    computed_date: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )
+    snapshot_date: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    is_outlier: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+
+    player: Mapped[Player] = relationship()
+    model: Mapped["ClusteringModel"] = relationship()
+
+    __table_args__ = (
+        UniqueConstraint(
+            "player_id", "model_id", "snapshot_date",
+            name="uq_archetype_assignment_player_model_date",
+        ),
+        Index("ix_archetype_assignment_player", "player_id"),
+        Index("ix_archetype_assignment_model", "model_id", "cluster_id"),
+    )
+
+
+class ClusteringMonitoringLog(Base):
+    """Weekly monitoring entries (ML Constitution Addendum §4).
+    Tracks drift detection results, assignment churn, and retraining events."""
+
+    __tablename__ = "clustering_monitoring_log"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    model_id: Mapped[int] = mapped_column(
+        ForeignKey("clustering_models.id"), nullable=False
+    )
+    logged_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )
+    log_type: Mapped[str] = mapped_column(String(32), nullable=False)  # drift, churn, retrain, alert
+    details: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    metric_name: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    metric_value: Mapped[float | None] = mapped_column(Float, nullable=True)
+    threshold: Mapped[float | None] = mapped_column(Float, nullable=True)
+    alert_triggered: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+
+    model: Mapped["ClusteringModel"] = relationship()
+
+    __table_args__ = (
+        Index("ix_monitoring_model_time", "model_id", "logged_at"),
+        Index("ix_monitoring_alerts", "alert_triggered"),
+    )

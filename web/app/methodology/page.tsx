@@ -195,6 +195,47 @@ export default async function MethodologyPage() {
           <a href="/docs/analytics/emerging-player-methodology">analytics/emerging-player-methodology</a>.
         </p>
 
+        <h2 id="archetypes">Player archetypes</h2>
+        <p>
+          Player archetypes are <strong>statistically-defined groups of players with similar
+          playing styles</strong>, discovered through unsupervised clustering of per-90
+          statistics. These are patterns in the data, not predictions about player ability
+          or potential.
+        </p>
+        <p>
+          The clustering uses <strong>k-means</strong> on 12 per-90 statistical features
+          covering passing, carrying, pressing, defensive, attacking, and creative
+          dimensions. Players are clustered separately by position group (midfielders,
+          strikers, defenders) to produce position-appropriate archetypes.
+        </p>
+        <h3>How archetypes are named</h3>
+        <p>
+          Each archetype is named based on its <strong>distinguishing statistical
+          characteristics</strong> — the features that differ most from the global average.
+          For example, a cluster with high pressing activity and high tackle rates might be
+          named &ldquo;High-Pressing Ball-Winners.&rdquo; Names are descriptive and grounded
+          in statistics, never arbitrary labels.
+        </p>
+        <h3>Typicality</h3>
+        <p>
+          Each player&rsquo;s archetype assignment includes a <strong>typicality score</strong>
+          (0–100%) measuring how close the player is to the archetype&rsquo;s center in
+          statistical space. A player at 95% typicality is a textbook example of the
+          archetype; a player at 40% is more of an edge case. Players far from all
+          archetype centers are flagged as &ldquo;unusual profiles.&rdquo;
+        </p>
+        <h3>Limitations</h3>
+        <ul>
+          <li>Archetypes cover <strong>top-5 European leagues only</strong> — they may not apply to other leagues</li>
+          <li>Requires <strong>900+ minutes played</strong> — young players with limited game time are excluded</li>
+          <li>Clustering is <strong>per-position-group</strong> — a midfielder&rsquo;s archetype is not comparable to a striker&rsquo;s</li>
+          <li>The model is retrained periodically; archetype definitions may shift slightly between seasons</li>
+        </ul>
+        <p>
+          For the full technical details, see the <a href="/archetypes">archetypes page</a> and
+          the <a href="/docs/ml/player_clustering_v1.md">model card</a>.
+        </p>
+
         <h2>Worked example — a real player, end to end</h2>
         <p>
           To show the arithmetic is real, here is a full walkthrough of a player currently in the
