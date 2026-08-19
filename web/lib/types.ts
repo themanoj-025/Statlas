@@ -1196,3 +1196,127 @@ export type Comment = {
   created_at: string | null;
   edited_at: string | null;
 };
+
+// ---------------------------------------------------------------------------
+// Phase 17 — Tactical Intelligence
+// ---------------------------------------------------------------------------
+
+export type PassNode = {
+  player_id: number;
+  degree_centrality: number;
+  betweenness_centrality: number;
+  clustering_coefficient: number;
+  pass_count: number;
+  pass_success_rate: number;
+  avg_x: number | null;
+  avg_y: number | null;
+};
+
+export type PassEdge = {
+  from: number;
+  to: number;
+  weight: number;
+};
+
+export type TacticalStyle = {
+  style: string;
+  confidence: number;
+  factors: string[];
+  metrics: {
+    total_passes: number;
+    avg_pass_distance: number;
+    avg_success_rate: number;
+    avg_betweenness: number;
+    width_score: number;
+  };
+};
+
+export type TacticalAnomaly = {
+  type: string;
+  player_id: number;
+  severity: string;
+  detail: string;
+};
+
+export type PassingNetworkResult = {
+  match_id: string;
+  phase: string;
+  attribution: string;
+  network: {
+    nodes: PassNode[];
+    edges: PassEdge[];
+    total_passes: number;
+  };
+  style: TacticalStyle;
+  anomalies: TacticalAnomaly[];
+};
+
+export type ZoneDensities = Record<string, number>;
+
+export type PressureMap = {
+  match_id: string;
+  type: string;
+  total_actions: number;
+  zone_densities: ZoneDensities;
+};
+
+export type PossessionMap = {
+  match_id: string;
+  type: string;
+  total_actions: number;
+  zone_densities: ZoneDensities;
+};
+
+export type FormationWindow = {
+  minute_start: number;
+  minute_end: number;
+  formation: string;
+  formation_tuple: [number, number, number];
+  confidence: number;
+};
+
+export type FormationChange = {
+  from_formation: string;
+  to_formation: string;
+  approximate_minute: number;
+};
+
+export type FormationResult = {
+  match_id: string;
+  formation: {
+    formation: [number, number, number];
+    formation_str: string;
+    confidence: number;
+    player_lines: Record<number, string>;
+  };
+  stability: {
+    windows: FormationWindow[];
+    changes: FormationChange[];
+    stability_score: number;
+    dominant_formation: string;
+  };
+};
+
+export type FormationStability = {
+  windows: FormationWindow[];
+  changes: FormationChange[];
+  stability_score: number;
+  dominant_formation: string;
+};
+
+export type TacticalOverview = {
+  match_id: string;
+  attribution: string;
+  passing_network: {
+    nodes: PassNode[];
+    edges: PassEdge[];
+    total_passes: number;
+  };
+  style: TacticalStyle;
+  anomalies: TacticalAnomaly[];
+  pressure_map: PressureMap;
+  possession_map: PossessionMap;
+  formation: FormationResult;
+  formation_stability: FormationStability;
+};
+

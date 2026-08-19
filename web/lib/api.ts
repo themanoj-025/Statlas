@@ -58,6 +58,11 @@ import type {
   OrgSettings,
   AuditEntry,
   Comment,
+  PassingNetworkResult,
+  PressureMap,
+  PossessionMap,
+  FormationResult,
+  TacticalOverview,
 } from "./types";
 
 // Server components read the API at STATLAS_API_URL (no CORS involved);
@@ -424,6 +429,21 @@ export const api = {
   addComment: (resourceType: string, resourceId: number, orgId: number, text: string, parentId?: number) =>
     post<{ comment_id: number }>(`/api/v1/comments/${resourceType}/${resourceId}${qs({ org_id: orgId })}`,
       { text, parent_id: parentId ?? null }),
+  // Phase 17 — Tactical Intelligence
+  tacticalOverview: (matchId: string) =>
+    get<TacticalOverview>(`/api/v1/tactical/matches/${matchId}/overview`),
+  passingNetwork: (matchId: string, params?: { phase?: string; minute_start?: number; minute_end?: number }) =>
+    get<PassingNetworkResult>(`/api/v1/tactical/matches/${matchId}/passing-network${qs(params ?? {})}`),
+  pressureMap: (matchId: string) =>
+    get<PressureMap>(`/api/v1/tactical/matches/${matchId}/pressure-map`),
+  possessionMap: (matchId: string) =>
+    get<PossessionMap>(`/api/v1/tactical/matches/${matchId}/possession-map`),
+  pressureSuccess: (matchId: string) =>
+    get<Record<string, unknown>>(`/api/v1/tactical/matches/${matchId}/pressure-success`),
+  formation: (matchId: string, params?: { window_minutes?: number }) =>
+    get<FormationResult>(`/api/v1/tactical/matches/${matchId}/formation${qs(params ?? {})}`),
+  tacticalCoverage: (matchId: string) =>
+    get<{ has_coverage: boolean; event_count: number; message: string }>(`/api/v1/tactical/matches/${matchId}/coverage`),
 };
 
 async function del<T>(path: string): Promise<T> {
