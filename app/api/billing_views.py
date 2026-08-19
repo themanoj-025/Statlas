@@ -143,8 +143,8 @@ def password_reset_request(body: PasswordResetRequestBody):
         user = db.query(User).filter(User.email == body.email.lower()).first()
         if user is not None:
             token = auth.create_password_reset_token(db, user.id)
-            # In production, send email here. For now, log for dev/testing.
-            logger.info("Password reset token for %s: %s", user.email, token)
+            # In production, send email here. For dev/testing, log only a truncated reference.
+            logger.info("Password reset token generated for %s (token prefix: %s...)", user.email, token[:8])
     return {"detail": "If an account with that email exists, a reset link has been sent."}
 
 
