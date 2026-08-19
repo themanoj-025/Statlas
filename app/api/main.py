@@ -36,6 +36,7 @@ from app.api.report_views import router as report_router
 from app.api.search_views import router as search_router
 from app.api.watch_views import router as watch_router
 from app.api.workspace_views import router as workspace_router
+from app.api.archetype_views import router as archetype_router
 from app.config import get_settings, load_registry
 from app.db import session_scope
 
@@ -69,6 +70,7 @@ app.include_router(search_router)
 app.include_router(report_router)
 app.include_router(watch_router)
 app.include_router(dashboard_router)
+app.include_router(archetype_router)
 
 @app.middleware("http")
 async def attach_api_rate_limit_headers(request: Request, call_next):

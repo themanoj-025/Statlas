@@ -67,6 +67,9 @@ class RefreshReport:
     alerts_created: int = 0
     alerts_by_type: dict[str, int] = field(default_factory=dict)
     emerging_scores: int = 0
+    archetype_assignments: int = 0
+    archetype_outliers: int = 0
+    archetype_churn: float = 0.0
     errors: list[str] = field(default_factory=list)
 
     def add(self, **kw: Any) -> None:
@@ -421,6 +424,44 @@ def run_weekly_refresh(
         season=season,
     )
     report.emerging_scores = emerging_count
+
+    # --- 9. player clustering & archetypes (Phase 14) -------------------------
+    # After publish: assign all qualifying players to archetypes.
+    # Idempotent: re-running for the same snapshot_date replaces assignments.
+    try:
+        from app.compute.clustering import (
+            check_model_staleness,
+            assign_all_players,
+        )
+        from app.models import ClusteringModel
+
+        active_model = (
+            db.query(ClusteringModel)
+            .filter_by(status="in_production")
+            .first()
+        )
+        if active_model is not None:
+            # Check staleness before assignment
+            if not check_model_staleness(db, active_model.id):
+                assignment_report = assign_all_players(
+                    db,
+                    snapshot_date=snapshot_date,
+                    model_id=active_model.id,
+                    season=season,
+                )
+                report.archetype_assignments = assignment_report.players_assigned
+                report.archetype_outliers = assignment_report.players_outlier
+                report.archetype_churn = assignment_report.churn_rate
+            else:
+                report.errors.append(
+                    f"Clustering model {active_model.model_name} v{active_model.version} "
+                    f"is stale — archetype assignment skipped"
+                )
+        else:
+            logger.info("No active clustering model — archetype assignment skipped")
+    except Exception as exc:
+        report.errors.append(f"archetype assignment: {exc}")
+        logger.exception("archetype assignment failed")
 
     # --- optional extra layers -----------------------------------------------
     if do_statsbomb and statsbomb_source is not None:

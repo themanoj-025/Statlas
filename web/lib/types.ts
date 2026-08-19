@@ -910,3 +910,91 @@ export type DashboardSummary = {
   recommended_players: DashboardRecommendedPlayer[];
   saved_players: DashboardSavedPlayer[];
 };
+
+// ---------------------------------------------------------------------------
+// Phase 14 — Player Archetypes (ML clustering)
+// ---------------------------------------------------------------------------
+// Constitution Addendum §1.2: Archetypes are patterns, not predictions.
+// Every archetype output is labeled as a statistical pattern.
+
+export type ArchetypeModel = {
+  model_id: number;
+  model_name: string;
+  version: string;
+  algorithm: string;
+  n_clusters: number;
+  silhouette_score: number | null;
+  training_date: string | null;
+  deployed_at: string | null;
+  training_data_source: string;
+};
+
+export type ArchetypeDefinition = {
+  cluster_id: number;
+  name: string;
+  description: string;
+  player_count: number;
+  distinguishing_features: {
+    feature: string;
+    cluster_value: number;
+    global_value: number;
+    difference: number;
+  }[];
+  example_players: {
+    player_id: number;
+    name: string;
+  }[];
+};
+
+export type ArchetypeOverview = {
+  model: ArchetypeModel | null;
+  archetypes: ArchetypeDefinition[];
+  total_players: number;
+};
+
+export type ArchetypePlayer = {
+  player_id: number;
+  name: string;
+  position_group: string | null;
+  club: string | null;
+  league: string | null;
+  league_slug: string | null;
+  distance_to_center: number;
+  typicality: number;
+  top_distinguishing_features: {
+    feature: string;
+    player_value: number;
+    archetype_average: number;
+  }[];
+  minutes_played: number | null;
+};
+
+export type ArchetypeDetail = {
+  model_id: number;
+  cluster_id: number;
+  archetype_name: string;
+  archetype_description: string;
+  total: number;
+  limit: number;
+  offset: number;
+  players: ArchetypePlayer[];
+};
+
+export type PlayerArchetype = {
+  player_id: number;
+  model_version: string;
+  cluster_id: number | null;
+  archetype_name: string | null;
+  archetype_description: string | null;
+  distance_to_center: number | null;
+  typicality: number | null;
+  is_outlier: boolean | null;
+  top_distinguishing_features: {
+    feature: string;
+    player_value: number;
+    archetype_average: number;
+  }[];
+  computed_date: string | null;
+  snapshot_date: string | null;
+  note?: string;
+};
