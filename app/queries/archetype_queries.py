@@ -9,7 +9,6 @@ of what the cluster represents.
 
 from __future__ import annotations
 
-from datetime import datetime
 from typing import Any
 
 from sqlalchemy.orm import Session
@@ -18,10 +17,10 @@ from app.models import (
     ArchetypeAssignment,
     ArchetypeDefinition,
     ClusteringModel,
+    League,
     Player,
     StatSnapshot,
     Team,
-    League,
 )
 
 

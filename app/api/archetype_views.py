@@ -56,7 +56,7 @@ def archetype_detail(cluster_id: int, limit: int = Query(50, ge=1, le=200)):
     Returns the archetype definition and a paginated list of players
     assigned to this archetype.
     """
-    from app.queries.archetype_queries import get_archetype_players, get_active_model
+    from app.queries.archetype_queries import get_active_model, get_archetype_players
 
     with session_scope() as db:
         model = get_active_model(db)

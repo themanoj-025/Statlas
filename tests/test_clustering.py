@@ -14,11 +14,9 @@ Constitution Addendum §6: All governance checkpoints are verified by these test
 
 from __future__ import annotations
 
-import os
-import shutil
 from datetime import datetime, timezone
 from pathlib import Path
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 import numpy as np
 import pytest
@@ -26,12 +24,7 @@ from sqlalchemy.orm import Session
 
 from app.compute.clustering import (
     CLUSTERING_FEATURES,
-    CLUSTERING_MIN_MINUTES,
-    DEFAULT_N_CLUSTERS,
-    OUTFIELD_POSITIONS,
     SILHOUETTE_THRESHOLD,
-    AssignmentReport,
-    ClusteringReport,
     _generate_archetype_description,
     _generate_archetype_name,
     assign_all_players,
@@ -41,13 +34,10 @@ from app.compute.clustering import (
     compute_cluster_centers,
     deploy_model,
     find_optimal_k,
-    generate_archetype_definitions,
     rollback_model,
     train_clustering_model,
 )
 from app.models import (
-    ArchetypeAssignment,
-    ArchetypeDefinition,
     ClusteringModel,
     ClusteringMonitoringLog,
     League,
@@ -55,7 +45,6 @@ from app.models import (
     StatSnapshot,
     Team,
 )
-
 
 # ---------------------------------------------------------------------------
 # Fixtures
@@ -379,7 +368,7 @@ class TestClusteringTraining:
         for i in range(30):
             _make_player(db, f"Player {i}", "CM", league=premier_league)
 
-        report = train_clustering_model(
+        train_clustering_model(
             db,
             season="2025-26",
             model_name="test_pipeline_save",
@@ -773,7 +762,7 @@ class TestMonitoring:
 
         # Manually set old training date
         model = db.get(ClusteringModel, report.model_id)
-        model.training_date = datetime(2025, 1, 1)
+        model.training_date = datetime(2025, 1, 1, tzinfo=timezone.utc)
         db.commit()
 
         is_stale = check_model_staleness(db, report.model_id)
@@ -808,9 +797,9 @@ class TestClusterCenters:
             db, season="2025-26"
         )
 
+        from sklearn.cluster import KMeans
         from sklearn.pipeline import Pipeline
         from sklearn.preprocessing import StandardScaler
-        from sklearn.cluster import KMeans
 
         pipeline = Pipeline([
             ("scaler", StandardScaler()),

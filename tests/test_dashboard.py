@@ -21,22 +21,16 @@ from app.activity import DEDUP_WINDOW_SECONDS, log_activity
 from app.models import (
     ActivityLog,
     Base,
-    DashboardState,
     League,
     PercentileSnapshot,
     Player,
-    SavedPlayer,
     Shortlist,
-    ShortlistEntry,
     StatSnapshot,
     User,
-    Watch,
-    WatchAlert,
 )
 from app.queries.dashboard_queries import (
     dismiss_recommendation,
     get_or_create_dashboard_state,
-    get_recent_activity,
     get_recommended_players,
     get_saved_players,
     get_trending_players,
