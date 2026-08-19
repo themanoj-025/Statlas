@@ -909,6 +909,7 @@ export type DashboardSummary = {
   trending_players: DashboardTrendingPlayer[];
   recommended_players: DashboardRecommendedPlayer[];
   saved_players: DashboardSavedPlayer[];
+  transfer_opportunities: OpportunityCard[];
 };
 
 // ---------------------------------------------------------------------------
@@ -997,4 +998,201 @@ export type PlayerArchetype = {
   computed_date: string | null;
   snapshot_date: string | null;
   note?: string;
+};
+
+// ---------------------------------------------------------------------------
+// Phase 15 — Transfer Intelligence
+// ---------------------------------------------------------------------------
+
+export type ValuationComparison = {
+  player_id: number;
+  player_name: string;
+  stat_value_score: number;
+  stat_value_eur: number;
+  market_value_eur: number;
+  market_source: string;
+  market_confidence: string;
+  valuation_gap_eur: number;
+  valuation_gap_pct: number;
+  label: string;
+  signal_strength: string;
+  explanation: string;
+  age_adjustment: number;
+  stat_snapshot_date: string;
+};
+
+export type TransferCandidate = {
+  player_id: number;
+  name: string;
+  age: number | null;
+  position_group: string;
+  club: string | null;
+  league: string | null;
+  league_slug: string | null;
+  index_score: number;
+  market_value_eur: number | null;
+  market_source: string | null;
+  market_confidence: string | null;
+  contract_status: string;
+  contract_status_label: string;
+  years_remaining: number | null;
+  availability_score: number;
+  composite_score: number;
+  minutes_played: number;
+};
+
+export type TransferCandidateResult = {
+  total: number;
+  limit: number;
+  offset: number;
+  candidates: TransferCandidate[];
+};
+
+export type CandidateTemplate = {
+  id: string;
+  name: string;
+  rationale: string;
+  filters: Record<string, unknown>;
+};
+
+export type OpportunityCard = {
+  player_id: number;
+  name: string;
+  age: number | null;
+  position_group: string;
+  club: string | null;
+  league: string | null;
+  index_score: number;
+  market_value_eur: number | null;
+  stat_value_eur: number;
+  upside_eur: number;
+  upside_pct?: number;
+  confidence?: string;
+  opportunity_type: string;
+  opportunity_summary: string;
+  risk_factors: string[];
+};
+
+export type TransferRisk = {
+  player_id: number;
+  risk_tier: string;
+  risk_score: number;
+  risk_factors: string[];
+  mitigation_factors: string[];
+};
+
+export type ValuationConfidence = {
+  player_id: number;
+  confidence_score: number;
+  confidence_level: string;
+  factors: Record<string, { score: number; detail: string }>;
+};
+
+export type ValuationGapPlayer = {
+  player_id: number;
+  name: string;
+  position_group: string;
+  club: string | null;
+  league: string | null;
+  stat_value_score: number;
+  stat_value_eur: number;
+  market_value_eur: number;
+  market_source: string;
+  valuation_gap_eur: number;
+  valuation_gap_pct: number;
+  age: number | null;
+  signal_strength: string;
+  note?: string;
+};
+
+export type PositionScarcityOpportunity = {
+  player_id: number;
+  name: string;
+  age: number | null;
+  position_group: string;
+  club: string | null;
+  league: string | null;
+  index_score: number;
+  market_value_eur: number | null;
+  premium_factor: number;
+  opportunity_type: string;
+  opportunity_summary: string;
+  risk_factors: string[];
+};
+
+// ---------------------------------------------------------------------------
+// Phase 16 — Organizations / Multi-Tenant
+// ---------------------------------------------------------------------------
+
+export type OrgSummary = {
+  org_id: number;
+  name: string;
+  slug: string;
+  role: string;
+  tier: string;
+  joined_at: string | null;
+};
+
+export type OrgDetail = {
+  org_id: number;
+  name: string;
+  slug: string;
+  tier: string;
+  owner_user_id: number;
+  member_count: number;
+  created_at: string | null;
+  country: string | null;
+};
+
+export type OrgMember = {
+  user_id: number;
+  email: string;
+  display_name: string | null;
+  role: string;
+  joined_at: string | null;
+};
+
+export type OrgInviteResult = {
+  invite_id: number;
+  email: string;
+  role: string;
+  expires_at: string;
+  raw_token: string;
+};
+
+export type OrgJoinResult = {
+  org_id: number;
+  role: string;
+  joined_at: string | null;
+};
+
+export type OrgSettings = {
+  org_id: number;
+  data_retention_days: number;
+  workspace_name: string | null;
+  enable_audit_logging: boolean;
+  allow_public_reporting: boolean;
+  require_2fa: boolean;
+};
+
+export type AuditEntry = {
+  id: number;
+  action: string;
+  performed_by: string;
+  performed_by_user_id: number;
+  target_user_id: number | null;
+  resource_type: string | null;
+  resource_id: number | null;
+  detail: Record<string, unknown>;
+  created_at: string | null;
+};
+
+export type Comment = {
+  comment_id: number;
+  author: string;
+  author_user_id: number;
+  text: string;
+  parent_id: number | null;
+  created_at: string | null;
+  edited_at: string | null;
 };

@@ -490,6 +490,64 @@ def dismiss_recommendation(db: Session, user_id: int, player_id: int) -> None:
 
 
 # ---------------------------------------------------------------------------
+# B1.5 — Top viewed positions (for transfer opportunities widget)
+# ---------------------------------------------------------------------------
+
+
+def get_top_viewed_positions(
+    db: Session,
+    user_id: int,
+    *,
+    lookback_days: int = 30,
+    limit: int = 5,
+) -> list[str]:
+    """Return the position groups the user has viewed most frequently.
+
+    Used by the dashboard's transfer opportunities widget to surface
+    relevant hidden gems for the user's areas of interest.
+    """
+    cutoff = datetime.now(timezone.utc) - timedelta(days=lookback_days)
+
+    # Get recently viewed player IDs
+    viewed_player_ids = [
+        r[0]
+        for r in (
+            db.query(ActivityLog.entity_id)
+            .filter(
+                ActivityLog.user_id == user_id,
+                ActivityLog.entity_type == "player",
+                ActivityLog.action_type == "viewed",
+                ActivityLog.performed_at > cutoff,
+            )
+            .distinct()
+            .all()
+        )
+    ]
+    if not viewed_player_ids:
+        return []
+
+    # Count position groups from viewed players
+    from sqlalchemy import func
+
+    position_counts = (
+        db.query(
+            Player.position_group,
+            func.count().label("view_count"),
+        )
+        .filter(
+            Player.id.in_(viewed_player_ids),
+            Player.position_group.isnot(None),
+        )
+        .group_by(Player.position_group)
+        .order_by(func.count().desc())
+        .limit(limit)
+        .all()
+    )
+
+    return [row.position_group for row in position_counts if row.position_group]
+
+
+# ---------------------------------------------------------------------------
 # B2 — Saved players CRUD
 # ---------------------------------------------------------------------------
 

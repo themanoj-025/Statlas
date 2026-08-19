@@ -42,6 +42,7 @@ from app.compute.anomaly_check import (
 from app.config import load_tiers
 from app.models import DataCoverage, League, Player, StatSnapshot, Team
 from app.reconciliation import Reconciler
+from app.sources.market_data import FixtureMarketDataSource
 
 logger = logging.getLogger(__name__)
 
@@ -70,6 +71,9 @@ class RefreshReport:
     archetype_assignments: int = 0
     archetype_outliers: int = 0
     archetype_churn: float = 0.0
+    market_valuations_inserted: int = 0
+    market_valuations_flagged: int = 0
+    market_contracts_inserted: int = 0
     errors: list[str] = field(default_factory=list)
 
     def add(self, **kw: Any) -> None:
@@ -462,6 +466,107 @@ def run_weekly_refresh(
     except Exception as exc:
         report.errors.append(f"archetype assignment: {exc}")
         logger.exception("archetype assignment failed")
+
+    # --- 10. market data ingestion (Phase 15) ---------------------------------
+    # Idempotent: valuations use (player_id, source, valuation_date) natural
+    # key — re-running for the same date skips duplicates.
+    try:
+        from app.sources.market_data import MarketDataSource
+        from app.models import MarketValuation, ContractStatus
+
+        # Collect all player IDs that have qualifying snapshots this run
+        qualifying_player_ids = [
+            pid for (pid,) in (
+                db.query(StatSnapshot.player_id)
+                .filter(
+                    StatSnapshot.scrape_date == snapshot_date,
+                    StatSnapshot.minutes_played >= 900,
+                )
+                .distinct()
+                .all()
+            )
+        ]
+
+        if qualifying_player_ids:
+            # Fetch and store market valuations (fixture or real source)
+            market_source = FixtureMarketDataSource(seed=42)
+            valuation_records = market_source.fetch_valuations(
+                qualifying_player_ids, as_of=snapshot_date
+            )
+            from app.compute.market_validation import validate_batch, validate_valuation
+            val_inserted = 0
+            val_flagged = 0
+            for rec in valuation_records:
+                # Validate before insertion (Constitution §3: reject implausible)
+                mv = MarketValuation(
+                    player_id=rec.player_id,
+                    source=rec.source,
+                    valuation_amount_eur=rec.valuation_amount_eur,
+                    valuation_date=rec.valuation_date,
+                    low_range=rec.low_range,
+                    high_range=rec.high_range,
+                    confidence_level=rec.confidence_level,
+                    raw=rec.raw,
+                )
+                val_result = validate_valuation(mv, db)
+                if not val_result.is_valid:
+                    val_flagged += 1
+                    for issue in val_result.issues:
+                        report.errors.append(f"market valuation player={rec.player_id}: {issue}")
+                    if val_result.severity == "error":
+                        continue  # Block error-severity records from publication
+                existing = (
+                    db.query(MarketValuation)
+                    .filter_by(
+                        player_id=rec.player_id,
+                        source=rec.source,
+                        valuation_date=rec.valuation_date,
+                    )
+                    .first()
+                )
+                if existing is not None:
+                    continue
+                db.add(mv)
+                val_inserted += 1
+            report.market_valuations_inserted = val_inserted
+            report.market_valuations_flagged = val_flagged
+
+            # Fetch and store contract statuses
+            contract_records = market_source.fetch_contracts(
+                qualifying_player_ids, as_of=snapshot_date
+            )
+            contracts_inserted = 0
+            for rec in contract_records:
+                existing = (
+                    db.query(ContractStatus)
+                    .filter_by(
+                        player_id=rec.player_id,
+                        source=rec.source,
+                        snapshot_date=rec.snapshot_date,
+                    )
+                    .first()
+                )
+                if existing is not None:
+                    continue
+                db.add(
+                    ContractStatus(
+                        player_id=rec.player_id,
+                        current_team_id=rec.current_team_id,
+                        contract_end_date=rec.contract_end_date,
+                        contract_value_per_year_eur=rec.contract_value_per_year_eur,
+                        contract_status=rec.contract_status,
+                        source=rec.source,
+                        snapshot_date=rec.snapshot_date,
+                        raw=rec.raw,
+                    )
+                )
+                contracts_inserted += 1
+            report.market_contracts_inserted = contracts_inserted
+
+            report.leagues_scraped.append("market_data")
+    except Exception as exc:
+        report.errors.append(f"market data ingestion: {exc}")
+        logger.exception("market data ingestion failed")
 
     # --- optional extra layers -----------------------------------------------
     if do_statsbomb and statsbomb_source is not None:

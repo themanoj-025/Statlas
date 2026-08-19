@@ -27,6 +27,9 @@ from pydantic import BaseModel
 
 from app import auth
 from app.api.archetype_views import router as archetype_router
+from app.api.transfer_views import router as transfer_router
+from app.api.org_views import router as org_router
+from app.api.comment_views import router as comment_router
 from app.api.assistant_views import router as assistant_router
 from app.api.billing_views import router as billing_router
 from app.api.dashboard_views import router as dashboard_router
@@ -71,6 +74,9 @@ app.include_router(report_router)
 app.include_router(watch_router)
 app.include_router(dashboard_router)
 app.include_router(archetype_router)
+app.include_router(transfer_router)
+app.include_router(org_router)
+app.include_router(comment_router)
 
 @app.middleware("http")
 async def attach_api_rate_limit_headers(request: Request, call_next):

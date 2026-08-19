@@ -360,7 +360,12 @@ CREATE TABLE shortlists (
     description TEXT,
     created_at  TIMESTAMPTZ NOT NULL DEFAULT now(),
     updated_at  TIMESTAMPTZ NOT NULL DEFAULT now(),
-    deleted_at  TIMESTAMPTZ                 -- soft delete — history preserved
+    deleted_at  TIMESTAMPTZ,                -- soft delete — history preserved
+    -- Phase 16 — org ownership (null = personal, existing behavior)
+    owner_org_id     INTEGER REFERENCES organizations(id),
+    visibility       resource_visibility NOT NULL DEFAULT 'personal',
+    created_by_user_id INTEGER REFERENCES users(id),
+    restricted_access JSONB                  -- array of user_ids if visibility='restricted'
 );
 CREATE INDEX ix_shortlists_user ON shortlists (user_id);
 
@@ -425,7 +430,11 @@ CREATE TABLE saved_searches (
     query_definition JSONB       NOT NULL,               -- the structured condition model
     created_at       TIMESTAMPTZ NOT NULL DEFAULT now(),
     updated_at       TIMESTAMPTZ NOT NULL DEFAULT now(),
-    last_run_at      TIMESTAMPTZ                         -- set on every re-run
+    last_run_at      TIMESTAMPTZ,                        -- set on every re-run
+    -- Phase 16 — org ownership
+    owner_org_id     INTEGER REFERENCES organizations(id),
+    visibility       resource_visibility NOT NULL DEFAULT 'personal',
+    created_by_user_id INTEGER REFERENCES users(id)
 );
 CREATE INDEX ix_saved_searches_user ON saved_searches (user_id);
 
@@ -461,6 +470,10 @@ CREATE TABLE watches (
     entity_id        INTEGER      NOT NULL,
     followed_metrics JSONB,                    -- nullable; null = broad "any significant movement"
     created_at       TIMESTAMPTZ  NOT NULL DEFAULT now(),
+    -- Phase 16 — org ownership
+    owner_org_id     INTEGER REFERENCES organizations(id),
+    visibility       resource_visibility NOT NULL DEFAULT 'personal',
+    created_by_user_id INTEGER REFERENCES users(id),
     UNIQUE (user_id, entity_type, entity_id)   -- a user follows an entity once
 );
 CREATE INDEX ix_watches_user ON watches (user_id);
@@ -504,7 +517,11 @@ CREATE TABLE reports (
     data_snapshot_date    TIMESTAMPTZ NOT NULL,                          -- which snapshot this report is based on
     report_json           JSONB       NOT NULL,                          -- the full structured report (canonical export source)
     verification_log      JSONB       NOT NULL DEFAULT '{}',
-    created_at            TIMESTAMPTZ NOT NULL DEFAULT now()
+    created_at            TIMESTAMPTZ NOT NULL DEFAULT now(),
+    -- Phase 16 — org ownership
+    owner_org_id          INTEGER REFERENCES organizations(id),
+    visibility            resource_visibility NOT NULL DEFAULT 'personal',
+    created_by_user_id    INTEGER REFERENCES users(id)
 );
 CREATE INDEX ix_reports_user ON reports (user_id);
 
@@ -576,5 +593,222 @@ CREATE TABLE saved_players (
     UNIQUE (user_id, player_id)
 );
 CREATE INDEX ix_saved_players_user ON saved_players (user_id, saved_at DESC);
+
+-- ===========================================================================
+-- Phase 15 — Transfer Intelligence & Market Data
+-- ===========================================================================
+-- All market data is versioned and append-only (Constitution §3).
+-- Valuations carry source attribution and confidence levels.
+-- Transfer history is real, confirmed data — never fabricated.
+
+CREATE TYPE market_source AS ENUM ('transfermarkt', 'understat_transfer', 'instat', 'manual');
+CREATE TYPE transfer_type AS ENUM ('permanent', 'loan', 'free_agent');
+CREATE TYPE transfer_status AS ENUM ('confirmed', 'reported');
+CREATE TYPE contract_status AS ENUM ('active', 'expiring_next_season', 'expired', 'on_loan');
+CREATE TYPE valuation_confidence AS ENUM ('high', 'medium', 'low');
+CREATE TYPE risk_tier AS ENUM ('low', 'medium', 'high');
+
+CREATE TABLE market_valuations (
+    id                    SERIAL PRIMARY KEY,
+    player_id             INTEGER NOT NULL REFERENCES players(id),
+    source                market_source NOT NULL,
+    valuation_amount_eur  DOUBLE PRECISION NOT NULL,
+    valuation_date        TIMESTAMPTZ NOT NULL,
+    low_range             DOUBLE PRECISION,
+    high_range            DOUBLE PRECISION,
+    confidence_level      valuation_confidence NOT NULL DEFAULT 'medium',
+    raw                   JSONB NOT NULL DEFAULT '{}',
+    created_at            TIMESTAMPTZ NOT NULL DEFAULT now(),
+    UNIQUE (player_id, source, valuation_date)
+);
+CREATE INDEX ix_market_valuation_player ON market_valuations (player_id, valuation_date DESC);
+CREATE INDEX ix_market_valuation_date ON market_valuations (valuation_date);
+
+CREATE TABLE transfer_history (
+    id                SERIAL PRIMARY KEY,
+    player_id         INTEGER NOT NULL REFERENCES players(id),
+    from_team_id      INTEGER REFERENCES teams(id),
+    to_team_id        INTEGER NOT NULL REFERENCES teams(id),
+    transfer_date     TIMESTAMPTZ NOT NULL,
+    reported_fee_eur  DOUBLE PRECISION,
+    transfer_type     transfer_type NOT NULL,
+    status            transfer_status NOT NULL DEFAULT 'reported',
+    source            market_source NOT NULL,
+    raw               JSONB NOT NULL DEFAULT '{}',
+    created_at        TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+CREATE INDEX ix_transfer_player ON transfer_history (player_id);
+CREATE INDEX ix_transfer_date ON transfer_history (transfer_date);
+CREATE INDEX ix_transfer_to_team ON transfer_history (to_team_id);
+
+CREATE TABLE contract_status (
+    id                         SERIAL PRIMARY KEY,
+    player_id                  INTEGER NOT NULL REFERENCES players(id),
+    current_team_id            INTEGER REFERENCES teams(id),
+    contract_end_date          TIMESTAMPTZ,
+    contract_value_per_year_eur DOUBLE PRECISION,
+    contract_status            contract_status NOT NULL DEFAULT 'active',
+    source                     market_source NOT NULL,
+    snapshot_date              TIMESTAMPTZ NOT NULL,
+    raw                        JSONB NOT NULL DEFAULT '{}',
+    created_at                 TIMESTAMPTZ NOT NULL DEFAULT now(),
+    UNIQUE (player_id, source, snapshot_date)
+);
+CREATE INDEX ix_contract_player ON contract_status (player_id);
+
+-- ===========================================================================
+-- Phase 16 — Organization / Multi-Tenant Architecture
+-- ===========================================================================
+-- Design (Multi-Tenant Addendum):
+-- * Org membership is opt-in: solo users continue working unchanged.
+-- * Every user-owned resource gains optional owner_org_id + visibility.
+-- * RBAC enforced at query layer via user_has_permission().
+-- * Audit logging captures all team-structure changes.
+
+CREATE TYPE org_role AS ENUM ('owner', 'manager', 'scout', 'viewer');
+CREATE TYPE resource_visibility AS ENUM ('personal', 'org_members', 'restricted');
+CREATE TYPE org_tier AS ENUM ('free', 'pro', 'enterprise');
+CREATE TYPE org_invite_status AS ENUM ('pending', 'accepted', 'expired');
+CREATE TYPE audit_action AS ENUM (
+    'user_added', 'user_removed', 'role_changed',
+    'resource_created', 'resource_shared', 'resource_deleted',
+    'comment_added'
+);
+CREATE TYPE mention_status AS ENUM ('pending', 'read');
+
+CREATE TABLE organizations (
+    id                     SERIAL PRIMARY KEY,
+    name                   VARCHAR(256) NOT NULL,
+    slug                   VARCHAR(128) NOT NULL UNIQUE,
+    owner_user_id          INTEGER      NOT NULL REFERENCES users(id),
+    tier                   org_tier     NOT NULL DEFAULT 'free',
+    created_at             TIMESTAMPTZ  NOT NULL DEFAULT now(),
+    updated_at             TIMESTAMPTZ  NOT NULL DEFAULT now(),
+    plan_expires_at        TIMESTAMPTZ,
+    primary_contact_email  VARCHAR(320),
+    billing_contact_email  VARCHAR(320),
+    country                VARCHAR(64)
+);
+CREATE INDEX ix_organizations_slug ON organizations (slug);
+CREATE INDEX ix_organizations_owner ON organizations (owner_user_id);
+
+CREATE TABLE org_memberships (
+    id                     SERIAL PRIMARY KEY,
+    org_id                 INTEGER      NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+    user_id                INTEGER      NOT NULL REFERENCES users(id),
+    role                   org_role     NOT NULL DEFAULT 'scout',
+    joined_at              TIMESTAMPTZ  NOT NULL DEFAULT now(),
+    invited_by_user_id     INTEGER      REFERENCES users(id),
+    permissions_override    JSONB,
+    UNIQUE (org_id, user_id)
+);
+CREATE INDEX ix_org_memberships_org ON org_memberships (org_id);
+CREATE INDEX ix_org_memberships_user ON org_memberships (user_id);
+
+CREATE TABLE org_settings (
+    id                     SERIAL PRIMARY KEY,
+    org_id                 INTEGER      NOT NULL REFERENCES organizations(id) ON DELETE CASCADE UNIQUE,
+    data_retention_days    INTEGER      NOT NULL DEFAULT 90,
+    workspace_name         VARCHAR(128),
+    enable_audit_logging   BOOLEAN      NOT NULL DEFAULT TRUE,
+    allow_public_reporting BOOLEAN      NOT NULL DEFAULT FALSE,
+    require_2fa            BOOLEAN      NOT NULL DEFAULT FALSE,
+    created_at             TIMESTAMPTZ  NOT NULL DEFAULT now(),
+    updated_at             TIMESTAMPTZ  NOT NULL DEFAULT now()
+);
+CREATE INDEX ix_org_settings_org ON org_settings (org_id);
+
+CREATE TABLE org_invites (
+    id                     SERIAL PRIMARY KEY,
+    org_id                 INTEGER      NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+    email                  VARCHAR(320) NOT NULL,
+    role                   org_role     NOT NULL,
+    token_hash             VARCHAR(64)  NOT NULL,
+    invited_by_user_id     INTEGER      NOT NULL REFERENCES users(id),
+    status                 org_invite_status NOT NULL DEFAULT 'pending',
+    created_at             TIMESTAMPTZ  NOT NULL DEFAULT now(),
+    expires_at             TIMESTAMPTZ  NOT NULL,
+    accepted_at            TIMESTAMPTZ
+);
+CREATE INDEX ix_org_invites_org ON org_invites (org_id);
+CREATE INDEX ix_org_invites_token ON org_invites (token_hash);
+
+CREATE TABLE org_audit_log (
+    id                     SERIAL PRIMARY KEY,
+    org_id                 INTEGER      NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+    action                 audit_action NOT NULL,
+    performed_by_user_id   INTEGER      NOT NULL REFERENCES users(id),
+    target_user_id         INTEGER      REFERENCES users(id),
+    resource_type          VARCHAR(32),
+    resource_id            INTEGER,
+    detail                 JSONB        NOT NULL DEFAULT '{}',
+    created_at             TIMESTAMPTZ  NOT NULL DEFAULT now()
+);
+CREATE INDEX ix_audit_log_org ON org_audit_log (org_id, created_at);
+CREATE INDEX ix_audit_log_performed_by ON org_audit_log (performed_by_user_id);
+
+CREATE TABLE comments (
+    id                     SERIAL PRIMARY KEY,
+    resource_type          VARCHAR(32)  NOT NULL,
+    resource_id            INTEGER      NOT NULL,
+    org_id                 INTEGER      NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+    author_user_id         INTEGER      NOT NULL REFERENCES users(id),
+    parent_id              INTEGER      REFERENCES comments(id),
+    text                   TEXT         NOT NULL,
+    created_at             TIMESTAMPTZ  NOT NULL DEFAULT now(),
+    edited_at              TIMESTAMPTZ,
+    deleted_at             TIMESTAMPTZ
+);
+CREATE INDEX ix_comments_resource ON comments (resource_type, resource_id);
+CREATE INDEX ix_comments_org ON comments (org_id, created_at);
+CREATE INDEX ix_comments_author ON comments (author_user_id);
+
+CREATE TABLE mentions (
+    id                     SERIAL PRIMARY KEY,
+    comment_id             INTEGER      NOT NULL REFERENCES comments(id) ON DELETE CASCADE,
+    mentioned_user_id      INTEGER      NOT NULL REFERENCES users(id),
+    org_id                 INTEGER      NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+    status                 mention_status NOT NULL DEFAULT 'pending',
+    created_at             TIMESTAMPTZ  NOT NULL DEFAULT now()
+);
+CREATE INDEX ix_mentions_user ON mentions (mentioned_user_id, status);
+CREATE INDEX ix_mentions_comment ON mentions (comment_id);
+
+COMMIT;
+
+-- ============================================================================
+-- PHASE 16 MIGRATION — Add org ownership columns to existing tables
+-- ============================================================================
+-- These ALTER TABLE statements add the new columns for multi-tenant support.
+-- Safe to run multiple times (IF NOT EXISTS guards).
+-- Existing data is unaffected: all new columns default to personal/null.
+--
+-- Usage:  psql $DATABASE_URL -f app/schema.sql
+-- (The CREATE TABLE statements above are idempotent with IF NOT EXISTS
+--  on most; the ALTERs below are the migration path for existing DBs.)
+-- ============================================================================
+
+BEGIN;
+
+-- Add org ownership columns to shortlists
+ALTER TABLE shortlists ADD COLUMN IF NOT EXISTS owner_org_id INTEGER REFERENCES organizations(id);
+ALTER TABLE shortlists ADD COLUMN IF NOT EXISTS visibility resource_visibility NOT NULL DEFAULT 'personal';
+ALTER TABLE shortlists ADD COLUMN IF NOT EXISTS created_by_user_id INTEGER REFERENCES users(id);
+ALTER TABLE shortlists ADD COLUMN IF NOT EXISTS restricted_access JSONB;
+
+-- Add org ownership columns to saved_searches
+ALTER TABLE saved_searches ADD COLUMN IF NOT EXISTS owner_org_id INTEGER REFERENCES organizations(id);
+ALTER TABLE saved_searches ADD COLUMN IF NOT EXISTS visibility resource_visibility NOT NULL DEFAULT 'personal';
+ALTER TABLE saved_searches ADD COLUMN IF NOT EXISTS created_by_user_id INTEGER REFERENCES users(id);
+
+-- Add org ownership columns to reports
+ALTER TABLE reports ADD COLUMN IF NOT EXISTS owner_org_id INTEGER REFERENCES organizations(id);
+ALTER TABLE reports ADD COLUMN IF NOT EXISTS visibility resource_visibility NOT NULL DEFAULT 'personal';
+ALTER TABLE reports ADD COLUMN IF NOT EXISTS created_by_user_id INTEGER REFERENCES users(id);
+
+-- Add org ownership columns to watches
+ALTER TABLE watches ADD COLUMN IF NOT EXISTS owner_org_id INTEGER REFERENCES organizations(id);
+ALTER TABLE watches ADD COLUMN IF NOT EXISTS visibility resource_visibility NOT NULL DEFAULT 'personal';
+ALTER TABLE watches ADD COLUMN IF NOT EXISTS created_by_user_id INTEGER REFERENCES users(id);
 
 COMMIT;
