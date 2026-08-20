@@ -13,6 +13,8 @@ this module only maps the domain errors to HTTP statuses:
 
 from __future__ import annotations
 
+import logging
+
 from fastapi import APIRouter, HTTPException, Query, Request
 from pydantic import BaseModel, Field
 
@@ -21,6 +23,8 @@ from app.api.deps import require_user
 from app.config import plan_limits as pricing_limits
 from app.db import session_scope
 from app.queries import workspace_queries as wq
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/v1/workspace", tags=["workspace"])
 
@@ -48,6 +52,7 @@ def _map_error(exc: Exception) -> HTTPException:
         return HTTPException(status_code=403, detail=str(exc))
     if isinstance(exc, ValueError):
         return HTTPException(status_code=400, detail=str(exc))
+    logger.exception("Unmapped exception in workspace_views")
     return HTTPException(status_code=500, detail="Something went wrong.")
 
 

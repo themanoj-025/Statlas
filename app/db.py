@@ -8,6 +8,7 @@ dialect-neutral types (native_enum=False, JSON) so both work.
 from __future__ import annotations
 
 import logging
+
 from sqlalchemy import create_engine
 from sqlalchemy.engine import Engine
 from sqlalchemy.orm import Session, sessionmaker

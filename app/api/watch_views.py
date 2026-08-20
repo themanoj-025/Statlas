@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import hashlib
 import hmac
+import logging
 
 from fastapi import APIRouter, HTTPException, Query, Request
 from fastapi.responses import JSONResponse
@@ -25,6 +26,8 @@ from app.config import get_settings
 from app.db import session_scope
 from app.models import NotificationPreferences
 from app.queries import watch_queries as wq
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/v1/watch", tags=["watchlist"])
 
@@ -40,6 +43,7 @@ def _map_error(exc: Exception) -> HTTPException:
         return HTTPException(status_code=403, detail=str(exc))
     if isinstance(exc, ValueError):
         return HTTPException(status_code=400, detail=str(exc))
+    logger.exception("Unmapped exception in watch_views")
     return HTTPException(status_code=500, detail="Something went wrong.")
 
 

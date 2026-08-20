@@ -16,6 +16,8 @@ verification gate runs identically on every generation regardless of narrator.
 
 from __future__ import annotations
 
+import logging
+
 from fastapi import APIRouter, HTTPException, Request
 from fastapi.responses import Response, StreamingResponse
 from pydantic import BaseModel, Field
@@ -24,6 +26,8 @@ from app import report_export, reports
 from app.api.deps import require_user
 from app.config import get_settings
 from app.db import session_scope
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/v1/reports", tags=["reports"])
 
@@ -49,6 +53,7 @@ def _map_error(exc: Exception) -> HTTPException:
         return HTTPException(status_code=422, detail=str(exc))
     if isinstance(exc, ValueError):
         return HTTPException(status_code=400, detail=str(exc))
+    logger.exception("Unmapped exception in report_views")
     return HTTPException(status_code=500, detail="Something went wrong.")
 
 

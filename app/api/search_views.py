@@ -13,6 +13,8 @@ Domain error mapping:
 
 from __future__ import annotations
 
+import logging
+
 from fastapi import APIRouter, HTTPException, Query, Request
 from pydantic import BaseModel, Field
 
@@ -20,8 +22,9 @@ from app import auth
 from app.api.deps import require_user, session_token
 from app.config import get_settings
 from app.db import session_scope
-from app.models import User
 from app.queries import structured_search as ss
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/v1/search", tags=["search"])
 
@@ -31,11 +34,18 @@ _require_user = require_user
 _session_token = session_token
 
 
-def _optional_user(request: Request) -> User | None:
+def _optional_user(request: Request) -> int | None:
+    """Resolve the session cookie to a user_id (or None for anonymous).
+
+    Returns just the integer ID (not a detached ORM object) so the caller
+    can safely use it after the session closes.
+    """
+    token = request.cookies.get(get_settings().session_cookie_name)
+    if not token:
+        return None
     with session_scope() as db:
-        return auth.user_from_session(
-            db, request.cookies.get(get_settings().session_cookie_name)
-        )
+        user = auth.user_from_session(db, token)
+        return user.id if user else None
 
 
 def _map_error(exc: Exception) -> HTTPException:
@@ -45,6 +55,7 @@ def _map_error(exc: Exception) -> HTTPException:
         return HTTPException(status_code=403, detail=str(exc))
     if isinstance(exc, (ss.InvalidQuery, ValueError)):
         return HTTPException(status_code=400, detail=str(exc))
+    logger.exception("Unmapped exception in search_views")
     return HTTPException(status_code=500, detail="Something went wrong.")
 
 
@@ -61,7 +72,7 @@ class ExecuteBody(QueryDefinitionBody):
     limit: int = Field(default=25, ge=1, le=100)
     offset: int = Field(default=0, ge=0)
     sort_by: str = "index"
-    sort_dir: str | None = None
+    sort_dir: str | None = Field(default=None, pattern="^(asc|desc)$")
     log_history: bool = True
 
 
@@ -72,7 +83,7 @@ class RunBody(BaseModel):
     limit: int = Field(default=25, ge=1, le=100)
     offset: int = Field(default=0, ge=0)
     sort_by: str = "index"
-    sort_dir: str | None = None
+    sort_dir: str | None = Field(default=None, pattern="^(asc|desc)$")
 
 
 class SaveSearchBody(QueryDefinitionBody):
@@ -93,7 +104,7 @@ def execute(body: ExecuteBody, request: Request):
             return ss.execute_structured_query(
                 db,
                 body.query_definition,
-                user_id=user.id if user else None,
+                user_id=user,
                 log_history=body.log_history,
                 limit=body.limit,
                 offset=body.offset,

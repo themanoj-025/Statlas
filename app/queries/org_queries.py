@@ -12,6 +12,7 @@ RBAC Roles and Permissions (Addendum Part 3.1):
 
 from __future__ import annotations
 
+import logging
 from datetime import datetime, timedelta, timezone
 from typing import Any
 
@@ -27,6 +28,8 @@ from app.models import (
     Shortlist,
     User,
 )
+
+logger = logging.getLogger(__name__)
 
 # ---------------------------------------------------------------------------
 # RBAC Permission Matrix (Addendum Part 3.1)
@@ -579,8 +582,8 @@ def _log_audit(
             detail=detail or {},
         )
         db.add(log_entry)
-    except Exception:
-        pass  # Audit logging must never break the operation
+    except Exception as exc:
+        logger.warning("Audit log write failed for %s/%s: %s", resource_type, resource_id, exc)
 
 
 def get_audit_log(
