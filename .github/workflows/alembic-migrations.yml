@@ -1,0 +1,212 @@
+name: "Alembic — migration round-trip"
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "alembic/**"
+      - "alembic.ini"
+      - "app/models.py"
+      - "app/schema.sql"
+      - "app/config.py"
+      - "requirements.txt"
+  pull_request:
+    paths:
+      - "alembic/**"
+      - "alembic.ini"
+      - "app/models.py"
+      - "app/schema.sql"
+      - "app/config.py"
+      - "requirements.txt"
+  workflow_dispatch: # manual trigger
+
+permissions:
+  contents: read
+
+concurrency:
+  group: alembic-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  migration-round-trip:
+    name: "PostgreSQL — upgrade → downgrade → upgrade"
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: statlas
+          POSTGRES_PASSWORD: test_password
+          POSTGRES_DB: statlas_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U statlas -d statlas_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 12
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.14"
+          cache: pip
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Wait for PostgreSQL
+        run: |
+          for i in $(seq 1 30); do
+            if python -c "import psycopg2; psycopg2.connect('postgresql://statlas:test_password@localhost:5432/statlas_test')" 2>/dev/null; then
+              echo "PostgreSQL is ready"
+              break
+            fi
+            echo "Waiting for PostgreSQL... ($i/30)"
+            sleep 1
+          done
+
+      # --- Step 1: Upgrade to head (creates all tables from models) ---
+      - name: "alembic upgrade head"
+        env:
+          DATABASE_URL: postgresql+psycopg2://statlas:test_password@localhost:5432/statlas_test
+        run: alembic upgrade head
+
+      # --- Step 2: Verify critical tables exist ---
+      - name: Verify schema tables
+        env:
+          PGHOST: localhost
+          PGPORT: "5432"
+          PGUSER: statlas
+          PGPASSWORD: test_password
+          PGDATABASE: statlas_test
+        run: |
+          echo "Checking critical tables exist..."
+          for table in players teams leagues stat_snapshots percentile_snapshots \
+                       users session_tokens subscriptions shortlists reports \
+                       watches analytics_events clustering_models; do
+            if ! psql -c "SELECT 1 FROM $table LIMIT 0" 2>/dev/null; then
+              echo "FAIL: Table '$table' does not exist after upgrade"
+              exit 1
+            fi
+            echo "  ✓ $table"
+          done
+          echo "All critical tables verified."
+
+      # --- Step 3: Downgrade to base (drops everything) ---
+      - name: "alembic downgrade base"
+        env:
+          DATABASE_URL: postgresql+psycopg2://statlas:test_password@localhost:5432/statlas_test
+        run: alembic downgrade base
+
+      # --- Step 4: Verify tables are gone ---
+      - name: Verify schema dropped
+        env:
+          PGHOST: localhost
+          PGPORT: "5432"
+          PGUSER: statlas
+          PGPASSWORD: test_password
+          PGDATABASE: statlas_test
+        run: |
+          echo "Checking critical tables are gone..."
+          for table in players teams users; do
+            if psql -c "SELECT 1 FROM $table LIMIT 0" 2>/dev/null; then
+              echo "FAIL: Table '$table' still exists after downgrade"
+              exit 1
+            fi
+            echo "  ✓ $table removed"
+          done
+          echo "Schema successfully dropped."
+
+      # --- Step 5: Re-upgrade to head (idempotency check) ---
+      - name: "alembic upgrade head (re-apply)"
+        env:
+          DATABASE_URL: postgresql+psycopg2://statlas:test_password@localhost:5432/statlas_test
+        run: alembic upgrade head
+
+      # --- Step 6: Verify schema is correct again ---
+      - name: Verify schema re-created
+        env:
+          PGHOST: localhost
+          PGPORT: "5432"
+          PGUSER: statlas
+          PGPASSWORD: test_password
+          PGDATABASE: statlas_test
+        run: |
+          echo "Verifying schema re-created after round-trip..."
+          table_count=$(psql -t -c "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = 'public'" 2>/dev/null)
+          echo "Tables in database: $table_count"
+          if [ "$table_count" -lt 20 ]; then
+            echo "FAIL: Expected at least 20 tables, got $table_count"
+            exit 1
+          fi
+          echo "✓ Schema round-trip complete ($table_count tables)"
+
+  migration-current:
+    name: "Check — no pending migrations"
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: statlas
+          POSTGRES_PASSWORD: test_password
+          POSTGRES_DB: statlas_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U statlas -d statlas_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 12
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.14"
+          cache: pip
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Apply current migrations
+        env:
+          DATABASE_URL: postgresql+psycopg2://statlas:test_password@localhost:5432/statlas_test
+        run: alembic upgrade head
+
+      # Verify that alembic current matches the head — a mismatch means
+      # someone forgot to generate a migration or the migration chain is broken.
+      - name: "Check — migration chain is current"
+        env:
+          DATABASE_URL: postgresql+psycopg2://statlas:test_password@localhost:5432/statlas_test
+        run: |
+          echo "Checking migration chain..."
+          HEADS=$(alembic heads 2>&1)
+          CURRENT=$(alembic current 2>&1)
+          echo "  heads:  $HEADS"
+          echo "  current: $CURRENT"
+
+          # Extract just the revision hash from each
+          HEAD_REV=$(echo "$HEADS" | grep -oE '[a-f0-9]{12}' | head -1)
+          CUR_REV=$(echo "$CURRENT" | grep -oE '[a-f0-9]{12}' | head -1)
+
+          if [ -z "$HEAD_REV" ]; then
+            echo "FAIL: No migration head found"
+            exit 1
+          fi
+
+          if [ "$HEAD_REV" != "$CUR_REV" ]; then
+            echo "FAIL: Database is at revision $CUR_REV but head is $HEAD_REV"
+            echo "Run: alembic upgrade head"
+            exit 1
+          fi
+
+          echo "✓ Database is at migration head ($HEAD_REV)"

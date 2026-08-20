@@ -909,7 +909,9 @@ def test_api_save_run_delete_and_free_gate(client, db):
         },
     )
     assert resp.status_code == 403
-    assert "Upgrade to Pro" in resp.json()["detail"]
+    body = resp.json()
+    msg = body.get("detail") or body.get("error", {}).get("message", "")
+    assert "Upgrade to Pro" in msg
 
     assert client.delete(f"/api/v1/search/saved/{search_id}").status_code == 200
 
@@ -933,7 +935,9 @@ def test_api_invalid_query_400_and_cross_user_404(client, db):
         },
     )
     assert resp.status_code == 400
-    assert "Metric Registry" in resp.json()["detail"]
+    body = resp.json()
+    msg = body.get("detail") or body.get("error", {}).get("message", "")
+    assert "Metric Registry" in msg
 
     # Save under user one, then attempt access as user two -> 404 not 403.
     saved = client.post(
