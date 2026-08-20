@@ -91,3 +91,16 @@ def compute_and_publish(db, *, snapshot_date, season, **kwargs):
     )
     publish_run(db, now)
     return report
+
+
+@pytest.fixture(autouse=True)
+def _ensure_clean_rate_limiter():
+    """Reset the in-memory rate limiter before every test to prevent
+    cross-test rate-limit exhaustion (e.g., multiple registrations from
+    the same test IP)."""
+    from app.rate_limiting import get_rate_limiter
+
+    limiter = get_rate_limiter()
+    if hasattr(limiter, "reset_all"):
+        limiter.reset_all()
+    yield

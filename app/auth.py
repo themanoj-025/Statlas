@@ -127,6 +127,22 @@ def revoke_session(db: Session, raw_token: str | None) -> None:
         db.commit()
 
 
+def revoke_all_user_sessions(db: Session, user_id: int) -> int:
+    """Revoke ALL active sessions for a user (e.g., after password change/reset).
+    Returns the number of sessions revoked."""
+    now = datetime.now(timezone.utc)
+    count = (
+        db.query(SessionToken)
+        .filter(
+            SessionToken.user_id == user_id,
+            SessionToken.revoked_at.is_(None),
+            SessionToken.expires_at > now,
+        )
+        .update({"revoked_at": now})
+    )
+    return count
+
+
 # ---------------------------------------------------------------------------
 # Subscription / access gating (Part A4 — the single gate)
 # ---------------------------------------------------------------------------

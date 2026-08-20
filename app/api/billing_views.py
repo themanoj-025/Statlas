@@ -77,7 +77,19 @@ _require_user = require_user
 
 
 @router.post("/auth/register", status_code=201)
-def register(body: RegisterBody, response: Response):
+def register(body: RegisterBody, response: Response, request: Request):
+    # Rate limit: 5 registrations per IP per 10 minutes
+    from app.rate_limiting import get_rate_limiter
+
+    limiter = get_rate_limiter()
+    client_ip = request.client.host if request.client else "unknown"
+    if limiter.is_limited(
+        f"register:{client_ip}", max_attempts=5, window_seconds=600
+    ):
+        raise HTTPException(
+            status_code=429,
+            detail="Too many registration attempts. Please try again later.",
+        )
     with session_scope() as db:
         existing = db.query(User).filter(User.email == body.email.lower()).first()
         if existing is not None:
@@ -197,7 +209,7 @@ def password_reset_request(body: PasswordResetRequestBody):
 
 @router.post("/auth/password-reset/confirm")
 def password_reset_confirm(body: PasswordResetConfirmBody):
-    """Confirm a password reset with the token."""
+    """Confirm a password reset with the token. Revokes all existing sessions."""
     with session_scope() as db:
         user_id = auth.consume_password_reset_token(db, body.token)
         if user_id is None:
@@ -209,8 +221,10 @@ def password_reset_confirm(body: PasswordResetConfirmBody):
         if user is None:
             raise HTTPException(status_code=400, detail="Invalid reset token.")
         user.password_hash = auth.hash_password(body.new_password)
+        # Security: invalidate ALL sessions so any compromised token is dead
+        auth.revoke_all_user_sessions(db, user_id)
         db.commit()
-    return {"detail": "Password has been reset. You can now log in."}
+    return {"detail": "Password has been reset. All sessions invalidated. You can now log in."}
 
 
 # ---------------------------------------------------------------------------
@@ -304,8 +318,8 @@ def update_profile(request: Request, body: ProfileUpdateBody):
 
 
 @router.post("/auth/change-password")
-def change_password(request: Request, body: ChangePasswordBody):
-    """Change password for the signed-in user."""
+def change_password(request: Request, body: ChangePasswordBody, response: Response):
+    """Change password for the signed-in user. Revokes all other sessions."""
     user = _require_user(request)
     with session_scope() as db:
         db_user = db.get(User, user.id)
@@ -314,8 +328,14 @@ def change_password(request: Request, body: ChangePasswordBody):
                 status_code=400, detail="Current password is incorrect."
             )
         db_user.password_hash = auth.hash_password(body.new_password)
+        # Revoke all other sessions — the current session stays valid
+        auth.revoke_all_user_sessions(db, user.id)
         db.commit()
-    return {"detail": "Password changed."}
+    # Issue a fresh session token (the old one was revoked)
+    with session_scope() as db:
+        raw, expires_at = auth.create_session(db, user.id)
+        _set_session_cookie(response, raw, expires_at)
+    return {"detail": "Password changed. All other sessions have been invalidated."}
 
 
 @router.post("/auth/delete-account")
