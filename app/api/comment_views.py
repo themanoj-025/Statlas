@@ -34,6 +34,7 @@ def _require_user(request: Request):
 # Request bodies
 # ---------------------------------------------------------------------------
 
+
 class AddCommentBody(BaseModel):
     text: str = Field(min_length=1, max_length=4000)
     parent_id: int | None = Field(default=None)
@@ -46,6 +47,7 @@ class EditCommentBody(BaseModel):
 # ---------------------------------------------------------------------------
 # Comment CRUD
 # ---------------------------------------------------------------------------
+
 
 @router.get("/{resource_type}/{resource_id}")
 def list_comments(
@@ -103,7 +105,9 @@ def add_comment(
     user = _require_user(request)
     with session_scope() as db:
         if not oq.user_has_permission(db, user.id, org_id, "resource_comment"):
-            raise HTTPException(status_code=403, detail="You do not have permission to comment")
+            raise HTTPException(
+                status_code=403, detail="You do not have permission to comment"
+            )
 
         comment = Comment(
             resource_type=resource_type,
@@ -142,7 +146,10 @@ def add_comment(
 
         # Audit log
         oq._log_audit(
-            db, org_id, user.id, "comment_added",
+            db,
+            org_id,
+            user.id,
+            "comment_added",
             resource_type=resource_type,
             resource_id=resource_id,
             detail={"comment_id": comment.id},
@@ -151,7 +158,9 @@ def add_comment(
         db.commit()
         return {
             "comment_id": comment.id,
-            "created_at": comment.created_at.isoformat() if comment.created_at else None,
+            "created_at": (
+                comment.created_at.isoformat() if comment.created_at else None
+            ),
         }
 
 
@@ -164,10 +173,14 @@ def edit_comment(comment_id: int, body: EditCommentBody, request: Request):
         if comment is None or comment.deleted_at is not None:
             raise HTTPException(status_code=404, detail="Comment not found")
         if comment.author_user_id != user.id:
-            raise HTTPException(status_code=403, detail="Only the author can edit this comment")
+            raise HTTPException(
+                status_code=403, detail="Only the author can edit this comment"
+            )
 
         comment.text = body.text
-        comment.edited_at = __import__("datetime").datetime.now(__import__("datetime").timezone.utc)
+        comment.edited_at = __import__("datetime").datetime.now(
+            __import__("datetime").timezone.utc
+        )
         db.commit()
         return {"ok": True}
 
@@ -183,11 +196,17 @@ def delete_comment(comment_id: int, request: Request):
 
         # Author or manager/owner can delete
         is_author = comment.author_user_id == user.id
-        is_manager = oq.user_has_permission(db, user.id, comment.org_id, "member_remove")
+        is_manager = oq.user_has_permission(
+            db, user.id, comment.org_id, "member_remove"
+        )
         if not is_author and not is_manager:
-            raise HTTPException(status_code=403, detail="You do not have permission to delete this comment")
+            raise HTTPException(
+                status_code=403,
+                detail="You do not have permission to delete this comment",
+            )
 
         from datetime import datetime, timezone
+
         comment.deleted_at = datetime.now(timezone.utc)
         db.commit()
         return {"ok": True}
@@ -224,13 +243,15 @@ def activity_feed(
 
         activities = []
         for c, u in comments:
-            activities.append({
-                "type": "comment",
-                "user": u.display_name or u.email,
-                "user_id": c.author_user_id,
-                "text": c.text[:200],  # Truncate for feed
-                "created_at": c.created_at.isoformat() if c.created_at else None,
-            })
+            activities.append(
+                {
+                    "type": "comment",
+                    "user": u.display_name or u.email,
+                    "user_id": c.author_user_id,
+                    "text": c.text[:200],  # Truncate for feed
+                    "created_at": c.created_at.isoformat() if c.created_at else None,
+                }
+            )
 
         # Sort by created_at descending
         activities.sort(key=lambda x: x["created_at"] or "", reverse=True)

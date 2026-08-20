@@ -106,7 +106,9 @@ def _player_history(
 
     dates_q = (
         db.query(StatSnapshot.player_id, StatSnapshot.scrape_date)
-        .join(PercentileSnapshot, PercentileSnapshot.stat_snapshot_id == StatSnapshot.id)
+        .join(
+            PercentileSnapshot, PercentileSnapshot.stat_snapshot_id == StatSnapshot.id
+        )
         .filter(
             StatSnapshot.player_id.in_(player_ids),
             StatSnapshot.scrape_date <= snapshot_date,
@@ -134,15 +136,15 @@ def _player_history(
             StatSnapshot.scrape_date.in_([d for ds in keep.values() for d in ds]),
             PercentileSnapshot.is_published.is_(True),
         )
-        .order_by(StatSnapshot.player_id, StatSnapshot.scrape_date, PercentileSnapshot.id)
+        .order_by(
+            StatSnapshot.player_id, StatSnapshot.scrape_date, PercentileSnapshot.id
+        )
         .all()
     )
     history: dict[int, dict[datetime, EntitySummary]] = {}
     for pct, snap in rows:
         date = _as_utc(snap.scrape_date)
-        summary = history.setdefault(
-            snap.player_id, {}
-        ).setdefault(
+        summary = history.setdefault(snap.player_id, {}).setdefault(
             date,
             EntitySummary(
                 date=date,
@@ -184,7 +186,9 @@ def _team_seasons(
     }
 
 
-def _statsbomb_league_seasons(db: Session, league_ids: list[int]) -> dict[int, set[str]]:
+def _statsbomb_league_seasons(
+    db: Session, league_ids: list[int]
+) -> dict[int, set[str]]:
     """League id -> set of seasons with an ACTIVE statsbomb coverage row."""
     if not league_ids:
         return {}
@@ -234,7 +238,9 @@ def _position_metrics(position_group: str | None) -> list[str]:
     return list(registry["outfield_metrics"])
 
 
-def _try_insert_alert(db: Session, watch: Watch, alert_type: str, dedupe_key: str, detail: dict[str, Any]) -> bool:
+def _try_insert_alert(
+    db: Session, watch: Watch, alert_type: str, dedupe_key: str, detail: dict[str, Any]
+) -> bool:
     """Insert one alert idempotently. Returns True when a NEW row was created;
     False when the (watch, type, key) already exists (a re-run or a duplicate
     detection — never a second alert)."""
@@ -374,8 +380,13 @@ def _evaluate_player(
     # --- data_coverage_change -------------------------------------------------
     league_id = curr.league_id
     if league_id is not None:
-        prev_covered = prev.league_id in coverage_seasons and prev.season in coverage_seasons[prev.league_id]
-        curr_covered = league_id in coverage_seasons and curr.season in coverage_seasons[league_id]
+        prev_covered = (
+            prev.league_id in coverage_seasons
+            and prev.season in coverage_seasons[prev.league_id]
+        )
+        curr_covered = (
+            league_id in coverage_seasons and curr.season in coverage_seasons[league_id]
+        )
         if not prev_covered and curr_covered:
             player = db.get(Player, watch.entity_id)
             if _try_insert_alert(
@@ -433,7 +444,11 @@ def _evaluate_team(
     prev_season = team_seasons[1][0] if len(team_seasons) > 1 else None
 
     # --- new_season_data: the season's FIRST snapshot arrived this cycle ------
-    if prev_season is not None and curr_season != prev_season and curr_first_date == snapshot_date:
+    if (
+        prev_season is not None
+        and curr_season != prev_season
+        and curr_first_date == snapshot_date
+    ):
         if _try_insert_alert(
             db,
             watch,
@@ -457,7 +472,9 @@ def _evaluate_team(
             and league_id in coverage_seasons
             and prev_season in coverage_seasons[league_id]
         )
-        curr_covered = league_id in coverage_seasons and curr_season in coverage_seasons[league_id]
+        curr_covered = (
+            league_id in coverage_seasons and curr_season in coverage_seasons[league_id]
+        )
         if not prev_covered and curr_covered:
             if _try_insert_alert(
                 db,
@@ -498,7 +515,9 @@ def detect_watch_triggers(
     """
     report = WatchDetectionReport()
     settings = get_settings()
-    threshold = threshold if threshold is not None else settings.alert_percentile_move_threshold
+    threshold = (
+        threshold if threshold is not None else settings.alert_percentile_move_threshold
+    )
     qualifying_minutes = (
         qualifying_minutes
         if qualifying_minutes is not None

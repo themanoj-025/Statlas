@@ -22,24 +22,29 @@ from app.models import MarketValuation, Player, Team
 # ---------------------------------------------------------------------------
 
 # Market valuation bounds (EUR)
-MIN_VALUATION_EUR = 10_000          # €10K — below this is implausible for a professional player
-MAX_VALUATION_EUR =500_000_000      # €500M — above this is implausible (current world record is ~€222M)
+MIN_VALUATION_EUR = 10_000  # €10K — below this is implausible for a professional player
+MAX_VALUATION_EUR = (
+    500_000_000  # €500M — above this is implausible (current world record is ~€222M)
+)
 
 # Valuation range bounds
-MAX_RANGE_SPREAD_RATIO = 0.6       # high/low range cannot differ by more than 60% of the midpoint
+MAX_RANGE_SPREAD_RATIO = (
+    0.6  # high/low range cannot differ by more than 60% of the midpoint
+)
 
 # Transfer fee bounds
-MIN_TRANSFER_FEE_EUR = 0           # Free transfers are valid
-MAX_TRANSFER_FEE_EUR = 500_000_000 # €500M max
+MIN_TRANSFER_FEE_EUR = 0  # Free transfers are valid
+MAX_TRANSFER_FEE_EUR = 500_000_000  # €500M max
 
 # Contract bounds
 MAX_CONTRACT_SALARY_EUR = 50_000_000  # €50M/year — above this is implausible
-MAX_CONTRACT_YEARS_REMAINING = 10     # Contracts longer than 10 years are implausible
+MAX_CONTRACT_YEARS_REMAINING = 10  # Contracts longer than 10 years are implausible
 
 
 @dataclass
 class ValidationResult:
     """Result of validating a single data record."""
+
     is_valid: bool
     issues: list[str] = field(default_factory=list)
     severity: str = "info"  # info, warning, error
@@ -48,6 +53,7 @@ class ValidationResult:
 @dataclass
 class ValidationReport:
     """Aggregate validation report for a batch of records."""
+
     total_records: int = 0
     valid_records: int = 0
     flagged_records: int = 0
@@ -68,9 +74,13 @@ def validate_valuation(record: MarketValuation, db: Session) -> ValidationResult
 
     # 1. Amount bounds
     if record.valuation_amount_eur < MIN_VALUATION_EUR:
-        issues.append(f"Valuation €{record.valuation_amount_eur:,.0f} below minimum €{MIN_VALUATION_EUR:,.0f}")
+        issues.append(
+            f"Valuation €{record.valuation_amount_eur:,.0f} below minimum €{MIN_VALUATION_EUR:,.0f}"
+        )
     if record.valuation_amount_eur > MAX_VALUATION_EUR:
-        issues.append(f"Valuation €{record.valuation_amount_eur:,.0f} exceeds maximum €{MAX_VALUATION_EUR:,.0f}")
+        issues.append(
+            f"Valuation €{record.valuation_amount_eur:,.0f} exceeds maximum €{MAX_VALUATION_EUR:,.0f}"
+        )
 
     # 2. Range bounds
     if record.low_range is not None and record.low_range < 0:
@@ -99,7 +109,11 @@ def validate_valuation(record: MarketValuation, db: Session) -> ValidationResult
     if record.valuation_date > now:
         issues.append(f"Valuation date {record.valuation_date} is in the future")
 
-    severity = "error" if any("not found" in i or "exceeds maximum" in i for i in issues) else "warning"
+    severity = (
+        "error"
+        if any("not found" in i or "exceeds maximum" in i for i in issues)
+        else "warning"
+    )
     return ValidationResult(
         is_valid=len(issues) == 0,
         issues=issues,
@@ -124,7 +138,9 @@ def validate_transfer(record: Any, db: Session) -> ValidationResult:
         if record.reported_fee_eur < MIN_TRANSFER_FEE_EUR:
             issues.append(f"Negative transfer fee: €{record.reported_fee_eur:,.0f}")
         if record.reported_fee_eur > MAX_TRANSFER_FEE_EUR:
-            issues.append(f"Transfer fee €{record.reported_fee_eur:,.0f} exceeds maximum €{MAX_TRANSFER_FEE_EUR:,.0f}")
+            issues.append(
+                f"Transfer fee €{record.reported_fee_eur:,.0f} exceeds maximum €{MAX_TRANSFER_FEE_EUR:,.0f}"
+            )
 
     # 2. Teams exist
     if record.to_team_id is not None:
@@ -177,13 +193,15 @@ def validate_batch(
             else:
                 report.flagged_records += 1
                 for issue in result.issues:
-                    report.issues.append({
-                        "record_type": "valuation",
-                        "player_id": rec.player_id,
-                        "source": rec.source,
-                        "issue": issue,
-                        "severity": result.severity,
-                    })
+                    report.issues.append(
+                        {
+                            "record_type": "valuation",
+                            "player_id": rec.player_id,
+                            "source": rec.source,
+                            "issue": issue,
+                            "severity": result.severity,
+                        }
+                    )
 
     if transfers:
         for rec in transfers:
@@ -194,11 +212,13 @@ def validate_batch(
             else:
                 report.flagged_records += 1
                 for issue in result.issues:
-                    report.issues.append({
-                        "record_type": "transfer",
-                        "player_id": rec.player_id,
-                        "issue": issue,
-                        "severity": result.severity,
-                    })
+                    report.issues.append(
+                        {
+                            "record_type": "transfer",
+                            "player_id": rec.player_id,
+                            "issue": issue,
+                            "severity": result.severity,
+                        }
+                    )
 
     return report

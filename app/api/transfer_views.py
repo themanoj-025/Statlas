@@ -18,6 +18,7 @@ router = APIRouter(prefix="/api/v1/transfers", tags=["transfers"])
 # Market valuation endpoints
 # ---------------------------------------------------------------------------
 
+
 @router.get("/valuation/{player_id}")
 def valuation_comparison(player_id: int):
     """Compare a player's statistical performance rank to their market valuation.
@@ -29,7 +30,9 @@ def valuation_comparison(player_id: int):
     with session_scope() as db:
         result = get_valuation_comparison(db, player_id)
         if result is None:
-            raise HTTPException(status_code=404, detail="No valuation data available for this player")
+            raise HTTPException(
+                status_code=404, detail="No valuation data available for this player"
+            )
         return result
 
 
@@ -83,6 +86,7 @@ def overvalued_players(
 # Transfer candidate discovery
 # ---------------------------------------------------------------------------
 
+
 @router.get("/candidates")
 def transfer_candidates(
     position_group: str | None = Query(None),
@@ -131,7 +135,10 @@ def candidate_templates():
 @router.get("/profile-match")
 def profile_match(
     position_group: str = Query(...),
-    attributes: str = Query(..., description="Comma-separated key attributes (e.g., progressive_passing,pressing)"),
+    attributes: str = Query(
+        ...,
+        description="Comma-separated key attributes (e.g., progressive_passing,pressing)",
+    ),
     limit: int = Query(20, ge=1, le=100),
 ):
     """Find players matching a tactical/statistical profile.
@@ -150,12 +157,17 @@ def profile_match(
             limit=limit,
         )
         # Filter by attribute match from stat snapshots
-        return {"position_group": position_group, "desired_attributes": attr_list, "candidates": results.get("candidates", [])}
+        return {
+            "position_group": position_group,
+            "desired_attributes": attr_list,
+            "candidates": results.get("candidates", []),
+        }
 
 
 # ---------------------------------------------------------------------------
 # Opportunity finder
 # ---------------------------------------------------------------------------
+
 
 @router.get("/opportunities/hidden-gems")
 def hidden_gems(
@@ -229,6 +241,7 @@ def position_scarcity(
 # ---------------------------------------------------------------------------
 # Risk assessment
 # ---------------------------------------------------------------------------
+
 
 @router.get("/risk/{player_id}")
 def transfer_risk(

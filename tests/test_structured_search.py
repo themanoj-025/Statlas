@@ -179,35 +179,71 @@ def search_data(db):
     db.commit()
 
     seed_player(
-        db, "Player A", position="CM", minutes=2000,
-        percentiles={"si_prgp_p90": 80, "si_tkl_p90": 70}, index_score=85,
-        dob="2005-06-01", league=league, team=team,
+        db,
+        "Player A",
+        position="CM",
+        minutes=2000,
+        percentiles={"si_prgp_p90": 80, "si_tkl_p90": 70},
+        index_score=85,
+        dob="2005-06-01",
+        league=league,
+        team=team,
     )
     seed_player(
-        db, "Player B", position="CM", minutes=1500,
-        percentiles={"si_prgp_p90": 75, "si_tkl_p90": 65}, index_score=78,
-        dob="2002-01-01", league=league, team=team,
+        db,
+        "Player B",
+        position="CM",
+        minutes=1500,
+        percentiles={"si_prgp_p90": 75, "si_tkl_p90": 65},
+        index_score=78,
+        dob="2002-01-01",
+        league=league,
+        team=team,
     )
     seed_player(
-        db, "Player C", position="CM", minutes=800,
-        percentiles={"si_prgp_p90": 95, "si_tkl_p90": 90}, index_score=92,
-        dob="2006-03-15", league=league, team=team,
+        db,
+        "Player C",
+        position="CM",
+        minutes=800,
+        percentiles={"si_prgp_p90": 95, "si_tkl_p90": 90},
+        index_score=92,
+        dob="2006-03-15",
+        league=league,
+        team=team,
     )
     seed_player(
-        db, "Player D", position="DM", minutes=1800,
-        percentiles={"si_prgp_p90": 40, "si_tkl_p90": 95}, index_score=88,
-        dob="2001-09-09", league=league, team=team,
+        db,
+        "Player D",
+        position="DM",
+        minutes=1800,
+        percentiles={"si_prgp_p90": 40, "si_tkl_p90": 95},
+        index_score=88,
+        dob="2001-09-09",
+        league=league,
+        team=team,
     )
     # Player E deliberately has NO si_prgp_p90 percentile row.
     seed_player(
-        db, "Player E", position="CM", minutes=1200,
-        percentiles={"si_tkl_p90": 60}, index_score=70,
-        dob=None, league=league, team=team,
+        db,
+        "Player E",
+        position="CM",
+        minutes=1200,
+        percentiles={"si_tkl_p90": 60},
+        index_score=70,
+        dob=None,
+        league=league,
+        team=team,
     )
     seed_player(
-        db, "Player F", position="CM", minutes=1000,
-        percentiles={"si_prgp_p90": 20, "si_tkl_p90": 30}, index_score=55,
-        dob="2008-11-30", league=league, team=team,
+        db,
+        "Player F",
+        position="CM",
+        minutes=1000,
+        percentiles={"si_prgp_p90": 20, "si_tkl_p90": 30},
+        index_score=55,
+        dob="2008-11-30",
+        league=league,
+        team=team,
     )
     return {"free": free, "pro": pro}
 
@@ -465,7 +501,13 @@ def test_bad_operator_for_minutes_rejected(db, search_data):
         ss.execute_structured_query(
             db,
             qd(
-                [{"metric": "minutes_played", "operator": "percentile_gte", "value": 70}]
+                [
+                    {
+                        "metric": "minutes_played",
+                        "operator": "percentile_gte",
+                        "value": 70,
+                    }
+                ]
             ),
             user_id=None,
             log_history=False,
@@ -494,9 +536,9 @@ def test_between_requires_value_max(db, search_data):
 
 
 def test_max_conditions_enforced(db, search_data):
-    many = [
-        {"metric": "si_prgp_p90", "operator": "percentile_gte", "value": 50}
-    ] * (ss.MAX_CONDITIONS + 1)
+    many = [{"metric": "si_prgp_p90", "operator": "percentile_gte", "value": 50}] * (
+        ss.MAX_CONDITIONS + 1
+    )
     with pytest.raises(ss.InvalidQuery) as excinfo:
         ss.execute_structured_query(db, qd(many), user_id=None, log_history=False)
     assert "at most 8" in str(excinfo.value)
@@ -510,7 +552,10 @@ def test_unknown_position_and_tier_rejected(db, search_data):
     with pytest.raises(ss.InvalidQuery):
         ss.execute_structured_query(
             db,
-            qd([{"metric": "si_prgp_p90", "operator": "percentile_gte", "value": 50}], league_tier="tier_9"),
+            qd(
+                [{"metric": "si_prgp_p90", "operator": "percentile_gte", "value": 50}],
+                league_tier="tier_9",
+            ),
             user_id=None,
             log_history=False,
         )
@@ -564,8 +609,12 @@ def test_saved_search_rerun_reflects_current_data(db, search_data):
 
     # The dataset changes (a new player qualifies).
     seed_player(
-        db, "Player G", position="CM", minutes=1900,
-        percentiles={"si_prgp_p90": 85, "si_tkl_p90": 55}, index_score=81,
+        db,
+        "Player G",
+        position="CM",
+        minutes=1900,
+        percentiles={"si_prgp_p90": 85, "si_tkl_p90": 55},
+        index_score=81,
         dob="2003-04-04",
     )
     second = ss.run_saved_search(db, user.id, saved["search_id"])
@@ -577,9 +626,12 @@ def test_saved_search_rerun_reflects_current_data(db, search_data):
 
 def test_saved_search_requires_name(db, search_data):
     with pytest.raises(ss.InvalidQuery):
-        ss.save_search(db, search_data["free"].id, "   ", qd(
-            [{"metric": "si_prgp_p90", "operator": "percentile_gte", "value": 70}]
-        ))
+        ss.save_search(
+            db,
+            search_data["free"].id,
+            "   ",
+            qd([{"metric": "si_prgp_p90", "operator": "percentile_gte", "value": 70}]),
+        )
 
 
 def test_free_tier_saved_search_cap(db, search_data):
@@ -587,12 +639,16 @@ def test_free_tier_saved_search_cap(db, search_data):
     max_saved = 5
     for i in range(max_saved):
         ss.save_search(
-            db, user.id, f"Search {i}",
+            db,
+            user.id,
+            f"Search {i}",
             qd([{"metric": "si_prgp_p90", "operator": "percentile_gte", "value": 70}]),
         )
     with pytest.raises(ss.SearchLimitExceeded) as excinfo:
         ss.save_search(
-            db, user.id, "One too many",
+            db,
+            user.id,
+            "One too many",
             qd([{"metric": "si_prgp_p90", "operator": "percentile_gte", "value": 70}]),
         )
     assert "Upgrade to Pro" in str(excinfo.value)
@@ -601,7 +657,9 @@ def test_free_tier_saved_search_cap(db, search_data):
 def test_cross_user_saved_search_404(db, search_data):
     free, pro = search_data["free"], search_data["pro"]
     saved = ss.save_search(
-        db, free.id, "Private search",
+        db,
+        free.id,
+        "Private search",
         qd([{"metric": "si_prgp_p90", "operator": "percentile_gte", "value": 70}]),
     )
     with pytest.raises(ss.SearchNotFound):
@@ -711,14 +769,19 @@ def test_all_presets_validate_and_execute(db, search_data):
 
 
 def test_preset_summarize_query(db):
-    assert ss.summarize_query(
-        {
-            "position_group": ["CM"],
-            "league_tier": "tier_1",
-            "age_max": 23,
-            "conditions": [{"metric": "si_prgp_p90", "operator": "percentile_gte", "value": 70}],
-        }
-    ) == "CM · Tier 1 · U23 · Progressive passes per 90 ≥ 70th pct"
+    assert (
+        ss.summarize_query(
+            {
+                "position_group": ["CM"],
+                "league_tier": "tier_1",
+                "age_max": 23,
+                "conditions": [
+                    {"metric": "si_prgp_p90", "operator": "percentile_gte", "value": 70}
+                ],
+            }
+        )
+        == "CM · Tier 1 · U23 · Progressive passes per 90 ≥ 70th pct"
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -747,8 +810,11 @@ def _register(client, email: str = "api-scout@example.com"):
 
 def _seed_api_player(db):
     league = League(
-        slug="test-league", name="Test League", country="England",
-        tier="tier_1", external_ids={},
+        slug="test-league",
+        name="Test League",
+        country="England",
+        tier="tier_1",
+        external_ids={},
     )
     db.add(league)
     db.commit()
@@ -756,9 +822,14 @@ def _seed_api_player(db):
     db.add(team)
     db.commit()
     seed_player(
-        db, "API Player", position="CM", minutes=2000,
-        percentiles={"si_prgp_p90": 80}, index_score=85,
-        league=league, team=team,
+        db,
+        "API Player",
+        position="CM",
+        minutes=2000,
+        percentiles={"si_prgp_p90": 80},
+        index_score=85,
+        league=league,
+        team=team,
     )
 
 
@@ -815,7 +886,11 @@ def test_api_save_run_delete_and_free_gate(client, db):
                 "name": f"Extra {i}",
                 "query_definition": {
                     "conditions": [
-                        {"metric": "si_prgp_p90", "operator": "percentile_gte", "value": 50}
+                        {
+                            "metric": "si_prgp_p90",
+                            "operator": "percentile_gte",
+                            "value": 50,
+                        }
                     ],
                     "condition_logic": "AND",
                 },

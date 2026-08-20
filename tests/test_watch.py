@@ -132,7 +132,9 @@ def seed_snapshot(
 ) -> StatSnapshot:
     """One published snapshot with hand-set percentile values (published so the
     detection job's published-only queries see it)."""
-    team = team or (db.get(Team, player.current_team_id) if player.current_team_id else None)
+    team = team or (
+        db.get(Team, player.current_team_id) if player.current_team_id else None
+    )
     league_tier = "tier_1"
     if team is not None:
         league = db.get(League, team.league_id)
@@ -187,12 +189,8 @@ def test_movement_below_threshold_does_not_alert(db, watch_data):
     """62 -> 74 = +12: below the 15-point bar -> NO alert."""
     user, haaland = watch_data["pro"], watch_data["haaland"]
     seed_watch(db, user, "player", haaland.id)
-    seed_snapshot(
-        db, haaland, snapshot_date=SNAPSHOT_1, percentiles={PCT_METRIC: 62.0}
-    )
-    seed_snapshot(
-        db, haaland, snapshot_date=SNAPSHOT_2, percentiles={PCT_METRIC: 74.0}
-    )
+    seed_snapshot(db, haaland, snapshot_date=SNAPSHOT_1, percentiles={PCT_METRIC: 62.0})
+    seed_snapshot(db, haaland, snapshot_date=SNAPSHOT_2, percentiles={PCT_METRIC: 74.0})
 
     report = detect_watch_triggers(db, SNAPSHOT_2)
     assert report.alerts_created == 0
@@ -203,12 +201,8 @@ def test_movement_above_threshold_alerts(db, watch_data):
     """62 -> 81 = +19: above the bar -> alert with real detail values."""
     user, haaland = watch_data["pro"], watch_data["haaland"]
     seed_watch(db, user, "player", haaland.id)
-    seed_snapshot(
-        db, haaland, snapshot_date=SNAPSHOT_1, percentiles={PCT_METRIC: 62.0}
-    )
-    seed_snapshot(
-        db, haaland, snapshot_date=SNAPSHOT_2, percentiles={PCT_METRIC: 81.0}
-    )
+    seed_snapshot(db, haaland, snapshot_date=SNAPSHOT_1, percentiles={PCT_METRIC: 62.0})
+    seed_snapshot(db, haaland, snapshot_date=SNAPSHOT_2, percentiles={PCT_METRIC: 81.0})
 
     report = detect_watch_triggers(db, SNAPSHOT_2)
     assert report.alerts_created == 1
@@ -230,12 +224,8 @@ def test_movement_exactly_at_threshold_alerts_inclusive(db, watch_data):
     """62 -> 77 = +15: exactly at the bar -> alerts (documented INCLUSIVE)."""
     user, haaland = watch_data["pro"], watch_data["haaland"]
     seed_watch(db, user, "player", haaland.id)
-    seed_snapshot(
-        db, haaland, snapshot_date=SNAPSHOT_1, percentiles={PCT_METRIC: 62.0}
-    )
-    seed_snapshot(
-        db, haaland, snapshot_date=SNAPSHOT_2, percentiles={PCT_METRIC: 77.0}
-    )
+    seed_snapshot(db, haaland, snapshot_date=SNAPSHOT_1, percentiles={PCT_METRIC: 62.0})
+    seed_snapshot(db, haaland, snapshot_date=SNAPSHOT_2, percentiles={PCT_METRIC: 77.0})
     report = detect_watch_triggers(db, SNAPSHOT_2)
     assert report.alerts_created == 1
 
@@ -247,11 +237,17 @@ def test_movement_below_qualification_never_alerts(db, watch_data):
     user, haaland = watch_data["pro"], watch_data["haaland"]
     seed_watch(db, user, "player", haaland.id)
     seed_snapshot(
-        db, haaland, snapshot_date=SNAPSHOT_1, minutes=800.0,
+        db,
+        haaland,
+        snapshot_date=SNAPSHOT_1,
+        minutes=800.0,
         percentiles={PCT_METRIC: 40.0},
     )
     seed_snapshot(
-        db, haaland, snapshot_date=SNAPSHOT_2, minutes=1500.0,
+        db,
+        haaland,
+        snapshot_date=SNAPSHOT_2,
+        minutes=1500.0,
         percentiles={PCT_METRIC: 80.0},
     )
     report = detect_watch_triggers(db, SNAPSHOT_2)
@@ -265,11 +261,15 @@ def test_watched_metrics_refinement_limits_alerts(db, watch_data):
     seed_watch(db, user, "player", haaland.id, followed_metrics=["si_tkl_p90"])
     # prgp moves +30 (would alert under broad watch) but tkl moves +2.
     seed_snapshot(
-        db, haaland, snapshot_date=SNAPSHOT_1,
+        db,
+        haaland,
+        snapshot_date=SNAPSHOT_1,
         percentiles={PCT_METRIC: 50.0, "si_tkl_p90": 55.0},
     )
     seed_snapshot(
-        db, haaland, snapshot_date=SNAPSHOT_2,
+        db,
+        haaland,
+        snapshot_date=SNAPSHOT_2,
         percentiles={PCT_METRIC: 80.0, "si_tkl_p90": 57.0},
     )
     report = detect_watch_triggers(db, SNAPSHOT_2)
@@ -284,12 +284,8 @@ def test_watched_metrics_refinement_limits_alerts(db, watch_data):
 def test_detection_is_idempotent_no_duplicate_alerts(db, watch_data):
     user, haaland = watch_data["pro"], watch_data["haaland"]
     seed_watch(db, user, "player", haaland.id)
-    seed_snapshot(
-        db, haaland, snapshot_date=SNAPSHOT_1, percentiles={PCT_METRIC: 62.0}
-    )
-    seed_snapshot(
-        db, haaland, snapshot_date=SNAPSHOT_2, percentiles={PCT_METRIC: 81.0}
-    )
+    seed_snapshot(db, haaland, snapshot_date=SNAPSHOT_1, percentiles={PCT_METRIC: 62.0})
+    seed_snapshot(db, haaland, snapshot_date=SNAPSHOT_2, percentiles={PCT_METRIC: 81.0})
 
     first = detect_watch_triggers(db, SNAPSHOT_2)
     second = detect_watch_triggers(db, SNAPSHOT_2)
@@ -312,15 +308,24 @@ def test_club_change_alerts_and_fires_once(db, watch_data):
     # Snapshot 1: at City. Snapshot 2: transfer to Arsenal (detected).
     # Snapshot 3: still at Arsenal — no second alert.
     seed_snapshot(
-        db, haaland, snapshot_date=SNAPSHOT_1, team=city,
+        db,
+        haaland,
+        snapshot_date=SNAPSHOT_1,
+        team=city,
         percentiles={PCT_METRIC: 60.0},
     )
     seed_snapshot(
-        db, haaland, snapshot_date=SNAPSHOT_2, team=arsenal,
+        db,
+        haaland,
+        snapshot_date=SNAPSHOT_2,
+        team=arsenal,
         percentiles={PCT_METRIC: 65.0},
     )
     seed_snapshot(
-        db, haaland, snapshot_date=SNAPSHOT_3, team=arsenal,
+        db,
+        haaland,
+        snapshot_date=SNAPSHOT_3,
+        team=arsenal,
         percentiles={PCT_METRIC: 66.0},
     )
 
@@ -346,11 +351,17 @@ def test_new_season_data_alerts_once(db, watch_data):
     user, haaland = watch_data["pro"], watch_data["haaland"]
     seed_watch(db, user, "player", haaland.id)
     seed_snapshot(
-        db, haaland, snapshot_date=SNAPSHOT_1, season="2024-25",
+        db,
+        haaland,
+        snapshot_date=SNAPSHOT_1,
+        season="2024-25",
         percentiles={PCT_METRIC: 60.0},
     )
     seed_snapshot(
-        db, haaland, snapshot_date=SNAPSHOT_2, season="2025-26",
+        db,
+        haaland,
+        snapshot_date=SNAPSHOT_2,
+        season="2025-26",
         percentiles={PCT_METRIC: 62.0},
     )
     detect_watch_triggers(db, SNAPSHOT_2)
@@ -371,11 +382,17 @@ def test_coverage_gained_alerts(db, watch_data):
     seed_watch(db, user, "player", haaland.id)
     # Previous season: NO statsbomb coverage. New season: coverage exists.
     seed_snapshot(
-        db, haaland, snapshot_date=SNAPSHOT_1, season="2024-25",
+        db,
+        haaland,
+        snapshot_date=SNAPSHOT_1,
+        season="2024-25",
         percentiles={PCT_METRIC: 60.0},
     )
     seed_snapshot(
-        db, haaland, snapshot_date=SNAPSHOT_2, season="2025-26",
+        db,
+        haaland,
+        snapshot_date=SNAPSHOT_2,
+        season="2025-26",
         percentiles={PCT_METRIC: 62.0},
     )
     db.add(
@@ -391,9 +408,7 @@ def test_coverage_gained_alerts(db, watch_data):
 
     detect_watch_triggers(db, SNAPSHOT_2)
     coverage_alerts = (
-        db.query(WatchAlert)
-        .filter(WatchAlert.alert_type == ALERT_TYPE_COVERAGE)
-        .all()
+        db.query(WatchAlert).filter(WatchAlert.alert_type == ALERT_TYPE_COVERAGE).all()
     )
     assert len(coverage_alerts) == 1
     assert coverage_alerts[0].detail["signal"] == "coverage_gained"
@@ -403,9 +418,7 @@ def test_coverage_gained_alerts(db, watch_data):
 def test_source_anomaly_alerts(db, watch_data):
     user, haaland = watch_data["pro"], watch_data["haaland"]
     seed_watch(db, user, "player", haaland.id)
-    seed_snapshot(
-        db, haaland, snapshot_date=SNAPSHOT_1, percentiles={PCT_METRIC: 60.0}
-    )
+    seed_snapshot(db, haaland, snapshot_date=SNAPSHOT_1, percentiles={PCT_METRIC: 60.0})
     snap = seed_snapshot(
         db, haaland, snapshot_date=SNAPSHOT_2, percentiles={PCT_METRIC: 62.0}
     )
@@ -473,12 +486,8 @@ def test_follow_team(db, watch_data):
 def test_unfollow_deletes_watch_keeps_alerts(db, watch_data):
     user, haaland = watch_data["pro"], watch_data["haaland"]
     watch = seed_watch(db, user, "player", haaland.id)
-    seed_snapshot(
-        db, haaland, snapshot_date=SNAPSHOT_1, percentiles={PCT_METRIC: 62.0}
-    )
-    seed_snapshot(
-        db, haaland, snapshot_date=SNAPSHOT_2, percentiles={PCT_METRIC: 81.0}
-    )
+    seed_snapshot(db, haaland, snapshot_date=SNAPSHOT_1, percentiles={PCT_METRIC: 62.0})
+    seed_snapshot(db, haaland, snapshot_date=SNAPSHOT_2, percentiles={PCT_METRIC: 81.0})
     detect_watch_triggers(db, SNAPSHOT_2)
     assert db.query(WatchAlert).count() == 1
 
@@ -534,12 +543,8 @@ def _make_alert(db, watch_data, user=None) -> WatchAlert:
     user = user or watch_data["pro"]
     haaland = watch_data["haaland"]
     seed_watch(db, user, "player", haaland.id)
-    seed_snapshot(
-        db, haaland, snapshot_date=SNAPSHOT_1, percentiles={PCT_METRIC: 62.0}
-    )
-    seed_snapshot(
-        db, haaland, snapshot_date=SNAPSHOT_2, percentiles={PCT_METRIC: 81.0}
-    )
+    seed_snapshot(db, haaland, snapshot_date=SNAPSHOT_1, percentiles={PCT_METRIC: 62.0})
+    seed_snapshot(db, haaland, snapshot_date=SNAPSHOT_2, percentiles={PCT_METRIC: 81.0})
     detect_watch_triggers(db, SNAPSHOT_2)
     return db.query(WatchAlert).one()
 
@@ -557,7 +562,9 @@ def test_alert_read_and_dismiss(db, watch_data):
 
     wq.dismiss_alert(db, user.id, alert.id)
     assert wq.list_alerts(db, user.id, include_read=True) == []
-    assert len(wq.list_alerts(db, user.id, include_read=True, include_dismissed=True)) == 1
+    assert (
+        len(wq.list_alerts(db, user.id, include_read=True, include_dismissed=True)) == 1
+    )
 
     detail = wq.get_alert(db, user.id, alert.id)
     assert detail["alert_type"] == ALERT_TYPE_PERCENTILE
@@ -635,7 +642,9 @@ def test_opted_out_trigger_type_produces_no_email(db, watch_data):
     """THE preference-compliance test: a user opted out of percentile-movement
     alerts gets NO email even though a real trigger fired."""
     user = watch_data["pro"]
-    wq.update_preferences(db, user.id, alert_type_preferences={ALERT_TYPE_PERCENTILE: False})
+    wq.update_preferences(
+        db, user.id, alert_type_preferences={ALERT_TYPE_PERCENTILE: False}
+    )
     _make_alert(db, watch_data, user)  # the trigger fired
 
     sent: list = []
@@ -686,7 +695,9 @@ def test_immediate_email_sent_with_real_content_and_unsubscribe(db, watch_data):
     assert "Erling Haaland" in message.html
     # One-click unsubscribe: List-Unsubscribe header + footer link present.
     assert "List-Unsubscribe" in message.headers
-    assert "List-Unsubscribe=One-Click" in message.headers.get("List-Unsubscribe-Post", "")
+    assert "List-Unsubscribe=One-Click" in message.headers.get(
+        "List-Unsubscribe-Post", ""
+    )
     assert "unsubscribe" in message.headers["List-Unsubscribe"].lower()
 
     # Delivered alerts are not re-sent.
@@ -702,11 +713,15 @@ def test_digest_batches_multiple_alerts_into_one_email(db, watch_data):
     seed_watch(db, user, "player", haaland.id)
     # Two distinct metrics crossing the threshold in the same transition.
     seed_snapshot(
-        db, haaland, snapshot_date=SNAPSHOT_1,
+        db,
+        haaland,
+        snapshot_date=SNAPSHOT_1,
         percentiles={PCT_METRIC: 62.0, "si_tkl_p90": 40.0},
     )
     seed_snapshot(
-        db, haaland, snapshot_date=SNAPSHOT_2,
+        db,
+        haaland,
+        snapshot_date=SNAPSHOT_2,
         percentiles={PCT_METRIC: 81.0, "si_tkl_p90": 70.0},
     )
     report = detect_watch_triggers(db, SNAPSHOT_2)
@@ -732,16 +747,14 @@ def test_digest_respects_per_type_opt_out(db, watch_data):
     alert entirely (it is neither emailed nor marked delivered)."""
     user, haaland = watch_data["pro"], watch_data["haaland"]
     wq.update_preferences(
-        db, user.id, digest_frequency="daily_digest",
+        db,
+        user.id,
+        digest_frequency="daily_digest",
         alert_type_preferences={ALERT_TYPE_PERCENTILE: False},
     )
     seed_watch(db, user, "player", haaland.id)
-    seed_snapshot(
-        db, haaland, snapshot_date=SNAPSHOT_1, percentiles={PCT_METRIC: 62.0}
-    )
-    seed_snapshot(
-        db, haaland, snapshot_date=SNAPSHOT_2, percentiles={PCT_METRIC: 81.0}
-    )
+    seed_snapshot(db, haaland, snapshot_date=SNAPSHOT_1, percentiles={PCT_METRIC: 62.0})
+    seed_snapshot(db, haaland, snapshot_date=SNAPSHOT_2, percentiles={PCT_METRIC: 81.0})
     detect_watch_triggers(db, SNAPSHOT_2)
     assert db.query(WatchAlert).count() == 1
 
@@ -755,12 +768,8 @@ def test_weekly_digest_only_on_monday(db, watch_data):
     user, haaland = watch_data["pro"], watch_data["haaland"]
     wq.update_preferences(db, user.id, digest_frequency="weekly_digest")
     seed_watch(db, user, "player", haaland.id)
-    seed_snapshot(
-        db, haaland, snapshot_date=SNAPSHOT_1, percentiles={PCT_METRIC: 62.0}
-    )
-    seed_snapshot(
-        db, haaland, snapshot_date=SNAPSHOT_2, percentiles={PCT_METRIC: 81.0}
-    )
+    seed_snapshot(db, haaland, snapshot_date=SNAPSHOT_1, percentiles={PCT_METRIC: 62.0})
+    seed_snapshot(db, haaland, snapshot_date=SNAPSHOT_2, percentiles={PCT_METRIC: 81.0})
     detect_watch_triggers(db, SNAPSHOT_2)
 
     sent: list = []
@@ -815,8 +824,11 @@ def _register(client, email: str = "api-watcher@example.com"):
 
 def _seed_api_entity(db):
     league = League(
-        slug="premier-league", name="Premier League", country="England",
-        tier="tier_1", external_ids={},
+        slug="premier-league",
+        name="Premier League",
+        country="England",
+        tier="tier_1",
+        external_ids={},
     )
     db.add(league)
     db.commit()
@@ -824,7 +836,9 @@ def _seed_api_entity(db):
     db.add(team)
     db.commit()
     player = Player(
-        canonical_name="Bukayo Saka", position_group="W", external_ids={},
+        canonical_name="Bukayo Saka",
+        position_group="W",
+        external_ids={},
         current_team_id=team.id,
     )
     db.add(player)
@@ -857,7 +871,10 @@ def test_api_follow_flow_alert_list_and_preferences(client, db):
     assert prefs["email_enabled"] is True
     resp = client.put(
         "/api/v1/watch/preferences",
-        json={"digest_frequency": "weekly_digest", "alert_type_preferences": {"club_change": False}},
+        json={
+            "digest_frequency": "weekly_digest",
+            "alert_type_preferences": {"club_change": False},
+        },
     )
     assert resp.status_code == 200
     assert resp.json()["digest_frequency"] == "weekly_digest"
@@ -871,8 +888,11 @@ def test_api_follow_flow_alert_list_and_preferences(client, db):
 def test_api_free_cap_honest_upsell(client, db):
     with db_module.session_scope() as session:
         _league = League(
-            slug="premier-league", name="Premier League", country="England",
-            tier="tier_1", external_ids={},
+            slug="premier-league",
+            name="Premier League",
+            country="England",
+            tier="tier_1",
+            external_ids={},
         )
         session.add(_league)
         session.commit()
@@ -884,7 +904,9 @@ def test_api_free_cap_honest_upsell(client, db):
             team_ids.append(t.id)
     _register(client)
     for tid in team_ids[:10]:
-        resp = client.post("/api/v1/watch", json={"entity_type": "team", "entity_id": tid})
+        resp = client.post(
+            "/api/v1/watch", json={"entity_type": "team", "entity_id": tid}
+        )
         assert resp.status_code == 201, resp.text
     resp = client.post(
         "/api/v1/watch", json={"entity_type": "team", "entity_id": team_ids[10]}
@@ -950,7 +972,9 @@ def test_api_unsubscribe_sessionless(client, db):
     client.post("/api/v1/auth/logout")  # sessionless click
 
     # Invalid signature -> honest 400.
-    resp = client.get(f"/api/v1/watch/unsubscribe?user={uid}&token={token}&sig=deadbeef")
+    resp = client.get(
+        f"/api/v1/watch/unsubscribe?user={uid}&token={token}&sig=deadbeef"
+    )
     assert resp.status_code == 400
 
     # Valid signature -> 200, email disabled.

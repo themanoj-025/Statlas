@@ -191,9 +191,23 @@ def compute_report_confidence(
         "rationale": rationale,
         "composite": round(composite, 3),
         "factors": {
-            "sample_size": {"level": sample_level, "score": sample_score, "minutes_played": minutes_played, "qualifying_minutes": qualifying_minutes},
-            "data_completeness": {"level": completeness_level, "score": completeness_score, "metrics_present": metrics_present, "metrics_expected": metrics_expected},
-            "recency": {"level": recency_level, "score": recency_score, "days": recency_days},
+            "sample_size": {
+                "level": sample_level,
+                "score": sample_score,
+                "minutes_played": minutes_played,
+                "qualifying_minutes": qualifying_minutes,
+            },
+            "data_completeness": {
+                "level": completeness_level,
+                "score": completeness_score,
+                "metrics_present": metrics_present,
+                "metrics_expected": metrics_expected,
+            },
+            "recency": {
+                "level": recency_level,
+                "score": recency_score,
+                "days": recency_days,
+            },
         },
     }
 
@@ -288,7 +302,9 @@ def derive_risk_factors(
 # ---------------------------------------------------------------------------
 
 
-def _age_from_dob(date_of_birth: datetime | None, now: datetime | None = None) -> int | None:
+def _age_from_dob(
+    date_of_birth: datetime | None, now: datetime | None = None
+) -> int | None:
     if date_of_birth is None:
         return None
     now = now or datetime.now(timezone.utc)
@@ -298,7 +314,9 @@ def _age_from_dob(date_of_birth: datetime | None, now: datetime | None = None) -
     if hasattr(dob, "hour"):
         dob = dob.replace(tzinfo=None)
     else:
-        dob = datetime(dob.year, dob.month, dob.day)  # noqa: DTZ001 — a DATE has no tz; naive is correct here
+        dob = datetime(  # noqa: DTZ001 — a DATE has no tz; naive is correct here
+            dob.year, dob.month, dob.day
+        )
     years = now.year - dob.year - ((now.month, now.day) < (dob.month, dob.day))
     return years
 
@@ -330,7 +348,9 @@ def gather_report_context(
 
     position_group = profile.get("position_group")
     metric_ids = (
-        registry["gk_metrics"] if position_group == "GK" else registry["outfield_metrics"]
+        registry["gk_metrics"]
+        if position_group == "GK"
+        else registry["outfield_metrics"]
     )
     metrics = registry["metrics"]
 
@@ -340,7 +360,9 @@ def gather_report_context(
 
     qualifying_minutes = registry["qualifying_minutes"]
     minutes = raw["minutes_played"] if raw else 0.0
-    snapshot_date = percentiles["snapshot_date"] or (raw["snapshot_date"] if raw else None)
+    snapshot_date = percentiles["snapshot_date"] or (
+        raw["snapshot_date"] if raw else None
+    )
     if snapshot_date is None:
         raise PlayerHasNoData(
             f"No snapshot date for {profile['name']} — the report needs a "
@@ -603,7 +625,12 @@ def _mask_labels(text: str, corpus: dict[str, Any]) -> str:
     that genuinely remain."""
     for name in corpus.get("metric_names", ()):
         text = re.sub(re.escape(name), " ", text, flags=re.IGNORECASE)
-    for label in (corpus.get("player_name"), corpus.get("club"), corpus.get("league"), corpus.get("season")):
+    for label in (
+        corpus.get("player_name"),
+        corpus.get("club"),
+        corpus.get("league"),
+        corpus.get("season"),
+    ):
         if label:
             text = re.sub(re.escape(label), " ", text, flags=re.IGNORECASE)
     for label in _MASK_LABELS:
@@ -692,13 +719,21 @@ def verify_report(report: dict[str, Any], context: dict[str, Any]) -> dict[str, 
             metric = item.get("supporting_metric")
             if metric and metric not in corpus["metric_ids"]:
                 unverified.append(
-                    {"claim": f"unknown metric '{metric}' in {item_key}", "source": item_key, "kind": "metric"}
+                    {
+                        "claim": f"unknown metric '{metric}' in {item_key}",
+                        "source": item_key,
+                        "kind": "metric",
+                    }
                 )
             for field in ("value", "percentile"):
                 value = item.get(field)
                 if value is not None and not tolerance_ok(float(value)):
                     unverified.append(
-                        {"claim": f"{item_key} {field} {value!r} not in corpus", "source": item_key, "kind": "number"}
+                        {
+                            "claim": f"{item_key} {field} {value!r} not in corpus",
+                            "source": item_key,
+                            "kind": "number",
+                        }
                     )
 
     # 3. Comparables must be a subset of the real Phase 6 results (B3).
@@ -712,16 +747,26 @@ def verify_report(report: dict[str, Any], context: dict[str, Any]) -> dict[str, 
         sim = comparable.get("similarity")
         if pid not in context_ids:
             unverified.append(
-                {"claim": f"comparable player {pid} not in real Phase 6 results", "source": "comparable_players", "kind": "comparable"}
+                {
+                    "claim": f"comparable player {pid} not in real Phase 6 results",
+                    "source": "comparable_players",
+                    "kind": "comparable",
+                }
             )
         if sim is not None and (pid, round(float(sim), 4)) not in context_sims:
             unverified.append(
-                {"claim": f"similarity {sim} for player {pid} not in real results", "source": "comparable_players", "kind": "number"}
+                {
+                    "claim": f"similarity {sim} for player {pid} not in real results",
+                    "source": "comparable_players",
+                    "kind": "number",
+                }
             )
 
     # 4. Confidence level must equal the deterministic computation.
     expected_level = context["confidence"]["level"]
-    actual_level = report.get("sections", {}).get("recommendation", {}).get("confidence_level")
+    actual_level = (
+        report.get("sections", {}).get("recommendation", {}).get("confidence_level")
+    )
     if actual_level != expected_level:
         unverified.append(
             {
@@ -743,7 +788,9 @@ def verify_report(report: dict[str, Any], context: dict[str, Any]) -> dict[str, 
 # ---------------------------------------------------------------------------
 
 
-def deterministic_narrator(context: dict[str, Any], correction: str | None = None) -> dict[str, Any]:
+def deterministic_narrator(
+    context: dict[str, Any], correction: str | None = None
+) -> dict[str, Any]:
     """A narrator that can ONLY emit context values — used by tests and dev
     seeding. It writes real, grounded prose from the context object; every
     number is pulled from the corpus by construction, so the verification gate
@@ -825,7 +872,11 @@ def deterministic_narrator(context: dict[str, Any], correction: str | None = Non
     trend_points = context["trend"].get("points", [])
     if len(trend_points) >= 2:
         first_raw, last_raw = trend_points[0]["raw"], trend_points[-1]["raw"]
-        direction = "risen" if (last_raw or 0) > (first_raw or 0) else ("fallen" if (last_raw or 0) < (first_raw or 0) else "held steady")
+        direction = (
+            "risen"
+            if (last_raw or 0) > (first_raw or 0)
+            else ("fallen" if (last_raw or 0) < (first_raw or 0) else "held steady")
+        )
         trend_summary = (
             f"Over the {len(trend_points)} most recent weekly snapshots, the "
             f"{context['index_metric_name'].lower()} has {direction} from "
@@ -915,7 +966,9 @@ def deterministic_narrator(context: dict[str, Any], correction: str | None = Non
     }
 
 
-def _narrate_via_anthropic(context: dict[str, Any], correction: str | None = None) -> dict[str, Any]:
+def _narrate_via_anthropic(
+    context: dict[str, Any], correction: str | None = None
+) -> dict[str, Any]:
     """The real LLM narrator (key-gated). Receives ONLY the verified context
     and must produce the report JSON; the verification gate still runs on its
     output regardless of how careful the prompt is.
@@ -1137,7 +1190,11 @@ def generate_report(
         "verification": {
             "status": "passed" if verification["passed"] else "needs_review",
             "log": {
-                "attempts": 2 if verification.get("retried") else (1 if verification["passed"] else 2),
+                "attempts": (
+                    2
+                    if verification.get("retried")
+                    else (1 if verification["passed"] else 2)
+                ),
                 "unverified": verification["unverified"],
                 "passed": verification["passed"],
             },
@@ -1178,7 +1235,11 @@ def _build_evidence_appendix(context: dict[str, Any]) -> list[dict[str, Any]]:
             {
                 "claim": f"{meta['name']} percentile and raw value",
                 "source_call": "percentiles",
-                "raw_result": {"metric": metric_id, "percentile": pct.get(metric_id), "value": raw.get(metric_id)},
+                "raw_result": {
+                    "metric": metric_id,
+                    "percentile": pct.get(metric_id),
+                    "value": raw.get(metric_id),
+                },
             }
         )
     appendix.append(
@@ -1192,7 +1253,11 @@ def _build_evidence_appendix(context: dict[str, Any]) -> list[dict[str, Any]]:
         {
             "claim": "minutes and matches played",
             "source_call": "raw_stats",
-            "raw_result": {"minutes": context["raw"]["minutes_played"], "matches": context["raw"]["matches_played"], "season": context["raw"]["season"]},
+            "raw_result": {
+                "minutes": context["raw"]["minutes_played"],
+                "matches": context["raw"]["matches_played"],
+                "season": context["raw"]["season"],
+            },
         }
     )
     appendix.append(
@@ -1207,7 +1272,11 @@ def _build_evidence_appendix(context: dict[str, Any]) -> list[dict[str, Any]]:
             {
                 "claim": f"similarity to {comparable['name']}",
                 "source_call": "similar_players",
-                "raw_result": {"player_id": comparable["player_id"], "similarity": comparable["similarity"], "shared_metrics": comparable.get("shared_metrics")},
+                "raw_result": {
+                    "player_id": comparable["player_id"],
+                    "similarity": comparable["similarity"],
+                    "shared_metrics": comparable.get("shared_metrics"),
+                },
             }
         )
     return appendix
@@ -1246,7 +1315,9 @@ def list_reports(db: Session, user_id: int) -> list[dict[str, Any]]:
     for row in rows:
         payload = _report_payload(row)
         payload["player_name"] = _player_name(db, row.player_id)
-        payload["verification_status"] = row.report_json.get("verification", {}).get("status")
+        payload["verification_status"] = row.report_json.get("verification", {}).get(
+            "status"
+        )
         out.append(payload)
     return out
 
@@ -1262,7 +1333,9 @@ def get_report(db: Session, user_id: int, report_id: int) -> dict[str, Any]:
         raise ReportNotFound(f"report {report_id} not found")
     payload = _report_payload(row)
     payload["player_name"] = _player_name(db, row.player_id)
-    payload["verification_status"] = row.report_json.get("verification", {}).get("status")
+    payload["verification_status"] = row.report_json.get("verification", {}).get(
+        "status"
+    )
     return payload
 
 

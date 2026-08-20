@@ -66,7 +66,12 @@ def main() -> int:
         except Exception as exc:  # noqa: BLE001 — a broken preset is a failure
             failures += 1
             rows.append(
-                {"id": preset["id"], "name": preset["name"], "error": str(exc), "ok": False}
+                {
+                    "id": preset["id"],
+                    "name": preset["name"],
+                    "error": str(exc),
+                    "ok": False,
+                }
             )
             print(f"[FAIL] {preset['name']:<42} -> error: {exc}")
 
@@ -75,8 +80,10 @@ def main() -> int:
 
     if args.json:
         print(json.dumps({"presets": rows, "failures": failures}, indent=2))
-    print(f"\n{len(rows) - failures}/{len(rows)} presets validated "
-          f"({failures} failing)")
+    print(
+        f"\n{len(rows) - failures}/{len(rows)} presets validated "
+        f"({failures} failing)"
+    )
     return 1 if failures else 0
 
 

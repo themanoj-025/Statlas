@@ -29,6 +29,7 @@ from app.queries.market_queries import compute_age_at_date, compute_stat_value_p
 # Hidden gem detection (Part D1)
 # ---------------------------------------------------------------------------
 
+
 def detect_hidden_gems(
     db: Session,
     *,
@@ -51,7 +52,9 @@ def detect_hidden_gems(
     players_with_index = (
         db.query(Player.id, PercentileSnapshot.index_score)
         .join(StatSnapshot, StatSnapshot.player_id == Player.id)
-        .join(PercentileSnapshot, PercentileSnapshot.stat_snapshot_id == StatSnapshot.id)
+        .join(
+            PercentileSnapshot, PercentileSnapshot.stat_snapshot_id == StatSnapshot.id
+        )
         .filter(
             PercentileSnapshot.is_published.is_(True),
             PercentileSnapshot.metric_name == "si_index",
@@ -102,30 +105,32 @@ def detect_hidden_gems(
 
         age = compute_age_at_date(player.date_of_birth, reference_date)
 
-        results.append({
-            "player_id": player_id,
-            "name": player.canonical_name,
-            "age": age,
-            "position_group": player.position_group,
-            "club": team.name if team else None,
-            "league": league.name if league else None,
-            "index_score": index_score,
-            "market_value_eur": latest_val.valuation_amount_eur,
-            "stat_value_eur": round(stat_eur),
-            "upside_eur": round(upside),
-            "upside_pct": round(upside / latest_val.valuation_amount_eur * 100, 0),
-            "confidence": latest_val.confidence_level,
-            "opportunity_type": "hidden_gem",
-            "opportunity_summary": (
-                f"Performing at {index_score:.0f}th percentile with market "
-                f"valuation of €{latest_val.valuation_amount_eur/1e6:.1f}M — "
-                f"potential upside of €{upside/1e6:.1f}M"
-            ),
-            "risk_factors": [
-                f"Market value based on {latest_val.confidence_level} confidence data",
-                "Performance level may not be recognized by broader market yet",
-            ],
-        })
+        results.append(
+            {
+                "player_id": player_id,
+                "name": player.canonical_name,
+                "age": age,
+                "position_group": player.position_group,
+                "club": team.name if team else None,
+                "league": league.name if league else None,
+                "index_score": index_score,
+                "market_value_eur": latest_val.valuation_amount_eur,
+                "stat_value_eur": round(stat_eur),
+                "upside_eur": round(upside),
+                "upside_pct": round(upside / latest_val.valuation_amount_eur * 100, 0),
+                "confidence": latest_val.confidence_level,
+                "opportunity_type": "hidden_gem",
+                "opportunity_summary": (
+                    f"Performing at {index_score:.0f}th percentile with market "
+                    f"valuation of €{latest_val.valuation_amount_eur/1e6:.1f}M — "
+                    f"potential upside of €{upside/1e6:.1f}M"
+                ),
+                "risk_factors": [
+                    f"Market value based on {latest_val.confidence_level} confidence data",
+                    "Performance level may not be recognized by broader market yet",
+                ],
+            }
+        )
 
     results.sort(key=lambda x: x["upside_pct"], reverse=True)
     return results[:limit]
@@ -134,6 +139,7 @@ def detect_hidden_gems(
 # ---------------------------------------------------------------------------
 # Age opportunity detection (Part D3)
 # ---------------------------------------------------------------------------
+
 
 def detect_age_opportunities(
     db: Session,
@@ -154,7 +160,9 @@ def detect_age_opportunities(
     players_with_index = (
         db.query(Player.id, PercentileSnapshot.index_score)
         .join(StatSnapshot, StatSnapshot.player_id == Player.id)
-        .join(PercentileSnapshot, PercentileSnapshot.stat_snapshot_id == StatSnapshot.id)
+        .join(
+            PercentileSnapshot, PercentileSnapshot.stat_snapshot_id == StatSnapshot.id
+        )
         .filter(
             PercentileSnapshot.is_published.is_(True),
             PercentileSnapshot.metric_name == "si_index",
@@ -192,34 +200,40 @@ def detect_age_opportunities(
         league = db.get(League, team.league_id) if team else None
 
         stat_proxy = compute_stat_value_proxy(db, player_id)
-        stat_eur = (stat_proxy["stat_value_score"] / 100) ** 2 * 100_000_000 if stat_proxy else 0
+        stat_eur = (
+            (stat_proxy["stat_value_score"] / 100) ** 2 * 100_000_000
+            if stat_proxy
+            else 0
+        )
 
         market_val = latest_val.valuation_amount_eur if latest_val else None
         upside = stat_eur - (market_val or 0)
 
-        results.append({
-            "player_id": player_id,
-            "name": player.canonical_name,
-            "age": age,
-            "position_group": player.position_group,
-            "club": team.name if team else None,
-            "league": league.name if league else None,
-            "index_score": index_score,
-            "market_value_eur": market_val,
-            "stat_value_eur": round(stat_eur),
-            "upside_eur": round(upside) if upside > 0 else 0,
-            "years_to_peak": max(0, 27 - age) if age < 27 else 0,
-            "opportunity_type": "age_opportunity",
-            "opportunity_summary": (
-                f"Age {age}, performing at {index_score:.0f}th percentile — "
-                f"years of development ahead before peak"
-            ),
-            "risk_factors": [
-                f"Young player (age {age}) — limited sample size",
-                "May not yet be ready for top-level pressure",
-                "Injury risk during development years",
-            ],
-        })
+        results.append(
+            {
+                "player_id": player_id,
+                "name": player.canonical_name,
+                "age": age,
+                "position_group": player.position_group,
+                "club": team.name if team else None,
+                "league": league.name if league else None,
+                "index_score": index_score,
+                "market_value_eur": market_val,
+                "stat_value_eur": round(stat_eur),
+                "upside_eur": round(upside) if upside > 0 else 0,
+                "years_to_peak": max(0, 27 - age) if age < 27 else 0,
+                "opportunity_type": "age_opportunity",
+                "opportunity_summary": (
+                    f"Age {age}, performing at {index_score:.0f}th percentile — "
+                    f"years of development ahead before peak"
+                ),
+                "risk_factors": [
+                    f"Young player (age {age}) — limited sample size",
+                    "May not yet be ready for top-level pressure",
+                    "Injury risk during development years",
+                ],
+            }
+        )
 
     results.sort(key=lambda x: (-x["index_score"], x["age"]))
     return results[:limit]
@@ -239,14 +253,14 @@ SCARCE_PROFILES: dict[str, list[str]] = {
 }
 
 POSITION_PREMIUM_FACTORS: dict[str, float] = {
-    "W": 1.3,   # Wingers command premiums
+    "W": 1.3,  # Wingers command premiums
     "AM": 1.25,  # Creative players command premiums
-    "CB": 1.1,   # Defenders slightly below average premium
+    "CB": 1.1,  # Defenders slightly below average premium
     "FB": 1.05,  # Full-backs moderate premium
-    "CM": 1.0,   # Midfielders baseline
+    "CM": 1.0,  # Midfielders baseline
     "DM": 0.95,  # Defensive midfielders slight discount
     "ST": 1.15,  # Strikers moderate premium
-    "GK": 0.9,   # Goalkeepers slight discount
+    "GK": 0.9,  # Goalkeepers slight discount
 }
 
 
@@ -268,7 +282,9 @@ def detect_position_scarcity_opportunities(
     players_with_index = (
         db.query(Player.id, PercentileSnapshot.index_score, Player.position_group)
         .join(StatSnapshot, StatSnapshot.player_id == Player.id)
-        .join(PercentileSnapshot, PercentileSnapshot.stat_snapshot_id == StatSnapshot.id)
+        .join(
+            PercentileSnapshot, PercentileSnapshot.stat_snapshot_id == StatSnapshot.id
+        )
         .filter(
             PercentileSnapshot.is_published.is_(True),
             PercentileSnapshot.metric_name == "si_index",
@@ -307,26 +323,28 @@ def detect_position_scarcity_opportunities(
 
         market_val = latest_val.valuation_amount_eur if latest_val else None
 
-        results.append({
-            "player_id": player_id,
-            "name": player.canonical_name,
-            "age": compute_age_at_date(player.date_of_birth, reference_date),
-            "position_group": pos_group,
-            "club": team.name if team else None,
-            "league": league.name if league else None,
-            "index_score": index_score,
-            "market_value_eur": market_val,
-            "premium_factor": premium,
-            "opportunity_type": "position_scarcity",
-            "opportunity_summary": (
-                f"Performing at {index_score:.0f}th percentile in a scarce "
-                f"position ({pos_group}) — this profile commands a premium"
-            ),
-            "risk_factors": [
-                f"Position premium factor: {premium}x",
-                "Premium positions attract competition for signatures",
-            ],
-        })
+        results.append(
+            {
+                "player_id": player_id,
+                "name": player.canonical_name,
+                "age": compute_age_at_date(player.date_of_birth, reference_date),
+                "position_group": pos_group,
+                "club": team.name if team else None,
+                "league": league.name if league else None,
+                "index_score": index_score,
+                "market_value_eur": market_val,
+                "premium_factor": premium,
+                "opportunity_type": "position_scarcity",
+                "opportunity_summary": (
+                    f"Performing at {index_score:.0f}th percentile in a scarce "
+                    f"position ({pos_group}) — this profile commands a premium"
+                ),
+                "risk_factors": [
+                    f"Position premium factor: {premium}x",
+                    "Premium positions attract competition for signatures",
+                ],
+            }
+        )
 
     results.sort(key=lambda x: x["index_score"], reverse=True)
     return results[:limit]

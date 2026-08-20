@@ -41,13 +41,17 @@ def get_active_model(db: Session) -> dict[str, Any] | None:
         "algorithm": model.algorithm,
         "n_clusters": model.n_clusters,
         "silhouette_score": model.silhouette_score,
-        "training_date": model.training_date.isoformat() if model.training_date else None,
+        "training_date": (
+            model.training_date.isoformat() if model.training_date else None
+        ),
         "deployed_at": model.deployed_at.isoformat() if model.deployed_at else None,
         "training_data_source": model.training_data_source,
     }
 
 
-def get_archetype_definitions(db: Session, model_id: int | None = None) -> list[dict[str, Any]]:
+def get_archetype_definitions(
+    db: Session, model_id: int | None = None
+) -> list[dict[str, Any]]:
     """Get all archetype definitions for the active (or specified) model."""
     if model_id is None:
         model = (
@@ -136,14 +140,20 @@ def get_player_archetype(
         "player_id": player_id,
         "model_version": model.version,
         "cluster_id": assignment.cluster_id,
-        "archetype_name": definition.name if definition else f"Cluster {assignment.cluster_id}",
+        "archetype_name": (
+            definition.name if definition else f"Cluster {assignment.cluster_id}"
+        ),
         "archetype_description": definition.description if definition else "",
         "distance_to_center": assignment.distance_to_center,
         "typicality": round(typicality, 1),
         "is_outlier": assignment.is_outlier,
         "top_distinguishing_features": assignment.top_distinguishing_features,
-        "computed_date": assignment.computed_date.isoformat() if assignment.computed_date else None,
-        "snapshot_date": assignment.snapshot_date.isoformat() if assignment.snapshot_date else None,
+        "computed_date": (
+            assignment.computed_date.isoformat() if assignment.computed_date else None
+        ),
+        "snapshot_date": (
+            assignment.snapshot_date.isoformat() if assignment.snapshot_date else None
+        ),
     }
 
 
@@ -190,18 +200,23 @@ def get_archetype_players(
             .first()
         )
 
-        players.append({
-            "player_id": player.id,
-            "name": player.canonical_name,
-            "position_group": player.position_group,
-            "club": team.name if team else None,
-            "league": league.name if league else None,
-            "league_slug": league.slug if league else None,
-            "distance_to_center": assignment.distance_to_center,
-            "typicality": round(max(0, min(100, 100 - (assignment.distance_to_center / 5.0 * 100))), 1),
-            "top_distinguishing_features": assignment.top_distinguishing_features,
-            "minutes_played": snap.minutes_played if snap else None,
-        })
+        players.append(
+            {
+                "player_id": player.id,
+                "name": player.canonical_name,
+                "position_group": player.position_group,
+                "club": team.name if team else None,
+                "league": league.name if league else None,
+                "league_slug": league.slug if league else None,
+                "distance_to_center": assignment.distance_to_center,
+                "typicality": round(
+                    max(0, min(100, 100 - (assignment.distance_to_center / 5.0 * 100))),
+                    1,
+                ),
+                "top_distinguishing_features": assignment.top_distinguishing_features,
+                "minutes_played": snap.minutes_played if snap else None,
+            }
+        )
 
     return {
         "model_id": model_id,
@@ -250,7 +265,9 @@ def get_archetype_overview(db: Session) -> dict[str, Any]:
             "algorithm": model.algorithm,
             "n_clusters": model.n_clusters,
             "silhouette_score": model.silhouette_score,
-            "training_date": model.training_date.isoformat() if model.training_date else None,
+            "training_date": (
+                model.training_date.isoformat() if model.training_date else None
+            ),
             "deployed_at": model.deployed_at.isoformat() if model.deployed_at else None,
         },
         "archetypes": [
@@ -270,11 +287,7 @@ def get_archetype_overview(db: Session) -> dict[str, Any]:
 
 def get_model_list(db: Session) -> list[dict[str, Any]]:
     """List all registered clustering models."""
-    models = (
-        db.query(ClusteringModel)
-        .order_by(ClusteringModel.created_at.desc())
-        .all()
-    )
+    models = db.query(ClusteringModel).order_by(ClusteringModel.created_at.desc()).all()
     return [
         {
             "model_id": m.id,

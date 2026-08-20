@@ -33,8 +33,15 @@ from app.models import (
 # Helpers
 # ---------------------------------------------------------------------------
 
+
 def _make_league(db: Session) -> League:
-    league = League(slug="champions-league", name="UEFA Champions League", country="Europe", tier="tier_1", external_ids={})
+    league = League(
+        slug="champions-league",
+        name="UEFA Champions League",
+        country="Europe",
+        tier="tier_1",
+        external_ids={},
+    )
     db.add(league)
     db.flush()
     return league
@@ -54,7 +61,9 @@ def _make_player(db: Session, team: Team, name: str = "Player A") -> Player:
     return player
 
 
-def _make_coverage(db: Session, competition_id: str = "2", season: str = "2023/2024") -> None:
+def _make_coverage(
+    db: Session, competition_id: str = "2", season: str = "2023/2024"
+) -> None:
     cov = DataCoverage(
         source="statsbomb",
         source_identifier=f"statsbomb:{competition_id}:1",
@@ -66,6 +75,7 @@ def _make_coverage(db: Session, competition_id: str = "2", season: str = "2023/2
 
 
 _pass_counter = 0
+
 
 def _make_pass_event(
     db: Session,
@@ -110,6 +120,7 @@ def _make_pass_event(
 
 _def_counter = 0
 
+
 def _make_defensive_event(
     db: Session,
     match_id: str,
@@ -143,44 +154,52 @@ def _make_defensive_event(
 # Zone assignment tests
 # ---------------------------------------------------------------------------
 
+
 class TestZoneAssignment:
     """C1 — Pitch zone definitions."""
 
     def test_defensive_left(self):
         from app.compute.spatial_analysis import assign_zone, assign_zone_name
+
         assert assign_zone(10, 10) == (0, 0)
         assert assign_zone_name(10, 10) == "defensive_left"
 
     def test_attacking_right(self):
         from app.compute.spatial_analysis import assign_zone, assign_zone_name
+
         assert assign_zone(110, 70) == (3, 2)
         assert assign_zone_name(110, 70) == "attacking_right"
 
     def test_center_midfield(self):
         from app.compute.spatial_analysis import assign_zone, assign_zone_name
+
         assert assign_zone(60, 40) == (1, 1) or assign_zone(60, 40) == (2, 1)
         name = assign_zone_name(60, 40)
         assert "center" in name
 
     def test_third_assignment(self):
         from app.compute.spatial_analysis import assign_third
+
         assert assign_third(10) == "defensive"
         assert assign_third(60) == "middle"
         assert assign_third(100) == "attacking"
 
     def test_width_assignment(self):
         from app.compute.spatial_analysis import assign_width
+
         assert assign_width(5) == "left"
         assert assign_width(40) == "center"
         assert assign_width(75) == "right"
 
     def test_boundary_values(self):
         from app.compute.spatial_analysis import assign_zone
+
         assert assign_zone(0, 0) == (0, 0)
         assert assign_zone(120, 80) == (3, 2)
 
     def test_all_zones_covered(self):
         from app.compute.spatial_analysis import assign_zone_name
+
         found_zones = set()
         for x in range(0, 121, 10):
             for y in range(0, 81, 10):
@@ -193,11 +212,13 @@ class TestZoneAssignment:
 # Passing network tests
 # ---------------------------------------------------------------------------
 
+
 class TestPassingNetwork:
     """B1-B2 — Network construction and metrics."""
 
     def test_build_network_empty(self, db: Session):
         from app.compute.passing_network import build_passing_network
+
         result = build_passing_network(db, "nonexistent_match")
         assert result["nodes"] == []
         assert result["edges"] == []
@@ -213,7 +234,9 @@ class TestPassingNetwork:
 
         _make_pass_event(db, "m1", p1, x=50, y=40, end_x=70, end_y=35, recipient="Bob")
         _make_pass_event(db, "m1", p1, x=50, y=40, end_x=80, end_y=30, recipient="Bob")
-        _make_pass_event(db, "m1", p2, x=70, y=35, end_x=55, end_y=45, recipient="Alice")
+        _make_pass_event(
+            db, "m1", p2, x=70, y=35, end_x=55, end_y=45, recipient="Alice"
+        )
         db.commit()
 
         result = build_passing_network(db, "m1")
@@ -236,12 +259,39 @@ class TestPassingNetwork:
 
         # Create a triangle of passes
         for i in range(5):
-            _make_pass_event(db, "m1", p1, x=50, y=40, end_x=70, end_y=35,
-                           recipient="Bob", minute=float(i))
-            _make_pass_event(db, "m1", p2, x=70, y=35, end_x=55, end_y=45,
-                           recipient="Alice", minute=float(i + 10))
-            _make_pass_event(db, "m1", p3, x=55, y=45, end_x=50, end_y=40,
-                           recipient="Alice", minute=float(i + 20))
+            _make_pass_event(
+                db,
+                "m1",
+                p1,
+                x=50,
+                y=40,
+                end_x=70,
+                end_y=35,
+                recipient="Bob",
+                minute=float(i),
+            )
+            _make_pass_event(
+                db,
+                "m1",
+                p2,
+                x=70,
+                y=35,
+                end_x=55,
+                end_y=45,
+                recipient="Alice",
+                minute=float(i + 10),
+            )
+            _make_pass_event(
+                db,
+                "m1",
+                p3,
+                x=55,
+                y=45,
+                end_x=50,
+                end_y=40,
+                recipient="Alice",
+                minute=float(i + 20),
+            )
         db.commit()
 
         network = build_passing_network(db, "m1")
@@ -264,8 +314,17 @@ class TestPassingNetwork:
         # Complete pass
         _make_pass_event(db, "m1", p1, x=50, y=40, end_x=70, end_y=35, recipient="Bob")
         # Incomplete pass (should not count)
-        _make_pass_event(db, "m1", p1, x=50, y=40, end_x=70, end_y=35,
-                        recipient="Bob", outcome="Incomplete")
+        _make_pass_event(
+            db,
+            "m1",
+            p1,
+            x=50,
+            y=40,
+            end_x=70,
+            end_y=35,
+            recipient="Bob",
+            outcome="Incomplete",
+        )
         db.commit()
 
         result = build_passing_network(db, "m1")
@@ -276,6 +335,7 @@ class TestPassingNetwork:
 # ---------------------------------------------------------------------------
 # Tactical style detection tests
 # ---------------------------------------------------------------------------
+
 
 class TestTacticalStyle:
     """B3 — Tactical style detection."""
@@ -294,6 +354,7 @@ class TestTacticalStyle:
 
     def test_insufficient_data(self):
         from app.compute.passing_network import detect_tactical_style
+
         result = detect_tactical_style({"total_passes": 0, "nodes": []}, {"nodes": []})
         assert result["style"] == "insufficient_data"
 
@@ -302,11 +363,13 @@ class TestTacticalStyle:
 # Anomaly detection tests
 # ---------------------------------------------------------------------------
 
+
 class TestAnomalyDetection:
     """B4 — Anomaly detection in passing networks."""
 
     def test_no_anomalies(self):
         from app.compute.passing_network import detect_network_anomalies
+
         result = detect_network_anomalies(
             {"nodes": [], "edges": []},
             {"nodes": []},
@@ -315,13 +378,28 @@ class TestAnomalyDetection:
 
     def test_disconnected_player(self):
         from app.compute.passing_network import detect_network_anomalies
+
         metrics = {
             "nodes": [
-                {"player_id": 1, "pass_count": 30, "pass_attempts": 40, "betweenness_centrality": 0.1, "pass_success_rate": 75},
-                {"player_id": 2, "pass_count": 0, "pass_attempts": 0, "betweenness_centrality": 0, "pass_success_rate": 0},
+                {
+                    "player_id": 1,
+                    "pass_count": 30,
+                    "pass_attempts": 40,
+                    "betweenness_centrality": 0.1,
+                    "pass_success_rate": 75,
+                },
+                {
+                    "player_id": 2,
+                    "pass_count": 0,
+                    "pass_attempts": 0,
+                    "betweenness_centrality": 0,
+                    "pass_success_rate": 0,
+                },
             ]
         }
-        result = detect_network_anomalies({"nodes": metrics["nodes"], "edges": []}, metrics)
+        result = detect_network_anomalies(
+            {"nodes": metrics["nodes"], "edges": []}, metrics
+        )
         disconnected = [a for a in result if a["type"] == "disconnected_player"]
         assert len(disconnected) == 1
         assert disconnected[0]["player_id"] == 2
@@ -331,11 +409,13 @@ class TestAnomalyDetection:
 # Pressure/possession heatmap tests
 # ---------------------------------------------------------------------------
 
+
 class TestHeatmaps:
     """C2-C3 — Pressure and possession heatmaps."""
 
     def test_pressure_heatmap_empty(self, db: Session):
         from app.compute.spatial_analysis import compute_pressure_heatmap
+
         result = compute_pressure_heatmap(db, "nonexistent")
         assert result["total_actions"] == 0
         assert all(v == 0 for v in result["zone_densities"].values())
@@ -378,11 +458,13 @@ class TestHeatmaps:
 # Pressure success rate tests
 # ---------------------------------------------------------------------------
 
+
 class TestPressureSuccess:
     """C4 — Pressure success rate per zone."""
 
     def test_pressure_success_empty(self, db: Session):
         from app.compute.spatial_analysis import compute_pressure_success
+
         result = compute_pressure_success(db, "nonexistent")
         assert result["zone_success_rates"] == {} or all(
             v["total_pressures"] == 0 for v in result["zone_success_rates"].values()
@@ -402,7 +484,9 @@ class TestPressureSuccess:
 
         result = compute_pressure_success(db, "m1")
         # Should have at least one zone with pressure data
-        has_data = any(v["total_pressures"] > 0 for v in result["zone_success_rates"].values())
+        has_data = any(
+            v["total_pressures"] > 0 for v in result["zone_success_rates"].values()
+        )
         assert has_data
 
 
@@ -410,11 +494,13 @@ class TestPressureSuccess:
 # Coverage check tests
 # ---------------------------------------------------------------------------
 
+
 class TestCoverageCheck:
     """Coverage gating for tactical data."""
 
     def test_has_tactical_data_no_events(self, db: Session):
         from app.compute.spatial_analysis import has_tactical_data
+
         result = has_tactical_data(db, "nonexistent")
         assert result["has_coverage"] is False
 
@@ -426,7 +512,9 @@ class TestCoverageCheck:
         p1 = _make_player(db, team)
 
         for i in range(150):
-            _make_pass_event(db, "m1", p1, x=60, y=40, end_x=70, end_y=35, minute=float(i))
+            _make_pass_event(
+                db, "m1", p1, x=60, y=40, end_x=70, end_y=35, minute=float(i)
+            )
         db.commit()
 
         result = has_tactical_data(db, "m1", min_events=100)
@@ -438,11 +526,13 @@ class TestCoverageCheck:
 # Formation detection tests
 # ---------------------------------------------------------------------------
 
+
 class TestFormationDetection:
     """D1-D2 — Formation detection and stability."""
 
     def test_formation_unknown_match(self, db: Session):
         from app.compute.formation import detect_formation
+
         result = detect_formation(db, "nonexistent")
         assert result["formation_str"] == "unknown"
         assert result["confidence"] == 0
@@ -472,9 +562,16 @@ class TestFormationDetection:
 
         for player, x, y in positions:
             for j in range(10):
-                _make_pass_event(db, "m1", player, x=x, y=y,
-                               end_x=min(120, x + 10), end_y=y,
-                               minute=float(j))
+                _make_pass_event(
+                    db,
+                    "m1",
+                    player,
+                    x=x,
+                    y=y,
+                    end_x=min(120, x + 10),
+                    end_y=y,
+                    minute=float(j),
+                )
         db.commit()
 
         result = detect_formation(db, "m1")
@@ -492,7 +589,9 @@ class TestFormationDetection:
 
         # Create minimal events
         for i in range(120):
-            _make_pass_event(db, "m1", p1, x=50, y=40, end_x=60, end_y=35, minute=float(i))
+            _make_pass_event(
+                db, "m1", p1, x=50, y=40, end_x=60, end_y=35, minute=float(i)
+            )
         db.commit()
 
         result = analyze_formation_stability(db, "m1", window_minutes=30)
@@ -509,8 +608,12 @@ class TestFormationDetection:
         p1 = _make_player(db, team, "DEF")
 
         for j in range(10):
-            _make_pass_event(db, "m1", gk, x=10, y=40, end_x=20, end_y=35, minute=float(j))
-            _make_pass_event(db, "m1", p1, x=30, y=40, end_x=50, end_y=35, minute=float(j + 10))
+            _make_pass_event(
+                db, "m1", gk, x=10, y=40, end_x=20, end_y=35, minute=float(j)
+            )
+            _make_pass_event(
+                db, "m1", p1, x=30, y=40, end_x=50, end_y=35, minute=float(j + 10)
+            )
         db.commit()
 
         result = analyze_formation_conformity(db, "m1", nominal_formation="4-3-3")
@@ -522,11 +625,13 @@ class TestFormationDetection:
 # API endpoint availability tests
 # ---------------------------------------------------------------------------
 
+
 class TestAPIEndpoints:
     """Verify tactical API endpoints are registered."""
 
     def test_tactical_router_registered(self):
         from app.api.tactical_views import router
+
         routes = [r.path for r in router.routes]
         assert any("overview" in p for p in routes)
         assert any("passing-network" in p for p in routes)
@@ -537,4 +642,5 @@ class TestAPIEndpoints:
 
     def test_main_includes_tactical(self):
         from app.api.tactical_views import router as t
+
         assert t.prefix == "/api/v1/tactical"

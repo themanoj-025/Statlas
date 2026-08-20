@@ -34,7 +34,7 @@ from app.models import (
 AGE_CURVES: dict[str, dict[str, Any]] = {
     "ST": {"peak_age": 27, "rise_rate": 0.08, "decline_rate": 0.06},
     "AM": {"peak_age": 26, "rise_rate": 0.07, "decline_rate": 0.07},
-    "W":  {"peak_age": 26, "rise_rate": 0.08, "decline_rate": 0.06},
+    "W": {"peak_age": 26, "rise_rate": 0.08, "decline_rate": 0.06},
     "CM": {"peak_age": 27, "rise_rate": 0.06, "decline_rate": 0.05},
     "DM": {"peak_age": 28, "rise_rate": 0.05, "decline_rate": 0.04},
     "FB": {"peak_age": 27, "rise_rate": 0.06, "decline_rate": 0.05},
@@ -80,6 +80,7 @@ def compute_age_at_date(dob: datetime | None, reference_date: datetime) -> int |
 # ---------------------------------------------------------------------------
 # Stat-based value proxy
 # ---------------------------------------------------------------------------
+
 
 def compute_stat_value_proxy(
     db: Session,
@@ -180,6 +181,7 @@ def compute_stat_value_proxy(
 # Market valuation lookup
 # ---------------------------------------------------------------------------
 
+
 def get_latest_valuation(
     db: Session,
     player_id: int,
@@ -187,10 +189,7 @@ def get_latest_valuation(
     source: str | None = None,
 ) -> dict[str, Any] | None:
     """Get the latest market valuation for a player."""
-    query = (
-        db.query(MarketValuation)
-        .filter(MarketValuation.player_id == player_id)
-    )
+    query = db.query(MarketValuation).filter(MarketValuation.player_id == player_id)
     if source:
         query = query.filter(MarketValuation.source == source)
 
@@ -212,6 +211,7 @@ def get_latest_valuation(
 # ---------------------------------------------------------------------------
 # Valuation comparison
 # ---------------------------------------------------------------------------
+
 
 def get_valuation_comparison(
     db: Session,
@@ -305,6 +305,7 @@ def get_valuation_comparison(
 # Undervaluation / overvaluation detection
 # ---------------------------------------------------------------------------
 
+
 def get_undervalued_players(
     db: Session,
     *,
@@ -357,7 +358,9 @@ def get_undervalued_players(
         # Apply filters
         if league_id:
             # Check player's team is in the league
-            team = db.get(Team, player.current_team_id) if player.current_team_id else None
+            team = (
+                db.get(Team, player.current_team_id) if player.current_team_id else None
+            )
             if team is None or team.league_id != league_id:
                 continue
         if position_group and player.position_group != position_group:
@@ -376,21 +379,23 @@ def get_undervalued_players(
         team = db.get(Team, player.current_team_id) if player.current_team_id else None
         league = db.get(League, team.league_id) if team else None
 
-        results.append({
-            "player_id": player.id,
-            "name": player.canonical_name,
-            "position_group": player.position_group,
-            "club": team.name if team else None,
-            "league": league.name if league else None,
-            "stat_value_score": stat["stat_value_score"],
-            "stat_value_eur": round(stat_eur),
-            "market_value_eur": market_val,
-            "market_source": val.source,
-            "valuation_gap_eur": round(stat_eur - market_val),
-            "valuation_gap_pct": round(gap_ratio * 100, 1),
-            "age": stat["age"],
-            "signal_strength": "moderate" if stat["n_metrics"] >= 6 else "weak",
-        })
+        results.append(
+            {
+                "player_id": player.id,
+                "name": player.canonical_name,
+                "position_group": player.position_group,
+                "club": team.name if team else None,
+                "league": league.name if league else None,
+                "stat_value_score": stat["stat_value_score"],
+                "stat_value_eur": round(stat_eur),
+                "market_value_eur": market_val,
+                "market_source": val.source,
+                "valuation_gap_eur": round(stat_eur - market_val),
+                "valuation_gap_pct": round(gap_ratio * 100, 1),
+                "age": stat["age"],
+                "signal_strength": "moderate" if stat["n_metrics"] >= 6 else "weak",
+            }
+        )
 
     results.sort(key=lambda x: x["valuation_gap_pct"], reverse=True)
     return results[:limit]
@@ -442,7 +447,9 @@ def get_overvalued_players(
             continue
 
         if league_id:
-            team = db.get(Team, player.current_team_id) if player.current_team_id else None
+            team = (
+                db.get(Team, player.current_team_id) if player.current_team_id else None
+            )
             if team is None or team.league_id != league_id:
                 continue
         if position_group and player.position_group != position_group:
@@ -460,22 +467,24 @@ def get_overvalued_players(
         team = db.get(Team, player.current_team_id) if player.current_team_id else None
         league = db.get(League, team.league_id) if team else None
 
-        results.append({
-            "player_id": player.id,
-            "name": player.canonical_name,
-            "position_group": player.position_group,
-            "club": team.name if team else None,
-            "league": league.name if league else None,
-            "stat_value_score": stat["stat_value_score"],
-            "stat_value_eur": round(stat_eur),
-            "market_value_eur": market_val,
-            "market_source": val.source,
-            "valuation_gap_eur": round(market_val - stat_eur),
-            "valuation_gap_pct": round(gap_ratio * 100, 1),
-            "age": stat["age"],
-            "signal_strength": "moderate" if stat["n_metrics"] >= 6 else "weak",
-            "note": "Overvaluation can be legitimate (young potential, scarcity, celebrity factor)",
-        })
+        results.append(
+            {
+                "player_id": player.id,
+                "name": player.canonical_name,
+                "position_group": player.position_group,
+                "club": team.name if team else None,
+                "league": league.name if league else None,
+                "stat_value_score": stat["stat_value_score"],
+                "stat_value_eur": round(stat_eur),
+                "market_value_eur": market_val,
+                "market_source": val.source,
+                "valuation_gap_eur": round(market_val - stat_eur),
+                "valuation_gap_pct": round(gap_ratio * 100, 1),
+                "age": stat["age"],
+                "signal_strength": "moderate" if stat["n_metrics"] >= 6 else "weak",
+                "note": "Overvaluation can be legitimate (young potential, scarcity, celebrity factor)",
+            }
+        )
 
     results.sort(key=lambda x: x["valuation_gap_pct"], reverse=True)
     return results[:limit]

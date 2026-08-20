@@ -100,6 +100,6 @@ def player_archetype(player_id: int):
                 "is_outlier": None,
                 "top_distinguishing_features": [],
                 "note": "No archetype assignment available. This player may not have "
-                        "sufficient qualifying data or no active clustering model exists.",
+                "sufficient qualifying data or no active clustering model exists.",
             }
         return result

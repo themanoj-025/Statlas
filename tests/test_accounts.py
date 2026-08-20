@@ -37,7 +37,9 @@ def db():
     session.close()
 
 
-def _create_user(db: Session, email: str = "test@example.com", password: str = "password123") -> User:
+def _create_user(
+    db: Session, email: str = "test@example.com", password: str = "password123"
+) -> User:
     user = User(
         email=email,
         password_hash=auth.hash_password(password),
@@ -129,9 +131,11 @@ class TestEmailVerification:
         raw_token = auth.create_email_verification_token(db, user.id)
         from app.models import EmailVerificationToken
 
-        ev = db.query(EmailVerificationToken).filter(
-            EmailVerificationToken.user_id == user.id
-        ).first()
+        ev = (
+            db.query(EmailVerificationToken)
+            .filter(EmailVerificationToken.user_id == user.id)
+            .first()
+        )
         ev.expires_at = datetime.now(timezone.utc) - timedelta(hours=1)
         db.commit()
 
@@ -163,7 +167,8 @@ class TestLoginRateLimiting:
             auth.record_login_failure("test@example.com")
         # Manually expire the failures
         auth._LOGIN_FAILURES["test@example.com"] = [
-            datetime.now(timezone.utc) - timedelta(minutes=auth.LOGIN_WINDOW_MINUTES + 1)
+            datetime.now(timezone.utc)
+            - timedelta(minutes=auth.LOGIN_WINDOW_MINUTES + 1)
         ]
         locked, _ = auth.is_login_locked("test@example.com")
         assert not locked

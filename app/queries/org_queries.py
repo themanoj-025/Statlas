@@ -35,21 +35,38 @@ from app.models import (
 # Permissions per role (inclusive: higher roles inherit lower role permissions)
 ROLE_PERMISSIONS: dict[str, set[str]] = {
     "owner": {
-        "org_delete", "org_settings_edit", "billing_manage",
-        "member_invite", "member_remove", "member_role_change",
-        "resource_create", "resource_edit", "resource_delete",
-        "resource_share", "resource_comment", "resource_view",
+        "org_delete",
+        "org_settings_edit",
+        "billing_manage",
+        "member_invite",
+        "member_remove",
+        "member_role_change",
+        "resource_create",
+        "resource_edit",
+        "resource_delete",
+        "resource_share",
+        "resource_comment",
+        "resource_view",
         "audit_view",
     },
     "manager": {
-        "member_invite", "member_remove", "member_role_change",
-        "resource_create", "resource_edit", "resource_delete",
-        "resource_share", "resource_comment", "resource_view",
+        "member_invite",
+        "member_remove",
+        "member_role_change",
+        "resource_create",
+        "resource_edit",
+        "resource_delete",
+        "resource_share",
+        "resource_comment",
+        "resource_view",
         "audit_view",
     },
     "scout": {
-        "resource_create", "resource_edit", "resource_delete",
-        "resource_comment", "resource_view",
+        "resource_create",
+        "resource_edit",
+        "resource_delete",
+        "resource_comment",
+        "resource_view",
     },
     "viewer": {
         "resource_view",
@@ -95,9 +112,7 @@ def user_has_permission(
 def get_user_org_ids(db: Session, user_id: int) -> list[int]:
     """Return all org IDs the user is a member of."""
     memberships = (
-        db.query(OrgMembership.org_id)
-        .filter(OrgMembership.user_id == user_id)
-        .all()
+        db.query(OrgMembership.org_id).filter(OrgMembership.user_id == user_id).all()
     )
     return [m.org_id for m in memberships]
 
@@ -118,6 +133,7 @@ def get_user_org_role(db: Session, user_id: int, org_id: int) -> str | None:
 # ---------------------------------------------------------------------------
 # Organization CRUD
 # ---------------------------------------------------------------------------
+
 
 def create_organization(
     db: Session,
@@ -189,9 +205,7 @@ def get_organization(db: Session, org_id: int) -> dict[str, Any] | None:
     if org is None:
         return None
     member_count = (
-        db.query(OrgMembership)
-        .filter(OrgMembership.org_id == org_id)
-        .count()
+        db.query(OrgMembership).filter(OrgMembership.org_id == org_id).count()
     )
     return {
         "org_id": org.id,
@@ -230,6 +244,7 @@ def list_user_organizations(db: Session, user_id: int) -> list[dict[str, Any]]:
 # Membership management
 # ---------------------------------------------------------------------------
 
+
 def invite_member(
     db: Session,
     org_id: int,
@@ -255,15 +270,15 @@ def invite_member(
         raise ValueError("Organization not found")
 
     member_count = (
-        db.query(OrgMembership)
-        .filter(OrgMembership.org_id == org_id)
-        .count()
+        db.query(OrgMembership).filter(OrgMembership.org_id == org_id).count()
     )
 
     seat_limits = {"free": 5, "pro": 25, "enterprise": 100}
     max_seats = seat_limits.get(org.tier, 5)
     if member_count >= max_seats:
-        raise ValueError(f"Organization has reached its {max_seats}-seat limit. Upgrade to add more members.")
+        raise ValueError(
+            f"Organization has reached its {max_seats}-seat limit. Upgrade to add more members."
+        )
 
     # Check for existing pending invite
     existing_invite = (
@@ -307,7 +322,13 @@ def invite_member(
     db.add(invite)
 
     # Audit log
-    _log_audit(db, org_id, invited_by_user_id, "user_added", detail={"email": email, "role": role})
+    _log_audit(
+        db,
+        org_id,
+        invited_by_user_id,
+        "user_added",
+        detail={"email": email, "role": role},
+    )
 
     db.commit()
     return {
@@ -323,11 +344,7 @@ def accept_invite(db: Session, raw_token: str, user_id: int) -> dict[str, Any]:
     """Accept an org invitation. Adds the user as a member."""
     token_hash = auth.hash_token(raw_token)
 
-    invite = (
-        db.query(OrgInvite)
-        .filter(OrgInvite.token_hash == token_hash)
-        .first()
-    )
+    invite = db.query(OrgInvite).filter(OrgInvite.token_hash == token_hash).first()
     if invite is None:
         raise ValueError("Invalid invite token")
 
@@ -368,8 +385,14 @@ def accept_invite(db: Session, raw_token: str, user_id: int) -> dict[str, Any]:
     invite.accepted_at = now
 
     # Audit log
-    _log_audit(db, invite.org_id, invite.invited_by_user_id, "user_added",
-               target_user_id=user_id, detail={"role": invite.role})
+    _log_audit(
+        db,
+        invite.org_id,
+        invite.invited_by_user_id,
+        "user_added",
+        target_user_id=user_id,
+        detail={"role": invite.role},
+    )
 
     db.commit()
     return {
@@ -416,7 +439,10 @@ def remove_member(
 
     # Audit log
     _log_audit(
-        db, org_id, removed_by_user_id, "user_removed",
+        db,
+        org_id,
+        removed_by_user_id,
+        "user_removed",
         target_user_id=target_user_id,
         detail={"previous_role": removed_role},
     )
@@ -475,7 +501,10 @@ def change_member_role(
 
     # Audit log
     _log_audit(
-        db, org_id, changed_by_user_id, "role_changed",
+        db,
+        org_id,
+        changed_by_user_id,
+        "role_changed",
         target_user_id=target_user_id,
         detail={"old_role": old_role, "new_role": new_role},
     )
@@ -508,6 +537,7 @@ def list_members(db: Session, org_id: int) -> list[dict[str, Any]]:
 # ---------------------------------------------------------------------------
 # Audit logging
 # ---------------------------------------------------------------------------
+
 
 def _log_audit(
     db: Session,
@@ -573,13 +603,10 @@ def get_audit_log(
 # Org settings
 # ---------------------------------------------------------------------------
 
+
 def get_org_settings(db: Session, org_id: int) -> dict[str, Any] | None:
     """Get organization settings."""
-    settings = (
-        db.query(OrgSettings)
-        .filter(OrgSettings.org_id == org_id)
-        .first()
-    )
+    settings = db.query(OrgSettings).filter(OrgSettings.org_id == org_id).first()
     if settings is None:
         return None
     return {
@@ -602,11 +629,7 @@ def update_org_settings(
     if not user_has_permission(db, user_id, org_id, "org_settings_edit"):
         raise PermissionError("You do not have permission to edit org settings")
 
-    settings = (
-        db.query(OrgSettings)
-        .filter(OrgSettings.org_id == org_id)
-        .first()
-    )
+    settings = db.query(OrgSettings).filter(OrgSettings.org_id == org_id).first()
     if settings is None:
         # Create if missing
         settings = OrgSettings(org_id=org_id)
@@ -624,6 +647,7 @@ def update_org_settings(
 # ---------------------------------------------------------------------------
 # Resource access helpers (Part C2)
 # ---------------------------------------------------------------------------
+
 
 def get_user_shortlists(
     db: Session,
@@ -659,15 +683,17 @@ def get_user_shortlists(
             )
             .count()
         )
-        results.append({
-            "shortlist_id": sl.id,
-            "name": sl.name,
-            "description": sl.description,
-            "entry_count": entry_count,
-            "visibility": getattr(sl, "visibility", "personal"),
-            "owner_type": "personal",
-            "created_at": sl.created_at.isoformat() if sl.created_at else None,
-        })
+        results.append(
+            {
+                "shortlist_id": sl.id,
+                "name": sl.name,
+                "description": sl.description,
+                "entry_count": entry_count,
+                "visibility": getattr(sl, "visibility", "personal"),
+                "owner_type": "personal",
+                "created_at": sl.created_at.isoformat() if sl.created_at else None,
+            }
+        )
 
     # Org-shared shortlists
     user_org_ids = get_user_org_ids(db, user_id)
@@ -704,16 +730,20 @@ def get_user_shortlists(
                 .count()
             )
             creator = db.get(User, sl.user_id)
-            results.append({
-                "shortlist_id": sl.id,
-                "name": sl.name,
-                "description": sl.description,
-                "entry_count": entry_count,
-                "visibility": vis,
-                "owner_type": "org",
-                "org_id": sl.owner_org_id,
-                "created_by": creator.display_name or creator.email if creator else None,
-                "created_at": sl.created_at.isoformat() if sl.created_at else None,
-            })
+            results.append(
+                {
+                    "shortlist_id": sl.id,
+                    "name": sl.name,
+                    "description": sl.description,
+                    "entry_count": entry_count,
+                    "visibility": vis,
+                    "owner_type": "org",
+                    "org_id": sl.owner_org_id,
+                    "created_by": (
+                        creator.display_name or creator.email if creator else None
+                    ),
+                    "created_at": sl.created_at.isoformat() if sl.created_at else None,
+                }
+            )
 
     return results

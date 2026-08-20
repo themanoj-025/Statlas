@@ -85,12 +85,17 @@ def _check_pair(db, registry, anchor_id: int, row: dict) -> list[str]:
 
     # 1. matched strengths: both >= 70th, gap <= 20
     for m in exp["matched_strengths"]:
-        if m["player_a_percentile"] < MATCHED_STRENGTH_MIN_PERCENTILE or m[
-            "player_b_percentile"
-        ] < MATCHED_STRENGTH_MIN_PERCENTILE:
-            problems.append(f"{name}: matched strength {m['metric']} has a sub-70 player")
+        if (
+            m["player_a_percentile"] < MATCHED_STRENGTH_MIN_PERCENTILE
+            or m["player_b_percentile"] < MATCHED_STRENGTH_MIN_PERCENTILE
+        ):
+            problems.append(
+                f"{name}: matched strength {m['metric']} has a sub-70 player"
+            )
         if m["difference"] > MATCHED_STRENGTH_MAX_DIFF:
-            problems.append(f"{name}: matched strength {m['metric']} gap {m['difference']} > 20")
+            problems.append(
+                f"{name}: matched strength {m['metric']} gap {m['difference']} > 20"
+            )
 
     # 2. top key difference has the largest gap (vs the served vector)
     if exp["key_differences"]:
@@ -107,7 +112,9 @@ def _check_pair(db, registry, anchor_id: int, row: dict) -> list[str]:
         b = _vector_for(db, row["player_id"], group, tier)
         shared = set(a) & set(b)
         if shared and max(abs(a[m] - b[m]) for m in shared) >= KEY_DIFFERENCE_MIN_GAP:
-            problems.append(f"{name}: reported no key differences but a >=25 gap exists")
+            problems.append(
+                f"{name}: reported no key differences but a >=25 gap exists"
+            )
 
     # 3. excluded metrics are truly absent from one/both vectors
     if exp["excluded_metrics"]:
@@ -122,7 +129,9 @@ def _check_pair(db, registry, anchor_id: int, row: dict) -> list[str]:
         shared = set(a) & set(b)
         for m in exp["matched_strengths"] + exp["key_differences"]:
             if m["metric"] not in shared:
-                problems.append(f"{name}: listed metric {m['metric']} not in shared set")
+                problems.append(
+                    f"{name}: listed metric {m['metric']} not in shared set"
+                )
 
     # 4. contributions sum to the similarity score (score == its explanation)
     group, tier = _cohort_of(db, anchor_id)
@@ -131,11 +140,11 @@ def _check_pair(db, registry, anchor_id: int, row: dict) -> list[str]:
     rebuilt = build_similarity_explanation(
         a, b, group=group, registry=registry, min_shared_metrics=row["shared_metrics"]
     )
-    sim, _shared, contributions = _cosine_with_components(
-        a, b, row["shared_metrics"]
-    )
+    sim, _shared, contributions = _cosine_with_components(a, b, row["shared_metrics"])
     if abs(sum(contributions.values()) - sim) > 0.001:
-        problems.append(f"{name}: contribution sum {sum(contributions.values()):.4f} != {sim:.4f}")
+        problems.append(
+            f"{name}: contribution sum {sum(contributions.values()):.4f} != {sim:.4f}"
+        )
 
     # 5. independent re-derivation matches the served explanation exactly
     if abs(sum(contributions.values()) - sim) <= 0.001:
@@ -162,7 +171,9 @@ def _check_pair(db, registry, anchor_id: int, row: dict) -> list[str]:
             "shared": exp["shared_metrics"],
         }
         if rebuilt_flat != served_flat:
-            problems.append(f"{name}: independent re-derivation differs from served response")
+            problems.append(
+                f"{name}: independent re-derivation differs from served response"
+            )
     return problems
 
 
@@ -193,7 +204,9 @@ def main() -> int:
                 name = row["name"]
                 exp = row["explanation"]
                 pair_problems = _check_pair(db, registry, anchor_id, row)
-                rows.append((anchor_id, name, row["similarity"], len(exp["matched_strengths"])))
+                rows.append(
+                    (anchor_id, name, row["similarity"], len(exp["matched_strengths"]))
+                )
                 if pair_problems:
                     problems.extend(f"{name} [{anchor_id}]: {p}" for p in pair_problems)
                 else:

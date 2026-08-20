@@ -146,9 +146,9 @@ def get_league_hub_data(
                 "key": cat["key"],
                 "label": cat["label"],
                 "metric": cat["metric"],
-                "metric_name": registry["metrics"].get(cat["metric"], {}).get(
-                    "name", cat["metric"]
-                ),
+                "metric_name": registry["metrics"]
+                .get(cat["metric"], {})
+                .get("name", cat["metric"]),
                 "entries": entries,
             }
         )
@@ -156,9 +156,7 @@ def get_league_hub_data(
     # Emerging players.
     from app.queries.emerging_queries import get_emerging_players
 
-    emerging = get_emerging_players(
-        db, league_id=league.id, season=season, limit=8
-    )
+    emerging = get_emerging_players(db, league_id=league.id, season=season, limit=8)
     # Enrich emerging players with slugs.
     for ep in emerging:
         ep["slug"] = get_player_slug(db, ep["player_id"])
@@ -176,9 +174,11 @@ def get_league_hub_data(
         "name": league.name,
         "country": league.country,
         "tier": league.tier,
-        "tier_label": {"/tier_1": "Tier 1", "/tier_2": "Tier 2", "/tier_3": "Tier 3"}.get(
-            league.tier, league.tier
-        ),
+        "tier_label": {
+            "/tier_1": "Tier 1",
+            "/tier_2": "Tier 2",
+            "/tier_3": "Tier 3",
+        }.get(league.tier, league.tier),
         "season": season,
         "team_count": len(teams),
         "player_count": player_count,

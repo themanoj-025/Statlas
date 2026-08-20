@@ -100,6 +100,7 @@ def compute_valuation_confidence(
 
     # Factor 4: Contract clarity (max 25 points)
     from app.models import ContractStatus
+
     contract = (
         db.query(ContractStatus)
         .filter(ContractStatus.player_id == player_id)
@@ -114,7 +115,11 @@ def compute_valuation_confidence(
         contract_score = 0
     factors["contract_clarity"] = {
         "score": round(contract_score, 1),
-        "detail": "Contract end date known" if contract_score == 25 else "Contract status limited",
+        "detail": (
+            "Contract end date known"
+            if contract_score == 25
+            else "Contract status limited"
+        ),
     }
 
     total = recency_score + presence_score + sample_score + contract_score
@@ -157,7 +162,12 @@ def compute_transfer_risk(
 
     player = db.get(Player, player_id)
     if player is None:
-        return {"risk_tier": "unknown", "risk_score": 50, "risk_factors": ["Player not found"], "mitigation_factors": []}
+        return {
+            "risk_tier": "unknown",
+            "risk_score": 50,
+            "risk_factors": ["Player not found"],
+            "mitigation_factors": [],
+        }
 
     reference_date = datetime.now(timezone.utc)
     risk_factors = []
@@ -165,7 +175,9 @@ def compute_transfer_risk(
     risk_score = 0
 
     # Factor 1: League tier transition (max 30 points)
-    current_team = db.get(Team, player.current_team_id) if player.current_team_id else None
+    current_team = (
+        db.get(Team, player.current_team_id) if player.current_team_id else None
+    )
     current_league = db.get(League, current_team.league_id) if current_team else None
 
     if current_league and target_league_tier:
@@ -175,14 +187,18 @@ def compute_transfer_risk(
         if target_tier_num < current_tier_num:
             # Moving up
             risk_score += 15
-            risk_factors.append(f"Moving up in tier ({current_league.tier} → {target_league_tier})")
+            risk_factors.append(
+                f"Moving up in tier ({current_league.tier} → {target_league_tier})"
+            )
         elif target_tier_num == current_tier_num:
             mitigation_factors.append("Same league tier — familiar competition level")
 
     # Factor 2: Position change (max 25 points)
     if target_position_group and player.position_group != target_position_group:
         risk_score += 20
-        risk_factors.append(f"Position change ({player.position_group} → {target_position_group})")
+        risk_factors.append(
+            f"Position change ({player.position_group} → {target_position_group})"
+        )
     else:
         mitigation_factors.append("Same position group — no role adaptation needed")
 
@@ -196,9 +212,13 @@ def compute_transfer_risk(
     if snap:
         if snap.minutes_played < 1000:
             risk_score += 15
-            risk_factors.append(f"Small sample size ({snap.minutes_played:.0f} minutes)")
+            risk_factors.append(
+                f"Small sample size ({snap.minutes_played:.0f} minutes)"
+            )
         elif snap.minutes_played >= 2000:
-            mitigation_factors.append(f"Extensive sample ({snap.minutes_played:.0f} minutes)")
+            mitigation_factors.append(
+                f"Extensive sample ({snap.minutes_played:.0f} minutes)"
+            )
     else:
         risk_score += 20
         risk_factors.append("No match data available")
@@ -208,8 +228,12 @@ def compute_transfer_risk(
     if age:
         if age < 22:
             risk_score += 10
-            risk_factors.append(f"Young player (age {age}) — limited adaptation experience")
-            mitigation_factors.append(f"Young age ({age}) — high ceiling and adaptation potential")
+            risk_factors.append(
+                f"Young player (age {age}) — limited adaptation experience"
+            )
+            mitigation_factors.append(
+                f"Young age ({age}) — high ceiling and adaptation potential"
+            )
         elif age > 32:
             risk_score += 5
             risk_factors.append(f"Older player (age {age}) — shorter contract horizon")

@@ -122,7 +122,11 @@ def save_search(body: SaveSearchBody, request: Request):
     with session_scope() as db:
         try:
             return ss.save_search(
-                db, user.id, body.name, body.query_definition, description=body.description
+                db,
+                user.id,
+                body.name,
+                body.query_definition,
+                description=body.description,
             )
         except Exception as exc:  # noqa: BLE001
             raise _map_error(exc)

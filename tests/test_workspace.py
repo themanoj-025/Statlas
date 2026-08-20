@@ -194,7 +194,9 @@ def test_same_player_ok_in_two_shortlists(db, workspace_data):
     second = wq.create_shortlist(db, user.id, "Project B")
     wq.add_player_to_shortlist(db, user.id, first["shortlist_id"], haaland.id)
     wq.add_player_to_shortlist(db, user.id, second["shortlist_id"], haaland.id)  # fine
-    assert len(wq.get_shortlist_detail(db, user.id, first["shortlist_id"])["entries"]) == 1
+    assert (
+        len(wq.get_shortlist_detail(db, user.id, first["shortlist_id"])["entries"]) == 1
+    )
 
 
 def test_re_add_after_remove_restores_entry(db, workspace_data):
@@ -333,7 +335,10 @@ def test_notes_appended_and_timestamped(db, workspace_data):
         db, user.id, wq.list_shortlists(db, user.id)[0]["shortlist_id"]
     )
     notes = detail["entries"][0]["notes"]
-    assert [n["note_text"] for n in notes] == ["Second observation", "First observation"]
+    assert [n["note_text"] for n in notes] == [
+        "Second observation",
+        "First observation",
+    ]
     assert notes[0]["author_user_id"] == user.id
 
 
@@ -472,7 +477,9 @@ def test_free_entry_cap(db, workspace_data):
     sl_id = wq.list_shortlists(db, user.id)[0]["shortlist_id"]
     limit = 10
     for i in range(limit):
-        wq.add_player_to_shortlist(db, user.id, sl_id, make_player(db, f"Player {i}").id)
+        wq.add_player_to_shortlist(
+            db, user.id, sl_id, make_player(db, f"Player {i}").id
+        )
     with pytest.raises(wq.WorkspaceLimitExceeded) as excinfo:
         wq.add_player_to_shortlist(
             db, user.id, sl_id, make_player(db, "Player overflow").id
@@ -488,7 +495,9 @@ def test_removed_entries_do_not_count_toward_cap(db, workspace_data):
     for p in players:
         wq.add_player_to_shortlist(db, user.id, sl_id, p.id)
     wq.remove_entry(db, user.id, sl_id, players[0].id)
-    wq.add_player_to_shortlist(db, user.id, sl_id, make_player(db, "Replacement").id)  # fits
+    wq.add_player_to_shortlist(
+        db, user.id, sl_id, make_player(db, "Replacement").id
+    )  # fits
 
 
 # ---------------------------------------------------------------------------
@@ -503,21 +512,30 @@ def test_tag_suggestions_own_only_and_prefix_filtered(db, workspace_data):
     wq.add_entry_tag(db, free.id, free_entry, "contract expiring")
     # A second free shortlist entry with the same tag bumps its frequency.
     wq.add_player_to_shortlist(
-        db, free.id, wq.list_shortlists(db, free.id)[0]["shortlist_id"],
+        db,
+        free.id,
+        wq.list_shortlists(db, free.id)[0]["shortlist_id"],
         workspace_data["salah"].id,
     )
-    other = wq.get_shortlist_detail(db, free.id, wq.list_shortlists(db, free.id)[0]["shortlist_id"])
+    other = wq.get_shortlist_detail(
+        db, free.id, wq.list_shortlists(db, free.id)[0]["shortlist_id"]
+    )
     wq.add_entry_tag(db, free.id, other["entries"][0]["entry_id"], "left-footed")
 
     # Pro user tags their own private vocabulary.
     pro_sl = wq.create_shortlist(db, pro.id, "Pro secret list")
-    pro_entry = wq.add_player_to_shortlist(db, pro.id, pro_sl["shortlist_id"], workspace_data["haaland"].id)
+    pro_entry = wq.add_player_to_shortlist(
+        db, pro.id, pro_sl["shortlist_id"], workspace_data["haaland"].id
+    )
     wq.add_entry_tag(db, pro.id, pro_entry["entry_id"], "secret-target")
 
     suggestions = wq.get_user_tag_suggestions(db, free.id, "left")
     assert suggestions == ["left-footed"]
     # Frequency ordering: left-footed (2) before contract expiring (1).
-    assert wq.get_user_tag_suggestions(db, free.id, "") == ["left-footed", "contract expiring"]
+    assert wq.get_user_tag_suggestions(db, free.id, "") == [
+        "left-footed",
+        "contract expiring",
+    ]
     # Pro's private tag never surfaces for free.
     assert "secret-target" not in wq.get_user_tag_suggestions(db, free.id, "")
     assert wq.get_user_tag_suggestions(db, pro.id, "secret") == ["secret-target"]
@@ -609,7 +627,9 @@ def _seed_players_via_orm():
         db.add(team)
         db.commit()
         player = Player(
-            canonical_name="Bukayo Saka", position_group="W", external_ids={},
+            canonical_name="Bukayo Saka",
+            position_group="W",
+            external_ids={},
             current_team_id=team.id,
         )
         db.add(player)
@@ -676,7 +696,8 @@ def test_api_full_flow_and_free_gate(client):
     )
     assert (
         client.post(
-            f"/api/v1/workspace/entries/{entry_id}/tags", json={"tag_text": "left-footed"}
+            f"/api/v1/workspace/entries/{entry_id}/tags",
+            json={"tag_text": "left-footed"},
         ).status_code
         == 201
     )
