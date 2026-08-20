@@ -13,6 +13,8 @@ from sqlalchemy.orm import Session
 
 from app.models import ActivityLog
 
+__all__ = ["log_activity"]
+
 DEDUP_WINDOW_SECONDS = 60
 
 
