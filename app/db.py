@@ -7,18 +7,22 @@ dialect-neutral types (native_enum=False, JSON) so both work.
 
 from __future__ import annotations
 
+import logging
 from sqlalchemy import create_engine
 from sqlalchemy.engine import Engine
 from sqlalchemy.orm import Session, sessionmaker
 
 from app.config import get_settings
 
+logger = logging.getLogger(__name__)
+
 _engine: Engine | None = None
 _session_factory: sessionmaker[Session] | None = None
 
 
-def _make_engine() -> Engine:
-    url = get_settings().database_url
+def _make_engine(url: str | None = None) -> Engine:
+    if url is None:
+        url = get_settings().database_url
     if url is None or "sqlite" in (url or ""):
         # SQLite (tests / local dev without Postgres). StaticPool + check_same_thread
         # so in-memory databases survive across sessions within one process.
@@ -56,6 +60,17 @@ def get_session_factory() -> sessionmaker[Session]:
 def session_scope() -> Session:
     """Return a new Session (caller closes it; or use as context manager)."""
     return get_session_factory()()
+
+
+def dispose_engine() -> None:
+    """Dispose the current engine and reset state. Useful for tests that
+    need a fresh database connection."""
+    global _engine, _session_factory
+    if _engine is not None:
+        _engine.dispose()
+        _engine = None
+    _session_factory = None
+    logger.debug("Database engine disposed and reset")
 
 
 def create_schema() -> None:
