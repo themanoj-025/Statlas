@@ -13,6 +13,8 @@ from sqlalchemy.orm import Session
 
 logger = logging.getLogger(__name__)
 
+__all__ = ["cleanup_expired_tokens", "cleanup_old_analytics"]
+
 
 def cleanup_expired_tokens(db: Session) -> dict[str, int]:
     """Delete expired and revoked session tokens, used password-reset tokens,
