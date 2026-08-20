@@ -1319,4 +1319,3 @@ export type TacticalOverview = {
   formation: FormationResult;
   formation_stability: FormationStability;
 };
-
