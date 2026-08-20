@@ -99,7 +99,9 @@ def workspace_overview(request: Request):
 
 @router.get("/tag-suggestions")
 def tag_suggestions(
-    request: Request, prefix: str = Query("", max_length=64), limit: int = Query(10, ge=1, le=25)
+    request: Request,
+    prefix: str = Query("", max_length=64),
+    limit: int = Query(10, ge=1, le=25),
 ):
     user = _require_user(request)
     with session_scope() as db:
@@ -153,7 +155,11 @@ def add_entry(shortlist_id: int, body: AddEntryBody, request: Request):
     with session_scope() as db:
         try:
             return wq.add_player_to_shortlist(
-                db, user.id, shortlist_id, body.player_id, initial_note=body.initial_note
+                db,
+                user.id,
+                shortlist_id,
+                body.player_id,
+                initial_note=body.initial_note,
             )
         except Exception as exc:  # noqa: BLE001
             raise _map_error(exc)

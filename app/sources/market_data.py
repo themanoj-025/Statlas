@@ -23,6 +23,7 @@ from datetime import datetime, timezone
 @dataclass
 class MarketValuationRecord:
     """Normalized market valuation from any source."""
+
     player_id: int
     source: str
     valuation_amount_eur: float
@@ -36,6 +37,7 @@ class MarketValuationRecord:
 @dataclass
 class TransferRecord:
     """Normalized transfer record from any source."""
+
     player_id: int
     from_team_id: int | None
     to_team_id: int
@@ -50,6 +52,7 @@ class TransferRecord:
 @dataclass
 class ContractRecord:
     """Normalized contract status from any source."""
+
     player_id: int
     current_team_id: int | None
     contract_end_date: datetime | None
@@ -76,9 +79,7 @@ class MarketDataSource(ABC):
         ...
 
     @abstractmethod
-    def fetch_transfers(
-        self, since: datetime
-    ) -> list[TransferRecord]:
+    def fetch_transfers(self, since: datetime) -> list[TransferRecord]:
         """Fetch transfer records since a given date."""
         ...
 
@@ -111,21 +112,21 @@ class FixtureMarketDataSource(MarketDataSource):
             confidence = self._rng.choice(["high", "medium", "low"])
             low = base_val * 0.8 if confidence != "high" else base_val * 0.9
             high = base_val * 1.2 if confidence != "high" else base_val * 1.1
-            records.append(MarketValuationRecord(
-                player_id=pid,
-                source="transfermarkt",
-                valuation_amount_eur=round(base_val, 2),
-                valuation_date=as_of,
-                low_range=round(low, 2),
-                high_range=round(high, 2),
-                confidence_level=confidence,
-                raw={"fixture": True},
-            ))
+            records.append(
+                MarketValuationRecord(
+                    player_id=pid,
+                    source="transfermarkt",
+                    valuation_amount_eur=round(base_val, 2),
+                    valuation_date=as_of,
+                    low_range=round(low, 2),
+                    high_range=round(high, 2),
+                    confidence_level=confidence,
+                    raw={"fixture": True},
+                )
+            )
         return records
 
-    def fetch_transfers(
-        self, since: datetime
-    ) -> list[TransferRecord]:
+    def fetch_transfers(self, since: datetime) -> list[TransferRecord]:
         """No synthetic transfers in fixture mode."""
         return []
 
@@ -135,20 +136,22 @@ class FixtureMarketDataSource(MarketDataSource):
         """Generate synthetic contract statuses."""
         records = []
         for pid in player_ids:
-            status = self._rng.choice(["active", "active", "active", "expiring_next_season"])
-            years_left = 4 if status == "active" else 1
-            end = datetime(
-                as_of.year + years_left, 6, 30, tzinfo=timezone.utc
+            status = self._rng.choice(
+                ["active", "active", "active", "expiring_next_season"]
             )
+            years_left = 4 if status == "active" else 1
+            end = datetime(as_of.year + years_left, 6, 30, tzinfo=timezone.utc)
             salary = self._rng.uniform(500_000, 10_000_000)
-            records.append(ContractRecord(
-                player_id=pid,
-                current_team_id=None,  # resolved by ingestion
-                contract_end_date=end,
-                contract_value_per_year_eur=round(salary, 2),
-                contract_status=status,
-                source="transfermarkt",
-                snapshot_date=as_of,
-                raw={"fixture": True},
-            ))
+            records.append(
+                ContractRecord(
+                    player_id=pid,
+                    current_team_id=None,  # resolved by ingestion
+                    contract_end_date=end,
+                    contract_value_per_year_eur=round(salary, 2),
+                    contract_status=status,
+                    source="transfermarkt",
+                    snapshot_date=as_of,
+                    raw={"fixture": True},
+                )
+            )
         return records

@@ -31,7 +31,7 @@ from app.config import get_settings
 logger = logging.getLogger(__name__)
 
 # Constitution §3 design tokens (mirrored from web/app/globals.css).
-BRAND_PRIMARY = "#0f766e"      # teal-700
+BRAND_PRIMARY = "#0f766e"  # teal-700
 BRAND_DARK = "#0b3b38"
 TEXT_MAIN = "#1a2e35"
 TEXT_MUTED = "#5b6b72"
@@ -79,8 +79,7 @@ def unsubscribe_url(user_id: int, token: str) -> str:
     sig = _sign(payload)
     base = settings.public_base_url.rstrip("/")
     return (
-        f"{base}/notifications/unsubscribe?"
-        f"user={user_id}&token={token}&sig={sig}"
+        f"{base}/notifications/unsubscribe?" f"user={user_id}&token={token}&sig={sig}"
     )
 
 
@@ -97,7 +96,7 @@ def _email_for(
     unsub = unsubscribe_url(user_id, unsubscribe_token)
     footer = (
         f'<tr><td style="padding:24px 32px;border-top:1px solid {BORDER};'
-        f'font-family:Inter,Helvetica,Arial,sans-serif;font-size:12px;'
+        f"font-family:Inter,Helvetica,Arial,sans-serif;font-size:12px;"
         f'color:{TEXT_MUTED};line-height:1.6;">'
         f'<p style="margin:0 0 8px;">Statlas — transparent football analytics.<br>'
         f"You're receiving this because you follow players/teams on Statlas and "
@@ -119,9 +118,9 @@ def _email_for(
         f'<span style="color:#ffffff;font-family:Inter,Helvetica,Arial,sans-serif;'
         f'font-size:20px;font-weight:700;letter-spacing:0.3px;">STATLAS</span>'
         f'<span style="color:#7dd3c8;font-family:Inter,Helvetica,Arial,sans-serif;'
-        f'font-size:12px;font-weight:600;margin-left:10px;'
+        f"font-size:12px;font-weight:600;margin-left:10px;"
         f'letter-spacing:1.2px;text-transform:uppercase;">Scouting Alerts</span>'
-        f'</td></tr>'
+        f"</td></tr>"
         f"{body_html}"
         f"{footer}"
         f"</table></td></tr></table></body></html>"
@@ -225,14 +224,14 @@ def _pct(value: float | None) -> str:
     return f"{n}{suffix}"
 
 
-def alert_email_content(
-    alert_type: str, detail: dict[str, Any]
-) -> tuple[str, str]:
+def alert_email_content(alert_type: str, detail: dict[str, Any]) -> tuple[str, str]:
     """(subject, html-body) for a single alert, written from real detail data."""
     name = detail.get("entity_name") or "Player"
     if alert_type == "percentile_movement":
         metric = _metric_label(detail.get("metric", ""))
-        subject = f"{name}: {metric} jumped to {_pct(detail.get('to_percentile'))} percentile"
+        subject = (
+            f"{name}: {metric} jumped to {_pct(detail.get('to_percentile'))} percentile"
+        )
         body = (
             f'<tr><td style="padding:28px 32px;">'
             f'<p style="margin:0 0 12px;font-family:Inter,Helvetica,Arial,sans-serif;'
@@ -275,7 +274,9 @@ def alert_email_content(
     elif alert_type == "data_coverage_change":
         signal = detail.get("signal")
         if signal == "coverage_gained":
-            subject = f"{name}: detailed {detail.get('coverage_source')} data now available"
+            subject = (
+                f"{name}: detailed {detail.get('coverage_source')} data now available"
+            )
             body = (
                 f'<tr><td style="padding:28px 32px;">'
                 f'<p style="margin:0;font-family:Inter,Helvetica,Arial,sans-serif;'
@@ -327,12 +328,11 @@ def digest_email_content(
     body_html = (
         f'<tr><td style="padding:28px 32px;">'
         f'<p style="margin:0 0 4px;font-family:Inter,Helvetica,Arial,sans-serif;'
-        f'font-size:12px;font-weight:600;letter-spacing:1.2px;'
+        f"font-size:12px;font-weight:600;letter-spacing:1.2px;"
         f'text-transform:uppercase;color:{BRAND_PRIMARY};">{period} digest</p>'
         f'<p style="margin:0 0 16px;font-family:Inter,Helvetica,Arial,sans-serif;'
         f'font-size:18px;font-weight:700;color:{TEXT_MAIN};">'
         f"{count} update{'s' if count != 1 else ''} from your watchlist</p>"
-        f"</td></tr>"
-        + "".join(rows)
+        f"</td></tr>" + "".join(rows)
     )
     return subject, body_html

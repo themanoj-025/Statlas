@@ -53,8 +53,7 @@ def get_emerging_players(
 
     player_ids = [s.player_id for s in scores]
     players = {
-        p.id: p
-        for p in db.query(Player).filter(Player.id.in_(player_ids)).all()
+        p.id: p for p in db.query(Player).filter(Player.id.in_(player_ids)).all()
     }
 
     # Get team names from the latest snapshot for each player.

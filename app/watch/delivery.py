@@ -79,9 +79,7 @@ def _alert_deliverable(alert: WatchAlert) -> bool:
     return alert.delivered_at is None and not alert.dismissed
 
 
-def _email_for_alert(
-    db: Session, alert: WatchAlert
-) -> tuple[str, str] | None:
+def _email_for_alert(db: Session, alert: WatchAlert) -> tuple[str, str] | None:
     """(subject, html) for one alert, using real detail data."""
     return alert_email_content(alert.alert_type, alert.detail or {})
 
@@ -104,7 +102,9 @@ def deliver_immediate(
     pending = (
         db.query(WatchAlert, Watch, NotificationPreferences, User)
         .join(Watch, WatchAlert.watch_id == Watch.id)
-        .outerjoin(NotificationPreferences, NotificationPreferences.user_id == Watch.user_id)
+        .outerjoin(
+            NotificationPreferences, NotificationPreferences.user_id == Watch.user_id
+        )
         .outerjoin(User, User.id == Watch.user_id)
         .filter(WatchAlert.delivered_at.is_(None), WatchAlert.dismissed.is_(False))
         .order_by(WatchAlert.triggered_at.asc())
@@ -119,7 +119,9 @@ def deliver_immediate(
             email_on, type_on, digest_ok = True, True, True
         else:
             email_on = prefs.email_enabled
-            type_on = bool((prefs.alert_type_preferences or {}).get(alert.alert_type, True))
+            type_on = bool(
+                (prefs.alert_type_preferences or {}).get(alert.alert_type, True)
+            )
             digest_ok = prefs.digest_frequency == "immediate"
         email = user.email if user else None
 
@@ -181,7 +183,9 @@ def send_digests(
     stats = {"digests_sent": 0, "alerts_included": 0, "users_with_no_alerts": 0}
 
     if frequency not in ("daily_digest", "weekly_digest"):
-        raise ValueError(f"send_digests expects daily_digest or weekly_digest, got {frequency}")
+        raise ValueError(
+            f"send_digests expects daily_digest or weekly_digest, got {frequency}"
+        )
 
     # Users on this digest frequency with at least one undelivered alert.
     rows = (

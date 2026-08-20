@@ -42,10 +42,28 @@ def log_user_activity(request: Request, body: ActivityRequest):
     """
     user = _require_user(request)
 
-    if body.entity_type not in ("player", "team", "search", "shortlist", "report", "watch"):
-        raise HTTPException(status_code=400, detail=f"Invalid entity_type: {body.entity_type}")
-    if body.action_type not in ("viewed", "created", "edited", "deleted", "shared", "run"):
-        raise HTTPException(status_code=400, detail=f"Invalid action_type: {body.action_type}")
+    if body.entity_type not in (
+        "player",
+        "team",
+        "search",
+        "shortlist",
+        "report",
+        "watch",
+    ):
+        raise HTTPException(
+            status_code=400, detail=f"Invalid entity_type: {body.entity_type}"
+        )
+    if body.action_type not in (
+        "viewed",
+        "created",
+        "edited",
+        "deleted",
+        "shared",
+        "run",
+    ):
+        raise HTTPException(
+            status_code=400, detail=f"Invalid action_type: {body.action_type}"
+        )
 
     with session_scope() as db:
         logged = log_activity(
@@ -86,9 +104,14 @@ def dashboard_summary(request: Request):
             viewed_positions = dq.get_top_viewed_positions(db, user.id)
             seen_player_ids: set[int] = set()
             for pos in viewed_positions[:3]:
-                gems = detect_hidden_gems(db, min_stat_percentile=75, max_market_value=30_000_000, limit=3)
+                gems = detect_hidden_gems(
+                    db, min_stat_percentile=75, max_market_value=30_000_000, limit=3
+                )
                 for gem in gems:
-                    if gem["player_id"] not in seen_player_ids and len(transfer_opportunities) < 3:
+                    if (
+                        gem["player_id"] not in seen_player_ids
+                        and len(transfer_opportunities) < 3
+                    ):
                         transfer_opportunities.append(gem)
                         seen_player_ids.add(gem["player_id"])
         except Exception:

@@ -232,7 +232,9 @@ def create_password_reset_token(db: Session, user_id: int) -> str:
     from app.models import PasswordResetToken
 
     raw = generate_token()
-    expires_at = datetime.now(timezone.utc) + timedelta(minutes=PASSWORD_RESET_TTL_MINUTES)
+    expires_at = datetime.now(timezone.utc) + timedelta(
+        minutes=PASSWORD_RESET_TTL_MINUTES
+    )
     db.add(
         PasswordResetToken(
             user_id=user_id,
@@ -280,7 +282,9 @@ def create_email_verification_token(db: Session, user_id: int) -> str:
     from app.models import EmailVerificationToken
 
     raw = generate_token()
-    expires_at = datetime.now(timezone.utc) + timedelta(minutes=EMAIL_VERIFICATION_TTL_MINUTES)
+    expires_at = datetime.now(timezone.utc) + timedelta(
+        minutes=EMAIL_VERIFICATION_TTL_MINUTES
+    )
     db.add(
         EmailVerificationToken(
             user_id=user_id,
@@ -329,10 +333,7 @@ LOGIN_LOCKOUT_MINUTES = 15
 def _clean_failures(email: str) -> None:
     """Remove failures older than the window."""
     cutoff = datetime.now(timezone.utc) - timedelta(minutes=LOGIN_WINDOW_MINUTES)
-    _LOGIN_FAILURES[email] = [
-        t for t in _LOGIN_FAILURES.get(email, [])
-        if t > cutoff
-    ]
+    _LOGIN_FAILURES[email] = [t for t in _LOGIN_FAILURES.get(email, []) if t > cutoff]
 
 
 def record_login_failure(email: str) -> None:

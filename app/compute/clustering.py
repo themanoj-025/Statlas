@@ -98,6 +98,7 @@ DRIFT_PVALUE_THRESHOLD = 0.05
 @dataclass
 class ClusteringReport:
     """Report from a clustering training run."""
+
     model_id: int | None = None
     model_name: str = ""
     version: str = ""
@@ -117,6 +118,7 @@ class ClusteringReport:
 @dataclass
 class AssignmentReport:
     """Report from an archetype assignment run."""
+
     model_id: int = 0
     players_assigned: int = 0
     players_outlier: int = 0
@@ -298,15 +300,20 @@ def train_clustering_model(
     report.n_clusters = n_clusters
 
     # 4. Build preprocessing + clustering pipeline
-    pipeline = Pipeline([
-        ("scaler", StandardScaler()),
-        ("kmeans", KMeans(
-            n_clusters=n_clusters,
-            random_state=random_seed,
-            n_init=10,
-            max_iter=300,
-        )),
-    ])
+    pipeline = Pipeline(
+        [
+            ("scaler", StandardScaler()),
+            (
+                "kmeans",
+                KMeans(
+                    n_clusters=n_clusters,
+                    random_state=random_seed,
+                    n_init=10,
+                    max_iter=300,
+                ),
+            ),
+        ]
+    )
 
     # 5. Fit on training data
     pipeline.fit(X_train)
@@ -398,8 +405,12 @@ def train_clustering_model(
     logger.info(
         "Clustering model %s v%s trained: %d players, %d clusters, "
         "silhouette=%.3f, Davies-Bouldin=%.3f",
-        model_name, version, len(player_ids), n_clusters,
-        report.silhouette_score, report.davies_bouldin_index,
+        model_name,
+        version,
+        len(player_ids),
+        n_clusters,
+        report.silhouette_score,
+        report.davies_bouldin_index,
     )
 
     return report
@@ -463,13 +474,18 @@ def compute_cluster_centers(
         closest_indices = np.argsort(distances)[:5]
         example_player_ids = [player_ids_cluster[i] for i in closest_indices]
 
-        cluster_info.append({
-            "cluster_id": cid,
-            "center": {feature_names[i]: round(float(center[i]), 4) for i in range(len(feature_names))},
-            "distinguishing_features": distinguishing,
-            "example_players": example_player_ids,
-            "player_count": int(mask.sum()),
-        })
+        cluster_info.append(
+            {
+                "cluster_id": cid,
+                "center": {
+                    feature_names[i]: round(float(center[i]), 4)
+                    for i in range(len(feature_names))
+                },
+                "distinguishing_features": distinguishing,
+                "example_players": example_player_ids,
+                "player_count": int(mask.sum()),
+            }
+        )
 
     return cluster_info
 
@@ -503,7 +519,9 @@ def generate_archetype_definitions(
 
         # Generate name based on top distinguishing features
         name = _generate_archetype_name(distinguishing, feature_names)
-        description = _generate_archetype_description(distinguishing, ci["player_count"])
+        description = _generate_archetype_description(
+            distinguishing, ci["player_count"]
+        )
 
         # Fetch example player names
         examples = [
@@ -511,15 +529,17 @@ def generate_archetype_definitions(
             for pid in ci["example_players"]
         ]
 
-        definitions.append({
-            "cluster_id": cid,
-            "name": name,
-            "description": description,
-            "cluster_center": ci["center"],
-            "distinguishing_features": ci["distinguishing_features"],
-            "example_players": examples,
-            "player_count": ci["player_count"],
-        })
+        definitions.append(
+            {
+                "cluster_id": cid,
+                "name": name,
+                "description": description,
+                "cluster_center": ci["center"],
+                "distinguishing_features": ci["distinguishing_features"],
+                "example_players": examples,
+                "player_count": ci["player_count"],
+            }
+        )
 
         # Store in database
         existing = (
@@ -535,22 +555,26 @@ def generate_archetype_definitions(
             existing.example_players = examples
             existing.player_count = ci["player_count"]
         else:
-            db.add(ArchetypeDefinition(
-                model_id=model_id,
-                cluster_id=cid,
-                name=name,
-                description=description,
-                cluster_center=ci["center"],
-                distinguishing_features=ci["distinguishing_features"],
-                example_players=examples,
-                player_count=ci["player_count"],
-            ))
+            db.add(
+                ArchetypeDefinition(
+                    model_id=model_id,
+                    cluster_id=cid,
+                    name=name,
+                    description=description,
+                    cluster_center=ci["center"],
+                    distinguishing_features=ci["distinguishing_features"],
+                    example_players=examples,
+                    player_count=ci["player_count"],
+                )
+            )
 
     db.commit()
     return definitions
 
 
-def _generate_archetype_name(distinguishing_features: list[dict], feature_names: list[str]) -> str:
+def _generate_archetype_name(
+    distinguishing_features: list[dict], feature_names: list[str]
+) -> str:
     """Generate a descriptive archetype name based on top distinguishing features."""
     if not distinguishing_features:
         return "Unknown Archetype"
@@ -584,7 +608,9 @@ def _generate_archetype_name(distinguishing_features: list[dict], feature_names:
         return f"Low-{label}"
 
 
-def _generate_archetype_description(distinguishing_features: list[dict], player_count: int) -> str:
+def _generate_archetype_description(
+    distinguishing_features: list[dict], player_count: int
+) -> str:
     """Generate a plain-language archetype description."""
     if not distinguishing_features:
         return "Archetype based on statistical clustering."
@@ -668,7 +694,10 @@ def assign_player_to_archetype(
         if months_old > model.staleness_months:
             logger.warning(
                 "Model %s v%s is stale (%.1f months old, threshold: %d)",
-                model.model_name, model.version, months_old, model.staleness_months,
+                model.model_name,
+                model.version,
+                months_old,
+                model.staleness_months,
             )
             return None
 
@@ -791,9 +820,7 @@ def assign_all_players(
     pipeline: Pipeline = joblib.load(model_path)
 
     # Build feature matrix for all qualifying players
-    player_ids, feature_names, X, raw_stats = build_feature_matrix(
-        db, season=season
-    )
+    player_ids, feature_names, X, raw_stats = build_feature_matrix(db, season=season)
 
     if len(X) == 0:
         report.errors.append("No qualifying players found")
@@ -821,9 +848,7 @@ def assign_all_players(
 
     X_scaled = scaler.transform(X)
     labels = kmeans.predict(X_scaled)
-    distances = np.linalg.norm(
-        X_scaled - kmeans.cluster_centers_[labels], axis=1
-    )
+    distances = np.linalg.norm(X_scaled - kmeans.cluster_centers_[labels], axis=1)
 
     # Center in original space for distinguishing features
     centers_original = scaler.inverse_transform(kmeans.cluster_centers_)
@@ -872,15 +897,17 @@ def assign_all_players(
             existing.top_distinguishing_features = distinguishing
             existing.is_outlier = is_outlier
         else:
-            db.add(ArchetypeAssignment(
-                player_id=pid,
-                model_id=model.id,
-                cluster_id=cid,
-                distance_to_center=dist,
-                top_distinguishing_features=distinguishing,
-                snapshot_date=snapshot_date,
-                is_outlier=is_outlier,
-            ))
+            db.add(
+                ArchetypeAssignment(
+                    player_id=pid,
+                    model_id=model.id,
+                    cluster_id=cid,
+                    distance_to_center=dist,
+                    top_distinguishing_features=distinguishing,
+                    snapshot_date=snapshot_date,
+                    is_outlier=is_outlier,
+                )
+            )
 
         report.players_assigned += 1
         if is_outlier:
@@ -897,7 +924,9 @@ def assign_all_players(
     # Log monitoring entry
     if report.churn_rate > CHURN_ALERT_THRESHOLD:
         _log_monitoring(
-            db, model.id, "churn",
+            db,
+            model.id,
+            "churn",
             f"Assignment churn rate {report.churn_rate:.1%} exceeds threshold",
             metric_name="churn_rate",
             metric_value=report.churn_rate,
@@ -907,7 +936,9 @@ def assign_all_players(
 
     logger.info(
         "Archetype assignment: %d players assigned, %d outliers, churn=%.1f%%",
-        report.players_assigned, report.players_outlier, report.churn_rate * 100,
+        report.players_assigned,
+        report.players_outlier,
+        report.churn_rate * 100,
     )
 
     return report
@@ -929,19 +960,21 @@ def deploy_model(db: Session, model_id: int) -> bool:
         return False
 
     # Check silhouette score meets threshold
-    if model.silhouette_score is not None and model.silhouette_score < SILHOUETTE_THRESHOLD:
+    if (
+        model.silhouette_score is not None
+        and model.silhouette_score < SILHOUETTE_THRESHOLD
+    ):
         logger.warning(
             "Model %s v%s silhouette score %.3f below threshold %.3f — not deploying",
-            model.model_name, model.version, model.silhouette_score, SILHOUETTE_THRESHOLD,
+            model.model_name,
+            model.version,
+            model.silhouette_score,
+            SILHOUETTE_THRESHOLD,
         )
         return False
 
     # Archive previous production model
-    previous = (
-        db.query(ClusteringModel)
-        .filter_by(status="in_production")
-        .all()
-    )
+    previous = db.query(ClusteringModel).filter_by(status="in_production").all()
     for prev in previous:
         prev.status = "archived"
 
@@ -1006,15 +1039,17 @@ def _log_monitoring(
     alert_triggered: bool = False,
 ) -> None:
     """Log a monitoring event."""
-    db.add(ClusteringMonitoringLog(
-        model_id=model_id,
-        log_type=log_type,
-        details={"message": details},
-        metric_name=metric_name,
-        metric_value=metric_value,
-        threshold=threshold,
-        alert_triggered=alert_triggered,
-    ))
+    db.add(
+        ClusteringMonitoringLog(
+            model_id=model_id,
+            log_type=log_type,
+            details={"message": details},
+            metric_name=metric_name,
+            metric_value=metric_value,
+            threshold=threshold,
+            alert_triggered=alert_triggered,
+        )
+    )
     db.commit()
 
 
@@ -1033,7 +1068,9 @@ def check_model_staleness(db: Session, model_id: int) -> bool:
     months_old = (datetime.now(timezone.utc) - training_date).days / 30
     if months_old > model.staleness_months:
         _log_monitoring(
-            db, model_id, "alert",
+            db,
+            model_id,
+            "alert",
             f"Model is {months_old:.1f} months old (threshold: {model.staleness_months} months)",
             metric_name="model_age_months",
             metric_value=months_old,
@@ -1064,7 +1101,9 @@ def get_monitoring_summary(db: Session, model_id: int) -> dict[str, Any]:
         "version": model.version,
         "status": model.status,
         "silhouette_score": model.silhouette_score,
-        "training_date": model.training_date.isoformat() if model.training_date else None,
+        "training_date": (
+            model.training_date.isoformat() if model.training_date else None
+        ),
         "deployed_at": model.deployed_at.isoformat() if model.deployed_at else None,
         "recent_alerts": [
             {
@@ -1073,7 +1112,8 @@ def get_monitoring_summary(db: Session, model_id: int) -> dict[str, Any]:
                 "details": log.details,
                 "alert_triggered": log.alert_triggered,
             }
-            for log in logs if log.alert_triggered
+            for log in logs
+            if log.alert_triggered
         ],
         "total_log_entries": len(logs),
     }

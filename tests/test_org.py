@@ -37,7 +37,10 @@ from app.models import (
 # Helpers
 # ---------------------------------------------------------------------------
 
-def _make_user(db: Session, *, email: str = "test@example.com", name: str = "Test User") -> User:
+
+def _make_user(
+    db: Session, *, email: str = "test@example.com", name: str = "Test User"
+) -> User:
     user = User(
         email=email,
         password_hash=auth.hash_password("password123"),
@@ -48,7 +51,9 @@ def _make_user(db: Session, *, email: str = "test@example.com", name: str = "Tes
     return user
 
 
-def _make_org(db: Session, owner: User, *, name: str = "Test FC Scouting") -> Organization:
+def _make_org(
+    db: Session, owner: User, *, name: str = "Test FC Scouting"
+) -> Organization:
     org = Organization(
         name=name,
         slug=name.lower().replace(" ", "-"),
@@ -71,7 +76,13 @@ def _make_org(db: Session, owner: User, *, name: str = "Test FC Scouting") -> Or
     return org
 
 
-def _add_member(db: Session, org: Organization, user: User, role: str = "scout", by: User | None = None) -> OrgMembership:
+def _add_member(
+    db: Session,
+    org: Organization,
+    user: User,
+    role: str = "scout",
+    by: User | None = None,
+) -> OrgMembership:
     membership = OrgMembership(
         org_id=org.id,
         user_id=user.id,

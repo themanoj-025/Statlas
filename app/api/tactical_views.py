@@ -32,10 +32,13 @@ def _check_tactical_coverage(db, match_id: str, min_events: int = 100) -> None:
 # Passing networks
 # ---------------------------------------------------------------------------
 
+
 @router.get("/matches/{match_id}/passing-network")
 def get_passing_network(
     match_id: str,
-    phase: str = Query("full_match", description="full_match, first_half, second_half, open_play"),
+    phase: str = Query(
+        "full_match", description="full_match, first_half, second_half, open_play"
+    ),
     minute_start: float | None = None,
     minute_end: float | None = None,
 ):
@@ -55,8 +58,11 @@ def get_passing_network(
         _check_tactical_coverage(db, match_id)
 
         network = build_passing_network(
-            db, match_id, phase=phase,
-            minute_start=minute_start, minute_end=minute_end,
+            db,
+            match_id,
+            phase=phase,
+            minute_start=minute_start,
+            minute_end=minute_end,
         )
         metrics = compute_network_metrics(network)
         style = detect_tactical_style(network, metrics)
@@ -149,6 +155,7 @@ def get_cached_passing_network(
 # Spatial analysis (heatmaps)
 # ---------------------------------------------------------------------------
 
+
 @router.get("/matches/{match_id}/pressure-map")
 def get_pressure_map(
     match_id: str,
@@ -212,6 +219,7 @@ def get_zone_definitions(
 # Formation analysis
 # ---------------------------------------------------------------------------
 
+
 @router.get("/matches/{match_id}/formation")
 def get_formation(
     match_id: str,
@@ -250,14 +258,13 @@ def get_formation_conformity(
 
     with session_scope() as db:
         _check_tactical_coverage(db, match_id, min_events=50)
-        return analyze_formation_conformity(
-            db, match_id, nominal_formation=nominal
-        )
+        return analyze_formation_conformity(db, match_id, nominal_formation=nominal)
 
 
 # ---------------------------------------------------------------------------
 # Tactical match overview (all-in-one)
 # ---------------------------------------------------------------------------
+
 
 @router.get("/matches/{match_id}/overview")
 def get_tactical_overview(
@@ -324,6 +331,7 @@ def get_tactical_overview(
 # Coverage check
 # ---------------------------------------------------------------------------
 
+
 @router.get("/matches/{match_id}/coverage")
 def check_tactical_coverage(
     match_id: str,
@@ -333,6 +341,3 @@ def check_tactical_coverage(
 
     with session_scope() as db:
         return has_tactical_data(db, match_id)
-
-
-

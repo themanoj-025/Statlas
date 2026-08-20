@@ -41,9 +41,7 @@ def get_league_catalog(db: Session) -> list[dict[str, Any]]:
     # Team counts per league for the index page.
     team_counts: dict[int, int] = {}
     for league_id, cnt in (
-        db.query(Team.league_id, func.count(Team.id))
-        .group_by(Team.league_id)
-        .all()
+        db.query(Team.league_id, func.count(Team.id)).group_by(Team.league_id).all()
     ):
         team_counts[league_id] = cnt
 

@@ -92,7 +92,9 @@ def get_contract_situation_score(
         "contract_status": latest.contract_status,
         "contract_status_label": status_label,
         "years_remaining": years_remaining,
-        "contract_end_date": latest.contract_end_date.isoformat() if latest.contract_end_date else None,
+        "contract_end_date": (
+            latest.contract_end_date.isoformat() if latest.contract_end_date else None
+        ),
         "salary_annual_eur": latest.contract_value_per_year_eur,
     }
 
@@ -128,7 +130,9 @@ def get_transfer_candidate_search(
     query = (
         db.query(Player)
         .join(StatSnapshot, StatSnapshot.player_id == Player.id)
-        .join(PercentileSnapshot, PercentileSnapshot.stat_snapshot_id == StatSnapshot.id)
+        .join(
+            PercentileSnapshot, PercentileSnapshot.stat_snapshot_id == StatSnapshot.id
+        )
         .filter(
             PercentileSnapshot.is_published.is_(True),
             PercentileSnapshot.metric_name == "si_index",
@@ -160,7 +164,10 @@ def get_transfer_candidate_search(
             if p.date_of_birth is None:
                 continue
             age = reference_date.year - p.date_of_birth.year
-            if (reference_date.month, reference_date.day) < (p.date_of_birth.month, p.date_of_birth.day):
+            if (reference_date.month, reference_date.day) < (
+                p.date_of_birth.month,
+                p.date_of_birth.day,
+            ):
                 age -= 1
             if min_age and age < min_age:
                 continue
@@ -214,8 +221,13 @@ def get_transfer_candidate_search(
                 continue
 
         # Get contract situation
-        contract = get_contract_situation_score(db, player.id, reference_date=reference_date)
-        if max_availability_score and contract["availability_score"] > max_availability_score:
+        contract = get_contract_situation_score(
+            db, player.id, reference_date=reference_date
+        )
+        if (
+            max_availability_score
+            and contract["availability_score"] > max_availability_score
+        ):
             continue
 
         # Compute composite score
@@ -235,35 +247,42 @@ def get_transfer_candidate_search(
         age = None
         if player.date_of_birth:
             age = reference_date.year - player.date_of_birth.year
-            if (reference_date.month, reference_date.day) < (player.date_of_birth.month, player.date_of_birth.day):
+            if (reference_date.month, reference_date.day) < (
+                player.date_of_birth.month,
+                player.date_of_birth.day,
+            ):
                 age -= 1
 
-        results.append({
-            "player_id": player.id,
-            "name": player.canonical_name,
-            "age": age,
-            "position_group": player.position_group,
-            "club": team.name if team else None,
-            "league": league.name if league else None,
-            "league_slug": league.slug if league else None,
-            "index_score": index_score,
-            "market_value_eur": market_value,
-            "market_source": latest_val.source if latest_val else None,
-            "market_confidence": latest_val.confidence_level if latest_val else None,
-            "contract_status": contract["contract_status"],
-            "contract_status_label": contract["contract_status_label"],
-            "years_remaining": contract["years_remaining"],
-            "availability_score": contract["availability_score"],
-            "composite_score": round(composite, 1),
-            "minutes_played": stat_snap.minutes_played,
-        })
+        results.append(
+            {
+                "player_id": player.id,
+                "name": player.canonical_name,
+                "age": age,
+                "position_group": player.position_group,
+                "club": team.name if team else None,
+                "league": league.name if league else None,
+                "league_slug": league.slug if league else None,
+                "index_score": index_score,
+                "market_value_eur": market_value,
+                "market_source": latest_val.source if latest_val else None,
+                "market_confidence": (
+                    latest_val.confidence_level if latest_val else None
+                ),
+                "contract_status": contract["contract_status"],
+                "contract_status_label": contract["contract_status_label"],
+                "years_remaining": contract["years_remaining"],
+                "availability_score": contract["availability_score"],
+                "composite_score": round(composite, 1),
+                "minutes_played": stat_snap.minutes_played,
+            }
+        )
 
     results.sort(key=lambda x: x["composite_score"], reverse=True)
     return {
         "total": len(results),
         "limit": limit,
         "offset": offset,
-        "candidates": results[offset:offset + limit],
+        "candidates": results[offset : offset + limit],
     }
 
 

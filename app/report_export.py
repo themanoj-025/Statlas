@@ -42,9 +42,9 @@ from reportlab.platypus import (
 PITCH_600 = colors.HexColor("#1A5F3E")  # primary headings / wordmark
 PITCH_700 = colors.HexColor("#144E33")  # link/emphasis text
 PITCH_400 = colors.HexColor("#2E8A5B")  # chart fill
-GRAY_900 = colors.HexColor("#1A1814")   # body text
-GRAY_600 = colors.HexColor("#5C574C")   # secondary text
-GRAY_300 = colors.HexColor("#C9C4B8")   # hairline borders
+GRAY_900 = colors.HexColor("#1A1814")  # body text
+GRAY_600 = colors.HexColor("#5C574C")  # secondary text
+GRAY_300 = colors.HexColor("#C9C4B8")  # hairline borders
 AMBER_700 = colors.HexColor("#8A4B0B")  # accent (confidence/notes)
 SURFACE = colors.HexColor("#FAF9F6")
 
@@ -57,47 +57,93 @@ _MARGIN = 16 * mm
 def _styles() -> dict[str, ParagraphStyle]:
     return {
         "wordmark": ParagraphStyle(
-            "Wordmark", fontName="Helvetica-Bold", fontSize=22, leading=26,
-            textColor=PITCH_600, spaceAfter=0,
+            "Wordmark",
+            fontName="Helvetica-Bold",
+            fontSize=22,
+            leading=26,
+            textColor=PITCH_600,
+            spaceAfter=0,
         ),
         "tagline": ParagraphStyle(
-            "Tagline", fontName="Helvetica", fontSize=8.5, leading=11,
-            textColor=GRAY_600, spaceAfter=0,
+            "Tagline",
+            fontName="Helvetica",
+            fontSize=8.5,
+            leading=11,
+            textColor=GRAY_600,
+            spaceAfter=0,
         ),
         "h1": ParagraphStyle(
-            "H1", fontName="Helvetica-Bold", fontSize=17, leading=21,
-            textColor=GRAY_900, spaceBefore=6, spaceAfter=2,
+            "H1",
+            fontName="Helvetica-Bold",
+            fontSize=17,
+            leading=21,
+            textColor=GRAY_900,
+            spaceBefore=6,
+            spaceAfter=2,
         ),
         "h2": ParagraphStyle(
-            "H2", fontName="Helvetica-Bold", fontSize=12.5, leading=16,
-            textColor=PITCH_700, spaceBefore=12, spaceAfter=4,
+            "H2",
+            fontName="Helvetica-Bold",
+            fontSize=12.5,
+            leading=16,
+            textColor=PITCH_700,
+            spaceBefore=12,
+            spaceAfter=4,
         ),
         "h3": ParagraphStyle(
-            "H3", fontName="Helvetica-Bold", fontSize=10.5, leading=14,
-            textColor=GRAY_900, spaceBefore=8, spaceAfter=2,
+            "H3",
+            fontName="Helvetica-Bold",
+            fontSize=10.5,
+            leading=14,
+            textColor=GRAY_900,
+            spaceBefore=8,
+            spaceAfter=2,
         ),
         "body": ParagraphStyle(
-            "Body", fontName="Helvetica", fontSize=9.5, leading=13.5,
-            textColor=GRAY_900, alignment=TA_LEFT, spaceAfter=6,
+            "Body",
+            fontName="Helvetica",
+            fontSize=9.5,
+            leading=13.5,
+            textColor=GRAY_900,
+            alignment=TA_LEFT,
+            spaceAfter=6,
         ),
         "muted": ParagraphStyle(
-            "Muted", fontName="Helvetica", fontSize=8.5, leading=12,
-            textColor=GRAY_600, spaceAfter=4,
+            "Muted",
+            fontName="Helvetica",
+            fontSize=8.5,
+            leading=12,
+            textColor=GRAY_600,
+            spaceAfter=4,
         ),
         "small": ParagraphStyle(
-            "Small", fontName="Helvetica", fontSize=8, leading=11,
-            textColor=GRAY_600, spaceAfter=2,
+            "Small",
+            fontName="Helvetica",
+            fontSize=8,
+            leading=11,
+            textColor=GRAY_600,
+            spaceAfter=2,
         ),
         "footer": ParagraphStyle(
-            "Footer", fontName="Helvetica", fontSize=7.5, leading=10,
-            textColor=GRAY_600, spaceAfter=0,
+            "Footer",
+            fontName="Helvetica",
+            fontSize=7.5,
+            leading=10,
+            textColor=GRAY_600,
+            spaceAfter=0,
         ),
         "cell": ParagraphStyle(
-            "Cell", fontName="Helvetica", fontSize=8.5, leading=11,
+            "Cell",
+            fontName="Helvetica",
+            fontSize=8.5,
+            leading=11,
             textColor=GRAY_900,
         ),
         "cellhead": ParagraphStyle(
-            "CellHead", fontName="Helvetica-Bold", fontSize=8.5, leading=11,
+            "CellHead",
+            fontName="Helvetica-Bold",
+            fontSize=8.5,
+            leading=11,
             textColor=colors.white,
         ),
     }
@@ -121,9 +167,7 @@ def export_json(report_doc: dict[str, Any]) -> str:
 # ---------------------------------------------------------------------------
 
 
-def _radar_drawing(
-    items: list[dict[str, Any]], size: int = 150
-) -> Drawing:
+def _radar_drawing(items: list[dict[str, Any]], size: int = 150) -> Drawing:
     """Mini percentile radar from the report's own statistical_profile.
 
     items: [{metric_name, percentile (0-100 or None)}] — draws only metrics
@@ -133,9 +177,15 @@ def _radar_drawing(
     cx, cy = size / 2, size / 2
     drawing = Drawing(size, size)
 
-    labelled = [(i["metric_name"], i["percentile"]) for i in items if i.get("percentile") is not None]
+    labelled = [
+        (i["metric_name"], i["percentile"])
+        for i in items
+        if i.get("percentile") is not None
+    ]
     if not labelled:
-        drawing.add(String(cx - 30, cy, "no percentile data", fontSize=7, fillColor=GRAY_600))
+        drawing.add(
+            String(cx - 30, cy, "no percentile data", fontSize=7, fillColor=GRAY_600)
+        )
         return drawing
     labelled = labelled[:12]
     n = len(labelled)
@@ -145,19 +195,31 @@ def _radar_drawing(
         flat: list[float] = []
         for i in range(n):
             ang = -90 + i * 360 / n
-            flat.extend((cx + radius * level * _cos(ang), cy + radius * level * _sin(ang)))
+            flat.extend(
+                (cx + radius * level * _cos(ang), cy + radius * level * _sin(ang))
+            )
         return flat
 
     # Grid rings (25/50/75/100).
     for level, color in zip((0.25, 0.5, 0.75, 1.0), ring_colors * 2):
-        drawing.add(Polygon(_ring_points(level), strokeColor=color, strokeWidth=0.5, fillColor=None))
+        drawing.add(
+            Polygon(
+                _ring_points(level), strokeColor=color, strokeWidth=0.5, fillColor=None
+            )
+        )
 
     # Spokes.
     for i in range(n):
         ang = -90 + i * 360 / n
         drawing.add(
-            Line(cx, cy, cx + radius * _cos(ang), cy + radius * _sin(ang),
-                 strokeColor=GRAY_300, strokeWidth=0.5)
+            Line(
+                cx,
+                cy,
+                cx + radius * _cos(ang),
+                cy + radius * _sin(ang),
+                strokeColor=GRAY_300,
+                strokeWidth=0.5,
+            )
         )
 
     # Value polygon.
@@ -165,27 +227,49 @@ def _radar_drawing(
     for i in range(n):
         ang = -90 + i * 360 / n
         value = min(max(float(labelled[i][1]), 0.0), 100.0) / 100.0
-        value_points.extend((cx + radius * value * _cos(ang), cy + radius * value * _sin(ang)))
-    drawing.add(Polygon(value_points, strokeColor=PITCH_600, strokeWidth=1.4, fillColor=PITCH_400, fillOpacity=0.22))
+        value_points.extend(
+            (cx + radius * value * _cos(ang), cy + radius * value * _sin(ang))
+        )
+    drawing.add(
+        Polygon(
+            value_points,
+            strokeColor=PITCH_600,
+            strokeWidth=1.4,
+            fillColor=PITCH_400,
+            fillOpacity=0.22,
+        )
+    )
 
     # Labels.
     for i, (name, _) in enumerate(labelled):
         ang = -90 + i * 360 / n
         lx, ly = cx + (radius + 12) * _cos(ang), cy + (radius + 12) * _sin(ang)
         drawing.add(
-            String(lx, ly - 3, name, fontSize=5.5, fillColor=GRAY_600,
-                   textAnchor="middle" if abs(_cos(ang)) < 0.3 else ("start" if _cos(ang) > 0 else "end"))
+            String(
+                lx,
+                ly - 3,
+                name,
+                fontSize=5.5,
+                fillColor=GRAY_600,
+                textAnchor=(
+                    "middle"
+                    if abs(_cos(ang)) < 0.3
+                    else ("start" if _cos(ang) > 0 else "end")
+                ),
+            )
         )
     return drawing
 
 
 def _cos(deg: float) -> float:
     import math
+
     return math.cos(math.radians(deg))
 
 
 def _sin(deg: float) -> float:
     import math
+
     return math.sin(math.radians(deg))
 
 
@@ -203,13 +287,23 @@ def _header_footer(canvas, doc):
     canvas.drawString(_MARGIN, _PAGE_H - 17 * mm, BRAND)
     canvas.setFillColor(GRAY_600)
     canvas.setFont("Helvetica", 7.5)
-    canvas.drawString(_MARGIN, _PAGE_H - 22 * mm, "AI Scouting Report — generated from verified Statlas data")
+    canvas.drawString(
+        _MARGIN,
+        _PAGE_H - 22 * mm,
+        "AI Scouting Report — generated from verified Statlas data",
+    )
     canvas.setFillColor(GRAY_300)
     canvas.line(_MARGIN, _PAGE_H - 25 * mm, _PAGE_W - _MARGIN, _PAGE_H - 25 * mm)
     canvas.setFillColor(GRAY_600)
     canvas.setFont("Helvetica", 7.5)
-    canvas.drawString(_MARGIN, 10 * mm, f"Page {doc.page} · data as of {doc.data_snapshot_label}")
-    canvas.drawRightString(_PAGE_W - _MARGIN, 10 * mm, "statlas.app — reflects snapshot data, not real-time")
+    canvas.drawString(
+        _MARGIN, 10 * mm, f"Page {doc.page} · data as of {doc.data_snapshot_label}"
+    )
+    canvas.drawRightString(
+        _PAGE_W - _MARGIN,
+        10 * mm,
+        "statlas.app — reflects snapshot data, not real-time",
+    )
     canvas.restoreState()
 
 
@@ -225,9 +319,12 @@ def export_pdf(report_doc: dict[str, Any], player_name: str | None = None) -> by
     buf = io.BytesIO()
     player_label = player_name or f"Player {report_doc.get('player_id')}"
     doc = SimpleDocTemplate(
-        buf, pagesize=A4,
-        leftMargin=_MARGIN, rightMargin=_MARGIN,
-        topMargin=32 * mm, bottomMargin=16 * mm,
+        buf,
+        pagesize=A4,
+        leftMargin=_MARGIN,
+        rightMargin=_MARGIN,
+        topMargin=32 * mm,
+        bottomMargin=16 * mm,
         title=f"Statlas Scouting Report — {player_label}",
         author="Statlas",
         subject=f"Scouting report generated {report_doc.get('generated_at')}",
@@ -248,11 +345,22 @@ def export_pdf(report_doc: dict[str, Any], player_name: str | None = None) -> by
 
     # Branding block.
     story.append(Paragraph(BRAND, st["wordmark"]))
-    story.append(Paragraph("AI scouting report · every claim traced to real Statlas data", st["tagline"]))
-    story.append(HRFlowable(width="100%", thickness=1.2, color=PITCH_600, spaceBefore=4, spaceAfter=10))
+    story.append(
+        Paragraph(
+            "AI scouting report · every claim traced to real Statlas data",
+            st["tagline"],
+        )
+    )
+    story.append(
+        HRFlowable(
+            width="100%", thickness=1.2, color=PITCH_600, spaceBefore=4, spaceAfter=10
+        )
+    )
 
     # Heading + snapshot.
-    story.append(Paragraph(player_name or f"Player #{report_doc.get('player_id')}", st["h1"]))
+    story.append(
+        Paragraph(player_name or f"Player #{report_doc.get('player_id')}", st["h1"])
+    )
     story.append(
         Paragraph(
             f"Generated {_fmt_ts(report_doc.get('generated_at'))} · data snapshot {snapshot_label} — "
@@ -267,7 +375,9 @@ def export_pdf(report_doc: dict[str, Any], player_name: str | None = None) -> by
                 "<b>Needs review:</b> this report contains a claim that failed "
                 "automated verification against Statlas data. Treat every "
                 "unverified figure with caution.",
-                ParagraphStyle("warn", parent=st["body"], textColor=AMBER_700, spaceBefore=6),
+                ParagraphStyle(
+                    "warn", parent=st["body"], textColor=AMBER_700, spaceBefore=6
+                ),
             )
         )
 
@@ -279,26 +389,38 @@ def export_pdf(report_doc: dict[str, Any], player_name: str | None = None) -> by
     story.append(Paragraph("Statistical Profile", st["h2"]))
     metrics = sections.get("statistical_profile", {}).get("metrics", [])
     if metrics:
-        rows = [[Paragraph("Metric", st["cellhead"]), Paragraph("Value", st["cellhead"]), Paragraph("Percentile", st["cellhead"])]]
+        rows = [
+            [
+                Paragraph("Metric", st["cellhead"]),
+                Paragraph("Value", st["cellhead"]),
+                Paragraph("Percentile", st["cellhead"]),
+            ]
+        ]
         for m in metrics:
             value = m.get("value")
             pct = m.get("percentile")
-            rows.append([
-                Paragraph(m.get("metric_name", m.get("metric", "")), st["cell"]),
-                Paragraph("—" if value is None else _fmt_num(value), st["cell"]),
-                Paragraph("—" if pct is None else f"{_fmt_num(pct)}th", st["cell"]),
-            ])
+            rows.append(
+                [
+                    Paragraph(m.get("metric_name", m.get("metric", "")), st["cell"]),
+                    Paragraph("—" if value is None else _fmt_num(value), st["cell"]),
+                    Paragraph("—" if pct is None else f"{_fmt_num(pct)}th", st["cell"]),
+                ]
+            )
         table = Table(rows, colWidths=[78 * mm, 38 * mm, 40 * mm], repeatRows=1)
-        table.setStyle(TableStyle([
-            ("BACKGROUND", (0, 0), (-1, 0), PITCH_600),
-            ("ROWBACKGROUNDS", (0, 1), (-1, -1), [colors.white, SURFACE]),
-            ("GRID", (0, 0), (-1, -1), 0.4, GRAY_300),
-            ("VALIGN", (0, 0), (-1, -1), "TOP"),
-            ("LEFTPADDING", (0, 0), (-1, -1), 5),
-            ("RIGHTPADDING", (0, 0), (-1, -1), 5),
-            ("TOPPADDING", (0, 0), (-1, -1), 3),
-            ("BOTTOMPADDING", (0, 0), (-1, -1), 3),
-        ]))
+        table.setStyle(
+            TableStyle(
+                [
+                    ("BACKGROUND", (0, 0), (-1, 0), PITCH_600),
+                    ("ROWBACKGROUNDS", (0, 1), (-1, -1), [colors.white, SURFACE]),
+                    ("GRID", (0, 0), (-1, -1), 0.4, GRAY_300),
+                    ("VALIGN", (0, 0), (-1, -1), "TOP"),
+                    ("LEFTPADDING", (0, 0), (-1, -1), 5),
+                    ("RIGHTPADDING", (0, 0), (-1, -1), 5),
+                    ("TOPPADDING", (0, 0), (-1, -1), 3),
+                    ("BOTTOMPADDING", (0, 0), (-1, -1), 3),
+                ]
+            )
+        )
         story.append(table)
         story.append(Spacer(1, 4))
         story.append(Paragraph("Percentile radar (vs. position cohort)", st["h3"]))
@@ -327,7 +449,8 @@ def export_pdf(report_doc: dict[str, Any], player_name: str | None = None) -> by
             if matched:
                 story.append(
                     Paragraph(
-                        "Matched strengths: " + ", ".join(
+                        "Matched strengths: "
+                        + ", ".join(
                             f"{m.get('metric_name', m.get('metric'))} ({_fmt_num(m.get('player_a_percentile'))}th vs {_fmt_num(m.get('player_b_percentile'))}th)"
                             for m in matched[:3]
                         ),
@@ -337,7 +460,8 @@ def export_pdf(report_doc: dict[str, Any], player_name: str | None = None) -> by
             if diffs:
                 story.append(
                     Paragraph(
-                        "Key differences: " + ", ".join(
+                        "Key differences: "
+                        + ", ".join(
                             f"{m.get('metric_name', m.get('metric'))} ({_fmt_num(m.get('difference'))} pts)"
                             for m in diffs[:3]
                         ),
@@ -345,7 +469,11 @@ def export_pdf(report_doc: dict[str, Any], player_name: str | None = None) -> by
                     )
                 )
     else:
-        story.append(Paragraph("No comparable players with published data were found.", st["muted"]))
+        story.append(
+            Paragraph(
+                "No comparable players with published data were found.", st["muted"]
+            )
+        )
 
     # Trajectory + risks.
     story.append(Paragraph("Development Trajectory", st["h2"]))
@@ -369,7 +497,9 @@ def export_pdf(report_doc: dict[str, Any], player_name: str | None = None) -> by
     if wc:
         story.append(PageBreak())
         story.append(Paragraph("Workspace Context", st["h2"]))
-        story.append(Paragraph(wc.get("label", "user's own scouting notes"), st["muted"]))
+        story.append(
+            Paragraph(wc.get("label", "user's own scouting notes"), st["muted"])
+        )
         status = wc.get("shortlist_status")
         priority = wc.get("priority")
         tags = wc.get("tags") or []
@@ -402,26 +532,36 @@ def export_pdf(report_doc: dict[str, Any], player_name: str | None = None) -> by
     appendix = report_doc.get("evidence_appendix", [])
     if appendix:
         rows = [
-            [Paragraph("Claim", st["cellhead"]), Paragraph("Source call", st["cellhead"]), Paragraph("Raw result", st["cellhead"])]
+            [
+                Paragraph("Claim", st["cellhead"]),
+                Paragraph("Source call", st["cellhead"]),
+                Paragraph("Raw result", st["cellhead"]),
+            ]
         ]
         for item in appendix:
             raw = item.get("raw_result")
-            rows.append([
-                Paragraph(str(item.get("claim", "")), st["cell"]),
-                Paragraph(str(item.get("source_call", "")), st["cell"]),
-                Paragraph(_json_inline(raw), st["cell"]),
-            ])
+            rows.append(
+                [
+                    Paragraph(str(item.get("claim", "")), st["cell"]),
+                    Paragraph(str(item.get("source_call", "")), st["cell"]),
+                    Paragraph(_json_inline(raw), st["cell"]),
+                ]
+            )
         table = Table(rows, colWidths=[56 * mm, 30 * mm, 70 * mm], repeatRows=1)
-        table.setStyle(TableStyle([
-            ("BACKGROUND", (0, 0), (-1, 0), GRAY_900),
-            ("ROWBACKGROUNDS", (0, 1), (-1, -1), [colors.white, SURFACE]),
-            ("GRID", (0, 0), (-1, -1), 0.4, GRAY_300),
-            ("VALIGN", (0, 0), (-1, -1), "TOP"),
-            ("LEFTPADDING", (0, 0), (-1, -1), 5),
-            ("RIGHTPADDING", (0, 0), (-1, -1), 5),
-            ("TOPPADDING", (0, 0), (-1, -1), 3),
-            ("BOTTOMPADDING", (0, 0), (-1, -1), 3),
-        ]))
+        table.setStyle(
+            TableStyle(
+                [
+                    ("BACKGROUND", (0, 0), (-1, 0), GRAY_900),
+                    ("ROWBACKGROUNDS", (0, 1), (-1, -1), [colors.white, SURFACE]),
+                    ("GRID", (0, 0), (-1, -1), 0.4, GRAY_300),
+                    ("VALIGN", (0, 0), (-1, -1), "TOP"),
+                    ("LEFTPADDING", (0, 0), (-1, -1), 5),
+                    ("RIGHTPADDING", (0, 0), (-1, -1), 5),
+                    ("TOPPADDING", (0, 0), (-1, -1), 3),
+                    ("BOTTOMPADDING", (0, 0), (-1, -1), 3),
+                ]
+            )
+        )
         story.append(table)
     else:
         story.append(Paragraph("No evidence appendix in this report.", st["muted"]))
@@ -430,7 +570,9 @@ def export_pdf(report_doc: dict[str, Any], player_name: str | None = None) -> by
     return buf.getvalue()
 
 
-def _bullet_list(story: list[Any], items: list[dict[str, Any]], st: dict[str, ParagraphStyle]) -> None:
+def _bullet_list(
+    story: list[Any], items: list[dict[str, Any]], st: dict[str, ParagraphStyle]
+) -> None:
     for item in items:
         text = item.get("point") or item.get("text")
         if not text:
@@ -498,29 +640,41 @@ def export_csv(report_doc: dict[str, Any], player_name: str | None = None) -> st
     writer.writerow([])
     writer.writerow(["metric", "metric_name", "value", "percentile"])
     for m in sections.get("statistical_profile", {}).get("metrics", []):
-        writer.writerow([
-            m.get("metric", ""),
-            m.get("metric_name", ""),
-            "" if m.get("value") is None else m.get("value"),
-            "" if m.get("percentile") is None else m.get("percentile"),
-        ])
+        writer.writerow(
+            [
+                m.get("metric", ""),
+                m.get("metric_name", ""),
+                "" if m.get("value") is None else m.get("value"),
+                "" if m.get("percentile") is None else m.get("percentile"),
+            ]
+        )
 
     writer.writerow([])
     writer.writerow([])
     writer.writerow(["Comparable Players (Phase 6 similarity)"])
-    writer.writerow(["player_id", "name", "similarity", "top_matched_strength", "top_key_difference"])
+    writer.writerow(
+        [
+            "player_id",
+            "name",
+            "similarity",
+            "top_matched_strength",
+            "top_key_difference",
+        ]
+    )
     for c in sections.get("comparable_players", []):
         expl = c.get("explanation") or {}
         matched = expl.get("matched_strengths") or []
         diffs = expl.get("key_differences") or []
         top_m = matched[0].get("metric") if matched else ""
         top_d = diffs[0].get("metric") if diffs else ""
-        writer.writerow([
-            c.get("player_id", ""),
-            c.get("name", ""),
-            c.get("similarity", ""),
-            top_m,
-            top_d,
-        ])
+        writer.writerow(
+            [
+                c.get("player_id", ""),
+                c.get("name", ""),
+                c.get("similarity", ""),
+                top_m,
+                top_d,
+            ]
+        )
 
     return buf.getvalue()

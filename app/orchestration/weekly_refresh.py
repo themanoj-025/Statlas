@@ -440,9 +440,7 @@ def run_weekly_refresh(
         from app.models import ClusteringModel
 
         active_model = (
-            db.query(ClusteringModel)
-            .filter_by(status="in_production")
-            .first()
+            db.query(ClusteringModel).filter_by(status="in_production").first()
         )
         if active_model is not None:
             # Check staleness before assignment
@@ -475,7 +473,8 @@ def run_weekly_refresh(
 
         # Collect all player IDs that have qualifying snapshots this run
         qualifying_player_ids = [
-            pid for (pid,) in (
+            pid
+            for (pid,) in (
                 db.query(StatSnapshot.player_id)
                 .filter(
                     StatSnapshot.scrape_date == snapshot_date,
@@ -493,6 +492,7 @@ def run_weekly_refresh(
                 qualifying_player_ids, as_of=snapshot_date
             )
             from app.compute.market_validation import validate_valuation
+
             val_inserted = 0
             val_flagged = 0
             for rec in valuation_records:
@@ -511,7 +511,9 @@ def run_weekly_refresh(
                 if not val_result.is_valid:
                     val_flagged += 1
                     for issue in val_result.issues:
-                        report.errors.append(f"market valuation player={rec.player_id}: {issue}")
+                        report.errors.append(
+                            f"market valuation player={rec.player_id}: {issue}"
+                        )
                     if val_result.severity == "error":
                         continue  # Block error-severity records from publication
                 existing = (

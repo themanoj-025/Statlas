@@ -72,9 +72,7 @@ def compute_emerging_scores(
 
     written = 0
     for league_id in league_ids:
-        scores = _score_league(
-            db, league_id, season, snapshot_date, qualifying_minutes
-        )
+        scores = _score_league(db, league_id, season, snapshot_date, qualifying_minutes)
         # Idempotent upsert: delete existing rows for this computed_date
         # + league first, then insert all fresh rows (§2 B2).
         (
@@ -131,8 +129,7 @@ def _score_league(
 
     player_ids = list(latest.keys())
     players = {
-        p.id: p
-        for p in db.query(Player).filter(Player.id.in_(player_ids)).all()
+        p.id: p for p in db.query(Player).filter(Player.id.in_(player_ids)).all()
     }
 
     # Get published percentile rows for these players (all metrics).
@@ -160,9 +157,7 @@ def _score_league(
         val = pct.percentile_value
         if val is None:
             continue
-        player_metrics[snap.player_id][pct.metric_name].append(
-            (snap.scrape_date, val)
-        )
+        player_metrics[snap.player_id][pct.metric_name].append((snap.scrape_date, val))
 
     # Sort each metric's points by date.
     for pid in player_metrics:
@@ -181,9 +176,7 @@ def _score_league(
             continue
 
         # Get the last TREND_WINDOW snapshot dates for this player.
-        all_dates = sorted(
-            {d for pts in metrics_data.values() for d, _ in pts}
-        )
+        all_dates = sorted({d for pts in metrics_data.values() for d, _ in pts})
         if len(all_dates) < MIN_SNAPSHOTS:
             continue
 
@@ -223,7 +216,9 @@ def _score_league(
             if positive_count >= min_positive:
                 consistent_count += 1
 
-        trend_consistency = consistent_count / total_metrics if total_metrics > 0 else 0.0
+        trend_consistency = (
+            consistent_count / total_metrics if total_metrics > 0 else 0.0
+        )
 
         # 3. Age weight: sigmoid centred at AGE_MIDPOINT.
         age = _player_age(player)

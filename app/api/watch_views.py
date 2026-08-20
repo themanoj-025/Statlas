@@ -226,7 +226,9 @@ def unsubscribe(
         if prefs is None:
             return JSONResponse(
                 status_code=404,
-                content={"detail": "No notification preferences found for this account."},
+                content={
+                    "detail": "No notification preferences found for this account."
+                },
             )
         if prefs.unsubscribe_token != token:
             return JSONResponse(

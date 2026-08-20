@@ -48,13 +48,17 @@ class GrantProBody(BaseModel):
 
 
 @router.post("/grant-pro")
-def grant_pro(body: GrantProBody, request: Request):  # noqa: ARG001 — Request kept for symmetry
+def grant_pro(
+    body: GrantProBody, request: Request
+):  # noqa: ARG001 — Request kept for symmetry
     """Give a registered account active Pro access (an e2e fixture)."""
     _require_e2e()
     with session_scope() as db:
         user = db.query(User).filter_by(email=body.email).first()
         if user is None:
-            raise HTTPException(status_code=404, detail="user not found — register first")
+            raise HTTPException(
+                status_code=404, detail="user not found — register first"
+            )
         existing = (
             db.query(Subscription)
             .filter(Subscription.user_id == user.id, Subscription.status == "active")
@@ -95,7 +99,9 @@ def seed_alert(body: SeedAlertBody):
     with session_scope() as db:
         user = db.query(User).filter_by(email=body.email).first()
         if user is None:
-            raise HTTPException(status_code=404, detail="user not found — register first")
+            raise HTTPException(
+                status_code=404, detail="user not found — register first"
+            )
         player = db.get(Player, body.player_id)
         if player is None:
             raise HTTPException(status_code=404, detail="player not found")
@@ -106,7 +112,11 @@ def seed_alert(body: SeedAlertBody):
         # alert-trigger-definitions.md §3 on metric-specific follows).
         watch = (
             db.query(Watch)
-            .filter(Watch.user_id == user.id, Watch.entity_type == "player", Watch.entity_id == player.id)
+            .filter(
+                Watch.user_id == user.id,
+                Watch.entity_type == "player",
+                Watch.entity_id == player.id,
+            )
             .first()
         )
         if watch is None:
@@ -156,7 +166,9 @@ def seed_alert(body: SeedAlertBody):
             league = db.query(League).first()
             team = db.query(Team).first()
             if league is None or team is None:
-                raise HTTPException(status_code=500, detail="no league/team seeded — seed data first")
+                raise HTTPException(
+                    status_code=500, detail="no league/team seeded — seed data first"
+                )
             team_id, league_id, season = team.id, league.id, "2025-26"
 
         # The fixture pair must BE the two most recent published snapshots for
@@ -166,7 +178,10 @@ def seed_alert(body: SeedAlertBody):
         # snapshot, so no real snapshot can sit between them.
         newest = (
             db.query(StatSnapshot.scrape_date)
-            .join(PercentileSnapshot, PercentileSnapshot.stat_snapshot_id == StatSnapshot.id)
+            .join(
+                PercentileSnapshot,
+                PercentileSnapshot.stat_snapshot_id == StatSnapshot.id,
+            )
             .filter(
                 StatSnapshot.player_id == player.id,
                 PercentileSnapshot.is_published.is_(True),
@@ -202,7 +217,11 @@ def seed_alert(body: SeedAlertBody):
                     stat_snapshot_id=snap.id,
                     computed_date=date,
                     position_group=player.position_group or "ST",
-                    league_tier=db.get(League, league_id).tier if db.get(League, league_id) else "tier_1",
+                    league_tier=(
+                        db.get(League, league_id).tier
+                        if db.get(League, league_id)
+                        else "tier_1"
+                    ),
                     metric_name=body.metric,
                     percentile_value=percentile,
                     index_score=None,

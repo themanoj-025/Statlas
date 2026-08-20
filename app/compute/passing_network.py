@@ -29,6 +29,7 @@ PITCH_WIDTH = 80.0
 # B1 — Network construction from event data
 # ---------------------------------------------------------------------------
 
+
 def build_passing_network(
     db: Session,
     match_id: str,
@@ -114,16 +115,20 @@ def build_passing_network(
         )
         attempts = player_pass_attempts.get(pid, 0)
         completed = player_pass_completed.get(pid, 0)
-        nodes.append({
-            "player_id": pid,
-            "pass_count": player_pass_count.get(pid, 0),
-            "pass_received": player_pass_received.get(pid, 0),
-            "pass_attempts": attempts,
-            "pass_completed": completed,
-            "pass_success_rate": round(completed / attempts * 100, 1) if attempts > 0 else 0,
-            "avg_x": round(avg_x, 1) if avg_x is not None else None,
-            "avg_y": round(avg_y, 1) if avg_y is not None else None,
-        })
+        nodes.append(
+            {
+                "player_id": pid,
+                "pass_count": player_pass_count.get(pid, 0),
+                "pass_received": player_pass_received.get(pid, 0),
+                "pass_attempts": attempts,
+                "pass_completed": completed,
+                "pass_success_rate": (
+                    round(completed / attempts * 100, 1) if attempts > 0 else 0
+                ),
+                "avg_x": round(avg_x, 1) if avg_x is not None else None,
+                "avg_y": round(avg_y, 1) if avg_y is not None else None,
+            }
+        )
 
     # Build edge list
     edge_list = [
@@ -155,10 +160,17 @@ def _filter_events(
     elif phase == "open_play":
         # Exclude set pieces by checking pass_type in extra
         filtered = [
-            e for e in filtered
-            if (e.extra or {}).get("pass_type") not in (
-                "Corner", "Free Kick", "Throw-in", "Goal Kick",
-                "Kick Off", "Penalty", "Cross",
+            e
+            for e in filtered
+            if (e.extra or {}).get("pass_type")
+            not in (
+                "Corner",
+                "Free Kick",
+                "Throw-in",
+                "Goal Kick",
+                "Kick Off",
+                "Penalty",
+                "Cross",
             )
         ]
     if minute_start is not None:
@@ -193,17 +205,14 @@ def _resolve_recipient_id(
             return pid
 
     # Fallback: match against Player.canonical_name
-    player = (
-        db.query(Player)
-        .filter(Player.canonical_name == recipient_name)
-        .first()
-    )
+    player = db.query(Player).filter(Player.canonical_name == recipient_name).first()
     return player.id if player else None
 
 
 # ---------------------------------------------------------------------------
 # B2 — Network metrics computation
 # ---------------------------------------------------------------------------
+
 
 def compute_network_metrics(network: dict[str, Any]) -> dict[str, Any]:
     """Compute network science metrics for each player in the passing network.
@@ -244,16 +253,18 @@ def compute_network_metrics(network: dict[str, Any]) -> dict[str, Any]:
         # Clustering coefficient (for directed: what fraction of neighbors also connect)
         clustering = _compute_clustering(pid, neighbors, adjacency)
 
-        metrics.append({
-            "player_id": pid,
-            "degree_centrality": round(degree_centrality, 4),
-            "betweenness_centrality": round(betweenness, 4),
-            "clustering_coefficient": round(clustering, 4),
-            "pass_count": node.get("pass_count", 0),
-            "pass_success_rate": node.get("pass_success_rate", 0),
-            "avg_x": node.get("avg_x"),
-            "avg_y": node.get("avg_y"),
-        })
+        metrics.append(
+            {
+                "player_id": pid,
+                "degree_centrality": round(degree_centrality, 4),
+                "betweenness_centrality": round(betweenness, 4),
+                "clustering_coefficient": round(clustering, 4),
+                "pass_count": node.get("pass_count", 0),
+                "pass_success_rate": node.get("pass_success_rate", 0),
+                "avg_x": node.get("avg_x"),
+                "avg_y": node.get("avg_y"),
+            }
+        )
 
     return {
         "nodes": metrics,
@@ -325,7 +336,7 @@ def _compute_clustering(
     neighbor_list = list(neighbors)
     edges_between = 0
     for i, n1 in enumerate(neighbor_list):
-        for n2 in neighbor_list[i + 1:]:
+        for n2 in neighbor_list[i + 1 :]:
             if n2 in adjacency.get(n1, set()) or n1 in adjacency.get(n2, set()):
                 edges_between += 1
     max_edges = len(neighbors) * (len(neighbors) - 1) / 2
@@ -336,7 +347,10 @@ def _compute_clustering(
 # B3 — Tactical style detection
 # ---------------------------------------------------------------------------
 
-def detect_tactical_style(network: dict[str, Any], metrics: dict[str, Any]) -> dict[str, Any]:
+
+def detect_tactical_style(
+    network: dict[str, Any], metrics: dict[str, Any]
+) -> dict[str, Any]:
     """Detect the team's tactical style from passing network data.
 
     Styles (documented thresholds):
@@ -364,7 +378,9 @@ def detect_tactical_style(network: dict[str, Any], metrics: dict[str, Any]) -> d
 
     # Compute aggregate metrics
     avg_success_rate = sum(n.get("pass_success_rate", 0) for n in nodes) / len(nodes)
-    avg_betweenness = sum(n.get("betweenness_centrality", 0) for n in nodes) / len(nodes)
+    avg_betweenness = sum(n.get("betweenness_centrality", 0) for n in nodes) / len(
+        nodes
+    )
 
     # Estimate average pass distance from node positions
     edges = network.get("edges", [])
@@ -397,7 +413,9 @@ def detect_tactical_style(network: dict[str, Any], metrics: dict[str, Any]) -> d
 
     # Betweenness signal
     if avg_betweenness > 0.3:
-        factors.append(f"High betweenness centrality ({avg_betweenness:.2f}) — playmaker-dependent structure")
+        factors.append(
+            f"High betweenness centrality ({avg_betweenness:.2f}) — playmaker-dependent structure"
+        )
     if avg_success_rate > 85:
         factors.append(f"High pass accuracy ({avg_success_rate:.0f}%)")
 
@@ -417,7 +435,9 @@ def detect_tactical_style(network: dict[str, Any], metrics: dict[str, Any]) -> d
 
 def _estimate_avg_pass_distance(nodes: list[dict], edges: list[dict]) -> float:
     """Estimate average pass distance from node average positions and edge weights."""
-    pos_map = {n["player_id"]: (n.get("avg_x") or 60, n.get("avg_y") or 40) for n in nodes}
+    pos_map = {
+        n["player_id"]: (n.get("avg_x") or 60, n.get("avg_y") or 40) for n in nodes
+    }
     total_dist = 0.0
     total_weight = 0
     for edge in edges:
@@ -455,6 +475,7 @@ def _estimate_width_concentration(nodes: list[dict]) -> float:
 # B4 — Anomaly detection
 # ---------------------------------------------------------------------------
 
+
 def detect_network_anomalies(
     network: dict[str, Any],
     metrics: dict[str, Any],
@@ -473,7 +494,9 @@ def detect_network_anomalies(
         return anomalies
 
     betweenness_values = [n.get("betweenness_centrality", 0) for n in nodes]
-    avg_betweenness = sum(betweenness_values) / len(betweenness_values) if betweenness_values else 0
+    avg_betweenness = (
+        sum(betweenness_values) / len(betweenness_values) if betweenness_values else 0
+    )
 
     for node in nodes:
         pid = node["player_id"]
@@ -484,44 +507,52 @@ def detect_network_anomalies(
             if n["player_id"] != pid:
                 pass_received += n.get("pass_count", 0) if False else 0
         # Use simple approach: pass_count vs network average
-        avg_passes = sum(n.get("pass_count", 0) for n in nodes) / len(nodes) if nodes else 0
+        avg_passes = (
+            sum(n.get("pass_count", 0) for n in nodes) / len(nodes) if nodes else 0
+        )
 
         # 1. Dominant playmaker
         if bc > 0.4 and bc > avg_betweenness * 2:
-            anomalies.append({
-                "type": "dominant_playmaker",
-                "player_id": pid,
-                "severity": "info",
-                "detail": (
-                    f"Player has unusually high betweenness centrality "
-                    f"({bc:.2f} vs average {avg_betweenness:.2f}) — "
-                    f"potential dominant playmaker"
-                ),
-            })
+            anomalies.append(
+                {
+                    "type": "dominant_playmaker",
+                    "player_id": pid,
+                    "severity": "info",
+                    "detail": (
+                        f"Player has unusually high betweenness centrality "
+                        f"({bc:.2f} vs average {avg_betweenness:.2f}) — "
+                        f"potential dominant playmaker"
+                    ),
+                }
+            )
 
         # 2. Asymmetric flow (high attempts, low received or vice versa)
         if pass_count > avg_passes * 2.5 and pass_count > 30:
-            anomalies.append({
-                "type": "high_volume_sender",
-                "player_id": pid,
-                "severity": "info",
-                "detail": (
-                    f"Player sends significantly more passes than average "
-                    f"({pass_count} vs avg {avg_passes:.0f}) — "
-                    f"may indicate dominant role or tactical focus"
-                ),
-            })
+            anomalies.append(
+                {
+                    "type": "high_volume_sender",
+                    "player_id": pid,
+                    "severity": "info",
+                    "detail": (
+                        f"Player sends significantly more passes than average "
+                        f"({pass_count} vs avg {avg_passes:.0f}) — "
+                        f"may indicate dominant role or tactical focus"
+                    ),
+                }
+            )
 
         # 3. Disconnected player (zero passes attempted)
         if node.get("pass_attempts", 0) == 0 and node.get("pass_count", 0) == 0:
-            anomalies.append({
-                "type": "disconnected_player",
-                "player_id": pid,
-                "severity": "warning",
-                "detail": (
-                    "Player has no completed passes in network — "
-                    "possible data error, limited playing time, or isolated role"
-                ),
-            })
+            anomalies.append(
+                {
+                    "type": "disconnected_player",
+                    "player_id": pid,
+                    "severity": "warning",
+                    "detail": (
+                        "Player has no completed passes in network — "
+                        "possible data error, limited playing time, or isolated role"
+                    ),
+                }
+            )
 
     return anomalies

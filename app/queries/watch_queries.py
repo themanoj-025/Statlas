@@ -35,7 +35,12 @@ from app.models import (
 )
 from app.queries.player_queries import get_player_slug, slugify_name
 
-ALERT_TYPES = ("percentile_movement", "club_change", "new_season_data", "data_coverage_change")
+ALERT_TYPES = (
+    "percentile_movement",
+    "club_change",
+    "new_season_data",
+    "data_coverage_change",
+)
 DIGEST_FREQUENCIES = ("immediate", "daily_digest", "weekly_digest")
 
 
@@ -61,7 +66,9 @@ def _now() -> datetime:
 
 
 def _owned_watch(db: Session, user_id: int, watch_id: int) -> Watch:
-    watch = db.query(Watch).filter(Watch.id == watch_id, Watch.user_id == user_id).first()
+    watch = (
+        db.query(Watch).filter(Watch.id == watch_id, Watch.user_id == user_id).first()
+    )
     if watch is None:
         raise WatchNotFound(f"watch {watch_id} not found")
     return watch
@@ -82,7 +89,9 @@ def _entity_slug(db: Session, entity_type: str, entity_id: int) -> str | None:
     return slugify_name(team.name)
 
 
-def _entity_name(db: Session, entity_type: str, entity_id: int) -> tuple[str, str | None]:
+def _entity_name(
+    db: Session, entity_type: str, entity_id: int
+) -> tuple[str, str | None]:
     """(name, slug) for an entity — used for links and alert display."""
     if entity_type == "player":
         player = db.get(Player, entity_id)
@@ -122,11 +131,7 @@ def follow_entity(
     limits = plan_limits(plan)
     max_watches = limits.get("watches_max")
     if max_watches is not None:
-        current = (
-            db.query(Watch)
-            .filter(Watch.user_id == user_id)
-            .count()
-        )
+        current = db.query(Watch).filter(Watch.user_id == user_id).count()
         if current >= max_watches:
             raise WatchLimitExceeded(
                 f"You've used your {plan} plan's allowance of {max_watches} followed "
@@ -193,8 +198,16 @@ def list_watches(db: Session, user_id: int) -> list[dict[str, Any]]:
     # Player/team identity in two batch queries.
     player_ids = [w.entity_id for w in watches if w.entity_type == "player"]
     team_ids = [w.entity_id for w in watches if w.entity_type == "team"]
-    players = {p.id: p for p in db.query(Player).filter(Player.id.in_(player_ids)).all()} if player_ids else {}
-    teams = {t.id: t for t in db.query(Team).filter(Team.id.in_(team_ids)).all()} if team_ids else {}
+    players = (
+        {p.id: p for p in db.query(Player).filter(Player.id.in_(player_ids)).all()}
+        if player_ids
+        else {}
+    )
+    teams = (
+        {t.id: t for t in db.query(Team).filter(Team.id.in_(team_ids)).all()}
+        if team_ids
+        else {}
+    )
 
     out = []
     for w in watches:
@@ -205,12 +218,22 @@ def list_watches(db: Session, user_id: int) -> list[dict[str, Any]]:
             if player is not None and player.current_team_id is not None:
                 team = db.get(Team, player.current_team_id)
                 team_name = team.name if team else None
-            extra = {"team": team_name, "position_group": player.position_group if player else None}
+            extra = {
+                "team": team_name,
+                "position_group": player.position_group if player else None,
+            }
         else:
             team = teams.get(w.entity_id)
             name = team.name if team else f"Team #{w.entity_id}"
-            league = db.get(League, team.league_id) if team is not None and team.league_id is not None else None
-            extra = {"league": league.name if league else None, "league_slug": league.slug if league else None}
+            league = (
+                db.get(League, team.league_id)
+                if team is not None and team.league_id is not None
+                else None
+            )
+            extra = {
+                "league": league.name if league else None,
+                "league_slug": league.slug if league else None,
+            }
         out.append(
             {
                 "watch_id": w.id,
@@ -325,7 +348,11 @@ def _alert_payload(db: Session, alert: WatchAlert, watch: Watch) -> dict[str, An
     else:
         team = db.get(Team, entity_id)
         name = team.name if team else f"Team #{entity_id}"
-        league = db.get(League, team.league_id) if team is not None and team.league_id is not None else None
+        league = (
+            db.get(League, team.league_id)
+            if team is not None and team.league_id is not None
+            else None
+        )
         league_slug = league.slug if league else None
     return {
         "alert_id": alert.id,
@@ -397,7 +424,9 @@ def update_preferences(
                 f"Unknown alert type(s): {', '.join(sorted(unknown))} — "
                 f"valid types are: {', '.join(ALERT_TYPES)}."
             )
-        prefs.alert_type_preferences = {t: bool(v) for t, v in alert_type_preferences.items()}
+        prefs.alert_type_preferences = {
+            t: bool(v) for t, v in alert_type_preferences.items()
+        }
     if digest_frequency is not None:
         if digest_frequency not in DIGEST_FREQUENCIES:
             raise ValueError(
