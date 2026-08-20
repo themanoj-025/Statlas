@@ -63,6 +63,16 @@ import type {
   PossessionMap,
   FormationResult,
   TacticalOverview,
+  DauResult,
+  MauResult,
+  FeatureUsageResult,
+  ConversionFunnel,
+  RetentionCohort,
+  ChurnResult,
+  ArpuResult,
+  ExecutiveDashboard,
+  AnalyticsAlert,
+  AnomalyResult,
 } from "./types";
 
 // Server components read the API at STATLAS_API_URL (no CORS involved);
@@ -444,6 +454,30 @@ export const api = {
     get<FormationResult>(`/api/v1/tactical/matches/${matchId}/formation${qs(params ?? {})}`),
   tacticalCoverage: (matchId: string) =>
     get<{ has_coverage: boolean; event_count: number; message: string }>(`/api/v1/tactical/matches/${matchId}/coverage`),
+  // Phase 18 — Internal Analytics
+  trackEvent: (eventName: string, properties: Record<string, unknown>, sessionId?: string) =>
+    post<{ status: string; event_id: number }>("/api/v1/analytics/events", {
+      event_name: eventName, properties, session_id: sessionId,
+    }),
+  eventSchema: () => get<{ events: Record<string, { required_properties: string[] }> }>('/api/v1/analytics/events/schema'),
+  analyticsDau: (date?: string) => get<DauResult>(`/api/v1/analytics/metrics/dau${qs(date ? { date } : {})}`),
+  analyticsMau: (date?: string) => get<MauResult>(`/api/v1/analytics/metrics/mau${qs(date ? { date } : {})}`),
+  analyticsFeatures: (date?: string) => get<FeatureUsageResult[]>(`/api/v1/analytics/metrics/features${qs(date ? { date } : {})}`),
+  analyticsConversion: (start?: string, end?: string) =>
+    get<ConversionFunnel>(`/api/v1/analytics/metrics/conversion${qs({ start, end })}`),
+  analyticsRetention: (cohortMonth?: string) =>
+    get<RetentionCohort[]>(`/api/v1/analytics/metrics/retention${qs(cohortMonth ? { cohort_month: cohortMonth } : {})}`),
+  analyticsChurn: (date?: string) => get<ChurnResult>(`/api/v1/analytics/metrics/churn${qs(date ? { date } : {})}`),
+  analyticsArpu: (date?: string) => get<ArpuResult>(`/api/v1/analytics/metrics/arpu${qs(date ? { date } : {})}`),
+  executiveDashboard: () => get<ExecutiveDashboard>('/api/v1/analytics/dashboard/executive'),
+  productDashboard: () => get<{ feature_usage: FeatureUsageResult[]; conversion: ConversionFunnel }>('/api/v1/analytics/dashboard/product'),
+  operationsDashboard: () => get<{ error_rate_pct: number; total_events_24h: number; error_events_24h: number }>('/api/v1/analytics/dashboard/operations'),
+  cohortDashboard: (cohortMonth?: string) =>
+    get<{ retention: RetentionCohort[] }>(`/api/v1/analytics/dashboard/cohorts${qs(cohortMonth ? { cohort_month: cohortMonth } : {})}`),
+  analyticsAlerts: (limit?: number) => get<{ alerts: AnalyticsAlert[]; total: number }>(`/api/v1/analytics/alerts${qs(limit ? { limit } : {})}`),
+  checkAlerts: () => post<{ alerts_fired: number; alerts: { alert_name: string; message: string }[] }>('/api/v1/analytics/alerts/check', {}),
+  analyticsAnomalies: (metricName?: string) =>
+    get<AnomalyResult>(`/api/v1/analytics/anomalies${qs(metricName ? { metric_name: metricName } : {})}`),
 };
 
 async function del<T>(path: string): Promise<T> {
