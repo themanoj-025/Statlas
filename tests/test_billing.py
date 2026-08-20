@@ -414,3 +414,107 @@ def test_billing_configured_flag(client):
     register_user(client)
     body = client.get("/api/v1/billing/subscription").json()
     assert body["billing_configured"] is True  # env keys present in this suite
+
+
+# ---------------------------------------------------------------------------
+# Registration rate limiting (5 per IP per 10 minutes)
+# ---------------------------------------------------------------------------
+
+
+def test_register_rate_limit_allows_under_threshold(client):
+    """First 5 registrations from the same IP should all succeed."""
+    for i in range(5):
+        resp = client.post(
+            "/api/v1/auth/register",
+            json={"email": f"user{i}@example.com", "password": "Hunter2hunter"},
+        )
+        assert resp.status_code == 201, f"Registration {i + 1} should succeed"
+
+
+def test_register_rate_limit_blocks_over_threshold(client):
+    """6th registration from the same IP should be rate-limited (429)."""
+    # Exhaust the limit
+    for i in range(5):
+        resp = client.post(
+            "/api/v1/auth/register",
+            json={"email": f"rate{i}@example.com", "password": "Hunter2hunter"},
+        )
+        assert resp.status_code == 201
+
+    # 6th attempt should be blocked
+    resp = client.post(
+        "/api/v1/auth/register",
+        json={"email": "rate5@example.com", "password": "Hunter2hunter"},
+    )
+    assert resp.status_code == 429
+    assert "Too many" in resp.json()["error"]["message"]
+
+
+def test_register_rate_limit_resets_after_clear(client):
+    """After clearing rate limit state, registrations should succeed again."""
+    # Exhaust the limit
+    for i in range(5):
+        client.post(
+            "/api/v1/auth/register",
+            json={"email": f"clear{i}@example.com", "password": "Hunter2hunter"},
+        )
+
+    # Should be blocked
+    resp = client.post(
+        "/api/v1/auth/register",
+        json={"email": "clear5@example.com", "password": "Hunter2hunter"},
+    )
+    assert resp.status_code == 429
+
+    # Clear the rate limiter (simulates time passing)
+    from app.rate_limiting import get_rate_limiter
+
+    limiter = get_rate_limiter()
+    limiter.reset_all()
+
+    # Should succeed again
+    resp = client.post(
+        "/api/v1/auth/register",
+        json={"email": "clear6@example.com", "password": "Hunter2hunter"},
+    )
+    assert resp.status_code == 201
+
+
+def test_register_rate_limit_independent_of_email(client):
+    """Rate limit is per IP, not per email — different emails from same IP count."""
+    for i in range(5):
+        resp = client.post(
+            "/api/v1/auth/register",
+            json={
+                "email": f"unique{i}@example.com",
+                "password": "Hunter2hunter",
+            },
+        )
+        assert resp.status_code == 201
+
+    # Even a different email is blocked (same IP)
+    resp = client.post(
+        "/api/v1/auth/register",
+        json={"email": "another@example.com", "password": "Hunter2hunter"},
+    )
+    assert resp.status_code == 429
+
+
+def test_register_rate_limit_error_message(client):
+    """Rate limit response includes a clear error message."""
+    for i in range(5):
+        client.post(
+            "/api/v1/auth/register",
+            json={"email": f"msg{i}@example.com", "password": "Hunter2hunter"},
+        )
+
+    resp = client.post(
+        "/api/v1/auth/register",
+        json={"email": "msg5@example.com", "password": "Hunter2hunter"},
+    )
+    assert resp.status_code == 429
+    body = resp.json()
+    assert "error" in body
+    assert body["error"]["code"] == "http_429"
+    assert isinstance(body["error"]["message"], str)
+    assert len(body["error"]["message"]) > 0
