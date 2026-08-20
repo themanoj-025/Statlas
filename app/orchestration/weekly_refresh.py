@@ -280,6 +280,16 @@ def publish_run(db: Session, computed_date: datetime) -> int:
     for row in rows:
         row.is_published = True
     db.commit()
+    # Invalidate caches so leaderboard/search pages reflect new data
+    try:
+        from app.cache import get_cache
+        cache = get_cache()
+        cache.delete_pattern("leaderboard:*")
+        cache.delete_pattern("search:*")
+        cache.delete_pattern("player:*")
+        cache.delete_pattern("league:*")
+    except Exception:
+        pass  # cache invalidation must never break the publish step
     return len(rows)
 
 

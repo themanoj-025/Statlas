@@ -247,9 +247,21 @@ def search_players(
     if not matched:
         return []
 
-    slugs = {p["player_id"]: p["slug"] for p in player_slug_map(db)}
-    teams = {t.id: t for t in db.query(Team).all()}
-    leagues = {league.id: league for league in db.query(League).all()}
+    # Only load teams/leagues for matched players (not ALL teams/leagues)
+    team_ids = {p.current_team_id for p in matched.values() if p.current_team_id}
+    teams: dict[int, Any] = {}
+    if team_ids:
+        team_rows = db.query(Team).filter(Team.id.in_(team_ids)).all()
+        teams = {t.id: t for t in team_rows}
+    league_ids = {t.league_id for t in teams.values() if t.league_id}
+    leagues: dict[int, Any] = {}
+    if league_ids:
+        league_rows = db.query(League).filter(League.id.in_(league_ids)).all()
+        leagues = {l.id: l for l in league_rows}
+
+    # Compute slugs only for matched players (not the full player table)
+    matched_ids = list(matched.keys())
+    slug_map = _compact_slug_map(db, matched_ids, matched, teams)
 
     results: list[dict[str, Any]] = []
     for player in matched.values():
@@ -259,7 +271,7 @@ def search_players(
             {
                 "player_id": player.id,
                 "name": player.canonical_name,
-                "slug": slugs.get(player.id),
+                "slug": slug_map.get(player.id),
                 "position_group": player.position_group,
                 "position_label": player.primary_position,
                 "club": team.name if team else None,
@@ -276,6 +288,42 @@ def search_players(
 
     results.sort(key=_rank)
     return results[:limit]
+
+
+def _compact_slug_map(
+    db: Session,
+    player_ids: list[int],
+    matched: dict[int, Player],
+    teams: dict[int, Any],
+) -> dict[int, str]:
+    """Compute slugs for a small set of matched players without loading the
+    full player table. Handles name collisions via club suffix.
+    """
+    # Group by name slug to detect collisions
+    by_name_slug: dict[str, list[int]] = {}
+    for pid in player_ids:
+        player = matched[pid]
+        name_slug = slugify_name(player.canonical_name)
+        by_name_slug.setdefault(name_slug, []).append(pid)
+
+    result: dict[int, str] = {}
+    for name_slug, pids in by_name_slug.items():
+        if len(pids) == 1:
+            result[pids[0]] = name_slug
+            continue
+        # Multiple players with same name — try club disambiguation
+        club_slugs: dict[str, list[int]] = {}
+        for pid in pids:
+            team = teams.get(matched[pid].current_team_id)
+            cs = slugify_name(team.name) if team else ""
+            club_slugs.setdefault(cs, []).append(pid)
+        for cs, cs_pids in club_slugs.items():
+            if len(cs_pids) == 1 and cs:
+                result[cs_pids[0]] = f"{name_slug}-{cs}"
+            else:
+                for pid in cs_pids:
+                    result[pid] = f"{name_slug}-{pid}"
+    return result
 
 
 def get_player_raw_stats(db: Session, player_id: int) -> dict[str, Any] | None:
