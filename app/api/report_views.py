@@ -83,7 +83,19 @@ def list_reports(request: Request):
 
 @router.post("", status_code=201)
 def generate(body: GenerateBody, request: Request):
+    """Generate a scouting report. Rate-limited to 10 per user per hour."""
+    from app.rate_limiting import get_rate_limiter
+
     user = _require_user(request)
+    limiter = get_rate_limiter()
+    if limiter.is_limited(
+        f"report:{user.id}", max_attempts=10, window_seconds=3600
+    ):
+        raise HTTPException(
+            status_code=429,
+            detail="Too many report requests. Please try again later.",
+            headers={"Retry-After": "3600"},
+        )
     with session_scope() as db:
         try:
             return reports.generate_report(
@@ -111,8 +123,20 @@ def get_report(report_id: int, request: Request):
 def regenerate(report_id: int, request: Request):
     """Re-run the stored report's definition against CURRENT data (the stored
     report itself is never mutated — a fresh report row is created, matching
-    the Phase 8 'results may have changed since last run' discipline)."""
+    the Phase 8 'results may have changed since last run' discipline).
+    Shares rate limit with generate (10 per user per hour)."""
+    from app.rate_limiting import get_rate_limiter
+
     user = _require_user(request)
+    limiter = get_rate_limiter()
+    if limiter.is_limited(
+        f"report:{user.id}", max_attempts=10, window_seconds=3600
+    ):
+        raise HTTPException(
+            status_code=429,
+            detail="Too many report requests. Please try again later.",
+            headers={"Retry-After": "3600"},
+        )
     with session_scope() as db:
         try:
             stored = reports.get_report(db, user.id, report_id)
