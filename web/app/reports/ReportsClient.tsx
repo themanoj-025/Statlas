@@ -272,6 +272,7 @@ async function downloadExport(
       try {
         const body = await res.json();
         if (typeof body.detail === "string") detail = body.detail;
+        else if (body.error?.message) detail = body.error.message;
       } catch {
         /* non-JSON */
       }

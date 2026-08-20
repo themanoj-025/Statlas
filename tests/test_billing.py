@@ -74,7 +74,7 @@ def client():
 
 def register_user(client, email: str = "scout@example.com") -> None:
     resp = client.post(
-        "/api/v1/auth/register", json={"email": email, "password": "hunter2hunter"}
+        "/api/v1/auth/register", json={"email": email, "password": "Hunter2hunter"}
     )
     assert resp.status_code == 201, resp.text
 
@@ -139,7 +139,7 @@ def test_register_login_logout_roundtrip(client):
 
     resp = client.post(
         "/api/v1/auth/login",
-        json={"email": "scout@example.com", "password": "hunter2hunter"},
+        json={"email": "scout@example.com", "password": "Hunter2hunter"},
     )
     assert resp.status_code == 200
     assert client.get("/api/v1/auth/me").json()["email"] == "scout@example.com"
@@ -149,7 +149,7 @@ def test_duplicate_email_rejected(client):
     register_user(client)
     resp = client.post(
         "/api/v1/auth/register",
-        json={"email": "scout@example.com", "password": "anotherpass1"},
+        json={"email": "scout@example.com", "password": "Anotherpass1"},
     )
     assert resp.status_code == 409
 
@@ -159,7 +159,7 @@ def test_password_stored_hashed_not_plaintext(client):
     with session_scope() as db:
         user = db.query(User).filter(User.email == "scout@example.com").first()
         assert user is not None
-        assert "hunter2hunter" not in user.password_hash
+        assert "Hunter2hunter" not in user.password_hash
         assert user.password_hash.count("$") == 2  # iterations$salt$hash
     resp = client.get("/api/v1/billing/subscription")
     assert resp.status_code == 200

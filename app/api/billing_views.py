@@ -31,6 +31,20 @@ class RegisterBody(BaseModel):
     email: EmailStr
     password: str = Field(min_length=8, max_length=200)
 
+    @classmethod
+    def validate_password_strength(cls, password: str) -> str:
+        """Validate password has minimum complexity."""
+        if not any(c.isupper() for c in password):
+            raise ValueError("Password must contain at least one uppercase letter.")
+        if not any(c.islower() for c in password):
+            raise ValueError("Password must contain at least one lowercase letter.")
+        if not any(c.isdigit() for c in password):
+            raise ValueError("Password must contain at least one digit.")
+        return password
+
+    def model_post_init(self, __context: object) -> None:
+        self.validate_password_strength(self.password)
+
 
 class LoginBody(BaseModel):
     email: EmailStr
@@ -134,13 +148,40 @@ class PasswordResetConfirmBody(BaseModel):
     token: str
     new_password: str = Field(min_length=8, max_length=200)
 
+    @classmethod
+    def validate_password_strength(cls, password: str) -> str:
+        if not any(c.isupper() for c in password):
+            raise ValueError("Password must contain at least one uppercase letter.")
+        if not any(c.islower() for c in password):
+            raise ValueError("Password must contain at least one lowercase letter.")
+        if not any(c.isdigit() for c in password):
+            raise ValueError("Password must contain at least one digit.")
+        return password
+
+    def model_post_init(self, __context: object) -> None:
+        self.validate_password_strength(self.new_password)
+
 
 @router.post("/auth/password-reset/request")
 def password_reset_request(body: PasswordResetRequestBody):
     """Request a password reset. Always returns the same response to prevent
-    account enumeration."""
+    account enumeration. Rate-limited to 3 attempts per hour per email."""
+    from app.rate_limiting import get_rate_limiter
+
+    email_lower = body.email.lower()
+    limiter = get_rate_limiter()
+    if limiter.is_limited(
+        f"password_reset:{email_lower}",
+        max_attempts=3,
+        window_seconds=3600,
+    ):
+        raise HTTPException(
+            status_code=429,
+            detail="Too many password reset requests. Try again in 1 hour.",
+            headers={"Retry-After": "3600"},
+        )
     with session_scope() as db:
-        user = db.query(User).filter(User.email == body.email.lower()).first()
+        user = db.query(User).filter(User.email == email_lower).first()
         if user is not None:
             token = auth.create_password_reset_token(db, user.id)
             # In production, send email here. For dev/testing, log only a truncated reference.
@@ -227,6 +268,19 @@ class ProfileUpdateBody(BaseModel):
 class ChangePasswordBody(BaseModel):
     current_password: str
     new_password: str = Field(min_length=8, max_length=200)
+
+    @classmethod
+    def validate_password_strength(cls, password: str) -> str:
+        if not any(c.isupper() for c in password):
+            raise ValueError("Password must contain at least one uppercase letter.")
+        if not any(c.islower() for c in password):
+            raise ValueError("Password must contain at least one lowercase letter.")
+        if not any(c.isdigit() for c in password):
+            raise ValueError("Password must contain at least one digit.")
+        return password
+
+    def model_post_init(self, __context: object) -> None:
+        self.validate_password_strength(self.new_password)
 
 
 class AccountDeleteBody(BaseModel):

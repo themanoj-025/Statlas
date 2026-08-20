@@ -57,7 +57,7 @@ def seeded_client():
     with TestClient(app) as c:
         c.post(
             "/api/v1/auth/register",
-            json={"email": "analyst@example.com", "password": "hunter2hunter"},
+            json={"email": "analyst@example.com", "password": "Hunter2hunter"},
         )
         yield c
 
@@ -206,7 +206,7 @@ def test_assistant_unconfigured_returns_503(monkeypatch):
     with TestClient(app) as c:
         c.post(
             "/api/v1/auth/register",
-            json={"email": "a@b.com", "password": "hunter2hunter"},
+            json={"email": "a@b.com", "password": "Hunter2hunter"},
         )
         resp = c.post(
             "/api/v1/assistant/chat",
