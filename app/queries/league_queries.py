@@ -22,7 +22,6 @@ from app.models import DataCoverage, League, Player, StatSnapshot, Team
 from app.queries.player_queries import get_player_slug, slugify_name
 
 
-
 def _current_season() -> str:
     return CURRENT_SEASON
 

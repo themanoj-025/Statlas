@@ -7,7 +7,6 @@ from __future__ import annotations
 import logging
 import time
 from collections import defaultdict
-from datetime import datetime, timedelta, timezone
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -106,6 +105,7 @@ def get_rate_limiter() -> RedisRateLimiter | InMemoryRateLimiter:
 
     try:
         import redis as redis_lib
+
         from app.config import get_settings
 
         settings = get_settings()

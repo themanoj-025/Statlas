@@ -113,6 +113,7 @@ def get_cache() -> CacheBackend:
 
     try:
         import redis as redis_lib
+
         from app.config import get_settings
 
         settings = get_settings()

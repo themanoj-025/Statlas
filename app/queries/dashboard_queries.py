@@ -26,6 +26,7 @@ from app.models import (
     Shortlist,
     ShortlistEntry,
     StatSnapshot,
+    Team,
     Watch,
     WatchAlert,
 )

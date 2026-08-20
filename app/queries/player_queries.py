@@ -263,7 +263,7 @@ def search_players(
     leagues: dict[int, Any] = {}
     if league_ids:
         league_rows = db.query(League).filter(League.id.in_(league_ids)).all()
-        leagues = {l.id: l for l in league_rows}
+        leagues = {lg.id: lg for lg in league_rows}
 
     # Compute slugs only for matched players (not the full player table)
     matched_ids = list(matched.keys())

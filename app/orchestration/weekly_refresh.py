@@ -288,8 +288,8 @@ def publish_run(db: Session, computed_date: datetime) -> int:
         cache.delete_pattern("search:*")
         cache.delete_pattern("player:*")
         cache.delete_pattern("league:*")
-    except Exception:
-        pass  # cache invalidation must never break the publish step
+    except Exception as exc:
+        logger.warning("Cache invalidation failed after publish (non-fatal): %s", exc)
     return len(rows)
 
 

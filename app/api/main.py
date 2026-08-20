@@ -17,15 +17,13 @@ from __future__ import annotations
 
 import logging
 from collections.abc import Callable
+from contextlib import asynccontextmanager
 from datetime import datetime, timezone
 from typing import Any
 
 from fastapi import FastAPI, HTTPException, Query, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
-from pydantic import BaseModel
-
-from contextlib import asynccontextmanager
 
 from app import auth
 from app.api.analytics_views import router as analytics_router
@@ -99,8 +97,7 @@ async def security_and_rate_limit_middleware(request: Request, call_next):
     """1. Attach X-RateLimit-* headers to public-API responses (Part C1).
     2. Add security headers to every response.
     The public views set request.state.rate_limit during auth; this applies
-    the headers on the way out."""
-    import uuid
+    the headers on the way out.    """
 
     # Generate request ID for tracing + structured logging
     from app.logging_setup import new_request_id
@@ -374,8 +371,8 @@ def player_by_slug(slug: str, request: Request):
                     entity_id=resolved["player_id"],
                     action_type="viewed",
                 )
-        except Exception:
-            pass  # activity logging must never break profile loading
+        except Exception as exc:
+            logger.debug("Activity logging failed for player view: %s", exc)
 
         return payload
 
