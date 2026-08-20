@@ -232,14 +232,18 @@ def search_players(
     q = query.strip().lower()
     if not q:
         return []
-    # Escape ILIKE wildcards in user input to prevent unintended matches
-    escaped = q.replace("%", "\\%").replace("_", "\\_")
+    # Escape ILIKE wildcards in user input to prevent unintended matches.
+    # SQLAlchemy ilike(escape='\') tells the DB to treat \% and \_ as literals.
+    escape_char = "\\"
+    escaped = q.replace("%", f"{escape_char}%").replace("_", f"{escape_char}_")
     pattern = f"%{escaped}%"
 
-    player_rows = db.query(Player).filter(Player.canonical_name.ilike(pattern)).all()
+    player_rows = db.query(Player).filter(
+        Player.canonical_name.ilike(pattern, escape=escape_char)
+    ).all()
     alias_rows = (
         db.query(PlayerNameAlias)
-        .filter(PlayerNameAlias.source_name_string.ilike(pattern))
+        .filter(PlayerNameAlias.source_name_string.ilike(pattern, escape=escape_char))
         .all()
     )
     matched: dict[int, Player] = {p.id: p for p in player_rows}
