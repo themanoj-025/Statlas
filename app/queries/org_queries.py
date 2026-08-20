@@ -153,6 +153,23 @@ def create_organization(
     if slug is None:
         slug = re.sub(r"[^a-z0-9]+", "-", name.lower()).strip("-")[:128]
 
+    # Validate slug format
+    if not slug or len(slug) < 3:
+        raise ValueError("Organization slug must be at least 3 characters")
+    if not re.match(r"^[a-z0-9]+(-[a-z0-9]+)*$", slug):
+        raise ValueError(
+            "Organization slug must contain only lowercase letters, numbers, and hyphens"
+        )
+    # Reserved slugs that conflict with API routes
+    reserved = {
+        "api", "auth", "billing", "admin", "dashboard",
+        "workspace", "search", "reports", "watch", "settings",
+        "profile", "public", "health", "meta", "leagues",
+        "players", "clubs", "transfers", "archetypes", "tactical",
+    }
+    if slug in reserved:
+        raise ValueError(f"'{slug}' is a reserved slug — choose another name")
+
     # Check slug uniqueness
     existing = db.query(Organization).filter(Organization.slug == slug).first()
     if existing:

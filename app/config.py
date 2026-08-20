@@ -166,6 +166,8 @@ class Settings:
             ]
         # --- Redis (production rate limiting / caching) --------------------------
         self.redis_url = env("REDIS_URL", "redis://localhost:6379/0")
+        # --- Staff access (analytics dashboards) --------------------------------
+        self.staff_emails = env("STAFF_EMAILS", "")
         # --- Security headers ---------------------------------------------------
         self.csp_report_uri = env("CSP_REPORT_URI", "")
 

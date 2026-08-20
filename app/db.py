@@ -11,6 +11,7 @@ import logging
 from sqlalchemy import create_engine
 from sqlalchemy.engine import Engine
 from sqlalchemy.orm import Session, sessionmaker
+from sqlalchemy.pool import StaticPool
 
 from app.config import get_settings
 
@@ -29,7 +30,7 @@ def _make_engine(url: str | None = None) -> Engine:
         target_url = url or "sqlite+pysqlite:///:memory:"
         return create_engine(
             target_url,
-            poolclass=__import__("sqlalchemy.pool", fromlist=["StaticPool"]).StaticPool,
+            poolclass=StaticPool,
             connect_args={"check_same_thread": False},
         )
     # PostgreSQL / MySQL — production-ready pooling.
