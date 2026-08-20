@@ -13,8 +13,6 @@ from __future__ import annotations
 
 import logging
 import time
-from collections import defaultdict
-
 from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel, Field
 
@@ -26,12 +24,10 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/v1", tags=["assistant"])
 
-# Simple in-memory rate limiter: per-user rolling minute window. Enough for
-# abuse defence at this stage; production would use Redis (documented in the
-# security review).
+# Rate limiter: per-user rolling minute window.
+# Uses RedisRateLimiter when available, falls back to in-memory.
 _RATE_WINDOW_SECONDS = 60
 _RATE_MAX_PER_MINUTE = 12  # generous for interactive use; quota is the real gate
-_hits: defaultdict[int, list[float]] = defaultdict(list)
 
 
 class ChatBody(BaseModel):
@@ -39,15 +35,18 @@ class ChatBody(BaseModel):
 
 
 def _rate_limit(user_id: int) -> None:
-    now = time.monotonic()
-    window = [t for t in _hits[user_id] if now - t < _RATE_WINDOW_SECONDS]
-    if len(window) >= _RATE_MAX_PER_MINUTE:
+    from app.rate_limiting import get_rate_limiter
+
+    limiter = get_rate_limiter()
+    if limiter.is_limited(
+        f"assistant:{user_id}",
+        max_attempts=_RATE_MAX_PER_MINUTE,
+        window_seconds=_RATE_WINDOW_SECONDS,
+    ):
         raise HTTPException(
             status_code=429,
             detail=f"Too many requests — the assistant allows {_RATE_MAX_PER_MINUTE} messages per minute. Slow down and try again shortly.",
         )
-    window.append(now)
-    _hits[user_id] = window
 
 
 @router.post("/assistant/chat")
