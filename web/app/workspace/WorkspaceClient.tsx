@@ -98,7 +98,7 @@ export function WorkspaceClient() {
       await api.removeShortlist(shortlistId);
       setData(await api.workspace());
     } catch (err) {
-      window.alert(err instanceof ApiError ? err.message : "Could not remove the shortlist.");
+      setLoadError(err instanceof ApiError ? err.message : "Could not remove the shortlist.");
     } finally {
       setBusyDelete(null);
     }

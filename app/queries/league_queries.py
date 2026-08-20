@@ -17,15 +17,14 @@ from sqlalchemy.orm import Session
 
 from app.compute.anomaly_check import blocked_player_ids
 from app.compute.percentiles import REGISTRY_FLOOR_KEYS
-from app.config import load_registry, load_tiers
+from app.config import CURRENT_SEASON, load_registry, load_tiers
 from app.models import DataCoverage, League, Player, StatSnapshot, Team
 from app.queries.player_queries import get_player_slug, slugify_name
 
-SEASON_FALLBACK = "2025-26"
 
 
 def _current_season() -> str:
-    return SEASON_FALLBACK
+    return CURRENT_SEASON
 
 
 def get_league_catalog(db: Session) -> list[dict[str, Any]]:

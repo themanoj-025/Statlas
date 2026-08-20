@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { Bell, BellOff } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useAuth } from "./AuthProvider";
 import { api, ApiError } from "@/lib/api";
 
@@ -33,7 +33,8 @@ export function FollowButton({
   const [loaded, setLoaded] = useState(false);
 
   // Lazy: only check follow state when signed in and not yet loaded.
-  if (status === "signed-in" && !loaded) {
+  useEffect(() => {
+    if (status !== "signed-in" || loaded) return;
     setLoaded(true);
     void (async () => {
       try {
@@ -46,7 +47,7 @@ export function FollowButton({
         setFollowing(false);
       }
     })();
-  }
+  }, [status, loaded, entityType, entityId]);
 
   if (status === "signed-out") {
     return (

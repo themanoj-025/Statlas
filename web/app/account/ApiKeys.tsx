@@ -20,13 +20,21 @@ const API_URL =
     ? (process.env.STATLAS_API_URL ?? "http://127.0.0.1:8000")
     : (process.env.NEXT_PUBLIC_STATLAS_API_URL ?? "http://127.0.0.1:8000");
 
+function parseError(res: { status: number }, body: Record<string, unknown>): string {
+  if (typeof body.detail === "string") return body.detail;
+  const err = body.error;
+  if (err && typeof err === "object" && typeof (err as Record<string, unknown>).message === "string") {
+    return (err as Record<string, string>).message;
+  }
+  return `API ${res.status}`;
+}
+
 async function get<T>(path: string): Promise<T> {
   const res = await fetch(`${API_URL}${path}`, { credentials: "include", cache: "no-store" });
   if (!res.ok) {
     let detail = `API ${res.status}`;
     try {
-      const b = await res.json();
-      if (typeof b.detail === "string") detail = b.detail;
+      detail = parseError(res, await res.json());
     } catch {
       /* non-JSON */
     }
@@ -46,8 +54,7 @@ async function post<T>(path: string, body?: unknown): Promise<T> {
   if (!res.ok) {
     let detail = `API ${res.status}`;
     try {
-      const b = await res.json();
-      if (typeof b.detail === "string") detail = b.detail;
+      detail = parseError(res, await res.json());
     } catch {
       /* non-JSON */
     }
@@ -61,13 +68,13 @@ async function del<T>(path: string): Promise<T> {
   if (!res.ok) {
     let detail = `API ${res.status}`;
     try {
-      const b = await res.json();
-      if (typeof b.detail === "string") detail = b.detail;
+      detail = parseError(res, await res.json());
     } catch {
       /* non-JSON */
     }
     throw new ApiError(res.status, detail);
   }
+  if (res.status === 204) return {} as T;
   return res.json() as Promise<T>;
 }
 
