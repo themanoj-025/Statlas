@@ -105,7 +105,9 @@ async function get<T>(path: string, init?: RequestInit): Promise<T> {
     let detail = `API ${res.status}`;
     try {
       const body = await res.json();
+      // Support both legacy {detail} and new {error: {message}} envelopes
       if (typeof body.detail === "string") detail = body.detail;
+      else if (body.error?.message) detail = body.error.message;
     } catch {
       /* non-JSON error body */
     }
@@ -492,6 +494,7 @@ async function del<T>(path: string): Promise<T> {
     try {
       const parsed = await res.json();
       if (typeof parsed.detail === "string") detail = parsed.detail;
+      else if (parsed.error?.message) detail = parsed.error.message;
     } catch {
       /* non-JSON */
     }
@@ -516,6 +519,7 @@ async function put<T>(path: string, body: unknown, init?: RequestInit): Promise<
     try {
       const parsed = await res.json();
       if (typeof parsed.detail === "string") detail = parsed.detail;
+      else if (parsed.error?.message) detail = parsed.error.message;
     } catch {
       /* non-JSON */
     }
@@ -538,6 +542,7 @@ async function post<T>(path: string, body: unknown, init?: RequestInit): Promise
     try {
       const parsed = await res.json();
       if (typeof parsed.detail === "string") detail = parsed.detail;
+      else if (parsed.error?.message) detail = parsed.error.message;
     } catch {
       /* non-JSON */
     }

@@ -783,7 +783,7 @@ from app.api.main import app  # noqa: E402
 
 def _register(client, email: str = "pro-api@example.com"):
     resp = client.post(
-        "/api/v1/auth/register", json={"email": email, "password": "hunter2hunter"}
+        "/api/v1/auth/register", json={"email": email, "password": "Hunter2hunter"}
     )
     assert resp.status_code == 201, resp.text
     # Reports are Pro-gated — grant the account Pro access.

@@ -165,6 +165,13 @@ def get_leaderboard_filtered(
 
     entries: list[dict[str, Any]] = []
     slugs = {p["player_id"]: p["slug"] for p in player_slug_map(db)}
+    # Batch-load all teams referenced in the results (eliminates N+1)
+    team_ids = {snap.team_id for _, snap, _, _ in best.values() if snap.team_id}
+    team_names: dict[int, str] = {}
+    if team_ids:
+        from app.models import Team
+        team_rows = db.query(Team).filter(Team.id.in_(team_ids)).all()
+        team_names = {t.id: t.name for t in team_rows}
     for percentile, snap, player, league in best.values():
         value = (
             percentile.index_score
@@ -179,7 +186,7 @@ def get_leaderboard_filtered(
                 "name": player.canonical_name,
                 "slug": slugs.get(player.id),
                 "position_group": percentile.position_group,
-                "club": _team_name(db, snap.team_id),
+                "club": team_names.get(snap.team_id) if snap.team_id else None,
                 "league": league.name,
                 "league_slug": league.slug,
                 "tier": league.tier,
