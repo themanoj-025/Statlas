@@ -19,15 +19,24 @@ _session_factory: sessionmaker[Session] | None = None
 
 def _make_engine() -> Engine:
     url = get_settings().database_url
-    if url is None:
+    if url is None or "sqlite" in (url or ""):
         # SQLite (tests / local dev without Postgres). StaticPool + check_same_thread
         # so in-memory databases survive across sessions within one process.
+        target_url = url or "sqlite+pysqlite:///:memory:"
         return create_engine(
-            "sqlite+pysqlite:///:memory:",
+            target_url,
             poolclass=__import__("sqlalchemy.pool", fromlist=["StaticPool"]).StaticPool,
             connect_args={"check_same_thread": False},
         )
-    return create_engine(url, pool_pre_ping=True)
+    # PostgreSQL / MySQL — production-ready pooling.
+    return create_engine(
+        url,
+        pool_size=20,
+        max_overflow=10,
+        pool_pre_ping=True,
+        pool_recycle=3600,
+        connect_args={"connect_timeout": 10},
+    )
 
 
 def get_engine() -> Engine:
