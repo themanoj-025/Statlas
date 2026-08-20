@@ -242,8 +242,20 @@ class VerifyEmailConfirmBody(BaseModel):
 
 @router.post("/auth/verify-email/request")
 def verify_email_request(request: Request, body: VerifyEmailRequestBody | None = None):
-    """Request email verification for the signed-in user."""
+    """Request email verification for the signed-in user.
+    Rate-limited to 5 per user per hour to prevent email spam."""
+    from app.rate_limiting import get_rate_limiter
+
     user = _require_user(request)
+    limiter = get_rate_limiter()
+    if limiter.is_limited(
+        f"verify_email:{user.id}", max_attempts=5, window_seconds=3600
+    ):
+        raise HTTPException(
+            status_code=429,
+            detail="Too many verification requests. Please try again in 1 hour.",
+            headers={"Retry-After": "3600"},
+        )
     with session_scope() as db:
         token = auth.create_email_verification_token(db, user.id)
         logger.info("Email verification token for %s: %s", user.email, token)
@@ -319,8 +331,20 @@ def update_profile(request: Request, body: ProfileUpdateBody):
 
 @router.post("/auth/change-password")
 def change_password(request: Request, body: ChangePasswordBody, response: Response):
-    """Change password for the signed-in user. Revokes all other sessions."""
+    """Change password for the signed-in user. Revokes all other sessions.
+    Rate-limited to 5 attempts per 10 minutes to prevent brute force."""
+    from app.rate_limiting import get_rate_limiter
+
     user = _require_user(request)
+    limiter = get_rate_limiter()
+    if limiter.is_limited(
+        f"change_password:{user.id}", max_attempts=5, window_seconds=600
+    ):
+        raise HTTPException(
+            status_code=429,
+            detail="Too many password change attempts. Please try again later.",
+            headers={"Retry-After": "600"},
+        )
     with session_scope() as db:
         db_user = db.get(User, user.id)
         if not auth.verify_password(body.current_password, db_user.password_hash):

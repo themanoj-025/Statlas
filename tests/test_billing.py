@@ -518,3 +518,60 @@ def test_register_rate_limit_error_message(client):
     assert body["error"]["code"] == "http_429"
     assert isinstance(body["error"]["message"], str)
     assert len(body["error"]["message"]) > 0
+
+
+# ---------------------------------------------------------------------------
+# Change-password rate limiting (5 per user per 10 min)
+# ---------------------------------------------------------------------------
+
+
+def test_change_password_rate_limit(client):
+    """Change password endpoint should be rate-limited after 5 attempts."""
+    register_user(client)
+
+    # 5 failed attempts (wrong current password) should all return 400
+    for i in range(5):
+        resp = client.post(
+            "/api/v1/auth/change-password",
+            json={"current_password": "wrongpass", "new_password": "NewPass123"},
+        )
+        assert resp.status_code == 400
+
+    # 6th attempt should be rate-limited (429)
+    resp = client.post(
+        "/api/v1/auth/change-password",
+        json={"current_password": "wrongpass", "new_password": "NewPass123"},
+    )
+    assert resp.status_code == 429
+    assert resp.json()["error"]["code"] == "http_429"
+
+
+def test_change_password_succeeds_under_limit(client):
+    """Successful password change within rate limit should work."""
+    register_user(client)
+    resp = client.post(
+        "/api/v1/auth/change-password",
+        json={"current_password": "Hunter2hunter", "new_password": "NewPass123"},
+    )
+    assert resp.status_code == 200
+    assert "Password changed" in resp.json()["detail"]
+
+
+# ---------------------------------------------------------------------------
+# Verify-email rate limiting (5 per user per hour)
+# ---------------------------------------------------------------------------
+
+
+def test_verify_email_rate_limit(client):
+    """Verify email endpoint should be rate-limited after 5 requests."""
+    register_user(client)
+    body = {"email": "scout@example.com"}
+
+    for i in range(5):
+        resp = client.post("/api/v1/auth/verify-email/request", json=body)
+        assert resp.status_code == 200
+
+    # 6th request should be rate-limited
+    resp = client.post("/api/v1/auth/verify-email/request", json=body)
+    assert resp.status_code == 429
+    assert resp.json()["error"]["code"] == "http_429"
