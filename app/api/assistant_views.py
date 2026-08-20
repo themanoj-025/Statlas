@@ -12,7 +12,7 @@ POST /api/v1/assistant/chat — the grounded function-calling assistant.
 from __future__ import annotations
 
 import logging
-import time
+
 from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel, Field
 

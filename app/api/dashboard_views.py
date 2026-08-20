@@ -7,6 +7,8 @@ queries/dashboard_queries.py and activity.py.
 
 from __future__ import annotations
 
+import logging
+
 from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel
 
@@ -14,6 +16,8 @@ from app.activity import log_activity
 from app.api.deps import require_user
 from app.db import session_scope
 from app.queries import dashboard_queries as dq
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/v1/dashboard", tags=["dashboard"])
 
@@ -114,8 +118,8 @@ def dashboard_summary(request: Request):
                     ):
                         transfer_opportunities.append(gem)
                         seen_player_ids.add(gem["player_id"])
-        except Exception:
-            pass  # Transfer data may not exist yet — non-critical
+        except Exception as exc:
+            logger.debug("Transfer data unavailable for dashboard: %s", exc)
 
     return {
         "recent_activity": recent,
