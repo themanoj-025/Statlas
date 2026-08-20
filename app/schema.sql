@@ -856,3 +856,96 @@ ALTER TABLE watches ADD COLUMN IF NOT EXISTS visibility resource_visibility NOT 
 ALTER TABLE watches ADD COLUMN IF NOT EXISTS created_by_user_id INTEGER REFERENCES users(id);
 
 COMMIT;
+
+-- ===========================================================================
+-- Phase 18 — Internal Usage Analytics
+-- ===========================================================================
+-- Constitution §3: all data is append-only, versioned by timestamp.
+-- Constitution §6: no fabricated numbers — events are real, metrics derived.
+-- Part E3: raw events retained 90 days, aggregated metrics retained 3 years.
+
+CREATE TABLE analytics_events (
+    id                SERIAL PRIMARY KEY,
+    user_id           INTEGER REFERENCES users(id),
+    session_id        VARCHAR(64),
+    event_name        VARCHAR(64) NOT NULL,
+    event_properties  JSONB NOT NULL DEFAULT '{}',
+    created_at        TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+CREATE INDEX ix_analytics_event_name_time ON analytics_events (event_name, created_at);
+CREATE INDEX ix_analytics_event_user ON analytics_events (user_id, created_at);
+CREATE INDEX ix_analytics_event_session ON analytics_events (session_id, created_at);
+
+CREATE TABLE analytics_sessions (
+    id                SERIAL PRIMARY KEY,
+    session_id        VARCHAR(64) NOT NULL UNIQUE,
+    user_id           INTEGER REFERENCES users(id),
+    started_at        TIMESTAMPTZ NOT NULL,
+    ended_at          TIMESTAMPTZ,
+    duration_seconds  INTEGER,
+    event_count       INTEGER NOT NULL DEFAULT 0,
+    events_json       JSONB NOT NULL DEFAULT '{}',
+    device_type       VARCHAR(16),
+    browser           VARCHAR(32),
+    os                VARCHAR(32)
+);
+CREATE INDEX ix_session_user_time ON analytics_sessions (user_id, started_at);
+
+CREATE TABLE daily_metrics (
+    id                SERIAL PRIMARY KEY,
+    metric_date       TIMESTAMPTZ NOT NULL,
+    metric_name       VARCHAR(64) NOT NULL,
+    tier              VARCHAR(32),
+    value             DOUBLE PRECISION NOT NULL,
+    computed_at       TIMESTAMPTZ NOT NULL DEFAULT now(),
+    UNIQUE (metric_date, metric_name, tier)
+);
+CREATE INDEX ix_daily_metric_name_date ON daily_metrics (metric_name, metric_date);
+
+CREATE TABLE feature_usage (
+    id                      SERIAL PRIMARY KEY,
+    usage_date              TIMESTAMPTZ NOT NULL,
+    feature_name            VARCHAR(64) NOT NULL,
+    adoption_count          INTEGER NOT NULL DEFAULT 0,
+    adoption_pct            DOUBLE PRECISION NOT NULL DEFAULT 0,
+    avg_engagement_minutes  DOUBLE PRECISION NOT NULL DEFAULT 0,
+    actions_count           INTEGER NOT NULL DEFAULT 0,
+    computed_at             TIMESTAMPTZ NOT NULL DEFAULT now(),
+    UNIQUE (usage_date, feature_name)
+);
+CREATE INDEX ix_feature_usage_date ON feature_usage (usage_date);
+
+CREATE TABLE cohort_retention (
+    id                      SERIAL PRIMARY KEY,
+    cohort_month            TIMESTAMPTZ NOT NULL,
+    months_since_signup     INTEGER NOT NULL,
+    cohort_size             INTEGER NOT NULL,
+    retained_count          INTEGER NOT NULL,
+    retention_pct           DOUBLE PRECISION NOT NULL,
+    computed_at             TIMESTAMPTZ NOT NULL DEFAULT now(),
+    UNIQUE (cohort_month, months_since_signup)
+);
+CREATE INDEX ix_cohort_retention_month ON cohort_retention (cohort_month);
+
+CREATE TABLE analytics_alerts (
+    id                SERIAL PRIMARY KEY,
+    alert_name        VARCHAR(64) NOT NULL,
+    metric_name       VARCHAR(64) NOT NULL,
+    threshold_type    VARCHAR(32) NOT NULL,
+    threshold_value   DOUBLE PRECISION NOT NULL,
+    actual_value      DOUBLE PRECISION NOT NULL,
+    message           TEXT NOT NULL,
+    fired_at          TIMESTAMPTZ NOT NULL DEFAULT now(),
+    acknowledged_at   TIMESTAMPTZ
+);
+CREATE INDEX ix_alert_fired ON analytics_alerts (fired_at);
+CREATE INDEX ix_alert_name ON analytics_alerts (alert_name);
+
+CREATE TABLE analytics_access_log (
+    id                SERIAL PRIMARY KEY,
+    user_id           INTEGER NOT NULL REFERENCES users(id),
+    dashboard_name    VARCHAR(64) NOT NULL,
+    query_params      JSONB,
+    accessed_at       TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+CREATE INDEX ix_access_log_user ON analytics_access_log (user_id, accessed_at);
