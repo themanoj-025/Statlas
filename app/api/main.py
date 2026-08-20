@@ -151,7 +151,24 @@ class ErrorDetail(BaseModel):
 
 @app.exception_handler(ValueError)
 async def value_error_handler(_, exc: ValueError):
-    return JSONResponse(status_code=400, content={"detail": str(exc)})
+    return JSONResponse(
+        status_code=400,
+        content={"error": {"code": "validation_error", "message": str(exc)}},
+    )
+
+
+@app.exception_handler(HTTPException)
+async def http_exception_handler(request: Request, exc: HTTPException):
+    """Standardized error envelope for all HTTP exceptions."""
+    return JSONResponse(
+        status_code=exc.status_code,
+        content={
+            "error": {
+                "code": f"http_{exc.status_code}",
+                "message": exc.detail,
+            }
+        },
+    )
 
 
 def _with_session(fn: Callable[[Any], Any], *args: Any, **kwargs: Any) -> Any:
@@ -293,6 +310,8 @@ def leaderboard(
         raise HTTPException(status_code=400, detail=f"unknown tier '{tier}'")
     if sort_by not in {"value", "minutes", "name", "club"}:
         raise HTTPException(status_code=400, detail=f"unknown sort_by '{sort_by}'")
+    if sort_dir is not None and sort_dir.lower() not in {"asc", "desc"}:
+        raise HTTPException(status_code=400, detail=f"sort_dir must be 'asc' or 'desc', got '{sort_dir}'")
 
     with session_scope() as db:
         return get_leaderboard_filtered(
