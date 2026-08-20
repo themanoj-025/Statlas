@@ -322,43 +322,43 @@ def consume_email_verification_token(db: Session, raw_token: str) -> int | None:
 
 # ---------------------------------------------------------------------------
 # Login rate limiting (Phase 12 — Part C2)
+# Uses RedisRateLimiter when Redis is available, falls back to in-memory.
 # ---------------------------------------------------------------------------
 
-_LOGIN_FAILURES: dict[str, list[datetime]] = {}  # email -> [attempt_times]
 LOGIN_MAX_FAILURES = 5
-LOGIN_WINDOW_MINUTES = 10
-LOGIN_LOCKOUT_MINUTES = 15
-
-
-def _clean_failures(email: str) -> None:
-    """Remove failures older than the window."""
-    cutoff = datetime.now(timezone.utc) - timedelta(minutes=LOGIN_WINDOW_MINUTES)
-    _LOGIN_FAILURES[email] = [t for t in _LOGIN_FAILURES.get(email, []) if t > cutoff]
+LOGIN_WINDOW_SECONDS = 10 * 60  # 10 minutes
+LOGIN_LOCKOUT_SECONDS = 15 * 60  # 15 minutes
 
 
 def record_login_failure(email: str) -> None:
-    """Record a failed login attempt."""
-    _LOGIN_FAILURES.setdefault(email, []).append(datetime.now(timezone.utc))
+    """Record a failed login attempt via the rate limiter."""
+    from app.rate_limiting import get_rate_limiter
+
+    limiter = get_rate_limiter()
+    limiter.is_limited(
+        f"login:{email}",
+        max_attempts=LOGIN_MAX_FAILURES,
+        window_seconds=LOGIN_WINDOW_SECONDS,
+    )
 
 
 def clear_login_failures(email: str) -> None:
     """Clear failures on successful login."""
-    _LOGIN_FAILURES.pop(email, None)
+    from app.rate_limiting import get_rate_limiter
+
+    limiter = get_rate_limiter()
+    limiter.reset(f"login:{email}")
 
 
 def is_login_locked(email: str) -> tuple[bool, int]:
     """Check if an account is locked out. Returns (locked, retry_after_seconds)."""
-    _clean_failures(email)
-    failures = _LOGIN_FAILURES.get(email, [])
-    if len(failures) < LOGIN_MAX_FAILURES:
-        return False, 0
-    # Lockout until the oldest failure in the window + lockout period
-    oldest = min(failures)
-    unlock_at = oldest + timedelta(minutes=LOGIN_LOCKOUT_MINUTES)
-    now = datetime.now(timezone.utc)
-    if now < unlock_at:
-        retry_after = int((unlock_at - now).total_seconds())
-        return True, max(retry_after, 1)
-    # Lockout expired — clear and allow
-    _LOGIN_FAILURES.pop(email, None)
+    from app.rate_limiting import get_rate_limiter
+
+    limiter = get_rate_limiter()
+    if limiter.is_limited(
+        f"login:{email}",
+        max_attempts=LOGIN_MAX_FAILURES,
+        window_seconds=LOGIN_WINDOW_SECONDS,
+    ):
+        return True, LOGIN_LOCKOUT_SECONDS
     return False, 0

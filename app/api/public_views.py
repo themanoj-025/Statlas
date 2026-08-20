@@ -14,7 +14,6 @@ from __future__ import annotations
 
 import logging
 import time
-from collections import defaultdict
 from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
@@ -30,9 +29,8 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/v1", tags=["public-api"])
 
-# In-memory sliding window: key_hash -> list of monotonic timestamps.
+# Rate limiter — uses Redis when available, falls back to in-memory.
 _WINDOW = 60
-_hits: defaultdict[str, list[float]] = defaultdict(list)
 
 
 # ---------------------------------------------------------------------------
@@ -100,6 +98,8 @@ def rotate_key(key_id: int, body: KeyRotateBody | None = None, request: Request 
 
 
 def _check_rate_limit(key_hash: str, plan: str) -> dict:
+    from app.rate_limiting import get_rate_limiter
+
     limits = api_keys.api_rate_limit_for_plan(plan)
     rpm = limits["per_minute"]
     if rpm <= 0:
@@ -107,16 +107,14 @@ def _check_rate_limit(key_hash: str, plan: str) -> dict:
             status_code=403,
             detail="The public API is not included in your current plan. Upgrade to the API Business tier to use it.",
         )
-    now = time.monotonic()
-    window = [t for t in _hits[key_hash] if now - t < _WINDOW]
-    if len(window) >= rpm:
+    limiter = get_rate_limiter()
+    if limiter.is_limited(f"apikey:{key_hash}", max_attempts=rpm, window_seconds=_WINDOW):
         raise HTTPException(
             status_code=429,
             detail=f"Rate limit exceeded — {rpm} requests/minute allowed on your plan. Retry shortly.",
         )
-    window.append(now)
-    _hits[key_hash] = window
-    return {"remaining": max(0, rpm - len(window)), "limit": rpm}
+    remaining = limiter.get_remaining(f"apikey:{key_hash}", max_attempts=rpm)
+    return {"remaining": remaining, "limit": rpm}
 
 
 def api_key_dependency(request: Request) -> tuple[User, str]:

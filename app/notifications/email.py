@@ -24,6 +24,7 @@ import hashlib
 import hmac
 import logging
 from dataclasses import dataclass
+from html import escape as html_escape
 from typing import Any, Callable
 
 from app.config import get_settings
@@ -226,7 +227,7 @@ def _pct(value: float | None) -> str:
 
 def alert_email_content(alert_type: str, detail: dict[str, Any]) -> tuple[str, str]:
     """(subject, html-body) for a single alert, written from real detail data."""
-    name = detail.get("entity_name") or "Player"
+    name = html_escape(detail.get("entity_name") or "Player")
     if alert_type == "percentile_movement":
         metric = _metric_label(detail.get("metric", ""))
         subject = (
@@ -248,8 +249,8 @@ def alert_email_content(alert_type: str, detail: dict[str, Any]) -> tuple[str, s
             f"</td></tr>"
         )
     elif alert_type == "club_change":
-        from_team = detail.get("from_team") or "unknown club"
-        to_team = detail.get("to_team") or "unknown club"
+        from_team = html_escape(detail.get("from_team") or "unknown club")
+        to_team = html_escape(detail.get("to_team") or "unknown club")
         subject = f"{name} has joined {to_team}"
         body = (
             f'<tr><td style="padding:28px 32px;">'

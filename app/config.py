@@ -153,6 +153,21 @@ class Settings:
         # Secure flag only on https deployments (statlas production); plain
         # http dev/test must keep the cookie usable.
         self.session_cookie_secure = env_bool("STATLAS_COOKIE_SECURE", False)
+        # --- CORS Configuration -------------------------------------------------
+        raw_origins = env("ALLOWED_ORIGINS", "")
+        if raw_origins:
+            self.allowed_origins = [
+                o.strip() for o in raw_origins.split(",") if o.strip()
+            ]
+        else:
+            self.allowed_origins = [
+                "http://localhost:3000",
+                "http://127.0.0.1:3000",
+            ]
+        # --- Redis (production rate limiting / caching) --------------------------
+        self.redis_url = env("REDIS_URL", "redis://localhost:6379/0")
+        # --- Security headers ---------------------------------------------------
+        self.csp_report_uri = env("CSP_REPORT_URI", "")
 
 
 _settings: Settings | None = None

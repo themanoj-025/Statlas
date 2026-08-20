@@ -21,8 +21,8 @@ services:
     volumes:
       - pgdata:/var/lib/postgresql/data
       # Canonical DDL (app/schema.sql) is applied by the postgres image's initdb
-      # mechanism — but only on a FRESH volume. Schema changes after first boot
-      # need `docker compose down -v` + up (or a real migration tool).
+      # mechanism — but only on a FRESH volume. After first boot, use Alembic:
+      #   docker compose exec api alembic upgrade head
       - ./app/schema.sql:/docker-entrypoint-initdb.d/001-schema.sql:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-statlas} -d ${POSTGRES_DB:-statlas}"]
@@ -31,14 +31,29 @@ services:
       retries: 12
     restart: unless-stopped
 
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    restart: unless-stopped
+
   api:
     build: .
     environment:
       DATABASE_URL: postgresql+psycopg2://${POSTGRES_USER:-statlas}:${POSTGRES_PASSWORD:-statlas_dev_password}@db:5432/${POSTGRES_DB:-statlas}
+      REDIS_URL: redis://redis:6379/0
       STATLAS_DATASET_MODE: ${STATLAS_DATASET_MODE:-fixture-demo}
       STATLAS_LOG_LEVEL: ${STATLAS_LOG_LEVEL:-INFO}
+      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-http://localhost:3000}
     depends_on:
       db:
+        condition: service_healthy
+      redis:
         condition: service_healthy
     ports:
       - "8000:8000"

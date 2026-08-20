@@ -53,17 +53,16 @@ app = FastAPI(
     description="Versioned internal API for the Statlas frontend (Phase 2).",
 )
 
+_settings = get_settings()
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:3000",
-        "http://127.0.0.1:3000",
-    ],
+    allow_origins=_settings.allowed_origins,
     # Phase 4: auth uses cookie sessions, so credentialed requests are allowed
     # from the web app origin (billing POST routes included).
     allow_credentials=True,
-    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allow_headers=["*"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+    allow_headers=["Content-Type", "Authorization", "X-CSRF-Token"],
+    max_age=86400,  # Cache preflight for 24 hours
 )
 
 app.include_router(billing_router)
@@ -83,18 +82,63 @@ app.include_router(comment_router)
 app.include_router(analytics_router)
 
 
+# --- Startup: configure structured logging ---
+@app.on_event("startup")
+def _setup_logging():
+    from app.logging_setup import setup_logging
+
+    setup_logging(level=_settings.log_level)
+
+
 @app.middleware("http")
-async def attach_api_rate_limit_headers(request: Request, call_next):
-    """Attach X-RateLimit-* headers to public-API responses (Part C1).
+async def security_and_rate_limit_middleware(request: Request, call_next):
+    """1. Attach X-RateLimit-* headers to public-API responses (Part C1).
+    2. Add security headers to every response.
     The public views set request.state.rate_limit during auth; this applies
     the headers on the way out."""
+    import uuid
+
+    # Generate request ID for tracing + structured logging
+    from app.logging_setup import new_request_id
+
+    req_id = new_request_id()
+    request.state.request_id = req_id
+
     response = await call_next(request)
+
+    # --- Rate limit headers ---
     try:
         from app.api.public_views import apply_rate_limit_headers
 
         apply_rate_limit_headers(response, request)
     except Exception:  # header decoration must never break a response
         pass
+
+    # --- Security headers ---
+    response.headers["X-Request-ID"] = req_id
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["X-Frame-Options"] = "DENY"
+    response.headers["X-XSS-Protection"] = "1; mode=block"
+    response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+    response.headers["Permissions-Policy"] = (
+        "geolocation=(), microphone=(), camera=()"
+    )
+    # Content-Security-Policy
+    csp_parts = [
+        "default-src 'self'",
+        "script-src 'self'",
+        "style-src 'self' 'unsafe-inline'",
+        "img-src 'self' data: https:",
+        "font-src 'self'",
+        "connect-src 'self' https://api.resend.com",
+        "frame-ancestors 'none'",
+        "base-uri 'self'",
+        "form-action 'self'",
+    ]
+    if _settings.csp_report_uri:
+        csp_parts.append(f"report-uri {_settings.csp_report_uri}")
+    response.headers["Content-Security-Policy"] = "; ".join(csp_parts)
+
     return response
 
 
@@ -123,12 +167,36 @@ def _with_session(fn: Callable[[Any], Any], *args: Any, **kwargs: Any) -> Any:
 
 @app.get("/api/v1/health")
 def health():
+    """Health check that verifies database connectivity."""
     settings = get_settings()
+    db_status = "healthy"
+    try:
+        from sqlalchemy import text
+
+        with session_scope() as db:
+            db.execute(text("SELECT 1"))
+    except Exception as exc:
+        db_status = f"unhealthy: {exc}"
+
     return {
-        "status": "ok",
+        "status": "ok" if db_status == "healthy" else "degraded",
+        "database": db_status,
         "api_version": "1.0.0",
         "dataset_mode": settings.dataset_mode,
     }
+
+
+@app.get("/api/v1/readiness")
+def readiness():
+    """Readiness check — returns 503 if not ready to serve traffic."""
+    try:
+        from sqlalchemy import text
+
+        with session_scope() as db:
+            db.execute(text("SELECT 1"))
+        return {"ready": True}
+    except Exception as exc:
+        raise HTTPException(status_code=503, detail=f"Database unavailable: {exc}")
 
 
 @app.get("/api/v1/meta")
