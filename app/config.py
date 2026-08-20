@@ -18,6 +18,10 @@ from typing import Any
 PROJECT_ROOT = Path(__file__).resolve().parent
 CONFIG_DIR = PROJECT_ROOT / "config"
 
+# The current season string — single source of truth. Every endpoint, query,
+# and test references this instead of hardcoding "2025-26".
+CURRENT_SEASON = "2025-26"
+
 DEFAULT_USER_AGENT = (
     "StatlasAnalytics/0.1 (public football analytics; contact: data@statlas.com)"
 )

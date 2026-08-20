@@ -30,7 +30,7 @@ from typing import Any
 
 from sqlalchemy.orm import Session
 
-from app.config import get_settings, load_registry, plan_limits
+from app.config import CURRENT_SEASON, get_settings, load_registry, plan_limits
 from app.db import session_scope
 from app.models import AssistantQuota, User
 from app.queries import (
@@ -116,14 +116,14 @@ def tool_get_leaderboard(
             league_slug=league,
             position_group=position or "CM",
             metric=metric,
-            season="2025-26",
+            season=CURRENT_SEASON,
         )
     else:
         # No league filter — use the filtered leaderboard with no league constraint
         rows_data = leaderboard_queries.get_leaderboard_filtered(
             db,
             metric=metric,
-            season="2025-26",
+            season=CURRENT_SEASON,
             position_group=position,
             limit=limit,
         )
@@ -412,6 +412,12 @@ def _execute_tool(
 
 
 def _serialize(result: dict[str, Any]) -> str:
+    """Serialize a tool result for the Anthropic API. Truncates at 12000 chars
+    to stay within context limits, but adds a note when truncated so the model
+    knows data was cut."""
     import json
 
-    return json.dumps(result, default=str)[:12000]
+    raw = json.dumps(result, default=str)
+    if len(raw) <= 12000:
+        return raw
+    return raw[:12000] + "\n... [truncated — full data has " + str(len(raw)) + " chars]"

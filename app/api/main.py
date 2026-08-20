@@ -25,6 +25,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 
+from contextlib import asynccontextmanager
+
 from app import auth
 from app.api.analytics_views import router as analytics_router
 from app.api.archetype_views import router as archetype_router
@@ -42,15 +44,25 @@ from app.api.tactical_views import router as tactical_router
 from app.api.transfer_views import router as transfer_router
 from app.api.watch_views import router as watch_router
 from app.api.workspace_views import router as workspace_router
-from app.config import get_settings, load_registry
+from app.config import CURRENT_SEASON, get_settings, load_registry
 from app.db import session_scope
 
 logger = logging.getLogger(__name__)
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Application lifespan — configure logging on startup."""
+    from app.logging_setup import setup_logging
+
+    setup_logging(level=_settings.log_level)
+    yield
+
 
 app = FastAPI(
     title="Statlas API",
     version="1.0.0",
     description="Versioned internal API for the Statlas frontend (Phase 2).",
+    lifespan=lifespan,
 )
 
 _settings = get_settings()
@@ -80,14 +92,6 @@ app.include_router(tactical_router)
 app.include_router(org_router)
 app.include_router(comment_router)
 app.include_router(analytics_router)
-
-
-# --- Startup: configure structured logging ---
-@app.on_event("startup")
-def _setup_logging():
-    from app.logging_setup import setup_logging
-
-    setup_logging(level=_settings.log_level)
 
 
 @app.middleware("http")
@@ -143,10 +147,6 @@ async def security_and_rate_limit_middleware(request: Request, call_next):
 
 
 VALID_POSITIONS = {"GK", "CB", "FB", "DM", "CM", "AM", "W", "ST"}
-
-
-class ErrorDetail(BaseModel):
-    detail: str
 
 
 @app.exception_handler(ValueError)
@@ -288,7 +288,7 @@ def league_stats(
 @app.get("/api/v1/leaderboard")
 def leaderboard(
     metric: str = Query("si_index"),
-    season: str = "2025-26",
+    season: str = CURRENT_SEASON,
     league: str | None = Query(
         None, description="league slug (omitting = whole tier/all)"
     ),
@@ -524,23 +524,15 @@ def coverage(league_id: int | None = None):
 @app.get("/api/v1/positions")
 def positions():
     meta = public_meta()
-    from app.queries.leaderboard_queries import get_leaderboard_filtered
+    from app.queries.leaderboard_queries import get_qualifying_counts
 
     with session_scope() as db:
+        counts_by_group = get_qualifying_counts(
+            db, metric=meta["index_metric_id"], season=CURRENT_SEASON,
+        )
         out = []
         for group in meta["position_groups"]:
-            counts = {}
-            for tier in ("tier_1", "tier_2", "tier_3"):
-                res = get_leaderboard_filtered(
-                    db,
-                    metric=meta["index_metric_id"],
-                    season="2025-26",
-                    tier=tier,
-                    position_group=group["code"],
-                    limit=1,
-                )
-                counts[tier] = res["total"]
-            out.append({**group, "qualifying_counts": counts})
+            out.append({**group, "qualifying_counts": counts_by_group.get(group["code"], {})})
         return out
 
 
