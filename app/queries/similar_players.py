@@ -131,7 +131,9 @@ def _explain_from_components(
     (similarity, shared, contributions) once per candidate and hands the
     intermediates here — no second computation, no re-query.
     """
-    metric_ids = registry["gk_metrics"] if group == "GK" else registry["outfield_metrics"]
+    metric_ids = (
+        registry["gk_metrics"] if group == "GK" else registry["outfield_metrics"]
+    )
     names = registry["metrics"]
     shared = [m for m in metric_ids if m in anchor and m in candidate]
 
@@ -169,9 +171,7 @@ def _explain_from_components(
                     "stronger_player": "player_a" if gap > 0 else "player_b",
                 }
             )
-    key_differences.sort(
-        key=lambda item: (-item["difference"], item["metric"])
-    )
+    key_differences.sort(key=lambda item: (-item["difference"], item["metric"]))
     key_differences = key_differences[:MAX_EXPLAINED_ITEMS]
 
     return {

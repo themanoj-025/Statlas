@@ -83,6 +83,7 @@ def assign_width(y: float) -> str:
 # C2 — Pressure/defensive action heatmap
 # ---------------------------------------------------------------------------
 
+
 def compute_pressure_heatmap(
     db: Session,
     match_id: str,
@@ -105,7 +106,9 @@ def compute_pressure_heatmap(
     events = query.all()
 
     zone_counts: dict[str, int] = defaultdict(int)
-    player_zone_counts: dict[int, dict[str, int]] = defaultdict(lambda: defaultdict(int))
+    player_zone_counts: dict[int, dict[str, int]] = defaultdict(
+        lambda: defaultdict(int)
+    )
     total = 0
 
     for ev in events:
@@ -144,6 +147,7 @@ def compute_pressure_heatmap(
 # C3 — Possession density map
 # ---------------------------------------------------------------------------
 
+
 def compute_possession_heatmap(
     db: Session,
     match_id: str,
@@ -166,7 +170,9 @@ def compute_possession_heatmap(
     events = query.all()
 
     zone_counts: dict[str, int] = defaultdict(int)
-    player_zone_counts: dict[int, dict[str, int]] = defaultdict(lambda: defaultdict(int))
+    player_zone_counts: dict[int, dict[str, int]] = defaultdict(
+        lambda: defaultdict(int)
+    )
     total = 0
 
     for ev in events:
@@ -204,6 +210,7 @@ def compute_possession_heatmap(
 # C4 — Pressure success rate per zone
 # ---------------------------------------------------------------------------
 
+
 def compute_pressure_success(
     db: Session,
     match_id: str,
@@ -226,10 +233,9 @@ def compute_pressure_success(
 
     if team_player_ids is None:
         # Infer team from event player_ids
-        team_player_ids = list({
-            ev.player_id for ev in all_events
-            if ev.player_id is not None
-        })
+        team_player_ids = list(
+            {ev.player_id for ev in all_events if ev.player_id is not None}
+        )
 
     team_set = set(team_player_ids)
     defensive_types = {"Tackle", "Interception", "Pressure", "Block"}
@@ -237,7 +243,9 @@ def compute_pressure_success(
     # Track events for success determination
     event_list = [(ev, ev.player_id, ev.event_type) for ev in all_events]
 
-    zone_success: dict[str, dict[str, int]] = defaultdict(lambda: {"success": 0, "total": 0})
+    zone_success: dict[str, dict[str, int]] = defaultdict(
+        lambda: {"success": 0, "total": 0}
+    )
 
     for idx, (ev, player_id, event_type) in enumerate(event_list):
         if event_type not in defensive_types:
@@ -289,6 +297,7 @@ def compute_pressure_success(
 # Utility — get match coverage check for tactical data
 # ---------------------------------------------------------------------------
 
+
 def has_tactical_data(
     db: Session,
     match_id: str,
@@ -303,11 +312,7 @@ def has_tactical_data(
         message: str
     """
 
-    event_count = (
-        db.query(MatchEvent)
-        .filter(MatchEvent.match_id == match_id)
-        .count()
-    )
+    event_count = db.query(MatchEvent).filter(MatchEvent.match_id == match_id).count()
 
     if event_count < min_events:
         return {

@@ -52,24 +52,41 @@ TIER_ENUM = Enum("tier_1", "tier_2", "tier_3", name="league_tier")
 QUEUE_STATUS_ENUM = Enum("pending", "resolved", "ignored", name="queue_status")
 # Phase 15 — Transfer Intelligence & Market Data
 MARKET_SOURCE_ENUM = Enum(
-    "transfermarkt", "understat_transfer", "instat", "manual",
+    "transfermarkt",
+    "understat_transfer",
+    "instat",
+    "manual",
     name="market_source",
 )
 TRANSFER_TYPE_ENUM = Enum(
-    "permanent", "loan", "free_agent", name="transfer_type",
+    "permanent",
+    "loan",
+    "free_agent",
+    name="transfer_type",
 )
 TRANSFER_STATUS_ENUM = Enum(
-    "confirmed", "reported", name="transfer_status",
+    "confirmed",
+    "reported",
+    name="transfer_status",
 )
 CONTRACT_STATUS_ENUM = Enum(
-    "active", "expiring_next_season", "expired", "on_loan",
+    "active",
+    "expiring_next_season",
+    "expired",
+    "on_loan",
     name="contract_status",
 )
 VALUATION_CONFIDENCE_ENUM = Enum(
-    "high", "medium", "low", name="valuation_confidence",
+    "high",
+    "medium",
+    "low",
+    name="valuation_confidence",
 )
 RISK_TIER_ENUM = Enum(
-    "low", "medium", "high", name="risk_tier",
+    "low",
+    "medium",
+    "high",
+    name="risk_tier",
 )
 SUBSCRIPTION_STATUS_ENUM = Enum(
     "active",
@@ -103,8 +120,6 @@ ALERT_TYPE_ENUM = Enum(
     name="alert_type",
 )
 DIGEST_FREQUENCY_ENUM = Enum(
-
-
     "immediate", "daily_digest", "weekly_digest", name="digest_frequency"
 )
 
@@ -438,7 +453,9 @@ class User(Base):
         DateTime(timezone=True), nullable=False, server_default=func.now()
     )
     updated_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), nullable=False, server_default=func.now(),
+        DateTime(timezone=True),
+        nullable=False,
+        server_default=func.now(),
         onupdate=func.now(),
     )
 
@@ -500,9 +517,7 @@ class PasswordResetToken(Base):
         DateTime(timezone=True), nullable=True
     )
 
-    __table_args__ = (
-        Index("ix_password_reset_user", "user_id"),
-    )
+    __table_args__ = (Index("ix_password_reset_user", "user_id"),)
 
 
 class EmailVerificationToken(Base):
@@ -523,9 +538,7 @@ class EmailVerificationToken(Base):
         DateTime(timezone=True), nullable=True
     )
 
-    __table_args__ = (
-        Index("ix_email_verification_user", "user_id"),
-    )
+    __table_args__ = (Index("ix_email_verification_user", "user_id"),)
 
 
 class Subscription(Base):
@@ -641,7 +654,9 @@ class WebhookEvent(Base):
 
 # Phase 16 enums (used by Shortlist, SavedSearch, Report, Watch org columns)
 ORG_ROLE_ENUM = Enum("owner", "manager", "scout", "viewer", name="org_role")
-VISIBILITY_ENUM = Enum("personal", "org_members", "restricted", name="resource_visibility")
+VISIBILITY_ENUM = Enum(
+    "personal", "org_members", "restricted", name="resource_visibility"
+)
 ORG_TIER_ENUM = Enum("free", "pro", "enterprise", name="org_tier")
 
 
@@ -704,9 +719,7 @@ class ShortlistEntry(Base):
     )  # soft delete — audit trail intact
 
     __table_args__ = (
-        UniqueConstraint(
-            "shortlist_id", "player_id", name="uq_shortlist_entry_player"
-        ),
+        UniqueConstraint("shortlist_id", "player_id", name="uq_shortlist_entry_player"),
         Index("ix_entries_shortlist", "shortlist_id"),
         Index("ix_entries_player", "player_id"),
         Index("ix_entries_status", "status"),
@@ -723,9 +736,7 @@ class EntryNote(Base):
     shortlist_entry_id: Mapped[int] = mapped_column(
         ForeignKey("shortlist_entries.id"), nullable=False
     )
-    author_user_id: Mapped[int] = mapped_column(
-        ForeignKey("users.id"), nullable=False
-    )
+    author_user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), nullable=False)
     note_text: Mapped[str] = mapped_column(Text, nullable=False)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=func.now()
@@ -936,9 +947,7 @@ class Watch(Base):
     user: Mapped[User] = relationship(foreign_keys=[user_id])
 
     __table_args__ = (
-        UniqueConstraint(
-            "user_id", "entity_type", "entity_id", name="uq_watch_entity"
-        ),
+        UniqueConstraint("user_id", "entity_type", "entity_id", name="uq_watch_entity"),
         Index("ix_watches_user", "user_id"),
         Index("ix_watches_entity", "entity_type", "entity_id"),
     )
@@ -1038,6 +1047,7 @@ class AssistantQuota(Base):
 # docs/analytics/emerging-player-methodology.md for the full formula.
 # Idempotency: re-running for the same computed_date replaces rows.
 
+
 class EmergingPlayerScore(Base):
     __tablename__ = "emerging_player_scores"
 
@@ -1057,7 +1067,9 @@ class EmergingPlayerScore(Base):
 
     __table_args__ = (
         UniqueConstraint(
-            "player_id", "league_id", "computed_date",
+            "player_id",
+            "league_id",
+            "computed_date",
             name="uq_emerging_player_league_date",
         ),
         Index("ix_emerging_league_date", "league_id", "computed_date"),
@@ -1071,11 +1083,21 @@ class EmergingPlayerScore(Base):
 
 
 ENTITY_TYPE_ENUM_13 = Enum(
-    "player", "team", "search", "shortlist", "report", "watch",
+    "player",
+    "team",
+    "search",
+    "shortlist",
+    "report",
+    "watch",
     name="entity_type_13",
 )
 ACTION_TYPE_ENUM = Enum(
-    "viewed", "created", "edited", "deleted", "shared", "run",
+    "viewed",
+    "created",
+    "edited",
+    "deleted",
+    "shared",
+    "run",
     name="action_type",
 )
 
@@ -1101,7 +1123,10 @@ class ActivityLog(Base):
         Index("ix_activity_user_time", "user_id", "performed_at"),
         Index(
             "ix_activity_entity",
-            "user_id", "entity_type", "entity_id", "performed_at",
+            "user_id",
+            "entity_type",
+            "entity_id",
+            "performed_at",
         ),
     )
 
@@ -1121,9 +1146,7 @@ class DashboardState(Base):
         DateTime(timezone=True), nullable=False, server_default=func.now()
     )
 
-    __table_args__ = (
-        UniqueConstraint("user_id", name="uq_dashboard_state_user"),
-    )
+    __table_args__ = (UniqueConstraint("user_id", name="uq_dashboard_state_user"),)
 
 
 class SavedPlayer(Base):
@@ -1178,18 +1201,26 @@ class ClusteringModel(Base):
     n_clusters: Mapped[int] = mapped_column(Integer, nullable=False)
     training_data_source: Mapped[str] = mapped_column(String(256), nullable=False)
     training_data_size: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
-    training_data_features: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    training_data_features: Mapped[list] = mapped_column(
+        JSON, nullable=False, default=list
+    )
     silhouette_score: Mapped[float | None] = mapped_column(Float, nullable=True)
     davies_bouldin_index: Mapped[float | None] = mapped_column(Float, nullable=True)
-    per_subgroup_scores: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    per_subgroup_scores: Mapped[dict] = mapped_column(
+        JSON, nullable=False, default=dict
+    )
     bias_audit_results: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
     training_code_commit: Mapped[str | None] = mapped_column(String(64), nullable=True)
-    training_date: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    training_date: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
     staleness_months: Mapped[int] = mapped_column(Integer, nullable=False, default=6)
     status: Mapped[str] = mapped_column(
         CLUSTERING_STATUS_ENUM, nullable=False, default="candidate"
     )
-    deployed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    deployed_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
     owner: Mapped[str | None] = mapped_column(String(128), nullable=True)
     known_limitations: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
     rollback_plan: Mapped[str | None] = mapped_column(Text, nullable=True)
@@ -1198,7 +1229,9 @@ class ClusteringModel(Base):
     )
 
     __table_args__ = (
-        UniqueConstraint("model_name", "version", name="uq_clustering_model_name_version"),
+        UniqueConstraint(
+            "model_name", "version", name="uq_clustering_model_name_version"
+        ),
         Index("ix_clustering_model_status", "status"),
     )
 
@@ -1218,7 +1251,9 @@ class ArchetypeDefinition(Base):
     name: Mapped[str] = mapped_column(String(128), nullable=False)
     description: Mapped[str] = mapped_column(Text, nullable=False)
     cluster_center: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
-    distinguishing_features: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    distinguishing_features: Mapped[list] = mapped_column(
+        JSON, nullable=False, default=list
+    )
     example_players: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
     player_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     created_at: Mapped[datetime] = mapped_column(
@@ -1248,11 +1283,15 @@ class ArchetypeAssignment(Base):
     )
     cluster_id: Mapped[int] = mapped_column(Integer, nullable=False)
     distance_to_center: Mapped[float] = mapped_column(Float, nullable=False)
-    top_distinguishing_features: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    top_distinguishing_features: Mapped[list] = mapped_column(
+        JSON, nullable=False, default=list
+    )
     computed_date: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=func.now()
     )
-    snapshot_date: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    snapshot_date: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False
+    )
     is_outlier: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
 
     player: Mapped[Player] = relationship()
@@ -1260,7 +1299,9 @@ class ArchetypeAssignment(Base):
 
     __table_args__ = (
         UniqueConstraint(
-            "player_id", "model_id", "snapshot_date",
+            "player_id",
+            "model_id",
+            "snapshot_date",
             name="uq_archetype_assignment_player_model_date",
         ),
         Index("ix_archetype_assignment_player", "player_id"),
@@ -1281,12 +1322,16 @@ class ClusteringMonitoringLog(Base):
     logged_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=func.now()
     )
-    log_type: Mapped[str] = mapped_column(String(32), nullable=False)  # drift, churn, retrain, alert
+    log_type: Mapped[str] = mapped_column(
+        String(32), nullable=False
+    )  # drift, churn, retrain, alert
     details: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
     metric_name: Mapped[str | None] = mapped_column(String(64), nullable=True)
     metric_value: Mapped[float | None] = mapped_column(Float, nullable=True)
     threshold: Mapped[float | None] = mapped_column(Float, nullable=True)
-    alert_triggered: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    alert_triggered: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, default=False
+    )
 
     model: Mapped["ClusteringModel"] = relationship()
 
@@ -1305,6 +1350,7 @@ class ClusteringMonitoringLog(Base):
 # * Transfer history is real, confirmed data — never fabricated.
 # * Contract status is a snapshot, not live data.
 
+
 class MarketValuation(Base):
     """Market valuation for a player from a specific source.
     Idempotent per (player, source, valuation_date). Historical valuations
@@ -1317,7 +1363,9 @@ class MarketValuation(Base):
     player_id: Mapped[int] = mapped_column(ForeignKey("players.id"), nullable=False)
     source: Mapped[str] = mapped_column(MARKET_SOURCE_ENUM, nullable=False)
     valuation_amount_eur: Mapped[float] = mapped_column(Float, nullable=False)
-    valuation_date: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    valuation_date: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False
+    )
     low_range: Mapped[float | None] = mapped_column(Float, nullable=True)
     high_range: Mapped[float | None] = mapped_column(Float, nullable=True)
     confidence_level: Mapped[str] = mapped_column(
@@ -1332,7 +1380,9 @@ class MarketValuation(Base):
 
     __table_args__ = (
         UniqueConstraint(
-            "player_id", "source", "valuation_date",
+            "player_id",
+            "source",
+            "valuation_date",
             name="uq_market_valuation_player_source_date",
         ),
         Index("ix_market_valuation_player", "player_id", "valuation_date"),
@@ -1352,10 +1402,14 @@ class TransferHistory(Base):
         ForeignKey("teams.id"), nullable=True
     )
     to_team_id: Mapped[int] = mapped_column(ForeignKey("teams.id"), nullable=False)
-    transfer_date: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    transfer_date: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False
+    )
     reported_fee_eur: Mapped[float | None] = mapped_column(Float, nullable=True)
     transfer_type: Mapped[str] = mapped_column(TRANSFER_TYPE_ENUM, nullable=False)
-    status: Mapped[str] = mapped_column(TRANSFER_STATUS_ENUM, nullable=False, default="reported")
+    status: Mapped[str] = mapped_column(
+        TRANSFER_STATUS_ENUM, nullable=False, default="reported"
+    )
     source: Mapped[str] = mapped_column(MARKET_SOURCE_ENUM, nullable=False)
     raw: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
     created_at: Mapped[datetime] = mapped_column(
@@ -1383,13 +1437,19 @@ class ContractStatus(Base):
     current_team_id: Mapped[int | None] = mapped_column(
         ForeignKey("teams.id"), nullable=True
     )
-    contract_end_date: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
-    contract_value_per_year_eur: Mapped[float | None] = mapped_column(Float, nullable=True)
+    contract_end_date: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    contract_value_per_year_eur: Mapped[float | None] = mapped_column(
+        Float, nullable=True
+    )
     contract_status: Mapped[str] = mapped_column(
         CONTRACT_STATUS_ENUM, nullable=False, default="active"
     )
     source: Mapped[str] = mapped_column(MARKET_SOURCE_ENUM, nullable=False)
-    snapshot_date: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    snapshot_date: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False
+    )
     raw: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=func.now()
@@ -1400,7 +1460,9 @@ class ContractStatus(Base):
 
     __table_args__ = (
         UniqueConstraint(
-            "player_id", "source", "snapshot_date",
+            "player_id",
+            "source",
+            "snapshot_date",
             name="uq_contract_status_player_source_date",
         ),
         Index("ix_contract_player", "player_id"),
@@ -1419,7 +1481,9 @@ class ContractStatus(Base):
 # * Audit logging captures all team-structure changes.
 
 ORG_ROLE_ENUM = Enum("owner", "manager", "scout", "viewer", name="org_role")
-VISIBILITY_ENUM = Enum("personal", "org_members", "restricted", name="resource_visibility")
+VISIBILITY_ENUM = Enum(
+    "personal", "org_members", "restricted", name="resource_visibility"
+)
 ORG_TIER_ENUM = Enum("free", "pro", "enterprise", name="org_tier")
 
 
@@ -1438,12 +1502,20 @@ class Organization(Base):
         DateTime(timezone=True), nullable=False, server_default=func.now()
     )
     updated_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), nullable=False, server_default=func.now(),
+        DateTime(timezone=True),
+        nullable=False,
+        server_default=func.now(),
         onupdate=func.now(),
     )
-    plan_expires_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
-    primary_contact_email: Mapped[str | None] = mapped_column(String(320), nullable=True)
-    billing_contact_email: Mapped[str | None] = mapped_column(String(320), nullable=True)
+    plan_expires_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    primary_contact_email: Mapped[str | None] = mapped_column(
+        String(320), nullable=True
+    )
+    billing_contact_email: Mapped[str | None] = mapped_column(
+        String(320), nullable=True
+    )
     country: Mapped[str | None] = mapped_column(String(64), nullable=True)
 
     __table_args__ = (
@@ -1486,23 +1558,33 @@ class OrgSettings(Base):
     org_id: Mapped[int] = mapped_column(
         ForeignKey("organizations.id"), unique=True, nullable=False
     )
-    data_retention_days: Mapped[int] = mapped_column(Integer, nullable=False, default=90)
+    data_retention_days: Mapped[int] = mapped_column(
+        Integer, nullable=False, default=90
+    )
     workspace_name: Mapped[str | None] = mapped_column(String(128), nullable=True)
-    enable_audit_logging: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
-    allow_public_reporting: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    enable_audit_logging: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, default=True
+    )
+    allow_public_reporting: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, default=False
+    )
     require_2fa: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=func.now()
     )
     updated_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), nullable=False, server_default=func.now(),
+        DateTime(timezone=True),
+        nullable=False,
+        server_default=func.now(),
         onupdate=func.now(),
     )
 
     __table_args__ = (Index("ix_org_settings_org", "org_id"),)
 
 
-ORG_INVITE_STATUS_ENUM = Enum("pending", "accepted", "expired", name="org_invite_status")
+ORG_INVITE_STATUS_ENUM = Enum(
+    "pending", "accepted", "expired", name="org_invite_status"
+)
 
 
 class OrgInvite(Base):
@@ -1515,13 +1597,21 @@ class OrgInvite(Base):
     email: Mapped[str] = mapped_column(String(320), nullable=False)
     role: Mapped[str] = mapped_column(ORG_ROLE_ENUM, nullable=False)
     token_hash: Mapped[str] = mapped_column(String(64), nullable=False)
-    invited_by_user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), nullable=False)
-    status: Mapped[str] = mapped_column(ORG_INVITE_STATUS_ENUM, nullable=False, default="pending")
+    invited_by_user_id: Mapped[int] = mapped_column(
+        ForeignKey("users.id"), nullable=False
+    )
+    status: Mapped[str] = mapped_column(
+        ORG_INVITE_STATUS_ENUM, nullable=False, default="pending"
+    )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=func.now()
     )
-    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
-    accepted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    expires_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False
+    )
+    accepted_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
 
     __table_args__ = (
         Index("ix_org_invites_org", "org_id"),
@@ -1530,8 +1620,12 @@ class OrgInvite(Base):
 
 
 AUDIT_ACTION_ENUM = Enum(
-    "user_added", "user_removed", "role_changed",
-    "resource_created", "resource_shared", "resource_deleted",
+    "user_added",
+    "user_removed",
+    "role_changed",
+    "resource_created",
+    "resource_shared",
+    "resource_deleted",
     "comment_added",
     name="audit_action",
 )
@@ -1545,8 +1639,12 @@ class AuditLog(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     org_id: Mapped[int] = mapped_column(ForeignKey("organizations.id"), nullable=False)
     action: Mapped[str] = mapped_column(AUDIT_ACTION_ENUM, nullable=False)
-    performed_by_user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), nullable=False)
-    target_user_id: Mapped[int | None] = mapped_column(ForeignKey("users.id"), nullable=True)
+    performed_by_user_id: Mapped[int] = mapped_column(
+        ForeignKey("users.id"), nullable=False
+    )
+    target_user_id: Mapped[int | None] = mapped_column(
+        ForeignKey("users.id"), nullable=True
+    )
     resource_type: Mapped[str | None] = mapped_column(String(32), nullable=True)
     resource_id: Mapped[int | None] = mapped_column(Integer, nullable=True)
     detail: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
@@ -1577,13 +1675,19 @@ class Comment(Base):
     resource_id: Mapped[int] = mapped_column(Integer, nullable=False)
     org_id: Mapped[int] = mapped_column(ForeignKey("organizations.id"), nullable=False)
     author_user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), nullable=False)
-    parent_id: Mapped[int | None] = mapped_column(ForeignKey("comments.id"), nullable=True)
+    parent_id: Mapped[int | None] = mapped_column(
+        ForeignKey("comments.id"), nullable=True
+    )
     text: Mapped[str] = mapped_column(Text, nullable=False)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=func.now()
     )
-    edited_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
-    deleted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    edited_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    deleted_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
 
     __table_args__ = (
         Index("ix_comments_resource", "resource_type", "resource_id"),
@@ -1602,9 +1706,13 @@ class Mention(Base):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     comment_id: Mapped[int] = mapped_column(ForeignKey("comments.id"), nullable=False)
-    mentioned_user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), nullable=False)
+    mentioned_user_id: Mapped[int] = mapped_column(
+        ForeignKey("users.id"), nullable=False
+    )
     org_id: Mapped[int] = mapped_column(ForeignKey("organizations.id"), nullable=False)
-    status: Mapped[str] = mapped_column(MENTION_STATUS_ENUM, nullable=False, default="pending")
+    status: Mapped[str] = mapped_column(
+        MENTION_STATUS_ENUM, nullable=False, default="pending"
+    )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=func.now()
     )
@@ -1622,6 +1730,7 @@ class Mention(Base):
 # * All tactical data is derived from StatsBomb event data.
 # * Coverage-gating: only matches with sufficient event data are analyzed.
 # * Cached per match to avoid recomputation.
+
 
 class MatchPassingNetwork(Base):
     """Cached passing network graph for a match/team.
@@ -1646,7 +1755,9 @@ class MatchPassingNetwork(Base):
 
     __table_args__ = (
         UniqueConstraint(
-            "match_id", "team_id", "phase",
+            "match_id",
+            "team_id",
+            "phase",
             name="uq_passing_network_match_team_phase",
         ),
         Index("ix_passing_network_match", "match_id"),
@@ -1661,7 +1772,9 @@ class MatchSpatialAnalysis(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     match_id: Mapped[str] = mapped_column(String(64), nullable=False)
     team_id: Mapped[int | None] = mapped_column(ForeignKey("teams.id"), nullable=True)
-    analysis_type: Mapped[str] = mapped_column(String(32), nullable=False)  # pressure, possession, pressure_success
+    analysis_type: Mapped[str] = mapped_column(
+        String(32), nullable=False
+    )  # pressure, possession, pressure_success
     result_json: Mapped[dict] = mapped_column(JSON, nullable=False)
     computed_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=func.now()
@@ -1669,7 +1782,9 @@ class MatchSpatialAnalysis(Base):
 
     __table_args__ = (
         UniqueConstraint(
-            "match_id", "team_id", "analysis_type",
+            "match_id",
+            "team_id",
+            "analysis_type",
             name="uq_spatial_analysis_match_team_type",
         ),
         Index("ix_spatial_analysis_match", "match_id"),
@@ -1693,7 +1808,8 @@ class MatchFormation(Base):
 
     __table_args__ = (
         UniqueConstraint(
-            "match_id", "team_id",
+            "match_id",
+            "team_id",
             name="uq_formation_match_team",
         ),
         Index("ix_formation_match", "match_id"),

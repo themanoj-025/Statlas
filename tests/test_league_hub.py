@@ -160,9 +160,15 @@ class TestEmergingScoreComputation:
 
         dates = [SNAP_DATE - timedelta(weeks=w) for w in range(4, -1, -1)]
         snaps = _seed_snapshots(db, player, league, dates=dates, minutes=2000)
-        _seed_percentiles(db, snaps, metric_name="progressive_passes_p90", values=[50, 55, 60, 65, 70])
-        _seed_percentiles(db, snaps, metric_name="defensive_actions_p90", values=[40, 45, 50, 55, 60])
-        _seed_percentiles(db, snaps, metric_name="duels_won_pct", values=[30, 35, 40, 45, 50])
+        _seed_percentiles(
+            db, snaps, metric_name="progressive_passes_p90", values=[50, 55, 60, 65, 70]
+        )
+        _seed_percentiles(
+            db, snaps, metric_name="defensive_actions_p90", values=[40, 45, 50, 55, 60]
+        )
+        _seed_percentiles(
+            db, snaps, metric_name="duels_won_pct", values=[30, 35, 40, 45, 50]
+        )
         db.commit()
 
         from app.compute.emerging import compute_emerging_scores
@@ -189,9 +195,15 @@ class TestEmergingScoreComputation:
         dates = [SNAP_DATE - timedelta(weeks=w) for w in range(4, -1, -1)]
         snaps = _seed_snapshots(db, player, league, dates=dates, minutes=2000)
         # Constant percentiles — no improvement.
-        _seed_percentiles(db, snaps, metric_name="progressive_passes_p90", values=[50, 50, 50, 50, 50])
-        _seed_percentiles(db, snaps, metric_name="defensive_actions_p90", values=[40, 40, 40, 40, 40])
-        _seed_percentiles(db, snaps, metric_name="duels_won_pct", values=[60, 60, 60, 60, 60])
+        _seed_percentiles(
+            db, snaps, metric_name="progressive_passes_p90", values=[50, 50, 50, 50, 50]
+        )
+        _seed_percentiles(
+            db, snaps, metric_name="defensive_actions_p90", values=[40, 40, 40, 40, 40]
+        )
+        _seed_percentiles(
+            db, snaps, metric_name="duels_won_pct", values=[60, 60, 60, 60, 60]
+        )
         db.commit()
 
         from app.compute.emerging import compute_emerging_scores
@@ -210,9 +222,15 @@ class TestEmergingScoreComputation:
 
         dates = [SNAP_DATE - timedelta(weeks=w) for w in range(4, -1, -1)]
         snaps = _seed_snapshots(db, player, league, dates=dates, minutes=qm - 100)
-        _seed_percentiles(db, snaps, metric_name="progressive_passes_p90", values=[50, 60, 70, 80, 90])
-        _seed_percentiles(db, snaps, metric_name="defensive_actions_p90", values=[40, 50, 60, 70, 80])
-        _seed_percentiles(db, snaps, metric_name="duels_won_pct", values=[30, 40, 50, 60, 70])
+        _seed_percentiles(
+            db, snaps, metric_name="progressive_passes_p90", values=[50, 60, 70, 80, 90]
+        )
+        _seed_percentiles(
+            db, snaps, metric_name="defensive_actions_p90", values=[40, 50, 60, 70, 80]
+        )
+        _seed_percentiles(
+            db, snaps, metric_name="duels_won_pct", values=[30, 40, 50, 60, 70]
+        )
         db.commit()
 
         from app.compute.emerging import compute_emerging_scores
@@ -228,9 +246,15 @@ class TestEmergingScoreComputation:
 
         dates = [SNAP_DATE - timedelta(weeks=w) for w in range(4, -1, -1)]
         snaps = _seed_snapshots(db, player, league, dates=dates, minutes=2000)
-        _seed_percentiles(db, snaps, metric_name="progressive_passes_p90", values=[50, 60, 70, 80, 90])
-        _seed_percentiles(db, snaps, metric_name="defensive_actions_p90", values=[40, 50, 60, 70, 80])
-        _seed_percentiles(db, snaps, metric_name="duels_won_pct", values=[30, 40, 50, 60, 70])
+        _seed_percentiles(
+            db, snaps, metric_name="progressive_passes_p90", values=[50, 60, 70, 80, 90]
+        )
+        _seed_percentiles(
+            db, snaps, metric_name="defensive_actions_p90", values=[40, 50, 60, 70, 80]
+        )
+        _seed_percentiles(
+            db, snaps, metric_name="duels_won_pct", values=[30, 40, 50, 60, 70]
+        )
         db.commit()
 
         from app.compute.emerging import compute_emerging_scores
@@ -256,9 +280,21 @@ class TestEmergingScoreComputation:
         dates = [SNAP_DATE - timedelta(weeks=w) for w in range(4, -1, -1)]
         for p in [young, old]:
             snaps = _seed_snapshots(db, p, league, dates=dates, minutes=2000)
-            _seed_percentiles(db, snaps, metric_name="progressive_passes_p90", values=[50, 60, 70, 80, 90])
-            _seed_percentiles(db, snaps, metric_name="defensive_actions_p90", values=[40, 50, 60, 70, 80])
-            _seed_percentiles(db, snaps, metric_name="duels_won_pct", values=[30, 40, 50, 60, 70])
+            _seed_percentiles(
+                db,
+                snaps,
+                metric_name="progressive_passes_p90",
+                values=[50, 60, 70, 80, 90],
+            )
+            _seed_percentiles(
+                db,
+                snaps,
+                metric_name="defensive_actions_p90",
+                values=[40, 50, 60, 70, 80],
+            )
+            _seed_percentiles(
+                db, snaps, metric_name="duels_won_pct", values=[30, 40, 50, 60, 70]
+            )
         db.commit()
 
         from app.compute.emerging import compute_emerging_scores

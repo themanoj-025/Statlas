@@ -33,6 +33,7 @@ from app.models import (
 # Helpers
 # ---------------------------------------------------------------------------
 
+
 def _make_player(
     db: Session,
     *,
@@ -52,8 +53,12 @@ def _make_player(
     return player
 
 
-def _make_league(db: Session, *, slug: str = "premier-league", tier: str = "tier_1") -> League:
-    league = League(slug=slug, name="Premier League", country="England", tier=tier, external_ids={})
+def _make_league(
+    db: Session, *, slug: str = "premier-league", tier: str = "tier_1"
+) -> League:
+    league = League(
+        slug=slug, name="Premier League", country="England", tier=tier, external_ids={}
+    )
     db.add(league)
     db.flush()
     return league
@@ -319,7 +324,9 @@ class TestUndervaluedPlayers:
         db.add(team)
         db.flush()
 
-        player = _make_player(db, team=team, dob=datetime(2000, 1, 1, tzinfo=timezone.utc))
+        player = _make_player(
+            db, team=team, dob=datetime(2000, 1, 1, tzinfo=timezone.utc)
+        )
         snap = _make_snapshot(db, player, minutes=2000, league=league)
 
         for metric in ["si_prgp_p90", "si_prgc_p90", "si_tkl_p90", "si_shots_p90"]:
@@ -457,7 +464,9 @@ class TestHiddenGems:
         # Low market value → hidden gem
         _make_valuation(db, player, amount=5_000_000)
 
-        result = detect_hidden_gems(db, min_stat_percentile=75, max_market_value=30_000_000)
+        result = detect_hidden_gems(
+            db, min_stat_percentile=75, max_market_value=30_000_000
+        )
         assert len(result) >= 1
         assert result[0]["player_id"] == player.id
         assert result[0]["opportunity_type"] == "hidden_gem"
@@ -476,7 +485,9 @@ class TestHiddenGems:
         # High market value → not a hidden gem
         _make_valuation(db, player, amount=50_000_000)
 
-        result = detect_hidden_gems(db, min_stat_percentile=75, max_market_value=30_000_000)
+        result = detect_hidden_gems(
+            db, min_stat_percentile=75, max_market_value=30_000_000
+        )
         assert len(result) == 0
 
 
@@ -632,7 +643,9 @@ class TestTransferRisk:
         db.add(team)
         db.flush()
 
-        player = _make_player(db, team=team, dob=datetime(2000, 1, 1, tzinfo=timezone.utc))
+        player = _make_player(
+            db, team=team, dob=datetime(2000, 1, 1, tzinfo=timezone.utc)
+        )
         result = compute_transfer_risk(db, player.id, target_league_tier="tier_1")
 
         assert result["risk_score"] > 0
@@ -742,9 +755,7 @@ class TestFixtureMarketDataSource:
         from app.sources.market_data import FixtureMarketDataSource
 
         source = FixtureMarketDataSource(seed=42)
-        records = source.fetch_valuations(
-            [1, 2, 3], as_of=datetime.now(timezone.utc)
-        )
+        records = source.fetch_valuations([1, 2, 3], as_of=datetime.now(timezone.utc))
         assert len(records) == 3
         assert all(r.player_id in [1, 2, 3] for r in records)
         assert all(r.valuation_amount_eur > 0 for r in records)
@@ -754,11 +765,11 @@ class TestFixtureMarketDataSource:
         from app.sources.market_data import FixtureMarketDataSource
 
         source = FixtureMarketDataSource(seed=42)
-        records = source.fetch_contracts(
-            [1, 2], as_of=datetime.now(timezone.utc)
-        )
+        records = source.fetch_contracts([1, 2], as_of=datetime.now(timezone.utc))
         assert len(records) == 2
-        assert all(r.contract_status in ("active", "expiring_next_season") for r in records)
+        assert all(
+            r.contract_status in ("active", "expiring_next_season") for r in records
+        )
 
     def test_fetch_transfers_returns_empty(self):
         from app.sources.market_data import FixtureMarketDataSource

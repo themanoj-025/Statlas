@@ -139,10 +139,7 @@ def get_workspace_summary(db: Session, user_id: int) -> dict:
     )
 
     watch_count = (
-        db.query(func.count(Watch.id))
-        .filter(Watch.user_id == user_id)
-        .scalar()
-        or 0
+        db.query(func.count(Watch.id)).filter(Watch.user_id == user_id).scalar() or 0
     )
 
     unread_alerts = (
@@ -196,9 +193,7 @@ def get_trending_players(
     saved_ids = {
         r[0]
         for r in (
-            db.query(SavedPlayer.player_id)
-            .filter(SavedPlayer.user_id == user_id)
-            .all()
+            db.query(SavedPlayer.player_id).filter(SavedPlayer.user_id == user_id).all()
         )
     }
     exclude_ids = viewed_ids | saved_ids
@@ -227,7 +222,9 @@ def get_trending_players(
             PercentileSnapshot.metric_name,
             PercentileSnapshot.percentile_value,
         )
-        .join(PercentileSnapshot, PercentileSnapshot.stat_snapshot_id == StatSnapshot.id)
+        .join(
+            PercentileSnapshot, PercentileSnapshot.stat_snapshot_id == StatSnapshot.id
+        )
         .filter(
             PercentileSnapshot.computed_date == latest_date,
             PercentileSnapshot.is_published.is_(True),
@@ -241,7 +238,9 @@ def get_trending_players(
             PercentileSnapshot.metric_name,
             PercentileSnapshot.percentile_value,
         )
-        .join(PercentileSnapshot, PercentileSnapshot.stat_snapshot_id == StatSnapshot.id)
+        .join(
+            PercentileSnapshot, PercentileSnapshot.stat_snapshot_id == StatSnapshot.id
+        )
         .filter(
             PercentileSnapshot.computed_date == prev_date,
             PercentileSnapshot.is_published.is_(True),
@@ -252,9 +251,9 @@ def get_trending_players(
     gains = (
         db.query(
             curr_subq.c.player_id,
-            func.avg(
-                curr_subq.c.percentile_value - prev_subq.c.percentile_value
-            ).label("avg_gain"),
+            func.avg(curr_subq.c.percentile_value - prev_subq.c.percentile_value).label(
+                "avg_gain"
+            ),
             func.count().label("metrics_with_data"),
         )
         .join(
@@ -348,9 +347,7 @@ def get_recommended_players(
     saved_player_ids = [
         r[0]
         for r in (
-            db.query(SavedPlayer.player_id)
-            .filter(SavedPlayer.user_id == user_id)
-            .all()
+            db.query(SavedPlayer.player_id).filter(SavedPlayer.user_id == user_id).all()
         )
     ]
 
@@ -360,9 +357,7 @@ def get_recommended_players(
 
     # Step 2: Get dismissed recommendations
     dashboard = (
-        db.query(DashboardState)
-        .filter(DashboardState.user_id == user_id)
-        .first()
+        db.query(DashboardState).filter(DashboardState.user_id == user_id).first()
     )
     dismissed: set[int] = set()
     if dashboard and dashboard.dismissed_recommendations:
@@ -403,7 +398,9 @@ def get_recommended_players(
             StatSnapshot.player_id,
             func.avg(PercentileSnapshot.percentile_value).label("avg_pct"),
         )
-        .join(PercentileSnapshot, PercentileSnapshot.stat_snapshot_id == StatSnapshot.id)
+        .join(
+            PercentileSnapshot, PercentileSnapshot.stat_snapshot_id == StatSnapshot.id
+        )
         .filter(
             PercentileSnapshot.computed_date == latest_date,
             PercentileSnapshot.is_published.is_(True),
@@ -465,11 +462,7 @@ def get_recommended_players(
 
 def get_or_create_dashboard_state(db: Session, user_id: int) -> DashboardState:
     """Get or create the user's dashboard state row."""
-    state = (
-        db.query(DashboardState)
-        .filter(DashboardState.user_id == user_id)
-        .first()
-    )
+    state = db.query(DashboardState).filter(DashboardState.user_id == user_id).first()
     if state is None:
         state = DashboardState(user_id=user_id)
         db.add(state)

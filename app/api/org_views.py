@@ -38,6 +38,7 @@ def _require_user(request: Request):
 # Request bodies
 # ---------------------------------------------------------------------------
 
+
 class CreateOrgBody(BaseModel):
     name: str = Field(min_length=1, max_length=256)
     slug: str | None = Field(default=None, max_length=128)
@@ -69,6 +70,7 @@ class UpdateSettingsBody(BaseModel):
 # Organization CRUD
 # ---------------------------------------------------------------------------
 
+
 @router.post("", status_code=201)
 def create_organization(body: CreateOrgBody, request: Request):
     """Create a new organization. The creator becomes the owner."""
@@ -76,8 +78,11 @@ def create_organization(body: CreateOrgBody, request: Request):
     with session_scope() as db:
         try:
             return oq.create_organization(
-                db, user.id, body.name,
-                slug=body.slug, country=body.country,
+                db,
+                user.id,
+                body.name,
+                slug=body.slug,
+                country=body.country,
             )
         except ValueError as exc:
             raise HTTPException(status_code=400, detail=str(exc))
@@ -107,6 +112,7 @@ def get_organization(org_id: int, request: Request):
 # ---------------------------------------------------------------------------
 # Member management
 # ---------------------------------------------------------------------------
+
 
 @router.post("/{org_id}/invite", status_code=201)
 def invite_member(org_id: int, body: InviteMemberBody, request: Request):
@@ -174,6 +180,7 @@ def remove_member(org_id: int, target_user_id: int, request: Request):
 # Settings
 # ---------------------------------------------------------------------------
 
+
 @router.get("/{org_id}/settings")
 def get_settings(org_id: int, request: Request):
     """Get organization settings. Must be a member."""
@@ -205,6 +212,7 @@ def update_settings(org_id: int, body: UpdateSettingsBody, request: Request):
 # Audit log
 # ---------------------------------------------------------------------------
 
+
 @router.get("/{org_id}/audit")
 def get_audit_log(
     org_id: int,
@@ -216,5 +224,8 @@ def get_audit_log(
     user = _require_user(request)
     with session_scope() as db:
         if not oq.user_has_permission(db, user.id, org_id, "audit_view"):
-            raise HTTPException(status_code=403, detail="You do not have permission to view the audit log")
+            raise HTTPException(
+                status_code=403,
+                detail="You do not have permission to view the audit log",
+            )
         return oq.get_audit_log(db, org_id, limit=limit, offset=offset)

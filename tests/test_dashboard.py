@@ -289,16 +289,30 @@ class TestTrendingPlayers:
         snap_curr = _create_stat_snapshot(
             db, trending_player.id, league.id, "2025-26", curr_date
         )
-        _seed_percentiles(db, snap_prev.id, prev_date, "CM", "tier_1", {
-            "progressive_passes_p90": 50,
-            "defensive_actions_p90": 40,
-            "duels_won_pct": 45,
-        })
-        _seed_percentiles(db, snap_curr.id, curr_date, "CM", "tier_1", {
-            "progressive_passes_p90": 70,  # +20
-            "defensive_actions_p90": 60,  # +20
-            "duels_won_pct": 55,  # +10
-        })
+        _seed_percentiles(
+            db,
+            snap_prev.id,
+            prev_date,
+            "CM",
+            "tier_1",
+            {
+                "progressive_passes_p90": 50,
+                "defensive_actions_p90": 40,
+                "duels_won_pct": 45,
+            },
+        )
+        _seed_percentiles(
+            db,
+            snap_curr.id,
+            curr_date,
+            "CM",
+            "tier_1",
+            {
+                "progressive_passes_p90": 70,  # +20
+                "defensive_actions_p90": 60,  # +20
+                "duels_won_pct": 55,  # +10
+            },
+        )
 
         # Static Player: no change
         snap_prev_s = _create_stat_snapshot(
@@ -307,16 +321,30 @@ class TestTrendingPlayers:
         snap_curr_s = _create_stat_snapshot(
             db, static_player.id, league.id, "2025-26", curr_date
         )
-        _seed_percentiles(db, snap_prev_s.id, prev_date, "CM", "tier_1", {
-            "progressive_passes_p90": 50,
-            "defensive_actions_p90": 50,
-            "duels_won_pct": 50,
-        })
-        _seed_percentiles(db, snap_curr_s.id, curr_date, "CM", "tier_1", {
-            "progressive_passes_p90": 50,
-            "defensive_actions_p90": 50,
-            "duels_won_pct": 50,
-        })
+        _seed_percentiles(
+            db,
+            snap_prev_s.id,
+            prev_date,
+            "CM",
+            "tier_1",
+            {
+                "progressive_passes_p90": 50,
+                "defensive_actions_p90": 50,
+                "duels_won_pct": 50,
+            },
+        )
+        _seed_percentiles(
+            db,
+            snap_curr_s.id,
+            curr_date,
+            "CM",
+            "tier_1",
+            {
+                "progressive_passes_p90": 50,
+                "defensive_actions_p90": 50,
+                "duels_won_pct": 50,
+            },
+        )
 
         return user, trending_player, static_player
 
@@ -373,31 +401,53 @@ class TestRecommendations:
         for p in [cm1, cm2, cm_rec, st_other]:
             snap = _create_stat_snapshot(db, p.id, league.id, "2025-26", now)
             _seed_percentiles(
-                db, snap.id, now, p.position_group or "CM", "tier_1",
-                {"progressive_passes_p90": 60, "defensive_actions_p90": 50, "duels_won_pct": 55},
+                db,
+                snap.id,
+                now,
+                p.position_group or "CM",
+                "tier_1",
+                {
+                    "progressive_passes_p90": 60,
+                    "defensive_actions_p90": 50,
+                    "duels_won_pct": 55,
+                },
             )
 
         # Override CM Recommendation to have higher percentiles
         snap_rec = (
-            db.query(StatSnapshot)
-            .filter(StatSnapshot.player_id == cm_rec.id)
-            .first()
+            db.query(StatSnapshot).filter(StatSnapshot.player_id == cm_rec.id).first()
         )
         # Delete and re-create with higher values
         db.query(PercentileSnapshot).filter(
             PercentileSnapshot.stat_snapshot_id == snap_rec.id
         ).delete()
         _seed_percentiles(
-            db, snap_rec.id, now, "CM", "tier_1",
-            {"progressive_passes_p90": 80, "defensive_actions_p90": 70, "duels_won_pct": 75},
+            db,
+            snap_rec.id,
+            now,
+            "CM",
+            "tier_1",
+            {
+                "progressive_passes_p90": 80,
+                "defensive_actions_p90": 70,
+                "duels_won_pct": 75,
+            },
         )
 
         # Log user viewing the two CMs
         log_activity(
-            db, user_id=user.id, entity_type="player", entity_id=cm1.id, action_type="viewed"
+            db,
+            user_id=user.id,
+            entity_type="player",
+            entity_id=cm1.id,
+            action_type="viewed",
         )
         log_activity(
-            db, user_id=user.id, entity_type="player", entity_id=cm2.id, action_type="viewed"
+            db,
+            user_id=user.id,
+            entity_type="player",
+            entity_id=cm2.id,
+            action_type="viewed",
         )
 
         recs = get_recommended_players(db, user.id)
@@ -428,12 +478,24 @@ class TestRecommendations:
         for p in [cm1, cm_dismissed]:
             snap = _create_stat_snapshot(db, p.id, league.id, "2025-26", now)
             _seed_percentiles(
-                db, snap.id, now, "CM", "tier_1",
-                {"progressive_passes_p90": 60, "defensive_actions_p90": 50, "duels_won_pct": 55},
+                db,
+                snap.id,
+                now,
+                "CM",
+                "tier_1",
+                {
+                    "progressive_passes_p90": 60,
+                    "defensive_actions_p90": 50,
+                    "duels_won_pct": 55,
+                },
             )
 
         log_activity(
-            db, user_id=user.id, entity_type="player", entity_id=cm1.id, action_type="viewed"
+            db,
+            user_id=user.id,
+            entity_type="player",
+            entity_id=cm1.id,
+            action_type="viewed",
         )
 
         # Dismiss the other player

@@ -144,8 +144,14 @@ def password_reset_request(body: PasswordResetRequestBody):
         if user is not None:
             token = auth.create_password_reset_token(db, user.id)
             # In production, send email here. For dev/testing, log only a truncated reference.
-            logger.info("Password reset token generated for %s (token prefix: %s...)", user.email, token[:8])
-    return {"detail": "If an account with that email exists, a reset link has been sent."}
+            logger.info(
+                "Password reset token generated for %s (token prefix: %s...)",
+                user.email,
+                token[:8],
+            )
+    return {
+        "detail": "If an account with that email exists, a reset link has been sent."
+    }
 
 
 @router.post("/auth/password-reset/confirm")
@@ -250,7 +256,9 @@ def change_password(request: Request, body: ChangePasswordBody):
     with session_scope() as db:
         db_user = db.get(User, user.id)
         if not auth.verify_password(body.current_password, db_user.password_hash):
-            raise HTTPException(status_code=400, detail="Current password is incorrect.")
+            raise HTTPException(
+                status_code=400, detail="Current password is incorrect."
+            )
         db_user.password_hash = auth.hash_password(body.new_password)
         db.commit()
     return {"detail": "Password changed."}

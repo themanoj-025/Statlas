@@ -50,9 +50,18 @@ NOW = datetime(2026, 8, 15, 12, 0, 0, tzinfo=timezone.utc)  # 3 days after snaps
 
 # A full ST percentile vector — every outfield metric present.
 FULL_VECTOR = {
-    "si_gls_p90": 82, "si_xg_p90": 78, "si_sh_p90": 74, "si_prgp_p90": 71,
-    "si_prgc_p90": 73, "si_xag_p90": 22, "si_kp_p90": 41, "si_tkl_p90": 32,
-    "si_int_p90": 56, "si_press_p90": 61, "si_cmp_pct": 66, "si_dis_p90": 48,
+    "si_gls_p90": 82,
+    "si_xg_p90": 78,
+    "si_sh_p90": 74,
+    "si_prgp_p90": 71,
+    "si_prgc_p90": 73,
+    "si_xag_p90": 22,
+    "si_kp_p90": 41,
+    "si_tkl_p90": 32,
+    "si_int_p90": 56,
+    "si_press_p90": 61,
+    "si_cmp_pct": 66,
+    "si_dis_p90": 48,
 }
 
 
@@ -157,8 +166,11 @@ def report_data(db):
     free = make_user(db, "free@example.com")
     pro = make_pro_user(db, "pro@example.com")
     league = League(
-        slug="test-league", name="Test League", country="England",
-        tier="tier_1", external_ids={},
+        slug="test-league",
+        name="Test League",
+        country="England",
+        tier="tier_1",
+        external_ids={},
     )
     db.add(league)
     db.commit()
@@ -167,19 +179,37 @@ def report_data(db):
     db.commit()
 
     anchor = seed_player(
-        db, "Anchor Striker", position="ST", minutes=2700.0,
-        percentiles=FULL_VECTOR, index_score=88.0, dob="2001-05-15",
-        league=league, team=team,
+        db,
+        "Anchor Striker",
+        position="ST",
+        minutes=2700.0,
+        percentiles=FULL_VECTOR,
+        index_score=88.0,
+        dob="2001-05-15",
+        league=league,
+        team=team,
     )
     seed_player(
-        db, "Comparable One", position="ST", minutes=2500.0,
-        percentiles={k: v + 2 for k, v in FULL_VECTOR.items()}, index_score=84.0,
-        dob="2000-02-10", league=league, team=team,
+        db,
+        "Comparable One",
+        position="ST",
+        minutes=2500.0,
+        percentiles={k: v + 2 for k, v in FULL_VECTOR.items()},
+        index_score=84.0,
+        dob="2000-02-10",
+        league=league,
+        team=team,
     )
     seed_player(
-        db, "Comparable Two", position="ST", minutes=2300.0,
-        percentiles={k: v - 3 for k, v in FULL_VECTOR.items()}, index_score=79.0,
-        dob="2002-08-22", league=league, team=team,
+        db,
+        "Comparable Two",
+        position="ST",
+        minutes=2300.0,
+        percentiles={k: v - 3 for k, v in FULL_VECTOR.items()},
+        index_score=79.0,
+        dob="2002-08-22",
+        league=league,
+        team=team,
     )
     return {"free": free, "pro": pro, "anchor": anchor, "league": league, "team": team}
 
@@ -306,14 +336,20 @@ def test_confidence_below_threshold_is_low(db, report_data):
 
 def test_confidence_stale_snapshot_lowers_score(db, report_data):
     fresh = reports.compute_report_confidence(
-        minutes_played=2700.0, qualifying_minutes=900,
-        metrics_present=12, metrics_expected=12,
-        snapshot_date=SNAPSHOT_DATE, now=NOW,
+        minutes_played=2700.0,
+        qualifying_minutes=900,
+        metrics_present=12,
+        metrics_expected=12,
+        snapshot_date=SNAPSHOT_DATE,
+        now=NOW,
     )
     stale = reports.compute_report_confidence(
-        minutes_played=2700.0, qualifying_minutes=900,
-        metrics_present=12, metrics_expected=12,
-        snapshot_date=datetime(2026, 1, 1, tzinfo=timezone.utc), now=NOW,
+        minutes_played=2700.0,
+        qualifying_minutes=900,
+        metrics_present=12,
+        metrics_expected=12,
+        snapshot_date=datetime(2026, 1, 1, tzinfo=timezone.utc),
+        now=NOW,
     )
     assert stale["composite"] < fresh["composite"]
     assert stale["factors"]["recency"]["level"] == "stale"
@@ -326,8 +362,12 @@ def test_confidence_stale_snapshot_lowers_score(db, report_data):
 
 def test_risk_factors_limited_sample(db, report_data):
     risks = reports.derive_risk_factors(
-        minutes_played=1200.0, qualifying_minutes=900, seasons=1,
-        has_event_data=True, age=25, position_group="ST",
+        minutes_played=1200.0,
+        qualifying_minutes=900,
+        seasons=1,
+        has_event_data=True,
+        age=25,
+        position_group="ST",
     )
     assert any(r["basis"] == "sample_size" for r in risks)
     assert any(r["basis"] == "single_season" for r in risks)
@@ -335,8 +375,12 @@ def test_risk_factors_limited_sample(db, report_data):
 
 def test_risk_factors_event_data_and_age(db, report_data):
     risks = reports.derive_risk_factors(
-        minutes_played=3000.0, qualifying_minutes=900, seasons=2,
-        has_event_data=False, age=17, position_group="ST",
+        minutes_played=3000.0,
+        qualifying_minutes=900,
+        seasons=2,
+        has_event_data=False,
+        age=17,
+        position_group="ST",
     )
     assert any(r["basis"] == "no_event_data" for r in risks)
     assert any(r["basis"] == "age_vs_position" for r in risks)
@@ -353,11 +397,21 @@ def test_risk_factors_no_invented_dimensions(db, report_data):
     unassessed dimensions (that is its point), but no real risk factor may
     claim to assess them."""
     risks = reports.derive_risk_factors(
-        minutes_played=3000.0, qualifying_minutes=900, seasons=2,
-        has_event_data=True, age=26, position_group="ST",
+        minutes_played=3000.0,
+        qualifying_minutes=900,
+        seasons=2,
+        has_event_data=True,
+        age=26,
+        position_group="ST",
     )
     bases = {r["basis"] for r in risks}
-    assert bases <= {"sample_size", "single_season", "no_event_data", "age_vs_position", "out_of_scope"}
+    assert bases <= {
+        "sample_size",
+        "single_season",
+        "no_event_data",
+        "age_vs_position",
+        "out_of_scope",
+    }
     for r in risks[:-1]:  # every real risk factor except the out-of-scope note
         lowered = r["point"].lower()
         assert "personality" not in lowered
@@ -396,14 +450,23 @@ def test_generate_report_pipeline_verified_and_stored(db, report_data):
 def test_generate_report_sections_structure(db, report_data):
     pro = report_data["pro"]
     result = reports.generate_report(
-        db, pro.id, report_data["anchor"].id,
-        narrator=reports.deterministic_narrator, now=NOW,
+        db,
+        pro.id,
+        report_data["anchor"].id,
+        narrator=reports.deterministic_narrator,
+        now=NOW,
     )
     sections = result["report"]["sections"]
     for key in (
-        "overview", "statistical_profile", "role_and_position", "strengths",
-        "weaknesses", "comparable_players", "development_trajectory",
-        "risk_factors", "recommendation",
+        "overview",
+        "statistical_profile",
+        "role_and_position",
+        "strengths",
+        "weaknesses",
+        "comparable_players",
+        "development_trajectory",
+        "risk_factors",
+        "recommendation",
     ):
         assert key in sections, key
     # Every strength/weakness carries a real metric + value.
@@ -416,14 +479,19 @@ def test_generate_report_sections_structure(db, report_data):
         assert "similarity" in c
         assert "explanation" in c
     # Confidence level equals the deterministic computation.
-    assert sections["recommendation"]["confidence_level"] == result["report"]["confidence"]["level"]
+    assert (
+        sections["recommendation"]["confidence_level"]
+        == result["report"]["confidence"]["level"]
+    )
 
 
 def test_generate_requires_pro(db, report_data):
     free = report_data["free"]
     with pytest.raises(reports.ReportLimitExceeded) as excinfo:
         reports.generate_report(
-            db, free.id, report_data["anchor"].id,
+            db,
+            free.id,
+            report_data["anchor"].id,
             narrator=reports.deterministic_narrator,
         )
     assert "Pro feature" in str(excinfo.value)
@@ -435,7 +503,10 @@ def test_generate_unknown_player(db, report_data):
     pro = report_data["pro"]
     with pytest.raises(reports.PlayerHasNoData):
         reports.generate_report(
-            db, pro.id, 999_999, narrator=reports.deterministic_narrator,
+            db,
+            pro.id,
+            999_999,
+            narrator=reports.deterministic_narrator,
         )
 
 
@@ -445,11 +516,18 @@ def test_generate_unpublished_player(db, report_data):
     league = report_data["league"]
     team = report_data["team"]
     bare = seed_player(
-        db, "Bare Player", position="ST", minutes=3000.0, percentiles={},
-        league=league, team=team,
+        db,
+        "Bare Player",
+        position="ST",
+        minutes=3000.0,
+        percentiles={},
+        league=league,
+        team=team,
     )
     with pytest.raises(reports.PlayerHasNoData):
-        reports.generate_report(db, pro.id, bare.id, narrator=reports.deterministic_narrator)
+        reports.generate_report(
+            db, pro.id, bare.id, narrator=reports.deterministic_narrator
+        )
 
 
 # ---------------------------------------------------------------------------
@@ -468,8 +546,12 @@ def test_workspace_context_included_when_generated_from_entry(db, report_data):
     wq.add_entry_note(db, pro.id, entry["entry_id"], "Strong press engagement")
 
     result = reports.generate_report(
-        db, pro.id, anchor.id, shortlist_entry_id=entry["entry_id"],
-        narrator=reports.deterministic_narrator, now=NOW,
+        db,
+        pro.id,
+        anchor.id,
+        shortlist_entry_id=entry["entry_id"],
+        narrator=reports.deterministic_narrator,
+        now=NOW,
     )
     wc = result["report"]["sections"]["workspace_context"]
     assert wc is not None
@@ -485,8 +567,11 @@ def test_workspace_context_included_when_generated_from_entry(db, report_data):
 def test_workspace_context_omitted_when_generated_ad_hoc(db, report_data):
     pro = report_data["pro"]
     result = reports.generate_report(
-        db, pro.id, report_data["anchor"].id,
-        narrator=reports.deterministic_narrator, now=NOW,
+        db,
+        pro.id,
+        report_data["anchor"].id,
+        narrator=reports.deterministic_narrator,
+        now=NOW,
     )
     assert result["report"]["sections"]["workspace_context"] is None
     assert result["report"]["source"] == "player_profile"
@@ -502,7 +587,10 @@ def test_workspace_entry_of_another_user_rejected(db, report_data):
     pro = report_data["pro"]
     with pytest.raises(reports.ReportNotFound):
         reports.generate_report(
-            db, pro.id, anchor.id, shortlist_entry_id=entry["entry_id"],
+            db,
+            pro.id,
+            anchor.id,
+            shortlist_entry_id=entry["entry_id"],
             narrator=reports.deterministic_narrator,
         )
 
@@ -517,8 +605,11 @@ def test_pro_quota_consumed_and_capped(db, report_data):
     quota = reports.get_report_quota(db, pro.id)
     assert quota["remaining"] == quota["limit"]
     reports.generate_report(
-        db, pro.id, report_data["anchor"].id,
-        narrator=reports.deterministic_narrator, now=NOW,
+        db,
+        pro.id,
+        report_data["anchor"].id,
+        narrator=reports.deterministic_narrator,
+        now=NOW,
     )
     after = reports.get_report_quota(db, pro.id)
     assert after["used"] == 1
@@ -527,13 +618,19 @@ def test_pro_quota_consumed_and_capped(db, report_data):
     # Exhaust the allowance -> honest, specific upsell, not a generic error.
     for _ in range(after["remaining"]):
         reports.generate_report(
-            db, pro.id, report_data["anchor"].id,
-            narrator=reports.deterministic_narrator, now=NOW,
+            db,
+            pro.id,
+            report_data["anchor"].id,
+            narrator=reports.deterministic_narrator,
+            now=NOW,
         )
     with pytest.raises(reports.ReportLimitExceeded) as excinfo:
         reports.generate_report(
-            db, pro.id, report_data["anchor"].id,
-            narrator=reports.deterministic_narrator, now=NOW,
+            db,
+            pro.id,
+            report_data["anchor"].id,
+            narrator=reports.deterministic_narrator,
+            now=NOW,
         )
     assert "allowance" in str(excinfo.value)
     assert "resets" in str(excinfo.value)
@@ -548,8 +645,11 @@ def test_cross_user_get_404(db, report_data):
     pro = report_data["pro"]
     other = make_pro_user(db, "other@example.com")
     result = reports.generate_report(
-        db, pro.id, report_data["anchor"].id,
-        narrator=reports.deterministic_narrator, now=NOW,
+        db,
+        pro.id,
+        report_data["anchor"].id,
+        narrator=reports.deterministic_narrator,
+        now=NOW,
     )
     with pytest.raises(reports.ReportNotFound):
         reports.get_report(db, other.id, result["report_id"])
@@ -562,12 +662,18 @@ def test_cross_user_get_404(db, report_data):
 def test_list_reports_own_only_and_ordered(db, report_data):
     pro = report_data["pro"]
     reports.generate_report(
-        db, pro.id, report_data["anchor"].id,
-        narrator=reports.deterministic_narrator, now=NOW,
+        db,
+        pro.id,
+        report_data["anchor"].id,
+        narrator=reports.deterministic_narrator,
+        now=NOW,
     )
     reports.generate_report(
-        db, pro.id, report_data["anchor"].id,
-        narrator=reports.deterministic_narrator, now=NOW,
+        db,
+        pro.id,
+        report_data["anchor"].id,
+        narrator=reports.deterministic_narrator,
+        now=NOW,
     )
     listing = reports.list_reports(db, pro.id)
     assert len(listing) == 2
@@ -579,8 +685,11 @@ def test_list_reports_own_only_and_ordered(db, report_data):
 def test_delete_report_own(db, report_data):
     pro = report_data["pro"]
     result = reports.generate_report(
-        db, pro.id, report_data["anchor"].id,
-        narrator=reports.deterministic_narrator, now=NOW,
+        db,
+        pro.id,
+        report_data["anchor"].id,
+        narrator=reports.deterministic_narrator,
+        now=NOW,
     )
     reports.delete_report(db, pro.id, result["report_id"])
     assert reports.list_reports(db, pro.id) == []
@@ -594,8 +703,11 @@ def test_delete_report_own(db, report_data):
 def _make_stored(db, report_data):
     pro = report_data["pro"]
     return reports.generate_report(
-        db, pro.id, report_data["anchor"].id,
-        narrator=reports.deterministic_narrator, now=NOW,
+        db,
+        pro.id,
+        report_data["anchor"].id,
+        narrator=reports.deterministic_narrator,
+        now=NOW,
     )
 
 
@@ -679,8 +791,10 @@ def _register(client, email: str = "pro-api@example.com"):
         user = db.query(User).filter_by(email=email).first()
         db.add(
             Subscription(
-                user_id=user.id, plan="pro",
-                stripe_subscription_id="sub_api", status="active",
+                user_id=user.id,
+                plan="pro",
+                stripe_subscription_id="sub_api",
+                status="active",
             )
         )
         db.commit()
@@ -689,8 +803,11 @@ def _register(client, email: str = "pro-api@example.com"):
 def _seed_api_data():
     with session_scope() as db:
         league = League(
-            slug="test-league", name="Test League", country="England",
-            tier="tier_1", external_ids={},
+            slug="test-league",
+            name="Test League",
+            country="England",
+            tier="tier_1",
+            external_ids={},
         )
         db.add(league)
         db.commit()
@@ -698,14 +815,24 @@ def _seed_api_data():
         db.add(team)
         db.commit()
         seed_player(
-            db, "API Striker", position="ST", minutes=2700.0,
-            percentiles=FULL_VECTOR, index_score=88.0,
-            league=league, team=team,
+            db,
+            "API Striker",
+            position="ST",
+            minutes=2700.0,
+            percentiles=FULL_VECTOR,
+            index_score=88.0,
+            league=league,
+            team=team,
         )
         seed_player(
-            db, "API Comparable", position="ST", minutes=2500.0,
-            percentiles={k: v + 2 for k, v in FULL_VECTOR.items()}, index_score=84.0,
-            league=league, team=team,
+            db,
+            "API Comparable",
+            position="ST",
+            minutes=2500.0,
+            percentiles={k: v + 2 for k, v in FULL_VECTOR.items()},
+            index_score=84.0,
+            league=league,
+            team=team,
         )
 
 
@@ -807,9 +934,9 @@ def test_api_cross_user_404(client):
     player_id = None
     with session_scope() as db:
         player_id = db.query(Player).filter_by(canonical_name="API Striker").first().id
-    report_id = client.post(
-        "/api/v1/reports", json={"player_id": player_id}
-    ).json()["report_id"]
+    report_id = client.post("/api/v1/reports", json={"player_id": player_id}).json()[
+        "report_id"
+    ]
 
     client.post("/api/v1/auth/logout")
     _register(client, "second@example.com")

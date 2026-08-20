@@ -85,7 +85,9 @@ def validate_query_definition(query_definition: dict[str, Any]) -> dict[str, Any
     if position_group is not None:
         raw = position_group if isinstance(position_group, list) else [position_group]
         if not raw:
-            raise InvalidQuery("position_group must be a group code or a list of group codes.")
+            raise InvalidQuery(
+                "position_group must be a group code or a list of group codes."
+            )
         bad = [g for g in raw if g not in VALID_POSITION_GROUPS]
         if bad:
             raise InvalidQuery(
@@ -155,7 +157,9 @@ def validate_query_definition(query_definition: dict[str, Any]) -> dict[str, Any
             )
         if operator == "between":
             if not isinstance(value_max, (int, float)) or not _finite(value_max):
-                raise InvalidQuery(f"condition #{i + 1}: between needs a numeric value_max.")
+                raise InvalidQuery(
+                    f"condition #{i + 1}: between needs a numeric value_max."
+                )
             if value_max <= value:
                 raise InvalidQuery(
                     f"condition #{i + 1}: value_max must be greater than value."
@@ -201,11 +205,7 @@ def _age_at(dob: date | None, ref: datetime) -> int | None:
     """Full years between date of birth and the reference snapshot date."""
     if dob is None or ref is None:
         return None
-    return (
-        ref.year
-        - dob.year
-        - ((ref.month, ref.day) < (dob.month, dob.day))
-    )
+    return ref.year - dob.year - ((ref.month, ref.day) < (dob.month, dob.day))
 
 
 def _team_name(db: Session, team_id: int | None) -> str | None:
@@ -337,10 +337,7 @@ def execute_structured_query(
     for entry in players.values():
         if entry["minutes"] < qualifying_minutes:
             continue
-        if (
-            qd["position_group"]
-            and entry["position_group"] not in qd["position_group"]
-        ):
+        if qd["position_group"] and entry["position_group"] not in qd["position_group"]:
             continue
         if qd["league_tier"] and entry["tier"] != qd["league_tier"]:
             continue
@@ -402,7 +399,9 @@ def execute_structured_query(
             key=lambda e: e["minutes"], reverse=(sort_dir or "desc") == "desc"
         )
     elif sort_by == "age":
-        survivors.sort(key=lambda e: e["age"] or 0, reverse=(sort_dir or "desc") == "desc")
+        survivors.sort(
+            key=lambda e: e["age"] or 0, reverse=(sort_dir or "desc") == "desc"
+        )
     elif sort_by in metrics:
         spec = metrics[sort_by]
         default_desc = spec["direction"] != "lower_is_better"
@@ -438,7 +437,9 @@ def execute_structured_query(
                     **cv,
                     "metric_name": (metric_spec or {}).get("name", cond["metric"]),
                     "condition_type": (
-                        "percentile" if cond["operator"] in PERCENTILE_OPERATORS else "raw"
+                        "percentile"
+                        if cond["operator"] in PERCENTILE_OPERATORS
+                        else "raw"
                     ),
                 }
             )
@@ -463,9 +464,7 @@ def execute_structured_query(
 
     most_restrictive = None
     if per_condition_counts:
-        most_restrictive = min(
-            per_condition_counts, key=lambda c: c["passing_count"]
-        )
+        most_restrictive = min(per_condition_counts, key=lambda c: c["passing_count"])
 
     result = {
         "query": qd,
@@ -483,7 +482,10 @@ def execute_structured_query(
         "has_more": offset + limit < total,
         "entries": entries,
         "diagnostics": (
-            {"per_condition_counts": per_condition_counts, "most_restrictive": most_restrictive}
+            {
+                "per_condition_counts": per_condition_counts,
+                "most_restrictive": most_restrictive,
+            }
             if total == 0
             else None
         ),
@@ -495,7 +497,9 @@ def execute_structured_query(
     return result
 
 
-def _log_history(db: Session, user_id: int, qd: dict[str, Any], result_count: int) -> None:
+def _log_history(
+    db: Session, user_id: int, qd: dict[str, Any], result_count: int
+) -> None:
     db.add(
         SearchHistory(
             user_id=user_id,
@@ -570,9 +574,7 @@ def save_search(
     limits = plan_limits(plan)
     max_saved = limits.get("saved_searches_max")
     if max_saved is not None:
-        current = (
-            db.query(SavedSearch).filter(SavedSearch.user_id == user_id).count()
-        )
+        current = db.query(SavedSearch).filter(SavedSearch.user_id == user_id).count()
         if current >= max_saved:
             raise SearchLimitExceeded(
                 f"You've used your {plan} plan's allowance of {max_saved} saved "
@@ -641,7 +643,9 @@ def _owned_history(db: Session, user_id: int, history_id: int) -> SearchHistory:
     return row
 
 
-def get_search_history(db: Session, user_id: int, limit: int = 20) -> list[dict[str, Any]]:
+def get_search_history(
+    db: Session, user_id: int, limit: int = 20
+) -> list[dict[str, Any]]:
     rows = (
         db.query(SearchHistory)
         .filter(SearchHistory.user_id == user_id)
@@ -729,7 +733,11 @@ def summarize_query(qd: dict[str, Any]) -> str:
         label = position_group if isinstance(position_group, list) else [position_group]
         parts.append(" + ".join(label))
     if qd.get("league_tier"):
-        parts.append({"tier_1": "Tier 1", "tier_2": "Tier 2", "tier_3": "Tier 3"}[qd["league_tier"]])
+        parts.append(
+            {"tier_1": "Tier 1", "tier_2": "Tier 2", "tier_3": "Tier 3"}[
+                qd["league_tier"]
+            ]
+        )
     if qd.get("age_max") is not None:
         parts.append(f"U{int(qd['age_max'])}")
     parts.extend(_label(cond) for cond in qd.get("conditions", []))

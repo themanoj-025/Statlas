@@ -41,28 +41,43 @@ from tests.conftest import SNAPSHOT_DATE
 OUTFIELD = load_registry()["outfield_metrics"]
 
 ANCHOR = {
-    "si_gls_p90": 82, "si_xg_p90": 78, "si_sh_p90": 74, "si_prgp_p90": 71,
-    "si_prgc_p90": 73, "si_xag_p90": 22, "si_kp_p90": 41, "si_tkl_p90": 32,
-    "si_int_p90": 56, "si_press_p90": 61, "si_cmp_pct": 66, "si_dis_p90": 48,
+    "si_gls_p90": 82,
+    "si_xg_p90": 78,
+    "si_sh_p90": 74,
+    "si_prgp_p90": 71,
+    "si_prgc_p90": 73,
+    "si_xag_p90": 22,
+    "si_kp_p90": 41,
+    "si_tkl_p90": 32,
+    "si_int_p90": 56,
+    "si_press_p90": 61,
+    "si_cmp_pct": 66,
+    "si_dis_p90": 48,
 }
 CANDIDATE = {
-    "si_gls_p90": 84, "si_xg_p90": 79, "si_sh_p90": 76, "si_prgp_p90": 30,
-    "si_prgc_p90": 75, "si_xag_p90": 18, "si_kp_p90": 43, "si_tkl_p90": 33,
-    "si_int_p90": 58, "si_press_p90": 63, "si_cmp_pct": 68, "si_dis_p90": 12,
+    "si_gls_p90": 84,
+    "si_xg_p90": 79,
+    "si_sh_p90": 76,
+    "si_prgp_p90": 30,
+    "si_prgc_p90": 75,
+    "si_xag_p90": 18,
+    "si_kp_p90": 43,
+    "si_tkl_p90": 33,
+    "si_int_p90": 58,
+    "si_press_p90": 63,
+    "si_cmp_pct": 68,
+    "si_dis_p90": 12,
 }
 
 
 def _seed_vector(db, league, name, values, *, team_name="City"):
     """Seed a player with a hand-set published percentile vector."""
-    team = (
-        db.query(Team).filter_by(name=team_name, league_id=league.id).first()
-        or Team(name=team_name, league_id=league.id)
-    )
+    team = db.query(Team).filter_by(
+        name=team_name, league_id=league.id
+    ).first() or Team(name=team_name, league_id=league.id)
     db.add(team)
     db.flush()
-    player = Player(
-        canonical_name=name, position_group="ST", current_team_id=team.id
-    )
+    player = Player(canonical_name=name, position_group="ST", current_team_id=team.id)
     db.add(player)
     db.flush()
     snap = StatSnapshot(
@@ -167,9 +182,7 @@ def test_matched_strength_rules_hold_on_fixture():
     gaps = [m["difference"] for m in exp["key_differences"]]
     assert gaps == sorted(gaps, reverse=True)
     # the top key difference genuinely has the largest gap in the vector
-    all_gaps = {
-        mid: abs(ANCHOR[mid] - CANDIDATE[mid]) for mid in OUTFIELD
-    }
+    all_gaps = {mid: abs(ANCHOR[mid] - CANDIDATE[mid]) for mid in OUTFIELD}
     assert exp["key_differences"][0]["difference"] == max(all_gaps.values())
 
 
@@ -193,9 +206,18 @@ def test_boundary_gap_of_25_is_a_key_difference():
 def test_no_meaningful_differences_edge_case():
     """All gaps small -> key differences must be empty, not force-ranked."""
     a = {
-        "si_gls_p90": 72, "si_xg_p90": 70, "si_sh_p90": 74, "si_prgp_p90": 71,
-        "si_prgc_p90": 73, "si_xag_p90": 60, "si_kp_p90": 58, "si_tkl_p90": 55,
-        "si_int_p90": 62, "si_press_p90": 64, "si_cmp_pct": 68, "si_dis_p90": 52,
+        "si_gls_p90": 72,
+        "si_xg_p90": 70,
+        "si_sh_p90": 74,
+        "si_prgp_p90": 71,
+        "si_prgc_p90": 73,
+        "si_xag_p90": 60,
+        "si_kp_p90": 58,
+        "si_tkl_p90": 55,
+        "si_int_p90": 62,
+        "si_press_p90": 64,
+        "si_cmp_pct": 68,
+        "si_dis_p90": 52,
     }
     b = {mid: v + 3 for mid, v in a.items()}
     exp = _explain(a, b)

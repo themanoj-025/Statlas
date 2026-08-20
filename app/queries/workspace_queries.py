@@ -447,9 +447,7 @@ def add_entry_tag(
     entry = _owned_entry(db, user_id, entry_id)
     existing = (
         db.query(EntryTag)
-        .filter(
-            EntryTag.shortlist_entry_id == entry.id, EntryTag.tag_text == tag_text
-        )
+        .filter(EntryTag.shortlist_entry_id == entry.id, EntryTag.tag_text == tag_text)
         .first()
     )
     if existing is None:
@@ -459,9 +457,7 @@ def add_entry_tag(
     return {"tag": tag_text}
 
 
-def remove_entry_tag(
-    db: Session, user_id: int, entry_id: int, tag_text: str
-) -> None:
+def remove_entry_tag(db: Session, user_id: int, entry_id: int, tag_text: str) -> None:
     """Remove a tag (tags are vocabulary, not audit data — hard delete is fine)."""
     entry = _owned_entry(db, user_id, entry_id)
     db.query(EntryTag).filter(
@@ -472,9 +468,7 @@ def remove_entry_tag(
     db.commit()
 
 
-def remove_entry(
-    db: Session, user_id: int, shortlist_id: int, player_id: int
-) -> None:
+def remove_entry(db: Session, user_id: int, shortlist_id: int, player_id: int) -> None:
     """Soft-delete an entry: removed_at set, notes/tags/status_history intact."""
     _owned_shortlist(db, user_id, shortlist_id)
     entry = (
@@ -508,9 +502,7 @@ def remove_entry_by_id(db: Session, user_id: int, entry_id: int) -> None:
 # ---------------------------------------------------------------------------
 
 
-def get_shortlist_memberships(
-    db: Session, user_id: int, player_id: int
-) -> list[int]:
+def get_shortlist_memberships(db: Session, user_id: int, player_id: int) -> list[int]:
     """Shortlist ids (non-deleted) that currently contain the player — used by
     the Add-to-Shortlist UI to mark existing memberships."""
     rows = (

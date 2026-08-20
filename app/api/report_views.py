@@ -165,7 +165,9 @@ def export_json(report_id: int, request: Request):
         return Response(
             content=content,
             media_type="application/json",
-            headers={"Content-Disposition": f'attachment; filename="report-{report_id}.json"'},
+            headers={
+                "Content-Disposition": f'attachment; filename="report-{report_id}.json"'
+            },
         )
 
 
@@ -177,11 +179,15 @@ def export_pdf(report_id: int, request: Request):
             payload = _load_verified(db, user.id, report_id)
         except Exception as exc:  # noqa: BLE001
             raise _map_error(exc)
-        pdf = report_export.export_pdf(payload["report"], player_name=payload.get("player_name"))
+        pdf = report_export.export_pdf(
+            payload["report"], player_name=payload.get("player_name")
+        )
         return Response(
             content=pdf,
             media_type="application/pdf",
-            headers={"Content-Disposition": f'attachment; filename="statlas-report-{report_id}.pdf"'},
+            headers={
+                "Content-Disposition": f'attachment; filename="statlas-report-{report_id}.pdf"'
+            },
         )
 
 
@@ -193,9 +199,13 @@ def export_csv(report_id: int, request: Request):
             payload = _load_verified(db, user.id, report_id)
         except Exception as exc:  # noqa: BLE001
             raise _map_error(exc)
-        csv_text = report_export.export_csv(payload["report"], player_name=payload.get("player_name"))
+        csv_text = report_export.export_csv(
+            payload["report"], player_name=payload.get("player_name")
+        )
         return StreamingResponse(
             iter([csv_text]),
             media_type="text/csv",
-            headers={"Content-Disposition": f'attachment; filename="statlas-report-{report_id}.csv"'},
+            headers={
+                "Content-Disposition": f'attachment; filename="statlas-report-{report_id}.csv"'
+            },
         )

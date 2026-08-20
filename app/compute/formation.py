@@ -82,9 +82,7 @@ def detect_formation(
     player_positions: dict[int, list[tuple[float, float]]] = defaultdict(list)
     for ev in events:
         if ev.player_id is not None:
-            player_positions[ev.player_id].append(
-                (ev.x_coordinate, ev.y_coordinate)
-            )
+            player_positions[ev.player_id].append((ev.x_coordinate, ev.y_coordinate))
 
     # Exclude GK (typically has very different x distribution)
     # GK is usually in x < 15 area
@@ -95,8 +93,7 @@ def detect_formation(
 
     # Classify players into lines
     outfield_players = {
-        pid: avg_x for pid, avg_x in player_avg_x.items()
-        if avg_x > 15  # Exclude GK
+        pid: avg_x for pid, avg_x in player_avg_x.items() if avg_x > 15  # Exclude GK
     }
 
     defenders = []
@@ -117,7 +114,9 @@ def detect_formation(
 
     # If we have exactly 10 outfield + 1 GK, we're confident
     total_outfield = n_def + n_mid + n_fwd
-    confidence = 1.0 if total_outfield == 10 else max(0.3, 1.0 - abs(total_outfield - 10) * 0.1)
+    confidence = (
+        1.0 if total_outfield == 10 else max(0.3, 1.0 - abs(total_outfield - 10) * 0.1)
+    )
 
     formation = (n_def, n_mid, n_fwd)
     formation_str = f"{n_def}-{n_mid}-{n_fwd}"
@@ -150,6 +149,7 @@ def detect_formation(
 # D2 — Formation stability analysis (by time windows)
 # ---------------------------------------------------------------------------
 
+
 def analyze_formation_stability(
     db: Session,
     match_id: str,
@@ -180,32 +180,37 @@ def analyze_formation_stability(
             minute_start=minute,
             minute_end=end,
         )
-        windows.append({
-            "minute_start": minute,
-            "minute_end": end,
-            "formation": result["formation_str"],
-            "formation_tuple": result["formation"],
-            "confidence": result["confidence"],
-        })
+        windows.append(
+            {
+                "minute_start": minute,
+                "minute_end": end,
+                "formation": result["formation_str"],
+                "formation_tuple": result["formation"],
+                "confidence": result["confidence"],
+            }
+        )
         minute += window_minutes
 
     # Detect changes
     for i in range(1, len(windows)):
         if windows[i]["formation_tuple"] != windows[i - 1]["formation_tuple"]:
-            changes.append({
-                "from_formation": windows[i - 1]["formation"],
-                "to_formation": windows[i]["formation"],
-                "approximate_minute": windows[i]["minute_start"],
-                "from_confidence": windows[i - 1]["confidence"],
-                "to_confidence": windows[i]["confidence"],
-            })
+            changes.append(
+                {
+                    "from_formation": windows[i - 1]["formation"],
+                    "to_formation": windows[i]["formation"],
+                    "approximate_minute": windows[i]["minute_start"],
+                    "from_confidence": windows[i - 1]["confidence"],
+                    "to_confidence": windows[i]["confidence"],
+                }
+            )
 
     # Stability score: fraction of transitions with same formation
     if len(windows) <= 1:
         stability_score = 1.0
     else:
         stable_transitions = sum(
-            1 for i in range(1, len(windows))
+            1
+            for i in range(1, len(windows))
             if windows[i]["formation_tuple"] == windows[i - 1]["formation_tuple"]
         )
         stability_score = stable_transitions / (len(windows) - 1)
@@ -214,7 +219,11 @@ def analyze_formation_stability(
     formation_counts: dict[str, int] = defaultdict(int)
     for w in windows:
         formation_counts[w["formation"]] += 1
-    dominant = max(formation_counts, key=formation_counts.get) if formation_counts else "unknown"
+    dominant = (
+        max(formation_counts, key=formation_counts.get)
+        if formation_counts
+        else "unknown"
+    )
 
     return {
         "match_id": match_id,
@@ -230,6 +239,7 @@ def analyze_formation_stability(
 # D3 — Formation effectiveness (correlation with performance)
 # ---------------------------------------------------------------------------
 
+
 def compute_formation_effectiveness(
     db: Session,
     match_ids: list[str],
@@ -244,12 +254,14 @@ def compute_formation_effectiveness(
     (1-2 matches per formation) do not support strong claims. Uncertainty is
     always flagged.
     """
-    formation_stats: dict[str, dict[str, Any]] = defaultdict(lambda: {
-        "matches": 0,
-        "total_shots": 0,
-        "total_passes": 0,
-        "avg_possession_x": 0,
-    })
+    formation_stats: dict[str, dict[str, Any]] = defaultdict(
+        lambda: {
+            "matches": 0,
+            "total_shots": 0,
+            "total_passes": 0,
+            "avg_possession_x": 0,
+        }
+    )
 
     for match_id in match_ids:
         result = detect_formation(db, match_id, team_player_ids)
@@ -308,6 +320,7 @@ def compute_formation_effectiveness(
 # ---------------------------------------------------------------------------
 # D4 — Formation conformity analysis
 # ---------------------------------------------------------------------------
+
 
 def analyze_formation_conformity(
     db: Session,
