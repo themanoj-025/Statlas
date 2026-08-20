@@ -108,18 +108,26 @@ def tool_get_leaderboard(
         return {
             "error": f"Unknown metric \"{metric}\". Known metrics: {sorted(registry.get('metrics', {}).keys())}"
         }
-    rows = leaderboard_queries.get_leaderboard(
-        db,
-        league_id=None,
-        position_group=position,
-        metric=metric,
-        season=None,
-    )
-    # Filter by league slug if given.
+    # get_leaderboard requires league_slug; when no league is given,
+    # fall back to the filtered leaderboard which accepts None league.
     if league:
-        rows = [
-            r for r in rows if (r.get("league_slug") or "").lower() == league.lower()
-        ]
+        rows = leaderboard_queries.get_leaderboard(
+            db,
+            league_slug=league,
+            position_group=position or "CM",
+            metric=metric,
+            season="2025-26",
+        )
+    else:
+        # No league filter — use the filtered leaderboard with no league constraint
+        rows_data = leaderboard_queries.get_leaderboard_filtered(
+            db,
+            metric=metric,
+            season="2025-26",
+            position_group=position,
+            limit=limit,
+        )
+        return {"metric": metric, "rows": rows_data.get("entries", [])[:limit]}
     return {"metric": metric, "rows": rows[:limit]}
 
 

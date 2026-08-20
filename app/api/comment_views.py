@@ -62,7 +62,7 @@ def list_comments(
     user = _require_user(request)
     with session_scope() as db:
         if not oq.user_has_permission(db, user.id, org_id, "resource_view"):
-            raise HTTPException(status_code=403, detail="Access denied")
+            raise HTTPException(status_code=404, detail="Resource not found")
 
         comments = (
             db.query(Comment, User)
@@ -106,7 +106,7 @@ def add_comment(
     with session_scope() as db:
         if not oq.user_has_permission(db, user.id, org_id, "resource_comment"):
             raise HTTPException(
-                status_code=403, detail="You do not have permission to comment"
+                status_code=404, detail="Resource not found"
             )
 
         comment = Comment(
@@ -178,9 +178,8 @@ def edit_comment(comment_id: int, body: EditCommentBody, request: Request):
             )
 
         comment.text = body.text
-        comment.edited_at = __import__("datetime").datetime.now(
-            __import__("datetime").timezone.utc
-        )
+        from datetime import datetime, timezone
+        comment.edited_at = datetime.now(timezone.utc)
         db.commit()
         return {"ok": True}
 
@@ -224,7 +223,7 @@ def activity_feed(
     user = _require_user(request)
     with session_scope() as db:
         if not oq.user_has_permission(db, user.id, org_id, "resource_view"):
-            raise HTTPException(status_code=403, detail="Access denied")
+            raise HTTPException(status_code=404, detail="Resource not found")
 
         # Get comments as activity items
         comments = (

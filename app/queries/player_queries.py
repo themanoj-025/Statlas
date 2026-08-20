@@ -232,7 +232,9 @@ def search_players(
     q = query.strip().lower()
     if not q:
         return []
-    pattern = f"%{q}%"
+    # Escape ILIKE wildcards in user input to prevent unintended matches
+    escaped = q.replace("%", "\\%").replace("_", "\\_")
+    pattern = f"%{escaped}%"
 
     player_rows = db.query(Player).filter(Player.canonical_name.ilike(pattern)).all()
     alias_rows = (

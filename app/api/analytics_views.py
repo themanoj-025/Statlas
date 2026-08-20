@@ -42,13 +42,30 @@ router = APIRouter(prefix="/api/v1/analytics", tags=["analytics"])
 
 
 def _require_staff(request: Request) -> User:
-    """Require an authenticated user with admin/staff privileges."""
+    """Require an authenticated user with admin/staff privileges.
+
+    Checks STAFF_EMAILS env var (comma-separated) against the user's email.
+    Falls back to requiring the user to have an active Pro subscription
+    (any paying user is treated as staff in single-team deployments).
+    """
     user = require_user(request)
-    # For now, check if user has admin status via subscription_tier
-    # In production, this would check a dedicated is_staff flag.
-    if not user:
-        raise HTTPException(status_code=401, detail="Not signed in.")
-    return user
+    settings = get_settings()
+    staff_emails = {
+        e.strip().lower()
+        for e in (settings.staff_emails or "").split(",")
+        if e.strip()
+    }
+    if staff_emails and user.email.lower() in staff_emails:
+        return user
+    # Fallback: active subscription = staff in single-team deployments
+    from app.db import session_scope as _scope
+    with _scope() as db:
+        if auth.has_pro_access(db, user.id):
+            return user
+    raise HTTPException(
+        status_code=403,
+        detail="This dashboard is restricted to staff accounts.",
+    )
 
 
 def _log_access(db: Session, user_id: int, dashboard: str, params: dict | None = None) -> None:

@@ -22,7 +22,7 @@ def get_leaderboard(
     league_slug: str,
     position_group: str,
     metric: str,
-    season: str,
+    season: str | None = None,
     limit: int = 50,
 ) -> list[dict[str, Any]]:
     registry = load_registry()
@@ -33,7 +33,7 @@ def get_leaderboard(
     if league is None:
         return []
 
-    rows = (
+    query = (
         db.query(PercentileSnapshot, StatSnapshot, Player)
         .join(StatSnapshot, PercentileSnapshot.stat_snapshot_id == StatSnapshot.id)
         .join(Player, StatSnapshot.player_id == Player.id)
@@ -42,10 +42,11 @@ def get_leaderboard(
             PercentileSnapshot.metric_name == metric,
             PercentileSnapshot.position_group == position_group,
             StatSnapshot.league_id == league.id,
-            StatSnapshot.season == season,
         )
-        .all()
     )
+    if season is not None:
+        query = query.filter(StatSnapshot.season == season)
+    rows = query.all()
 
     # Keep the latest snapshot per player (a player may have multiple snapshots
     # across scrape dates; published rows exist per snapshot).
