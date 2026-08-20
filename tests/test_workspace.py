@@ -659,7 +659,9 @@ def test_api_full_flow_and_free_gate(client):
     # Free user attempting a SECOND shortlist -> honest 403 upsell.
     resp = client.post("/api/v1/workspace", json={"name": "Second list"})
     assert resp.status_code == 403
-    assert "Upgrade to Pro" in resp.json()["detail"]
+    body = resp.json()
+    msg = body.get("detail") or body.get("error", {}).get("message", "")
+    assert "Upgrade to Pro" in msg
 
     # Add a player from the (simulated) profile page.
     resp = client.post(
@@ -684,7 +686,9 @@ def test_api_full_flow_and_free_gate(client):
         f"/api/v1/workspace/entries/{entry_id}/status", json={"status": "monitoring"}
     )
     assert resp.status_code == 400
-    assert "terminal" in resp.json()["detail"]
+    body = resp.json()
+    msg = body.get("detail") or body.get("error", {}).get("message", "")
+    assert "terminal" in msg
 
     # Notes + tags.
     assert (

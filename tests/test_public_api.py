@@ -123,7 +123,9 @@ def test_revoked_key_fails(seeded_client):
         headers={"Authorization": f"Bearer {raw}"},
     )
     assert resp.status_code == 401
-    assert "revoked" in resp.json()["detail"].lower()
+    body = resp.json()
+    msg = body.get("detail") or body.get("error", {}).get("message", "")
+    assert "revoked" in msg.lower()
 
 
 def test_rotate_mints_new_key_and_revokes_old(seeded_client):
@@ -160,7 +162,9 @@ def test_rate_limit_headers_and_403_for_non_api_plan(seeded_client):
         headers={"Authorization": f"Bearer {raw}"},
     )
     assert resp.status_code == 403
-    assert "api business" in resp.json()["detail"].lower()
+    body = resp.json()
+    msg = body.get("detail") or body.get("error", {}).get("message", "")
+    assert "api business" in msg.lower()
 
 
 def test_rate_limit_429_after_cap(seeded_client):
@@ -183,8 +187,13 @@ def test_rate_limit_429_after_cap(seeded_client):
         api_plan["api_rate_limit_per_minute"] = 3
         # Fresh key so prior hits cannot leak into this window.
         from app.api import public_views
+        from app.rate_limiting import get_rate_limiter
 
-        public_views._hits.clear()
+        limiter = get_rate_limiter()
+        # We can't easily reset per-key, so reset the entire in-memory limiter
+        import app.rate_limiting as rl
+
+        rl._limiter = None  # Force re-creation
         try:
             for _ in range(3):
                 resp = seeded_client.get(
