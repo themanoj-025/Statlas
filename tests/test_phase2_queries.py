@@ -104,6 +104,55 @@ def test_search_matches_aliases(db, premier_league):
     assert search_players(db, "zzzznope") == []
 
 
+def test_search_escapes_ilike_wildcards(db, premier_league):
+    """ILIKE wildcards (% and _) in user input are escaped so they are
+    treated as literal characters, not pattern metacharacters.
+
+    Without escaping:
+    - '%' would match everything (empty LIKE pattern)
+    - '_' would match any single character
+    """
+    _seed_team(db, premier_league, "Test Club")
+    # Player with literal % in name (unlikely but possible via aliases)
+    player_pct = Player(
+        canonical_name="100% Striker",
+        position_group="ST",
+    )
+    player_normal = Player(
+        canonical_name="Normal Striker",
+        position_group="ST",
+    )
+    db.add_all([player_pct, player_normal])
+    db.commit()
+
+    # Searching for '100%' should match the literal-name player,
+    # not return all players (which '%' alone would do unescaped)
+    hits = search_players(db, "100%", limit=10)
+    player_ids = [h["player_id"] for h in hits]
+    assert player_pct.id in player_ids, "Literal % should match, not be a wildcard"
+    # 'Normal Striker' should NOT appear — '%' is not a wildcard
+    assert player_normal.id not in player_ids
+
+    # Searching for '_' should match literal underscore, not any char
+    # Create a player with literal underscore
+    player_uscore = Player(
+        canonical_name="Player_ASpecial",
+        position_group="CM",
+    )
+    player_uother = Player(
+        canonical_name="PlayerBSpecial",
+        position_group="CM",
+    )
+    db.add_all([player_uscore, player_uother])
+    db.commit()
+
+    hits = search_players(db, "Player_A", limit=10)
+    player_ids = [h["player_id"] for h in hits]
+    assert player_uscore.id in player_ids, "Literal _ should match"
+    # 'PlayerBSpecial' should NOT appear — '_' is not a single-char wildcard
+    assert player_uother.id not in player_ids
+
+
 def test_similar_players_real_nearest_neighbour(db, premier_league, small_pool):
     """Cosine similarity is computed from real percentile vectors in-cohort."""
     for name, gls in [("A", 0.2), ("B", 0.4), ("C", 0.6), ("D", 0.8), ("E", 0.9)]:
