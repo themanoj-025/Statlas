@@ -86,6 +86,10 @@ class InMemoryRateLimiter:
     def reset(self, key: str) -> None:
         self._hits.pop(key, None)
 
+    def reset_all(self) -> None:
+        """Clear all rate-limit state (for test isolation)."""
+        self._hits.clear()
+
 
 # ---------------------------------------------------------------------------
 # Module-level singleton — lazy initialised

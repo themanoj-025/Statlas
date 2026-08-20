@@ -113,7 +113,7 @@ function ConfirmForm({ token }: { token: string }) {
     <form onSubmit={submit} className="card" style={{ padding: "var(--space-4)", marginTop: "var(--space-4)" }}>
       <div className="field">
         <label className="field__label" htmlFor="new-password">
-          New password (min 8 characters)
+          New password (min 8 chars, upper + lower + digit)
         </label>
         <input
           id="new-password"
