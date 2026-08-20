@@ -127,6 +127,45 @@ class TestOrganizationCRUD:
         with pytest.raises(ValueError, match="already exists"):
             create_organization(db, owner.id, "Test Org")
 
+    def test_create_org_slug_too_short(self, db: Session):
+        from app.queries.org_queries import create_organization
+
+        owner = _make_user(db)
+        with pytest.raises(ValueError, match="at least 3 characters"):
+            create_organization(db, owner.id, "AB", slug="ab")
+
+    def test_create_org_slug_invalid_format(self, db: Session):
+        from app.queries.org_queries import create_organization
+
+        owner = _make_user(db)
+        with pytest.raises(ValueError, match="lowercase letters, numbers, and hyphens"):
+            create_organization(db, owner.id, "Bad Slug", slug="Bad Slug!@#")
+
+    def test_create_org_slug_underscore_rejected(self, db: Session):
+        from app.queries.org_queries import create_organization
+
+        owner = _make_user(db)
+        with pytest.raises(ValueError, match="lowercase letters, numbers, and hyphens"):
+            create_organization(db, owner.id, "Underscore", slug="bad_slug")
+
+    def test_create_org_reserved_slug_rejected(self, db: Session):
+        from app.queries.org_queries import create_organization
+
+        owner = _make_user(db)
+        for reserved in ("api", "auth", "billing", "admin", "dashboard"):
+            with pytest.raises(ValueError, match="reserved slug"):
+                create_organization(db, owner.id, f"Reserved {reserved}", slug=reserved)
+
+    def test_create_org_valid_slug_formats(self, db: Session):
+        from app.queries.org_queries import create_organization
+
+        owner = _make_user(db)
+        for slug in ("my-org", "org-123", "scouting-team-v2"):
+            result = create_organization(db, owner.id, f"Org {slug}", slug=slug)
+            assert result["slug"] == slug
+            # Reset owner for next iteration
+            owner = _make_user(db, email=f"{slug}@test.com")
+
     def test_get_organization(self, db: Session):
         from app.queries.org_queries import get_organization
 
