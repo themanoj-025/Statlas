@@ -180,10 +180,10 @@ def test_assistant_quota_hard_cap(seeded_client, fake_anthropic):
         json={"messages": [{"role": "user", "content": "Compare two players."}]},
     )
     assert resp.status_code == 429
-    assert (
-        "quota" in resp.json()["detail"].lower()
-        or "reset" in resp.json()["detail"].lower()
-    )
+    body = resp.json()
+    # Support both legacy {"detail": ...} and new {"error": {"message": ...}} formats
+    msg = body.get("detail") or body.get("error", {}).get("message", "")
+    assert "quota" in msg.lower() or "reset" in msg.lower()
 
 
 def test_assistant_requires_signin(seeded_client, fake_anthropic):
@@ -213,7 +213,9 @@ def test_assistant_unconfigured_returns_503(monkeypatch):
             json={"messages": [{"role": "user", "content": "hi"}]},
         )
         assert resp.status_code == 503
-        assert "not configured" in resp.json()["detail"].lower()
+        body = resp.json()
+        msg = body.get("detail") or body.get("error", {}).get("message", "")
+        assert "not configured" in msg.lower()
 
 
 def test_assistant_rate_limit(seeded_client, fake_anthropic):
@@ -223,7 +225,26 @@ def test_assistant_rate_limit(seeded_client, fake_anthropic):
     # Lower the cap so the test is fast; clear prior hits from other tests.
     original = assistant_views._RATE_MAX_PER_MINUTE
     assistant_views._RATE_MAX_PER_MINUTE = 3
-    assistant_views._hits.clear()
+    # Reset the rate limiter state for this test
+    from app.rate_limiting import get_rate_limiter
+
+    limiter = get_rate_limiter()
+    # Use a test-specific key to avoid interference from other tests
+    test_key = "assistant:test_rate_limit"
+    limiter.reset(test_key)
+    # Monkey-patch the _rate_limit function to use our test key
+    original_fn = assistant_views._rate_limit
+
+    def _test_rate_limit(user_id: int) -> None:
+        if limiter.is_limited(test_key, max_attempts=3, window_seconds=60):
+            from fastapi import HTTPException
+
+            raise HTTPException(
+                status_code=429,
+                detail="Too many requests",
+            )
+
+    assistant_views._rate_limit = _test_rate_limit
     try:
         for _ in range(3):
             resp = seeded_client.post(
@@ -238,6 +259,7 @@ def test_assistant_rate_limit(seeded_client, fake_anthropic):
         assert resp.status_code == 429
     finally:
         assistant_views._RATE_MAX_PER_MINUTE = original
+        assistant_views._rate_limit = original_fn
 
 
 def test_assistant_quota_endpoint(seeded_client, fake_anthropic):

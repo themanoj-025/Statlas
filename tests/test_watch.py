@@ -912,7 +912,9 @@ def test_api_free_cap_honest_upsell(client, db):
         "/api/v1/watch", json={"entity_type": "team", "entity_id": team_ids[10]}
     )
     assert resp.status_code == 403
-    assert "Upgrade to Pro" in resp.json()["detail"]
+    body = resp.json()
+    msg = body.get("detail") or body.get("error", {}).get("message", "")
+    assert "Upgrade to Pro" in msg
 
 
 def test_api_cross_user_watch_404(client, db):
@@ -937,7 +939,9 @@ def test_e2e_seed_alert_fixture_disabled_outside_e2e(client):
         json={"email": "x@example.com", "player_id": 1},
     )
     assert resp.status_code == 403
-    assert "e2e fixtures are disabled" in resp.json()["detail"]
+    body = resp.json()
+    msg = body.get("detail") or body.get("error", {}).get("message", "")
+    assert "e2e fixtures are disabled" in msg
 
 
 def test_api_unsubscribe_sessionless(client, db):

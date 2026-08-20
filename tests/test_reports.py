@@ -906,7 +906,9 @@ def test_api_free_tier_honest_upsell(client):
         player_id = db.query(Player).filter_by(canonical_name="API Striker").first().id
     resp = client.post("/api/v1/reports", json={"player_id": player_id})
     assert resp.status_code == 403
-    assert "Pro feature" in resp.json()["detail"]
+    body = resp.json()
+    msg = body.get("detail") or body.get("error", {}).get("message", "")
+    assert "Pro feature" in msg
 
 
 def test_e2e_grant_fixture_disabled_without_flag(client_plain):

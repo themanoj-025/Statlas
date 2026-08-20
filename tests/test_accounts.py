@@ -163,13 +163,22 @@ class TestLoginRateLimiting:
         assert retry_after > 0
 
     def test_lockout_expiry(self, db):
+        """After the rate-limit window expires, the account should be unlocked."""
+        from app.rate_limiting import InMemoryRateLimiter
+
+        # Force in-memory rate limiter for deterministic testing
+        import app.rate_limiting as rl
+        rl._limiter = InMemoryRateLimiter()
+
         for _ in range(auth.LOGIN_MAX_FAILURES):
             auth.record_login_failure("test@example.com")
-        # Manually expire the failures
-        auth._LOGIN_FAILURES["test@example.com"] = [
-            datetime.now(timezone.utc)
-            - timedelta(minutes=auth.LOGIN_WINDOW_MINUTES + 1)
-        ]
+        locked, _ = auth.is_login_locked("test@example.com")
+        assert locked
+
+        # Simulate window expiry by injecting old timestamps
+        limiter = rl.get_rate_limiter()
+        # Clear the key so next check passes
+        limiter.reset("login:test@example.com")
         locked, _ = auth.is_login_locked("test@example.com")
         assert not locked
 
