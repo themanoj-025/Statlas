@@ -57,6 +57,8 @@ def get_recent_activity(
     Viewed" widget.  Deduplication is handled at write time (activity.py);
     this query just orders and limits.
     """
+    from app.models import Team
+
     cutoff = datetime.now(timezone.utc) - timedelta(days=lookback_days)
 
     rows = (
@@ -72,7 +74,9 @@ def get_recent_activity(
     )
 
     seen: set[tuple[str, int]] = set()
-    results: list[dict] = []
+    player_ids: list[int] = []
+    team_ids: set[int] = set()
+    raw_entries: list[dict] = []
     for row in rows:
         key = (row.entity_type, row.entity_id)
         if key in seen:
@@ -85,20 +89,30 @@ def get_recent_activity(
             "performed_at": row.performed_at.isoformat(),
         }
         if row.entity_type == "player":
-            player = db.get(Player, row.entity_id)
+            player_ids.append(row.entity_id)
+        raw_entries.append(entry)
+        if len(raw_entries) >= limit:
+            break
+
+    # Batch-load all players and teams (eliminates N+1)
+    players_map: dict[int, Player] = {}
+    if player_ids:
+        players_map = {p.id: p for p in db.query(Player).filter(Player.id.in_(player_ids)).all()}
+        team_ids = {p.current_team_id for p in players_map.values() if p.current_team_id}
+    teams_map: dict[int, Team] = {}
+    if team_ids:
+        teams_map = {t.id: t for t in db.query(Team).filter(Team.id.in_(team_ids)).all()}
+
+    results: list[dict] = []
+    for entry in raw_entries:
+        if entry["entity_type"] == "player":
+            player = players_map.get(entry["entity_id"])
             if player is not None:
                 entry["player_name"] = player.canonical_name
                 entry["position_group"] = player.position_group
-                if player.current_team_id:
-                    from app.models import Team
-
-                    team = db.get(Team, player.current_team_id)
-                    entry["team_name"] = team.name if team else None
-                else:
-                    entry["team_name"] = None
+                team = teams_map.get(player.current_team_id) if player.current_team_id else None
+                entry["team_name"] = team.name if team else None
         results.append(entry)
-        if len(results) >= limit:
-            break
 
     return results
 
@@ -415,20 +429,21 @@ def get_recommended_players(
         .all()
     )
 
+    # Batch-load all candidates' players and teams (eliminates N+1)
+    candidate_pids = [row.player_id for row in candidates if row.player_id not in all_seen and row.player_id not in dismissed]
+    players_map = {p.id: p for p in db.query(Player).filter(Player.id.in_(candidate_pids)).all()} if candidate_pids else {}
+    team_ids = {p.current_team_id for p in players_map.values() if p.current_team_id}
+    teams_map = {t.id: t for t in db.query(Team).filter(Team.id.in_(team_ids)).all()} if team_ids else {}
+
     results: list[dict] = []
     for row in candidates:
         pid = row.player_id
         if pid in all_seen or pid in dismissed:
             continue
-        player = db.get(Player, pid)
+        player = players_map.get(pid)
         if player is None:
             continue
-        team_name = None
-        if player.current_team_id:
-            from app.models import Team
-
-            team = db.get(Team, player.current_team_id)
-            team_name = team.name if team else None
+        team = teams_map.get(player.current_team_id) if player.current_team_id else None
 
         avg_pct = round(float(row.avg_pct), 1)
 
@@ -443,7 +458,7 @@ def get_recommended_players(
             {
                 "player_id": pid,
                 "player_name": player.canonical_name,
-                "team_name": team_name,
+                "team_name": team.name if team else None,
                 "position_group": player.position_group,
                 "avg_percentile": avg_pct,
                 "explanation": explanation,
@@ -597,28 +612,34 @@ def unsave_player(db: Session, user_id: int, player_id: int) -> bool:
 
 def get_saved_players(db: Session, user_id: int) -> list[dict]:
     """Return the user's saved players with summary data."""
+    from app.models import Team
+
     entries = (
         db.query(SavedPlayer)
         .filter(SavedPlayer.user_id == user_id)
         .order_by(SavedPlayer.saved_at.desc())
         .all()
     )
+    if not entries:
+        return []
+
+    # Batch-load all players and teams (eliminates N+1)
+    player_ids = [e.player_id for e in entries]
+    players_map = {p.id: p for p in db.query(Player).filter(Player.id.in_(player_ids)).all()}
+    team_ids = {p.current_team_id for p in players_map.values() if p.current_team_id}
+    teams_map = {t.id: t for t in db.query(Team).filter(Team.id.in_(team_ids)).all()} if team_ids else {}
+
     results: list[dict] = []
     for entry in entries:
-        player = db.get(Player, entry.player_id)
+        player = players_map.get(entry.player_id)
         if player is None:
             continue
-        team_name = None
-        if player.current_team_id:
-            from app.models import Team
-
-            team = db.get(Team, player.current_team_id)
-            team_name = team.name if team else None
+        team = teams_map.get(player.current_team_id) if player.current_team_id else None
         results.append(
             {
                 "player_id": player.id,
                 "player_name": player.canonical_name,
-                "team_name": team_name,
+                "team_name": team.name if team else None,
                 "position_group": player.position_group,
                 "saved_at": entry.saved_at.isoformat(),
                 "category": entry.category,

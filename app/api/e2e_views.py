@@ -169,7 +169,8 @@ def seed_alert(body: SeedAlertBody):
                 raise HTTPException(
                     status_code=500, detail="no league/team seeded — seed data first"
                 )
-            team_id, league_id, season = team.id, league.id, "2025-26"
+            from app.config import CURRENT_SEASON
+            team_id, league_id, season = team.id, league.id, CURRENT_SEASON
 
         # The fixture pair must BE the two most recent published snapshots for
         # the player — otherwise the detection job compares against whatever

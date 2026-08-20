@@ -224,3 +224,39 @@ def get_leaderboard_filtered(
         "offset": offset,
         "has_more": offset + limit < total,
     }
+
+
+def get_qualifying_counts(
+    db: Session,
+    *,
+    metric: str,
+    season: str,
+) -> dict[str, dict[str, int]]:
+    """Batch count qualifying players per (position_group, tier).
+
+    Returns {position_group: {tier_1: N, tier_2: N, tier_3: N}}.
+    One query instead of 3×8=24 individual leaderboard calls.
+    """
+    from sqlalchemy import func
+
+    rows = (
+        db.query(
+            PercentileSnapshot.position_group,
+            League.tier,
+            func.count(func.distinct(StatSnapshot.player_id)).label("total"),
+        )
+        .join(StatSnapshot, PercentileSnapshot.stat_snapshot_id == StatSnapshot.id)
+        .join(League, StatSnapshot.league_id == League.id)
+        .filter(
+            PercentileSnapshot.is_published.is_(True),
+            PercentileSnapshot.metric_name == metric,
+            StatSnapshot.season == season,
+        )
+        .group_by(PercentileSnapshot.position_group, League.tier)
+        .all()
+    )
+
+    result: dict[str, dict[str, int]] = {}
+    for pos_group, tier, total in rows:
+        result.setdefault(pos_group, {})[tier] = total
+    return result

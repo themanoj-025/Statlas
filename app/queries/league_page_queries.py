@@ -64,7 +64,8 @@ def get_league_hub_data(
     if league is None:
         return None
 
-    season = season or "2025-26"
+    from app.config import CURRENT_SEASON
+    season = season or CURRENT_SEASON
     registry = load_registry()
 
     # Teams in this league.
