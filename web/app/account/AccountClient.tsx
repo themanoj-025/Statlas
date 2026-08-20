@@ -239,7 +239,7 @@ export function AccountClient() {
             />
           </label>
           <label className="field" htmlFor="new-pw">
-            <span className="field__label">New password (min 8 characters)</span>
+            <span className="field__label">New password (min 8 chars, upper + lower + digit)</span>
             <input
               id="new-pw"
               className="input"
