@@ -26,6 +26,7 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 
 from app import auth
+from app.api.analytics_views import router as analytics_router
 from app.api.archetype_views import router as archetype_router
 from app.api.assistant_views import router as assistant_router
 from app.api.billing_views import router as billing_router
@@ -79,6 +80,7 @@ app.include_router(transfer_router)
 app.include_router(tactical_router)
 app.include_router(org_router)
 app.include_router(comment_router)
+app.include_router(analytics_router)
 
 
 @app.middleware("http")

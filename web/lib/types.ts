@@ -1319,3 +1319,108 @@ export type TacticalOverview = {
   formation: FormationResult;
   formation_stability: FormationStability;
 };
+
+// ---------------------------------------------------------------------------
+// Phase 18 — Internal Usage Analytics
+// ---------------------------------------------------------------------------
+
+export type DauResult = {
+  date: string;
+  dau_total: number;
+  dau_free: number;
+  dau_pro: number;
+};
+
+export type MauResult = {
+  month: string;
+  mau_total: number;
+  mau_free: number;
+  mau_pro: number;
+};
+
+export type FeatureUsageResult = {
+  date: string;
+  feature_name: string;
+  adoption_count: number;
+  adoption_pct: number;
+  avg_engagement_minutes: number;
+  actions_count: number;
+};
+
+export type ConversionFunnel = {
+  period: string;
+  step_1_signups: number;
+  step_2_created_shortlist: number;
+  step_2_rate: number;
+  step_3_upgrade_attempted: number;
+  step_3_rate: number;
+  step_4_subscribed: number;
+  step_4_rate: number;
+  overall_conversion: number;
+};
+
+export type RetentionCohort = {
+  cohort_month: string;
+  months_since_signup: number;
+  cohort_size: number;
+  retained_count: number;
+  retention_pct: number;
+};
+
+export type ChurnResult = {
+  month: string;
+  pro_users_at_start: number;
+  cancellations: number;
+  churn_rate_pct: number;
+  annualized_churn_pct: number;
+};
+
+export type ArpuResult = {
+  month: string;
+  pro_users: number;
+  mrr_eur: number;
+  arpu_eur: number;
+  upgrades: number;
+  cancellations: number;
+  estimated_lifetime_months: number;
+  estimated_ltv_eur: number;
+};
+
+export type ExecutiveDashboard = {
+  last_updated: string;
+  data_confidence: string;
+  caveat: string;
+  dau: DauResult;
+  mau: MauResult;
+  conversion: ConversionFunnel;
+  churn: ChurnResult;
+  arpu: ArpuResult;
+  feature_usage: FeatureUsageResult[];
+};
+
+export type AnalyticsAlert = {
+  id: number;
+  alert_name: string;
+  metric_name: string;
+  threshold_type: string;
+  threshold_value: number;
+  actual_value: number;
+  message: string;
+  fired_at: string | null;
+  acknowledged_at: string | null;
+};
+
+export type AnomalyResult = {
+  metric_name: string;
+  anomaly_detected: boolean;
+  anomaly: {
+    metric_name: string;
+    current_avg: number;
+    historical_mean: number;
+    std_dev: number;
+    z_score: number;
+    sigma_threshold: number;
+    window_weeks: number;
+    message: string;
+  } | null;
+};
