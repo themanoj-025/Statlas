@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { Search } from "lucide-react";
 import { useCallback, useEffect, useId, useRef, useState } from "react";
 import type { SearchResult } from "@/lib/types";
+import { api, ApiError } from "@/lib/api";
 import { initials, positionGroupLabel } from "@/lib/format";
 
 type Props = {
@@ -23,7 +24,7 @@ export function SearchCombobox({ autoFocus, onSelect, placeholder }: Props) {
   const [status, setStatus] = useState<"idle" | "loading" | "empty" | "error">("idle");
   const [errorMsg, setErrorMsg] = useState("");
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const abortRef = useRef<AbortController | null>(null);
+  const generationRef = useRef(0);
 
   const runSearch = useCallback(async (q: string) => {
     if (!q.trim()) {
@@ -33,25 +34,19 @@ export function SearchCombobox({ autoFocus, onSelect, placeholder }: Props) {
       return;
     }
     setStatus("loading");
-    abortRef.current?.abort();
-    const controller = new AbortController();
-    abortRef.current = controller;
+    generationRef.current += 1;
+    const gen = generationRef.current;
     try {
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_STATLAS_API_URL}/api/v1/players/search?q=${encodeURIComponent(q)}&limit=8`,
-        { cache: "no-store", signal: controller.signal }
-      );
-      if (!res.ok) throw new Error(`search ${res.status}`);
-      const data: SearchResult[] = await res.json();
-      if (controller.signal.aborted) return;
+      const data = await api.playerSearch(q, 8);
+      if (generationRef.current !== gen) return;
       setResults(data);
       setStatus(data.length ? "idle" : "empty");
       setActiveIndex(-1);
       setOpen(true);
     } catch (err) {
-      if (controller.signal.aborted) return;
+      if (generationRef.current !== gen) return;
       setStatus("error");
-      setErrorMsg(err instanceof Error ? err.message : "search failed");
+      setErrorMsg(err instanceof ApiError ? err.message : "search failed");
       setOpen(true);
     }
   }, []);
@@ -64,7 +59,7 @@ export function SearchCombobox({ autoFocus, onSelect, placeholder }: Props) {
 
   useEffect(() => () => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
-    abortRef.current?.abort();
+    generationRef.current += 1;
   }, []);
 
   const select = (result: SearchResult) => {

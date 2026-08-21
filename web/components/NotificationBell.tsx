@@ -88,21 +88,29 @@ export function NotificationBell() {
   }, [status]);
 
   const markRead = async (alertId: number) => {
-    await api.markAlertRead(alertId).catch(() => undefined);
-    setAlerts((prev) => {
-      if (!prev) return prev;
-      return prev.map((a) =>
-        a.alert_id === alertId ? { ...a, read_at: new Date().toISOString() } : a
-      );
-    });
+    try {
+      await api.markAlertRead(alertId);
+      setAlerts((prev) => {
+        if (!prev) return prev;
+        return prev.map((a) =>
+          a.alert_id === alertId ? { ...a, read_at: new Date().toISOString() } : a
+        );
+      });
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : "Could not mark as read.");
+    }
   };
 
   const dismiss = async (alertId: number) => {
-    await api.dismissAlert(alertId).catch(() => undefined);
-    setAlerts((prev) => {
-      if (!prev) return prev;
-      return prev.map((a) => (a.alert_id === alertId ? { ...a, dismissed: true } : a));
-    });
+    try {
+      await api.dismissAlert(alertId);
+      setAlerts((prev) => {
+        if (!prev) return prev;
+        return prev.map((a) => (a.alert_id === alertId ? { ...a, dismissed: true } : a));
+      });
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : "Could not dismiss notification.");
+    }
   };
 
   if (status !== "signed-in") return null;

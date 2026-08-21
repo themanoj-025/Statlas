@@ -56,6 +56,14 @@ def get_leaderboard(
         if existing is None or snap.scrape_date > existing[1].scrape_date:
             best[player.id] = (percentile, snap, player)
 
+    # Batch-load team names (eliminates N+1 from _team_name calls).
+    team_ids = {snap.team_id for _, snap, _ in best.values() if snap.team_id}
+    team_names: dict[int, str] = {}
+    if team_ids:
+        from app.models import Team
+        team_rows = db.query(Team).filter(Team.id.in_(team_ids)).all()
+        team_names = {t.id: t.name for t in team_rows}
+
     entries = []
     for percentile, snap, player in best.values():
         value = (
@@ -70,7 +78,7 @@ def get_leaderboard(
                 "player_id": player.id,
                 "name": player.canonical_name,
                 "position_group": percentile.position_group,
-                "club": _team_name(db, snap.team_id),
+                "club": team_names.get(snap.team_id) if snap.team_id else None,
                 "minutes": snap.minutes_played,
                 "value": value,
                 "snapshot_date": snap.scrape_date,
