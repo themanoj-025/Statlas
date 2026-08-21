@@ -246,10 +246,6 @@ def effective_plan(db: Session, user_id: int) -> str:
     return "free"
 
 
-def is_session_valid(db: Session, raw_token: str | None) -> bool:
-    return user_from_session(db, raw_token) is not None
-
-
 def user_payload(user: User) -> dict[str, Any]:
     """Public-safe user object (no hashes)."""
     return {

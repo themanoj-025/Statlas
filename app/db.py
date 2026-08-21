@@ -60,7 +60,11 @@ def get_session_factory() -> sessionmaker[Session]:
 
 
 def session_scope() -> Session:
-    """Return a new Session (caller closes it; or use as context manager)."""
+    """Return a new Session as a context manager.
+
+    Usage: ``with session_scope() as db: ...``
+    The session is automatically closed when the block exits.
+    """
     return get_session_factory()()
 
 

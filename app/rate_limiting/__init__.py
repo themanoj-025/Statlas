@@ -78,7 +78,7 @@ class InMemoryRateLimiter:
         self._hits[key] = window
         return False
 
-    def get_remaining(self, key: str, max_attempts: int, window_seconds: int = 600) -> int:
+    def get_remaining(self, key: str, max_attempts: int, window_seconds: int = 60) -> int:
         now = time.monotonic()
         window = [t for t in self._hits.get(key, []) if now - t < window_seconds]
         return max(0, max_attempts - len(window))

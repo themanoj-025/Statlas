@@ -38,6 +38,7 @@ from app.api.comment_views import router as comment_router
 from app.api.dashboard_views import router as dashboard_router
 from app.api.e2e_views import router as e2e_router
 from app.api.org_views import router as org_router
+from app.logging_setup import new_request_id
 from app.api.public_views import router as public_api_router
 from app.api.registry_view import public_meta
 from app.api.report_views import router as report_router
@@ -106,6 +107,8 @@ async def body_size_limit_middleware(request: Request, call_next):
     """Reject requests with oversized bodies (DoS protection).
 
     Constitution §4 (Security): SSRF guard + request validation.
+    Checks both Content-Length header and actual body size for chunked
+    transfers where Content-Length may be absent.
     """
     if request.method in ("GET", "HEAD", "OPTIONS"):
         return await call_next(request)
@@ -115,6 +118,14 @@ async def body_size_limit_middleware(request: Request, call_next):
             status_code=413,
             content={"error": {"code": "payload_too_large", "message": "Request body exceeds 1MB limit."}},
         )
+    # For chunked transfers (no Content-Length), read body and check size.
+    if not content_length:
+        body = await request.body()
+        if len(body) > MAX_REQUEST_BODY_BYTES:
+            return JSONResponse(
+                status_code=413,
+                content={"error": {"code": "payload_too_large", "message": "Request body exceeds 1MB limit."}},
+            )
     return await call_next(request)
 
 
@@ -188,8 +199,6 @@ async def security_and_rate_limit_middleware(request: Request, call_next):
     the headers on the way out.    """
 
     # Generate request ID for tracing + structured logging
-    from app.logging_setup import new_request_id
-
     req_id = new_request_id()
     request.state.request_id = req_id
 
