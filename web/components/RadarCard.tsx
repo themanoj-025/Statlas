@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import type { Axis, PlayerPayload } from "@/lib/types";
+import { api, ApiError } from "@/lib/api";
 import { RadarChart, type RadarMode, type RadarPlayer } from "./RadarChart";
 import { buildRadarPlayers } from "@/lib/radar";
 import { formatDate } from "@/lib/format";
@@ -43,14 +44,7 @@ export function RadarCard({ slugs, title, subtitle, maxPlayers = MAX_PLAYERS, mo
     setError(null);
     try {
       const results = await Promise.allSettled(
-        capped.map((slug) =>
-          fetch(`${process.env.NEXT_PUBLIC_STATLAS_API_URL}/api/v1/players/by-slug/${encodeURIComponent(slug)}`, {
-            cache: "no-store",
-          }).then(async (res) => {
-            if (!res.ok) throw new Error(`player '${slug}' not found`);
-            return res.json() as Promise<PlayerPayload>;
-          })
-        )
+        capped.map((slug) => api.playerBySlug(slug))
       );
       const ok: PlayerPayload[] = [];
       const failures: string[] = [];

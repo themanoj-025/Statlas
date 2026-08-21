@@ -28,6 +28,7 @@ export function FollowButton({
 }) {
   const { status } = useAuth();
   const [following, setFollowing] = useState<boolean | null>(null);
+  const [watchId, setWatchId] = useState<number | null>(null);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<{ kind: "ok" | "error" | "upsell"; text: string } | null>(null);
   const [loaded, setLoaded] = useState(false);
@@ -43,6 +44,7 @@ export function FollowButton({
           (w) => w.entity_type === entityType && w.entity_id === entityId
         );
         setFollowing(Boolean(mine));
+        if (mine) setWatchId(mine.watch_id);
       } catch {
         setFollowing(false);
       }
@@ -63,17 +65,23 @@ export function FollowButton({
     setMessage(null);
     try {
       if (following) {
-        // Unfollow: we know the watch id from a fresh list read.
-        const { watches } = await api.watches();
-        const mine = watches.find(
-          (w) => w.entity_type === entityType && w.entity_id === entityId
-        );
-        if (mine) await api.unfollow(mine.watch_id);
+        // Unfollow: use the cached watch_id (or fetch if missing).
+        let id = watchId;
+        if (!id) {
+          const { watches } = await api.watches();
+          const mine = watches.find(
+            (w) => w.entity_type === entityType && w.entity_id === entityId
+          );
+          if (mine) id = mine.watch_id;
+        }
+        if (id) await api.unfollow(id);
         setFollowing(false);
+        setWatchId(null);
         setMessage({ kind: "ok", text: `Unfollowed ${entityName}` });
       } else {
-        await api.follow(entityType, entityId);
+        const result = await api.follow(entityType, entityId);
         setFollowing(true);
+        if (result.watch_id) setWatchId(result.watch_id);
         setMessage({ kind: "ok", text: `Following ${entityName} — you'll get alerts on meaningful changes` });
       }
     } catch (err) {

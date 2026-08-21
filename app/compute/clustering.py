@@ -572,6 +572,23 @@ def generate_archetype_definitions(
     return definitions
 
 
+# Human-readable labels for archetype naming and descriptions (single source of truth).
+ARCHETYPE_LABELS: dict[str, str] = {
+    "si_cmp_pct": "Pass Completion",
+    "si_prgp_p90": "Progressive Passing",
+    "si_prgc_p90": "Ball Carrying",
+    "si_press_p90": "Pressing",
+    "si_tkl_p90": "Tackling",
+    "si_int_p90": "Interceptions",
+    "si_sh_p90": "Shooting",
+    "si_xg_p90": "Expected Goals",
+    "si_gls_p90": "Goals",
+    "si_kp_p90": "Key Passing",
+    "si_xag_p90": "Expected Assists",
+    "si_dis_p90": "Dispossessed",
+}
+
+
 def _generate_archetype_name(
     distinguishing_features: list[dict], feature_names: list[str]
 ) -> str:
@@ -584,23 +601,7 @@ def _generate_archetype_name(
     cluster_val = top["cluster_value"]
     global_val = top["global_value"]
 
-    # Feature name mapping for human-readable labels
-    feature_labels = {
-        "si_cmp_pct": "Pass Completion",
-        "si_prgp_p90": "Progressive Passing",
-        "si_prgc_p90": "Ball Carrying",
-        "si_press_p90": "Pressing",
-        "si_tkl_p90": "Tackling",
-        "si_int_p90": "Interceptions",
-        "si_sh_p90": "Shooting",
-        "si_xg_p90": "Expected Goals",
-        "si_gls_p90": "Goals",
-        "si_kp_p90": "Key Passing",
-        "si_xag_p90": "Expected Assists",
-        "si_dis_p90": "Dispossessed",
-    }
-
-    label = feature_labels.get(feature, feature)
+    label = ARCHETYPE_LABELS.get(feature, feature)
 
     if cluster_val > global_val:
         return f"High-{label}"
@@ -621,22 +622,7 @@ def _generate_archetype_description(
         cluster_val = feat["cluster_value"]
         global_val = feat["global_value"]
 
-        feature_labels = {
-            "si_cmp_pct": "pass completion",
-            "si_prgp_p90": "progressive passes",
-            "si_prgc_p90": "progressive carries",
-            "si_press_p90": "pressures",
-            "si_tkl_p90": "tackles",
-            "si_int_p90": "interceptions",
-            "si_sh_p90": "shots",
-            "si_xg_p90": "expected goals",
-            "si_gls_p90": "goals",
-            "si_kp_p90": "key passes",
-            "si_xag_p90": "expected assists",
-            "si_dis_p90": "dispossessed",
-        }
-
-        label = feature_labels.get(feature, feature)
+        label = ARCHETYPE_LABELS.get(feature, feature).lower()
         direction = "above" if cluster_val > global_val else "below"
         parts.append(f"{direction}-average {label}")
 
