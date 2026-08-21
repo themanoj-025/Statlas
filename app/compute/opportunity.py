@@ -65,44 +65,68 @@ def detect_hidden_gems(
     )
 
     seen = set()
+    candidate_ids = []
+    candidate_scores = {}
     for player_id, index_score in players_with_index:
         if player_id in seen or index_score is None:
             continue
         seen.add(player_id)
-
         if index_score < min_stat_percentile:
             continue
+        candidate_ids.append(player_id)
+        candidate_scores[player_id] = index_score
 
-        player = db.get(Player, player_id)
+    if not candidate_ids:
+        return []
+
+    # Batch-load all players (eliminates N+1).
+    players_map = {p.id: p for p in db.query(Player).filter(Player.id.in_(candidate_ids)).all()}
+    team_ids = {p.current_team_id for p in players_map.values() if p.current_team_id}
+    teams_map = {t.id: t for t in db.query(Team).filter(Team.id.in_(team_ids)).all()} if team_ids else {}
+    league_ids = {t.league_id for t in teams_map.values() if t.league_id}
+    leagues_map = {l.id: l for l in db.query(League).filter(League.id.in_(league_ids)).all()} if league_ids else {}
+
+    # Batch-load latest market valuations.
+    from sqlalchemy import func as sqlfunc
+    latest_val_subq = (
+        db.query(
+            MarketValuation.player_id,
+            sqlfunc.max(MarketValuation.valuation_date).label("max_date"),
+        )
+        .filter(MarketValuation.player_id.in_(candidate_ids))
+        .group_by(MarketValuation.player_id)
+        .subquery()
+    )
+    valuations_map = {
+        v.player_id: v
+        for v in db.query(MarketValuation)
+        .join(latest_val_subq, (MarketValuation.player_id == latest_val_subq.c.player_id) & (MarketValuation.valuation_date == latest_val_subq.c.max_date))
+        .all()
+    }
+
+    for player_id in candidate_ids:
+        player = players_map.get(player_id)
         if player is None:
             continue
+        index_score = candidate_scores[player_id]
 
-        # Check market value
-        latest_val = (
-            db.query(MarketValuation)
-            .filter(MarketValuation.player_id == player_id)
-            .order_by(MarketValuation.valuation_date.desc())
-            .first()
-        )
+        latest_val = valuations_map.get(player_id)
         if latest_val is None:
-            continue  # No market data — not a hidden gem (unknown)
+            continue
         if latest_val.valuation_amount_eur > max_market_value:
-            continue  # Already valued highly
+            continue
 
-        # Compute upside potential
         stat_proxy = compute_stat_value_proxy(db, player_id)
         if stat_proxy is None:
             continue
 
         stat_eur = (stat_proxy["stat_value_score"] / 100) ** 2 * 100_000_000
         upside = stat_eur - latest_val.valuation_amount_eur
-
         if upside <= 0:
-            continue  # Not undervalued
+            continue
 
-        team = db.get(Team, player.current_team_id) if player.current_team_id else None
-        league = db.get(League, team.league_id) if team else None
-
+        team = teams_map.get(player.current_team_id) if player.current_team_id else None
+        league = leagues_map.get(team.league_id) if team else None
         age = compute_age_at_date(player.date_of_birth, reference_date)
 
         results.append(

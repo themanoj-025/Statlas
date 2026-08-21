@@ -48,10 +48,17 @@ def compute_dau(db: Session, date: datetime | None = None) -> dict[str, int]:
 
     total = base.count()
 
-    # By tier
+    # By tier — separate query to avoid double-joining the Event table.
     free_count = (
-        base.join(User, User.id == AnalyticsEvent.user_id)
-        .filter(User.plan == "free")
+        db.query(distinct(AnalyticsEvent.user_id))
+        .join(User, User.id == AnalyticsEvent.user_id)
+        .filter(
+            AnalyticsEvent.user_id.isnot(None),
+            AnalyticsEvent.created_at >= day_start,
+            AnalyticsEvent.created_at < day_end,
+            ~AnalyticsEvent.event_name.in_(passive_events),
+            User.plan == "free",
+        )
         .count()
     )
 
@@ -90,9 +97,17 @@ def compute_mau(db: Session, date: datetime | None = None) -> dict[str, int]:
 
     total = base.count()
 
+    # By tier — separate query to avoid double-joining the Event table.
     free_count = (
-        base.join(User, User.id == AnalyticsEvent.user_id)
-        .filter(User.plan == "free")
+        db.query(distinct(AnalyticsEvent.user_id))
+        .join(User, User.id == AnalyticsEvent.user_id)
+        .filter(
+            AnalyticsEvent.user_id.isnot(None),
+            AnalyticsEvent.created_at >= month_start,
+            AnalyticsEvent.created_at < month_end,
+            ~AnalyticsEvent.event_name.in_(passive_events),
+            User.plan == "free",
+        )
         .count()
     )
 
@@ -344,10 +359,18 @@ def compute_retention_cohort(
 
     results = []
 
-    # Check retention for months 0 through 12
+    # Check retention for months 0 through 12 using proper month arithmetic.
     for months_after in range(0, 13):
-        check_start = cohort_month + timedelta(days=30 * months_after)
-        check_end = check_start + timedelta(days=30)
+        # Compute the actual start of the Nth month after cohort_month.
+        raw_month = cohort_month.month + months_after
+        check_year = cohort_month.year + (raw_month - 1) // 12
+        check_month = (raw_month - 1) % 12 + 1
+        check_start = cohort_month.replace(year=check_year, month=check_month, day=1)
+        # End of that month = start of next month.
+        if check_month == 12:
+            check_end = check_start.replace(year=check_year + 1, month=1)
+        else:
+            check_end = check_start.replace(month=check_month + 1)
 
         if check_start > datetime.now(timezone.utc):
             break
@@ -483,8 +506,13 @@ def compute_arpu(db: Session, date: datetime | None = None) -> dict:
         .count()
     )
 
-    # Pro price from config (default €49/month)
-    PRO_PRICE_EUR = 49.0
+    # Pro price from config (single source of truth).
+    try:
+        from app.config import load_pricing
+        pricing = load_pricing()
+        PRO_PRICE_EUR = float(pricing.get("plans", {}).get("pro", {}).get("price_monthly_eur", 49.0))
+    except Exception:
+        PRO_PRICE_EUR = 49.0  # fallback if pricing.json unreadable
 
     mrr = pro_users * PRO_PRICE_EUR
     arpu = mrr / pro_users if pro_users else 0
