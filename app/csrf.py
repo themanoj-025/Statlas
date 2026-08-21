@@ -8,14 +8,9 @@ from __future__ import annotations
 import hashlib
 import hmac
 import time
-from typing import TYPE_CHECKING
-
 from fastapi import HTTPException, Request
 
 from app.config import get_settings
-
-if TYPE_CHECKING:
-    pass
 
 CSRF_TOKEN_HEADER = "X-CSRF-Token"
 CSRF_TOKEN_TTL = 3600  # 1 hour
