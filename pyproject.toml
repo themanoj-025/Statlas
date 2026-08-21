@@ -19,3 +19,11 @@ select = ["E4", "E7", "E9", "F", "I", "DTZ"]
 # seed_dev_db.py sets DATABASE_URL via os.environ.setdefault BEFORE importing
 # db (db reads the URL at import time) — the E402 is the script's point.
 "scripts/seed_dev_db.py" = ["E402"]
+
+[tool.mypy]
+python_version = "3.11"
+ignore_missing_imports = true
+warn_return_any = true
+warn_unused_configs = true
+warn_redundant_casts = true
+warn_unused_ignores = true
