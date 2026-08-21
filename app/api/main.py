@@ -169,7 +169,11 @@ async def security_and_rate_limit_middleware(request: Request, call_next):
     req_id = new_request_id()
     request.state.request_id = req_id
 
+    import time
+
+    start_time = time.monotonic()
     response = await call_next(request)
+    duration_ms = (time.monotonic() - start_time) * 1000
 
     # --- Rate limit headers ---
     try:
@@ -208,6 +212,16 @@ async def security_and_rate_limit_middleware(request: Request, call_next):
     if _settings.csp_report_uri:
         csp_parts.append(f"report-uri {_settings.csp_report_uri}")
     response.headers["Content-Security-Policy"] = "; ".join(csp_parts)
+
+    # --- Performance tracking ---
+    response.headers["X-Response-Time"] = f"{duration_ms:.0f}ms"
+    if duration_ms > 1000:  # Log slow requests (>1s)
+        logger.warning(
+            "Slow request: %s %s took %.0fms",
+            request.method,
+            request.url.path,
+            duration_ms,
+        )
 
     return response
 
@@ -466,7 +480,7 @@ def player_similar(player_id: int, limit: int = Query(5, ge=1, le=10)):
 def player_trend(
     player_id: int,
     metric: str = Query(...),
-    window: int = Query(5),
+    window: int = Query(5, ge=1, le=50),
 ):
     from app.queries.trend_queries import get_player_trend
 
