@@ -17,3 +17,12 @@ docs
 .env
 .env.*
 !.env.example
+tests
+scripts
+*.md
+!requirements.txt
+.pre-commit-config.yaml
+alembic
+alembic.ini
+pyproject.toml
+pytest.ini

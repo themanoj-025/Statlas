@@ -575,3 +575,69 @@ def test_verify_email_rate_limit(client):
     resp = client.post("/api/v1/auth/verify-email/request", json=body)
     assert resp.status_code == 429
     assert resp.json()["error"]["code"] == "http_429"
+
+
+# ---------------------------------------------------------------------------
+# Stripe redirect URL validation (open redirect prevention)
+# ---------------------------------------------------------------------------
+
+
+def test_checkout_rejects_external_redirect(client):
+    """success_url pointing to a different domain must be rejected."""
+    register_user(client)
+    resp = client.post(
+        "/api/v1/billing/checkout",
+        json={"success_url": "https://evil.com/steal", "cancel_url": "/cancel"},
+    )
+    assert resp.status_code == 400
+    assert "domain" in resp.json()["error"]["message"].lower()
+
+
+def test_checkout_rejects_double_slash_redirect(client):
+    """URLs like //evil.com are protocol-relative and must be rejected."""
+    register_user(client)
+    resp = client.post(
+        "/api/v1/billing/checkout",
+        json={"success_url": "//evil.com/steal", "cancel_url": "/ok"},
+    )
+    assert resp.status_code == 400
+
+
+def test_checkout_allows_relative_redirect(client, monkeypatch):
+    """Relative paths like /success are always safe."""
+    register_user(client)
+    # Mock Stripe to avoid real API calls
+    import app.billing as _billing
+
+    created = {}
+
+    class FakeSession:
+        @staticmethod
+        def create(**kwargs):
+            created.update(kwargs)
+            return {"url": "https://checkout.stripe.com/test", "id": "cs_test"}
+
+    class FakeCheckout:
+        Session = FakeSession
+
+    class FakeCustomer:
+        @staticmethod
+        def create(**kwargs):
+            return {"id": "cus_test"}
+
+    class FakeStripe:
+        checkout = FakeCheckout()
+        Customer = FakeCustomer
+
+    fake_stripe = FakeStripe()
+    monkeypatch.setattr(_billing, "_stripe_client", lambda: fake_stripe)
+    monkeypatch.setattr(_billing, "_current_sub", lambda db, uid: None)
+
+    resp = client.post(
+        "/api/v1/billing/checkout",
+        json={"success_url": "/success", "cancel_url": "/cancel"},
+    )
+    # URL passed validation (200 = checkout session created)
+    assert resp.status_code == 200
+    assert created["success_url"] == "/success"
+    assert created["cancel_url"] == "/cancel"
