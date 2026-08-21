@@ -136,6 +136,8 @@ CREATE TABLE percentile_snapshots (
 CREATE INDEX ix_percentile_published         ON percentile_snapshots (is_published);
 CREATE INDEX ix_percentile_position_tier     ON percentile_snapshots (position_group, league_tier);
 CREATE INDEX ix_percentile_snapshot_id       ON percentile_snapshots (stat_snapshot_id);
+-- Player profile hot path: lookup by player + season + published
+CREATE INDEX ix_percentile_player_season     ON percentile_snapshots (player_id, season) WHERE is_published = true;
 
 -- StatsBomb Open Data event-level data (shot/pass maps). Coverage is NOT
 -- comprehensive across leagues — match_events is only populated for the
@@ -267,6 +269,8 @@ CREATE TABLE session_tokens (
     revoked_at TIMESTAMPTZ
 );
 CREATE INDEX ix_session_user ON session_tokens (user_id);
+-- Session validation hot path: lookup by token value (auth middleware)
+CREATE INDEX ix_session_token ON session_tokens (token_hash) WHERE revoked_at IS NULL;
 
 CREATE TABLE password_reset_tokens (
     id         SERIAL PRIMARY KEY,
