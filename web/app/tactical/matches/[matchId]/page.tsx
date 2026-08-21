@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
+import { api, ApiError } from "@/lib/api";
 import type {
   PassingNetworkResult,
   PressureMap,
@@ -31,27 +32,23 @@ export default function MatchTacticalPage() {
     setLoading(true);
     setError(null);
 
-    fetch(`${process.env.NEXT_PUBLIC_STATLAS_API_URL ?? "http://127.0.0.1:8000"}/api/v1/tactical/matches/${matchId}/coverage`)
-      .then((r) => r.json())
+    api.tacticalCoverage(matchId)
       .then((coverage) => {
         if (!coverage.has_coverage) {
           setError(coverage.message);
           setLoading(false);
-          return;
+          return null;
         }
-        return fetch(
-          `${process.env.NEXT_PUBLIC_STATLAS_API_URL ?? "http://127.0.0.1:8000"}/api/v1/tactical/matches/${matchId}/overview`
-        );
+        return api.tacticalOverview(matchId);
       })
-      .then((r) => r?.json())
       .then((data) => {
-        if (data && !data.detail) {
-          setOverview(data);
-        } else {
-          setError(data?.detail || "Failed to load tactical data");
+        if (data && !('detail' in data)) {
+          setOverview(data as TacticalOverview);
+        } else if (data) {
+          setError((data as { detail?: string }).detail || "Failed to load tactical data");
         }
       })
-      .catch((err) => setError(err.message))
+      .catch((err) => setError(err instanceof ApiError ? err.message : err.message))
       .finally(() => setLoading(false));
   }, [matchId]);
 
