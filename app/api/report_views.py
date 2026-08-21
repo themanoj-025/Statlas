@@ -140,10 +140,10 @@ def regenerate(report_id: int, request: Request):
     with session_scope() as db:
         try:
             stored = reports.get_report(db, user.id, report_id)
+            player_id = stored["report"]["player_id"]
+            entry_id = stored["report"].get("shortlist_entry_id")
         except Exception as exc:  # noqa: BLE001
             raise _map_error(exc)
-        player_id = stored["report"]["player_id"]
-        entry_id = stored["report"].get("shortlist_entry_id")
         try:
             return reports.generate_report(
                 db,
