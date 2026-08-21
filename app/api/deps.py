@@ -31,6 +31,11 @@ def require_user(request: Request) -> User:
 
     Used by every authenticated view module (billing, workspace, search,
     reports, watch, dashboard, public API).
+
+    NOTE: The returned User is detached from its session scope. Callers that
+    need the User within a different session_scope() must re-fetch via
+    db.get(User, user.id) to avoid DetachedInstanceError on lazy-loaded
+    relationships.
     """
     with session_scope() as db:
         user = auth.user_from_session(db, session_token(request))
