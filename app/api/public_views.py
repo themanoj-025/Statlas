@@ -79,7 +79,7 @@ def revoke_key(key_id: int, request: Request):
 
 
 @router.post("/keys/{key_id}/rotate")
-def rotate_key(key_id: int, body: KeyRotateBody | None = None, request: Request = None):
+def rotate_key(key_id: int, request: Request, body: KeyRotateBody | None = None):
     user = _require_user(request)
     with session_scope() as db:
         result = api_keys.rotate_api_key(
@@ -155,9 +155,6 @@ def public_search(
     _: tuple = Depends(api_key_dependency),
 ):
     results = _run(player_queries.search_players, q, 10)
-    response = Response(content=None)
-    response.headers["Cache-Control"] = "private, max-age=300"  # 5 min
-    # Note: FastAPI returns dict directly; headers set via middleware
     return {"results": results}
 
 
