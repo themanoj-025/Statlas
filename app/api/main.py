@@ -98,6 +98,26 @@ CSRF_EXEMPT_PATHS = frozenset({
 })
 
 
+MAX_REQUEST_BODY_BYTES = 1 * 1024 * 1024  # 1 MB
+
+
+@app.middleware("http")
+async def body_size_limit_middleware(request: Request, call_next):
+    """Reject requests with oversized bodies (DoS protection).
+
+    Constitution §4 (Security): SSRF guard + request validation.
+    """
+    if request.method in ("GET", "HEAD", "OPTIONS"):
+        return await call_next(request)
+    content_length = request.headers.get("content-length")
+    if content_length and int(content_length) > MAX_REQUEST_BODY_BYTES:
+        return JSONResponse(
+            status_code=413,
+            content={"error": {"code": "payload_too_large", "message": "Request body exceeds 1MB limit."}},
+        )
+    return await call_next(request)
+
+
 @app.middleware("http")
 async def csrf_middleware(request: Request, call_next):
     """Verify CSRF tokens on state-changing requests.
@@ -282,9 +302,10 @@ def _with_session(fn: Callable[[Any], Any], *args: Any, **kwargs: Any) -> Any:
 
 @app.get("/api/v1/health")
 def health():
-    """Health check that verifies database connectivity."""
+    """Health check that verifies database and Redis connectivity."""
     settings = get_settings()
     db_status = "healthy"
+    redis_status = "healthy"
     try:
         from sqlalchemy import text
 
@@ -292,10 +313,20 @@ def health():
             db.execute(text("SELECT 1"))
     except Exception as exc:
         db_status = f"unhealthy: {exc}"
+    try:
+        from app.cache import get_cache
 
+        cache = get_cache()
+        if hasattr(cache, 'redis'):
+            cache.redis.ping()
+    except Exception as exc:
+        redis_status = f"unhealthy: {exc}"
+
+    overall = "ok" if db_status == "healthy" and redis_status == "healthy" else "degraded"
     return {
-        "status": "ok" if db_status == "healthy" else "degraded",
+        "status": overall,
         "database": db_status,
+        "redis": redis_status,
         "api_version": "1.0.0",
         "dataset_mode": settings.dataset_mode,
     }
@@ -316,6 +347,7 @@ def readiness():
 
 @app.get("/api/v1/meta")
 def meta():
+    from fastapi import Response as _Resp
     from app.cache import get_cache
 
     cache = get_cache()
