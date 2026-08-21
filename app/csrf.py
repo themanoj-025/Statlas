@@ -25,7 +25,6 @@ __all__ = [
     "CSRF_TOKEN_TTL",
     "generate_csrf_token",
     "verify_csrf_token",
-    "verify_csrf",
 ]
 
 
@@ -73,28 +72,4 @@ def verify_csrf_token(token: str, session_id: str) -> bool:
         return False
 
 
-async def verify_csrf(request: Request) -> None:
-    """FastAPI dependency — verify CSRF token for state-changing requests.
 
-    Safe methods (GET, HEAD, OPTIONS) are always allowed.
-    """
-    if request.method in ("GET", "HEAD", "OPTIONS"):
-        return  # safe methods don't need CSRF protection
-
-    session_id = request.cookies.get(get_settings().session_cookie_name, "")
-    if not session_id:
-        # No session = no CSRF risk (but also no auth)
-        return
-
-    token = request.headers.get(CSRF_TOKEN_HEADER)
-    if not token:
-        raise HTTPException(
-            status_code=403,
-            detail="CSRF token missing. Include the X-CSRF-Token header.",
-        )
-
-    if not verify_csrf_token(token, session_id):
-        raise HTTPException(
-            status_code=403,
-            detail="Invalid or expired CSRF token.",
-        )
