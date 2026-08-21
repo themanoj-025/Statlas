@@ -74,7 +74,7 @@ def client():
 
 def register_user(client, email: str = "scout@example.com") -> None:
     resp = client.post(
-        "/api/v1/auth/register", json={"email": email, "password": "Hunter2hunter"}
+        "/api/v1/auth/register", json={"email": email, "password": "Hunter2hunter!"}
     )
     assert resp.status_code == 201, resp.text
 
@@ -139,7 +139,7 @@ def test_register_login_logout_roundtrip(client):
 
     resp = client.post(
         "/api/v1/auth/login",
-        json={"email": "scout@example.com", "password": "Hunter2hunter"},
+        json={"email": "scout@example.com", "password": "Hunter2hunter!"},
     )
     assert resp.status_code == 200
     assert client.get("/api/v1/auth/me").json()["email"] == "scout@example.com"
@@ -149,7 +149,7 @@ def test_duplicate_email_rejected(client):
     register_user(client)
     resp = client.post(
         "/api/v1/auth/register",
-        json={"email": "scout@example.com", "password": "Anotherpass1"},
+        json={"email": "scout@example.com", "password": "Anotherpass1!"},
     )
     assert resp.status_code == 409
 
@@ -159,7 +159,7 @@ def test_password_stored_hashed_not_plaintext(client):
     with session_scope() as db:
         user = db.query(User).filter(User.email == "scout@example.com").first()
         assert user is not None
-        assert "Hunter2hunter" not in user.password_hash
+        assert "Hunter2hunter!" not in user.password_hash
         assert user.password_hash.count("$") == 2  # iterations$salt$hash
     resp = client.get("/api/v1/billing/subscription")
     assert resp.status_code == 200
@@ -426,7 +426,7 @@ def test_register_rate_limit_allows_under_threshold(client):
     for i in range(5):
         resp = client.post(
             "/api/v1/auth/register",
-            json={"email": f"user{i}@example.com", "password": "Hunter2hunter"},
+            json={"email": f"user{i}@example.com", "password": "Hunter2hunter!"},
         )
         assert resp.status_code == 201, f"Registration {i + 1} should succeed"
 
@@ -437,14 +437,14 @@ def test_register_rate_limit_blocks_over_threshold(client):
     for i in range(5):
         resp = client.post(
             "/api/v1/auth/register",
-            json={"email": f"rate{i}@example.com", "password": "Hunter2hunter"},
+            json={"email": f"rate{i}@example.com", "password": "Hunter2hunter!"},
         )
         assert resp.status_code == 201
 
     # 6th attempt should be blocked
     resp = client.post(
         "/api/v1/auth/register",
-        json={"email": "rate5@example.com", "password": "Hunter2hunter"},
+        json={"email": "rate5@example.com", "password": "Hunter2hunter!"},
     )
     assert resp.status_code == 429
     assert "Too many" in resp.json()["error"]["message"]
@@ -456,13 +456,13 @@ def test_register_rate_limit_resets_after_clear(client):
     for i in range(5):
         client.post(
             "/api/v1/auth/register",
-            json={"email": f"clear{i}@example.com", "password": "Hunter2hunter"},
+            json={"email": f"clear{i}@example.com", "password": "Hunter2hunter!"},
         )
 
     # Should be blocked
     resp = client.post(
         "/api/v1/auth/register",
-        json={"email": "clear5@example.com", "password": "Hunter2hunter"},
+        json={"email": "clear5@example.com", "password": "Hunter2hunter!"},
     )
     assert resp.status_code == 429
 
@@ -475,7 +475,7 @@ def test_register_rate_limit_resets_after_clear(client):
     # Should succeed again
     resp = client.post(
         "/api/v1/auth/register",
-        json={"email": "clear6@example.com", "password": "Hunter2hunter"},
+        json={"email": "clear6@example.com", "password": "Hunter2hunter!"},
     )
     assert resp.status_code == 201
 
@@ -487,7 +487,7 @@ def test_register_rate_limit_independent_of_email(client):
             "/api/v1/auth/register",
             json={
                 "email": f"unique{i}@example.com",
-                "password": "Hunter2hunter",
+                "password": "Hunter2hunter!",
             },
         )
         assert resp.status_code == 201
@@ -495,7 +495,7 @@ def test_register_rate_limit_independent_of_email(client):
     # Even a different email is blocked (same IP)
     resp = client.post(
         "/api/v1/auth/register",
-        json={"email": "another@example.com", "password": "Hunter2hunter"},
+        json={"email": "another@example.com", "password": "Hunter2hunter!"},
     )
     assert resp.status_code == 429
 
@@ -505,12 +505,12 @@ def test_register_rate_limit_error_message(client):
     for i in range(5):
         client.post(
             "/api/v1/auth/register",
-            json={"email": f"msg{i}@example.com", "password": "Hunter2hunter"},
+            json={"email": f"msg{i}@example.com", "password": "Hunter2hunter!"},
         )
 
     resp = client.post(
         "/api/v1/auth/register",
-        json={"email": "msg5@example.com", "password": "Hunter2hunter"},
+        json={"email": "msg5@example.com", "password": "Hunter2hunter!"},
     )
     assert resp.status_code == 429
     body = resp.json()
@@ -533,14 +533,14 @@ def test_change_password_rate_limit(client):
     for i in range(5):
         resp = client.post(
             "/api/v1/auth/change-password",
-            json={"current_password": "wrongpass", "new_password": "NewPass123"},
+            json={"current_password": "wrongpass", "new_password": "NewPass123!"},
         )
         assert resp.status_code == 400
 
     # 6th attempt should be rate-limited (429)
     resp = client.post(
         "/api/v1/auth/change-password",
-        json={"current_password": "wrongpass", "new_password": "NewPass123"},
+        json={"current_password": "wrongpass", "new_password": "NewPass123!"},
     )
     assert resp.status_code == 429
     assert resp.json()["error"]["code"] == "http_429"
@@ -551,7 +551,7 @@ def test_change_password_succeeds_under_limit(client):
     register_user(client)
     resp = client.post(
         "/api/v1/auth/change-password",
-        json={"current_password": "Hunter2hunter", "new_password": "NewPass123"},
+        json={"current_password": "Hunter2hunter!", "new_password": "NewPass123!"},
     )
     assert resp.status_code == 200
     assert "Password changed" in resp.json()["detail"]

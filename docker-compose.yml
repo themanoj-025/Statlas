@@ -52,6 +52,7 @@ services:
       STATLAS_DATASET_MODE: ${STATLAS_DATASET_MODE:-fixture-demo}
       STATLAS_LOG_LEVEL: ${STATLAS_LOG_LEVEL:-INFO}
       ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-http://localhost:3000}
+      CSRF_SECRET_KEY: ${CSRF_SECRET_KEY:-}
     depends_on:
       db:
         condition: service_healthy

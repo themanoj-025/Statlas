@@ -174,6 +174,8 @@ class Settings:
         self.redis_url = env("REDIS_URL", "redis://localhost:6379/0")
         # --- Staff access (analytics dashboards) --------------------------------
         self.staff_emails = env("STAFF_EMAILS", "")
+        # --- CSRF secret (dedicated key, not derived from cookie name) ----------
+        self.csrf_secret_key = env("CSRF_SECRET_KEY", "") or None
         # --- Security headers ---------------------------------------------------
         self.csp_report_uri = env("CSP_REPORT_URI", "")
 

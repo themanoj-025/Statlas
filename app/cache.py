@@ -18,6 +18,7 @@ __all__ = [
     "InMemoryCacheBackend",
     "get_cache",
     "cached",
+    "invalidate_pattern",
 ]
 
 T = TypeVar("T")
@@ -130,6 +131,34 @@ def get_cache() -> CacheBackend:
         _backend = InMemoryCacheBackend()
 
     return _backend
+
+
+def invalidate_pattern(pattern: str) -> int:
+    """Delete all cache keys matching a glob pattern.
+
+    Use after data mutations (e.g., new scrape run, admin update) to ensure
+    stale cached responses are evicted. Returns the number of keys deleted.
+    """
+    cache = get_cache()
+    try:
+        if isinstance(cache, RedisCacheBackend):
+            cursor = 0
+            deleted = 0
+            while True:
+                cursor, keys = cache.redis.scan(cursor, match=pattern, count=100)
+                if keys:
+                    deleted += cache.redis.delete(*keys)
+                if cursor == 0:
+                    break
+            return deleted
+        else:
+            # In-memory: delegate to delete_pattern (count not available)
+            before = len(cache._store)
+            cache.delete_pattern(pattern)
+            return before - len(cache._store)
+    except Exception:
+        logger.warning("Cache invalidation failed for pattern: %s", pattern)
+        return 0
 
 
 def cached(ttl: int = 3600, prefix: str = ""):
