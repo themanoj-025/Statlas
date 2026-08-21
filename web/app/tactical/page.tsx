@@ -1,8 +1,10 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 
 export default function TacticalPage() {
+  const router = useRouter();
   const [matchId, setMatchId] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -11,8 +13,7 @@ export default function TacticalPage() {
     if (!matchId.trim()) return;
     setLoading(true);
     setError(null);
-    // Navigate to the match tactical page
-    window.location.href = `/tactical/matches/${matchId.trim()}`;
+    router.push(`/tactical/matches/${matchId.trim()}`);
   };
 
   return (
