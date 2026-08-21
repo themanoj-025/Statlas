@@ -75,6 +75,67 @@ app.add_middleware(
     max_age=86400,  # Cache preflight for 24 hours
 )
 
+# CSRF-protected routes (state-changing requests from browser)
+CSRF_EXEMPT_PATHS = frozenset({
+    "/api/v1/health",
+    "/api/v1/readiness",
+    "/api/v1/meta",
+    "/api/v1/leagues",
+    "/api/v1/coverage",
+    "/api/v1/positions",
+    "/api/v1/methodology",
+    "/api/v1/billing/webhook",  # Stripe signature verification
+    "/api/v1/billing/checkout",  # Redirects to Stripe
+    "/api/v1/billing/portal",   # Redirects to Stripe
+    "/api/v1/e2e",             # Test-only endpoints
+})
+
+
+@app.middleware("http")
+async def csrf_middleware(request: Request, call_next):
+    """Verify CSRF tokens on state-changing requests.
+
+    Safe methods (GET, HEAD, OPTIONS) are always allowed.
+    Exempt paths (webhook, health, etc.) are skipped.
+    For other POST/PUT/DELETE/PATCH requests, a valid X-CSRF-Token
+    header is required when a session cookie is present.
+    """
+    if request.method in ("GET", "HEAD", "OPTIONS"):
+        return await call_next(request)
+
+    # Check exemption list
+    path = request.url.path
+    if path in CSRF_EXEMPT_PATHS or path.startswith("/api/v1/e2e"):
+        return await call_next(request)
+
+    # Skip CSRF in test/CI environments (no browser involved)
+    if _settings.environment == "test":
+        return await call_next(request)
+
+    # Only enforce CSRF when a session cookie is present
+    session_cookie = request.cookies.get(_settings.session_cookie_name)
+    if not session_cookie:
+        return await call_next(request)
+
+    from app.csrf import CSRF_TOKEN_HEADER, verify_csrf_token
+
+    token = request.headers.get(CSRF_TOKEN_HEADER)
+    if not token or not verify_csrf_token(token, session_cookie):
+        return JSONResponse(
+            status_code=403,
+            content={
+                "error": {
+                    "code": "csrf_error",
+                    "message": "Invalid or missing CSRF token."
+                    if token
+                    else "CSRF token missing. Include the X-CSRF-Token header.",
+                }
+            },
+        )
+
+    return await call_next(request)
+
+
 app.include_router(billing_router)
 app.include_router(e2e_router)
 app.include_router(assistant_router)
@@ -124,6 +185,11 @@ async def security_and_rate_limit_middleware(request: Request, call_next):
     response.headers["Permissions-Policy"] = (
         "geolocation=(), microphone=(), camera=()"
     )
+    # HSTS: tell browsers to only use HTTPS (1 year, include subdomains)
+    if request.url.scheme == "https":
+        response.headers["Strict-Transport-Security"] = (
+            "max-age=31536000; includeSubDomains"
+        )
     # Content-Security-Policy
     csp_parts = [
         "default-src 'self'",

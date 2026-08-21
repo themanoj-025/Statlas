@@ -66,6 +66,24 @@ def _set_session_cookie(
     )
 
 
+def _set_csrf_cookie(response: Response, session_id: str) -> None:
+    """Set a readable CSRF cookie so the frontend can read it via JS
+    and send it back as the X-CSRF-Token header.
+    """
+    from app.csrf import CSRF_TOKEN_TTL, generate_csrf_token
+
+    token = generate_csrf_token(session_id)
+    response.set_cookie(
+        key="csrf_token",
+        value=token,
+        httponly=False,  # JS must be able to read this
+        samesite="lax",
+        secure=get_settings().session_cookie_secure,
+        max_age=CSRF_TOKEN_TTL,
+        path="/",
+    )
+
+
 # _session_token and _require_user consolidated into app/api/deps.py
 _session_token = session_token
 _require_user = require_user
@@ -105,6 +123,7 @@ def register(body: RegisterBody, response: Response, request: Request):
         db.commit()
         raw, expires_at = auth.create_session(db, user.id)
         _set_session_cookie(response, raw, expires_at)
+        _set_csrf_cookie(response, raw)
         return auth.user_payload(user)
 
 
@@ -127,6 +146,7 @@ def login(body: LoginBody, response: Response):
         auth.clear_login_failures(email_lower)
         raw, expires_at = auth.create_session(db, user.id)
         _set_session_cookie(response, raw, expires_at)
+        _set_csrf_cookie(response, raw)
         return auth.user_payload(user)
 
 
@@ -135,6 +155,7 @@ def logout(request: Request, response: Response):
     with session_scope() as db:
         auth.revoke_session(db, _session_token(request))
     response.delete_cookie(get_settings().session_cookie_name, path="/")
+    response.delete_cookie("csrf_token", path="/")
     return {"ok": True}
 
 

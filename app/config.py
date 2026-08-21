@@ -100,6 +100,8 @@ class Settings:
     """Runtime settings with the compliance-declared defaults baked in."""
 
     def __init__(self) -> None:
+        # "production" | "development" | "test" — controls CSRF, logging, etc.
+        self.environment = env("STATLAS_ENV", "production")
         self.database_url = env("DATABASE_URL")  # None -> SQLite (tests/dev)
         self.user_agent = env("STATLAS_USER_AGENT", DEFAULT_USER_AGENT)
         self.fbref_delay_seconds = env_float("FBREF_DELAY_SECONDS", 10.0)

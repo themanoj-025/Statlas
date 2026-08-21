@@ -482,12 +482,23 @@ export const api = {
     get<AnomalyResult>(`/api/v1/analytics/anomalies${qs(metricName ? { metric_name: metricName } : {})}`),
 };
 
+function getCsrfToken(): string | undefined {
+  // Read the non-httponly CSRF cookie set by the API on login/register.
+  const match = document.cookie.match(/(?:^|;\s*)csrf_token=([^;]*)/);
+  return match ? decodeURIComponent(match[1]) : undefined;
+}
+
+function csrfHeaders(): Record<string, string> {
+  const token = getCsrfToken();
+  return token ? { "X-CSRF-Token": token } : {};
+}
+
 async function del<T>(path: string): Promise<T> {
   const res = await fetch(`${API_URL}${path}`, {
     method: "DELETE",
     credentials: "include",
     cache: "no-store",
-    headers: { Accept: "application/json" },
+    headers: { Accept: "application/json", ...csrfHeaders() },
   });
   if (!res.ok) {
     let detail = `API ${res.status}`;
@@ -510,7 +521,7 @@ async function put<T>(path: string, body: unknown, init?: RequestInit): Promise<
     method: "PUT",
     credentials: "include",
     cache: "no-store",
-    headers: { "Content-Type": "application/json", Accept: "application/json", ...(init?.headers ?? {}) },
+    headers: { "Content-Type": "application/json", Accept: "application/json", ...csrfHeaders(), ...(init?.headers ?? {}) },
     body: JSON.stringify(body),
     ...init,
   });
@@ -533,7 +544,7 @@ async function post<T>(path: string, body: unknown, init?: RequestInit): Promise
     method: "POST",
     credentials: "include",
     cache: "no-store",
-    headers: { "Content-Type": "application/json", Accept: "application/json", ...(init?.headers ?? {}) },
+    headers: { "Content-Type": "application/json", Accept: "application/json", ...csrfHeaders(), ...(init?.headers ?? {}) },
     body: JSON.stringify(body),
     ...init,
   });
