@@ -24,6 +24,7 @@ from typing import Any
 from fastapi import FastAPI, HTTPException, Query, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from starlette.middleware.gzip import GZipMiddleware
 
 from app import auth
 from app.api.analytics_views import router as analytics_router
@@ -74,6 +75,8 @@ app.add_middleware(
     allow_headers=["Content-Type", "Authorization", "X-CSRF-Token"],
     max_age=86400,  # Cache preflight for 24 hours
 )
+# GZip compression for all responses (reduces payload size ~70%)
+app.add_middleware(GZipMiddleware, minimum_size=500)
 
 # CSRF-protected routes (state-changing requests from browser)
 CSRF_EXEMPT_PATHS = frozenset({
