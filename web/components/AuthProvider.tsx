@@ -8,6 +8,8 @@ type AuthState = {
   user: MePayload | null;
   status: "loading" | "signed-out" | "signed-in";
   subscription: SubscriptionStatusPayload | null;
+  error: string | null;
+  clearError: () => void;
   refresh: () => Promise<void>;
   login: (email: string, password: string) => Promise<void>;
   register: (email: string, password: string) => Promise<void>;
@@ -38,8 +40,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     void refresh();
   }, [refresh]);
 
+  const [error, setError] = useState<string | null>(null);
+  const clearError = useCallback(() => setError(null), []);
+
   const login = useCallback(
     async (email: string, password: string) => {
+      setError(null);
       const me = await api.login(email, password);
       setUser(me);
       setStatus("signed-in");
@@ -50,6 +56,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const register = useCallback(
     async (email: string, password: string) => {
+      setError(null);
       const me = await api.register(email, password);
       setUser(me);
       setStatus("signed-in");
@@ -69,7 +76,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, status, subscription, refresh, login, register, logout }}>
+    <AuthContext.Provider value={{ user, status, subscription, error, clearError, refresh, login, register, logout }}>
       {children}
     </AuthContext.Provider>
   );
