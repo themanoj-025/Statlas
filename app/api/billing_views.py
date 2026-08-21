@@ -414,6 +414,33 @@ def cancel_deletion(request: Request):
 # ---------------------------------------------------------------------------
 
 
+def _validate_redirect_url(url: str) -> str:
+    """Validate redirect URLs for Stripe checkout/portal.
+
+    Defense-in-depth: only allows the public base URL domain or relative paths.
+    Stripe also validates against dashboard config, but we check here to prevent
+    open redirect if Stripe config is misconfigured.
+    """
+    from urllib.parse import urlparse
+
+    parsed = urlparse(url)
+    settings = get_settings()
+    base = urlparse(settings.public_base_url)
+
+    # Relative paths are always safe
+    if url.startswith("/") and not url.startswith("//"):
+        return url
+
+    # Absolute URLs must match the configured base URL domain
+    if parsed.scheme in ("http", "https") and parsed.hostname == base.hostname:
+        return url
+
+    raise HTTPException(
+        status_code=400,
+        detail="Redirect URL must be a relative path or match the application domain.",
+    )
+
+
 class CheckoutBody(BaseModel):
     success_url: str
     cancel_url: str
@@ -422,10 +449,12 @@ class CheckoutBody(BaseModel):
 @router.post("/billing/checkout")
 def checkout(body: CheckoutBody, request: Request):
     user = _require_user(request)
+    success_url = _validate_redirect_url(body.success_url)
+    cancel_url = _validate_redirect_url(body.cancel_url)
     try:
         with session_scope() as db:
             return billing.create_checkout_session(
-                db, user, success_url=body.success_url, cancel_url=body.cancel_url
+                db, user, success_url=success_url, cancel_url=cancel_url
             )
     except billing.BillingNotConfiguredError as exc:
         raise HTTPException(status_code=503, detail=str(exc)) from exc
@@ -434,7 +463,7 @@ def checkout(body: CheckoutBody, request: Request):
 @router.post("/billing/portal")
 def billing_portal(request: Request, body: dict[str, str] | None = None):
     user = _require_user(request)
-    return_url = (body or {}).get("return_url") or "/account"
+    return_url = _validate_redirect_url((body or {}).get("return_url") or "/account")
     try:
         with session_scope() as db:
             return billing.create_billing_portal_session(

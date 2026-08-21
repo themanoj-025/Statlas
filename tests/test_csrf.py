@@ -114,3 +114,43 @@ class TestCsrfConstants:
         from app.csrf import CSRF_TOKEN_HEADER
 
         assert CSRF_TOKEN_HEADER == "X-CSRF-Token"
+
+
+# ---------------------------------------------------------------------------
+# CSRF middleware integration (simulated)
+# ---------------------------------------------------------------------------
+
+
+class TestCSRFMiddlewareIntegration:
+    """Tests for the CSRF middleware behavior. Since CSRF is disabled in
+    test mode (STATLAS_ENV=test), these test the token generation/verification
+    logic that the middleware relies on."""
+
+    def test_token_roundtrip(self):
+        """Generate a token and verify it succeeds."""
+        from app.csrf import generate_csrf_token, verify_csrf_token
+
+        session_id = "test-session-abc123"
+        token = generate_csrf_token(session_id)
+        assert verify_csrf_token(token, session_id) is True
+
+    def test_token_rejects_wrong_session(self):
+        """Token for one session should fail for another."""
+        from app.csrf import generate_csrf_token, verify_csrf_token
+
+        token = generate_csrf_token("session-A")
+        assert verify_csrf_token(token, "session-B") is False
+
+    def test_token_rejects_tampered(self):
+        """Tampered token should fail verification."""
+        from app.csrf import generate_csrf_token, verify_csrf_token
+
+        token = generate_csrf_token("session-A")
+        ts, sig = token.split(":")
+        tampered = f"{ts}:00000000000000000000000000000000"
+        assert verify_csrf_token(tampered, "session-A") is False
+
+    def test_token_rejects_empty(self):
+        from app.csrf import verify_csrf_token
+
+        assert verify_csrf_token("", "session-A") is False
