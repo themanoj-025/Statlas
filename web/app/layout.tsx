@@ -30,6 +30,33 @@ export const metadata: Metadata = {
   },
   description:
     "Per-90 statistics, percentile ranks and the Statlas Index for football players, with a fully published methodology.",
+  // SEO & social sharing
+  openGraph: {
+    title: "Statlas — football analytics that shows its work",
+    description:
+      "Per-90 statistics, percentile ranks and the Statlas Index for football players, with a fully published methodology.",
+    siteName: "Statlas",
+    type: "website",
+    locale: "en_US",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Statlas — football analytics that shows its work",
+    description:
+      "Per-90 statistics, percentile ranks and the Statlas Index for football players, with a fully published methodology.",
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: { index: true, follow: true },
+  },
+};
+
+export const viewport = {
+  themeColor: "#0f172a",
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 5,
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
