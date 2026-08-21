@@ -57,7 +57,7 @@ def seeded_client():
     with TestClient(app) as c:
         c.post(
             "/api/v1/auth/register",
-            json={"email": "dev@example.com", "password": "Hunter2hunter"},
+            json={"email": "dev@example.com", "password": "Hunter2hunter!"},
         )
         yield c
 

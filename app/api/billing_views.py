@@ -31,19 +31,8 @@ class RegisterBody(BaseModel):
     email: EmailStr
     password: str = Field(min_length=8, max_length=200)
 
-    @classmethod
-    def validate_password_strength(cls, password: str) -> str:
-        """Validate password has minimum complexity."""
-        if not any(c.isupper() for c in password):
-            raise ValueError("Password must contain at least one uppercase letter.")
-        if not any(c.islower() for c in password):
-            raise ValueError("Password must contain at least one lowercase letter.")
-        if not any(c.isdigit() for c in password):
-            raise ValueError("Password must contain at least one digit.")
-        return password
-
     def model_post_init(self, __context: object) -> None:
-        self.validate_password_strength(self.password)
+        auth.validate_password_strength(self.password)
 
 
 class LoginBody(BaseModel):
@@ -181,18 +170,8 @@ class PasswordResetConfirmBody(BaseModel):
     token: str
     new_password: str = Field(min_length=8, max_length=200)
 
-    @classmethod
-    def validate_password_strength(cls, password: str) -> str:
-        if not any(c.isupper() for c in password):
-            raise ValueError("Password must contain at least one uppercase letter.")
-        if not any(c.islower() for c in password):
-            raise ValueError("Password must contain at least one lowercase letter.")
-        if not any(c.isdigit() for c in password):
-            raise ValueError("Password must contain at least one digit.")
-        return password
-
     def model_post_init(self, __context: object) -> None:
-        self.validate_password_strength(self.new_password)
+        auth.validate_password_strength(self.new_password)
 
 
 @router.post("/auth/password-reset/request")
@@ -316,18 +295,8 @@ class ChangePasswordBody(BaseModel):
     current_password: str
     new_password: str = Field(min_length=8, max_length=200)
 
-    @classmethod
-    def validate_password_strength(cls, password: str) -> str:
-        if not any(c.isupper() for c in password):
-            raise ValueError("Password must contain at least one uppercase letter.")
-        if not any(c.islower() for c in password):
-            raise ValueError("Password must contain at least one lowercase letter.")
-        if not any(c.isdigit() for c in password):
-            raise ValueError("Password must contain at least one digit.")
-        return password
-
     def model_post_init(self, __context: object) -> None:
-        self.validate_password_strength(self.new_password)
+        auth.validate_password_strength(self.new_password)
 
 
 class AccountDeleteBody(BaseModel):
