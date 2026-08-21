@@ -15,7 +15,10 @@ Honesty by construction:
 
 from __future__ import annotations
 
+import json as _json
 import logging
+import re
+import time
 from collections.abc import Callable
 from contextlib import asynccontextmanager
 from datetime import datetime, timezone
@@ -91,6 +94,7 @@ CSRF_EXEMPT_PATHS = frozenset({
     "/api/v1/billing/checkout",  # Redirects to Stripe
     "/api/v1/billing/portal",   # Redirects to Stripe
     "/api/v1/e2e",             # Test-only endpoints
+    "/metrics",                # Prometheus scrape endpoint (read-only GET)
 })
 
 
@@ -169,8 +173,6 @@ async def security_and_rate_limit_middleware(request: Request, call_next):
     req_id = new_request_id()
     request.state.request_id = req_id
 
-    import time
-
     start_time = time.monotonic()
     response = await call_next(request)
     duration_ms = (time.monotonic() - start_time) * 1000
@@ -222,6 +224,22 @@ async def security_and_rate_limit_middleware(request: Request, call_next):
             request.url.path,
             duration_ms,
         )
+
+    # --- Metrics collection ---
+    try:
+        from app.metrics import get_metrics_collector
+
+        # Normalise path for metrics (strip query params, collapse IDs)
+        metrics_path = re.sub(r"/\d+", "/{id}", request.url.path)
+        metrics_path = re.sub(r"/by-slug/[^/]+", "/by-slug/{slug}", metrics_path)
+        get_metrics_collector().record_request(
+            method=request.method,
+            path=metrics_path,
+            status_code=response.status_code,
+            duration_seconds=duration_ms / 1000,
+        )
+    except Exception:  # metrics must never break a response
+        pass
 
     return response
 
@@ -298,9 +316,19 @@ def readiness():
 
 @app.get("/api/v1/meta")
 def meta():
+    from app.cache import get_cache
+
+    cache = get_cache()
+    cached = cache.get("api:meta")
+    if cached is not None:
+        try:
+            return _json.loads(cached)
+        except Exception:
+            pass
+
     settings = get_settings()
     registry = load_registry()
-    return {
+    result = {
         **public_meta(),
         "dataset": {
             "mode": settings.dataset_mode,
@@ -312,6 +340,11 @@ def meta():
             "ranks within season × position group × league tier"
         ),
     }
+    try:
+        cache.set("api:meta", _json.dumps(result, default=str), ttl=300)
+    except Exception:
+        pass  # caching failure must never break the response
+    return result
 
 
 # ---------------------------------------------------------------------------
@@ -321,9 +354,22 @@ def meta():
 
 @app.get("/api/v1/leagues")
 def leagues():
+    from app.cache import get_cache
     from app.queries.league_queries import get_league_catalog
 
-    return _with_session(get_league_catalog)
+    cache = get_cache()
+    cached = cache.get("api:leagues")
+    if cached is not None:
+        try:
+            return _json.loads(cached)
+        except Exception:
+            pass
+    result = _with_session(get_league_catalog)
+    try:
+        cache.set("api:leagues", _json.dumps(result, default=str), ttl=300)
+    except Exception:
+        pass
+    return result
 
 
 @app.get("/api/v1/leagues/{league_slug}")
@@ -603,8 +649,18 @@ def coverage(league_id: int | None = None):
 
 @app.get("/api/v1/positions")
 def positions():
+    from app.cache import get_cache
     meta = public_meta()
     from app.queries.leaderboard_queries import get_qualifying_counts
+
+    cache = get_cache()
+    cache_key = f"api:positions:{CURRENT_SEASON}"
+    cached = cache.get(cache_key)
+    if cached is not None:
+        try:
+            return _json.loads(cached)
+        except Exception:
+            pass
 
     with session_scope() as db:
         counts_by_group = get_qualifying_counts(
@@ -613,9 +669,37 @@ def positions():
         out = []
         for group in meta["position_groups"]:
             out.append({**group, "qualifying_counts": counts_by_group.get(group["code"], {})})
-        return out
+        result = out
+    try:
+        cache.set(cache_key, _json.dumps(result, default=str), ttl=300)
+    except Exception:
+        pass
+    return result
 
 
 @app.get("/api/v1/methodology")
 def methodology():
     return public_meta()
+
+
+# ---------------------------------------------------------------------------
+# Prometheus metrics endpoint (Phase 19 — observability)
+# ---------------------------------------------------------------------------
+
+
+@app.get("/metrics")
+def metrics():
+    """Prometheus-format metrics for production monitoring.
+
+    Exposes request counts, durations (histogram), error counts, cache stats,
+    and uptime. Designed to be scraped by Prometheus without any external
+    dependencies (no prometheus_client library required).
+    """
+    from fastapi.responses import PlainTextResponse
+
+    from app.metrics import get_metrics_collector
+
+    return PlainTextResponse(
+        content=get_metrics_collector().render(),
+        media_type="text/plain; version=0.0.4; charset=utf-8",
+    )

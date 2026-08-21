@@ -36,4 +36,6 @@ USER app
 EXPOSE 8000
 
 # Health endpoint: /api/v1/health (the compose healthcheck curls this).
-CMD ["python", "-m", "uvicorn", "app.api.main:app", "--host", "0.0.0.0", "--port", "8000"]
+# --workers 4 for production (handles concurrent requests; adjust based on CPU).
+# --timeout-keep-alive 65 for load-balancer health checks.
+CMD ["python", "-m", "uvicorn", "app.api.main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "4", "--timeout-keep-alive", "65"]

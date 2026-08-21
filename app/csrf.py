@@ -30,9 +30,13 @@ __all__ = [
 
 
 def _secret_key() -> str:
-    """Derive a CSRF secret from the session cookie secret."""
+    """CSRF secret — from CSRF_SECRET_KEY env var if set, else derived from
+    the session cookie name (backward-compatible default).
+    """
     settings = get_settings()
-    # Use the session cookie name + a constant as a domain-separated key
+    if settings.csrf_secret_key:
+        return settings.csrf_secret_key
+    # Fallback: domain-separated derivation (not ideal, but functional)
     return hmac.new(
         b"csrf-protection",
         settings.session_cookie_name.encode(),

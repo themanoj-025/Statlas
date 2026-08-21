@@ -16,6 +16,7 @@ from __future__ import annotations
 import hashlib
 import hmac
 import secrets
+import time
 from datetime import datetime, timedelta, timezone
 from typing import Any
 
@@ -26,6 +27,36 @@ from app.models import SessionToken, Subscription, User
 
 PBKDF2_ITERATIONS = 600_000
 TOKEN_BYTES = 32  # 256-bit session / API key values
+PASSWORD_MIN_LENGTH = 8
+PASSWORD_MAX_LENGTH = 200
+
+
+SPECIAL_CHARS = set("!@#$%^&*()_+-=[]{}|;:,./<>?")
+
+
+def validate_password_strength(password: str) -> str:
+    """Validate password has minimum complexity.
+
+    Called by RegisterBody, PasswordResetConfirmBody, and ChangePasswordBody
+    model validators — single source of truth for password policy.
+    Constitution §4: passwords must include uppercase, lowercase, digit,
+    and special character.
+    """
+    if len(password) < PASSWORD_MIN_LENGTH:
+        raise ValueError(f"Password must be at least {PASSWORD_MIN_LENGTH} characters.")
+    if len(password) > PASSWORD_MAX_LENGTH:
+        raise ValueError(f"Password must be at most {PASSWORD_MAX_LENGTH} characters.")
+    if not any(c.isupper() for c in password):
+        raise ValueError("Password must contain at least one uppercase letter.")
+    if not any(c.islower() for c in password):
+        raise ValueError("Password must contain at least one lowercase letter.")
+    if not any(c.isdigit() for c in password):
+        raise ValueError("Password must contain at least one digit.")
+    if not any(c in SPECIAL_CHARS for c in password):
+        raise ValueError(
+            "Password must contain at least one special character (!@#$%^&*...)."
+        )
+    return password
 
 
 # ---------------------------------------------------------------------------
@@ -344,6 +375,59 @@ def consume_email_verification_token(db: Session, raw_token: str) -> int | None:
 LOGIN_MAX_FAILURES = 5
 LOGIN_WINDOW_SECONDS = 10 * 60  # 10 minutes
 LOGIN_LOCKOUT_SECONDS = 15 * 60  # 15 minutes
+# Progressive lockout: after N lockouts in 24h, extend the lockout duration
+LOCKOUT_ESCALATION = {
+    3: 30 * 60,   # 3 lockouts in 24h → 30 min lockout
+    5: 60 * 60,   # 5 lockouts in 24h → 1 hour lockout
+    10: 24 * 60 * 60,  # 10 lockouts in 24h → 24 hour lockout
+}
+LOCKOUT_ESCALATION_WINDOW = 24 * 60 * 60  # 24 hours
+
+
+def _get_lockout_count(email: str) -> int:
+    """Count lockouts in the last 24 hours for progressive escalation."""
+    from app.rate_limiting import get_rate_limiter
+
+    limiter = get_rate_limiter()
+    key = f"lockout_count:{email}"
+    try:
+        if hasattr(limiter, 'redis'):
+            count = limiter.redis.get(limiter._key(key))
+            return int(count) if count else 0
+        # In-memory fallback: approximate from hit list
+        now = time.monotonic()
+        hits = limiter._hits.get(key, [])
+        recent = [t for t in hits if now - t < LOCKOUT_ESCALATION_WINDOW]
+        return len(recent)
+    except Exception:
+        return 0
+
+
+def _record_lockout(email: str) -> None:
+    """Record that a lockout occurred for progressive escalation."""
+    from app.rate_limiting import get_rate_limiter
+
+    limiter = get_rate_limiter()
+    key = f"lockout_count:{email}"
+    try:
+        if hasattr(limiter, 'redis'):
+            rk = limiter._key(key)
+            limiter.redis.incr(rk)
+            limiter.redis.expire(rk, LOCKOUT_ESCALATION_WINDOW)
+        else:
+            limiter.is_limited(key, max_attempts=999, window_seconds=LOCKOUT_ESCALATION_WINDOW)
+    except Exception:
+        pass
+
+
+def _escalated_lockout_seconds(email: str) -> int:
+    """Return the lockout duration based on how many lockouts occurred recently."""
+    count = _get_lockout_count(email)
+    result = LOGIN_LOCKOUT_SECONDS
+    for threshold, duration in sorted(LOCKOUT_ESCALATION.items()):
+        if count >= threshold:
+            result = duration
+    return result
 
 
 def record_login_failure(email: str) -> None:
@@ -367,7 +451,11 @@ def clear_login_failures(email: str) -> None:
 
 
 def is_login_locked(email: str) -> tuple[bool, int]:
-    """Check if an account is locked out. Returns (locked, retry_after_seconds)."""
+    """Check if an account is locked out. Returns (locked, retry_after_seconds).
+
+    Uses progressive backoff: repeated lockouts within 24 hours escalate
+    the lockout duration (15m → 30m → 1h → 24h).
+    """
     from app.rate_limiting import get_rate_limiter
 
     limiter = get_rate_limiter()
@@ -376,5 +464,6 @@ def is_login_locked(email: str) -> tuple[bool, int]:
         max_attempts=LOGIN_MAX_FAILURES,
         window_seconds=LOGIN_WINDOW_SECONDS,
     ):
-        return True, LOGIN_LOCKOUT_SECONDS
+        _record_lockout(email)
+        return True, _escalated_lockout_seconds(email)
     return False, 0
