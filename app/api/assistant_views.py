@@ -17,6 +17,7 @@ from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel, Field
 
 from app import assistant, auth
+from app.api.deps import require_user
 from app.config import get_settings
 from app.db import session_scope
 
@@ -51,23 +52,24 @@ def _rate_limit(user_id: int) -> None:
 
 @router.post("/assistant/chat")
 def chat(body: ChatBody, request: Request):
-    settings = get_settings()
     if not assistant.assistant_configured():
         raise HTTPException(
             status_code=503,
             detail="The assistant is not configured on this deployment (ANTHROPIC_API_KEY unset).",
         )
 
+    user = require_user(request)
+    _rate_limit(user.id)
+
     with session_scope() as db:
-        user = auth.user_from_session(
-            db, request.cookies.get(settings.session_cookie_name)
-        )
-        if user is None:
+        # Re-fetch user in this session scope for detached-object safety.
+        from app.models import User as UserModel
+        db_user = db.get(UserModel, user.id)
+        if db_user is None:
             raise HTTPException(status_code=401, detail="Sign in to use the assistant.")
-        _rate_limit(user.id)
 
         try:
-            result = assistant.run_assistant_turn(db, user, body.messages)
+            result = assistant.run_assistant_turn(db, db_user, body.messages)
         except assistant.QuotaExceeded as exc:
             raise HTTPException(
                 status_code=429,
@@ -80,11 +82,10 @@ def chat(body: ChatBody, request: Request):
 
 @router.get("/assistant/quota")
 def assistant_quota(request: Request):
-    settings = get_settings()
+    user = require_user(request)
     with session_scope() as db:
-        user = auth.user_from_session(
-            db, request.cookies.get(settings.session_cookie_name)
-        )
-        if user is None:
+        from app.models import User as UserModel
+        db_user = db.get(UserModel, user.id)
+        if db_user is None:
             raise HTTPException(status_code=401, detail="Sign in to use the assistant.")
-        return assistant.get_quota(db, user)
+        return assistant.get_quota(db, db_user)

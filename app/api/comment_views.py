@@ -166,11 +166,14 @@ def add_comment(
 
 @router.put("/{comment_id}")
 def edit_comment(comment_id: int, body: EditCommentBody, request: Request):
-    """Edit a comment. Only the author can edit."""
+    """Edit a comment. Only the author can edit. Org membership verified."""
     user = _require_user(request)
     with session_scope() as db:
         comment = db.get(Comment, comment_id)
         if comment is None or comment.deleted_at is not None:
+            raise HTTPException(status_code=404, detail="Comment not found")
+        # Org membership check — prevents editing comments from other orgs.
+        if not oq.user_has_permission(db, user.id, comment.org_id, "resource_view"):
             raise HTTPException(status_code=404, detail="Comment not found")
         if comment.author_user_id != user.id:
             raise HTTPException(
@@ -186,11 +189,16 @@ def edit_comment(comment_id: int, body: EditCommentBody, request: Request):
 
 @router.delete("/{comment_id}")
 def delete_comment(comment_id: int, request: Request):
-    """Soft-delete a comment. Author or org manager/owner can delete."""
+    """Soft-delete a comment. Author or org manager/owner can delete.
+    Org membership verified to prevent cross-org deletion."""
     user = _require_user(request)
     with session_scope() as db:
         comment = db.get(Comment, comment_id)
         if comment is None or comment.deleted_at is not None:
+            raise HTTPException(status_code=404, detail="Comment not found")
+
+        # Org membership check — prevents deleting comments from other orgs.
+        if not oq.user_has_permission(db, user.id, comment.org_id, "resource_view"):
             raise HTTPException(status_code=404, detail="Comment not found")
 
         # Author or manager/owner can delete

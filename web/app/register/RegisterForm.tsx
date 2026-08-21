@@ -19,8 +19,9 @@ export function RegisterForm() {
     const hasUpper = /[A-Z]/.test(password);
     const hasLower = /[a-z]/.test(password);
     const hasDigit = /[0-9]/.test(password);
-    if (password.length < 8 || !hasUpper || !hasLower || !hasDigit) {
-      setError("Password must be at least 8 characters with an uppercase letter, lowercase letter, and digit.");
+    const hasSpecial = /[!@#$%^&*()_+\-=\[\]{}|;:,./<>?]/.test(password);
+    if (password.length < 8 || !hasUpper || !hasLower || !hasDigit || !hasSpecial) {
+      setError("Password must be at least 8 characters with an uppercase letter, lowercase letter, digit, and special character.");
       return;
     }
     setSubmitting(true);
@@ -64,7 +65,7 @@ export function RegisterForm() {
           value={password}
           onChange={(e) => setPassword(e.target.value)}
         />
-        <p className="field__hint">Min 8 characters with uppercase, lowercase, and a digit. Stored as a salted hash — never plaintext.</p>
+        <p className="field__hint">Min 8 characters with uppercase, lowercase, a digit, and a special character. Stored as a salted hash — never plaintext.</p>
       </div>
 
       {error && (
