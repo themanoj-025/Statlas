@@ -9,6 +9,10 @@ parity (native_enum=False keeps the two interchangeable).
 
 from __future__ import annotations
 
+import os
+
+os.environ.setdefault("STATLAS_ENV", "test")
+
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -98,6 +102,11 @@ def _ensure_clean_rate_limiter():
     """Reset the in-memory rate limiter before every test to prevent
     cross-test rate-limit exhaustion (e.g., multiple registrations from
     the same test IP)."""
+    import app.config as _cfg
+
+    # Ensure test environment is active (disables CSRF middleware)
+    _cfg._settings = None  # reset cached Settings singleton
+
     from app.rate_limiting import get_rate_limiter
 
     limiter = get_rate_limiter()
