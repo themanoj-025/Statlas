@@ -40,7 +40,7 @@ from app.models import (
     StatusHistory,
     Team,
 )
-from app.queries.player_queries import player_slug_map
+from app.queries.player_queries import _compact_slug_map, slugify_name
 
 # ---------------------------------------------------------------------------
 # Pipeline definition (docs/product/scouting-pipeline.md §1)
@@ -568,7 +568,16 @@ def get_shortlist_detail(
                     "snapshot_date": snap.scrape_date,
                 }
 
-    slugs = {p["player_id"]: p["slug"] for p in player_slug_map(db)}
+    # Batch-compute slugs only for players in this shortlist (not all players).
+    from app.queries.player_queries import _compact_slug_map, slugify_name
+
+    entry_player_map = {pid: db.get(Player, pid) for pid in player_ids}
+    entry_teams = {
+        pid: db.get(Team, p.current_team_id)
+        for pid, p in entry_player_map.items()
+        if p and p.current_team_id
+    }
+    slugs = _compact_slug_map(db, player_ids, entry_player_map, entry_teams) if player_ids else {}
 
     entry_ids = [entry.id for entry, *_ in rows]
     notes_by_entry: dict[int, list[dict[str, Any]]] = {}

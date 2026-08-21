@@ -99,16 +99,14 @@ def track_event_endpoint(
     Validates event schema at write time (Part A2).  Unknown events or
     missing properties raise 400.
     """
-    user = None
-    user_id = None
-    token = request.cookies.get(get_settings().session_cookie_name)
-    if token:
-        with session_scope() as db:
+    with session_scope() as db:
+        user_id = None
+        token = request.cookies.get(get_settings().session_cookie_name)
+        if token:
             user = auth.user_from_session(db, token)
             if user:
                 user_id = user.id
 
-    with session_scope() as db:
         try:
             event = track_event(
                 db,
