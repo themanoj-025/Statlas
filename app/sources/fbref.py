@@ -222,7 +222,17 @@ class FBrefSource(StatsSource):
         limiter: RateLimiter | None = None,
     ) -> None:
         settings = get_settings()
-        self.session = session or requests.Session()
+        if session is not None:
+            self.session = session
+        else:
+            try:
+                import cloudscraper
+
+                self.session = cloudscraper.create_scraper(
+                    browser={"browser": "chrome", "platform": "windows", "mobile": False}
+                )
+            except ImportError:
+                self.session = requests.Session()
         self.cache = cache or HttpCache()
         # Declared compliance limit: 1 request per 10s ± 2s jitter.
         self.limiter = limiter or RateLimiter(
@@ -258,6 +268,7 @@ class FBrefSource(StatsSource):
             limiter=self.limiter,
             cache=self.cache,
             headers={"User-Agent": get_settings().user_agent},
+            session=self.session,
         )
         soup = BeautifulSoup(html, "html.parser")
 
