@@ -254,7 +254,7 @@ Statlas/
 │   ├── sources/                scrapers — FBref, Understat, StatsBomb, API-Football
 │   ├── watch/                  watchlist detection and email delivery
 │   ├── config.py               env settings, metric registry, league tiers
-│   ├── db.py / models.py      SQLAlchemy ORM models
+│   ├── db.py / models/        SQLAlchemy ORM models (domain modules)
 │   └── schema.sql              canonical PostgreSQL DDL
 ├── web/                        Next.js 16 (App Router, server-rendered)
 │   ├── app/                    pages — compare, trend, players, archetypes, leagues…
