@@ -16,7 +16,6 @@ from __future__ import annotations
 import hashlib
 import hmac
 import secrets
-import time
 from datetime import datetime, timedelta, timezone
 from typing import Any
 
@@ -387,17 +386,7 @@ def _get_lockout_count(email: str) -> int:
     limiter = get_rate_limiter()
     key = f"lockout_count:{email}"
     try:
-        # Use the public is_limited API with a high threshold to check
-        # if we've hit escalation thresholds — avoids private attr access.
-        # For Redis: check the counter directly. For in-memory: approximate.
-        if hasattr(limiter, 'redis') and limiter.redis is not None:
-            rk = limiter._key(key)
-            count = limiter.redis.get(rk)
-            return int(count) if count else 0
-        # In-memory fallback: treat any existing hits as at least 1 lockout.
-        if limiter.is_limited(key, max_attempts=1, window_seconds=LOCKOUT_ESCALATION_WINDOW):
-            return 1
-        return 0
+        return limiter.get_count(key)
     except Exception:
         return 0
 
@@ -405,21 +394,16 @@ def _get_lockout_count(email: str) -> int:
 def _record_lockout(email: str) -> None:
     """Record that a lockout occurred for progressive escalation.
 
-    For Redis: increment a dedicated counter with TTL.
-    For in-memory: use is_limited to register the event.
+    Uses the rate limiter's is_limited() with a high threshold to register
+    the event. For Redis, this increments a counter with TTL; for in-memory,
+    it adds a timestamp entry.
     """
     from app.rate_limiting import get_rate_limiter
 
     limiter = get_rate_limiter()
     key = f"lockout_count:{email}"
     try:
-        if hasattr(limiter, 'redis') and limiter.redis is not None:
-            rk = limiter._key(key)
-            limiter.redis.incr(rk)
-            limiter.redis.expire(rk, LOCKOUT_ESCALATION_WINDOW)
-        else:
-            # In-memory: register a hit so is_limited returns True
-            limiter.is_limited(key, max_attempts=999, window_seconds=LOCKOUT_ESCALATION_WINDOW)
+        limiter.is_limited(key, max_attempts=999, window_seconds=LOCKOUT_ESCALATION_WINDOW)
     except Exception:
         pass
 

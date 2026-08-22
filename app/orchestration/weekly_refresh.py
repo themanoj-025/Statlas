@@ -284,10 +284,17 @@ def publish_run(db: Session, computed_date: datetime) -> int:
     try:
         from app.cache import get_cache
         cache = get_cache()
+        # Legacy key patterns
         cache.delete_pattern("leaderboard:*")
         cache.delete_pattern("search:*")
         cache.delete_pattern("player:*")
         cache.delete_pattern("league:*")
+        # Current api: prefixed keys (leaderboard, similar, player profiles)
+        cache.delete_pattern("api:lb:*")
+        cache.delete_pattern("api:similar:*")
+        cache.delete_pattern("api:player:*")
+        cache.delete_pattern("api:positions:*")
+        cache.delete_pattern("api:meta")
     except Exception as exc:
         logger.warning("Cache invalidation failed after publish (non-fatal): %s", exc)
     return len(rows)
