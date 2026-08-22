@@ -31,11 +31,28 @@ def _parse_args() -> argparse.Namespace:
     ingest = sub.add_parser(
         "ingest", help="download real data from free sources and seed the DB"
     )
+    ingest_mode = ingest.add_mutually_exclusive_group()
+    ingest_mode.add_argument(
+        "--resume", action="store_true",
+        help="resume an interrupted backfill",
+    )
+    ingest_mode.add_argument(
+        "--status", action="store_true",
+        help="show ingestion progress and exit",
+    )
+    ingest_mode.add_argument(
+        "--reset-progress", action="store_true",
+        help="delete progress file and start fresh",
+    )
     ingest.add_argument(
         "--season", default=None, help="single season (e.g. 2025-26)"
     )
     ingest.add_argument(
         "--seasons", default=None, help="comma-separated seasons (e.g. 2023-24,2024-25)"
+    )
+    ingest.add_argument(
+        "--start-from", default=None, metavar="SEASON",
+        help="backfill from this season through current (e.g. --start-from 2017-18)",
     )
     ingest.add_argument(
         "--leagues", default=None, help="comma-separated league slugs"
@@ -114,10 +131,18 @@ def main() -> int:
 
         # Build sys.argv for the ingestion script
         ingest_args = []
+        if args.resume:
+            ingest_args.append("--resume")
+        if args.status:
+            ingest_args.append("--status")
+        if args.reset_progress:
+            ingest_args.append("--reset-progress")
         if args.season:
             ingest_args += ["--season", args.season]
         if args.seasons:
             ingest_args += ["--seasons", args.seasons]
+        if args.start_from:
+            ingest_args += ["--start-from", args.start_from]
         if args.leagues:
             ingest_args += ["--leagues", args.leagues]
         if args.statsbomb:
