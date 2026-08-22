@@ -41,6 +41,18 @@ from app.api.org_views import router as org_router
 from app.api.public_views import router as public_api_router
 from app.api.registry_view import public_meta
 from app.api.report_views import router as report_router
+from app.api.schemas import (
+    CoverageResponse,
+    HealthResponse,
+    LeaderboardResponse,
+    LeagueEntry,
+    MetaResponse,
+    PlayerProfileResponse,
+    PlayerSearchResult,
+    PositionEntry,
+    SimilarPlayerEntry,
+    TrendResponse,
+)
 from app.api.search_views import router as search_router
 from app.api.tactical_views import router as tactical_router
 from app.api.transfer_views import router as transfer_router
@@ -330,7 +342,7 @@ def _log_player_view(request: Request, player_id: int) -> None:
 # ---------------------------------------------------------------------------
 
 
-@app.get("/api/v1/health")
+@app.get("/api/v1/health", response_model=HealthResponse)
 def health():
     """Health check that verifies database and Redis connectivity."""
     settings = get_settings()
@@ -375,7 +387,7 @@ def readiness():
         raise HTTPException(status_code=503, detail=f"Database unavailable: {exc}")
 
 
-@app.get("/api/v1/meta")
+@app.get("/api/v1/meta", response_model=MetaResponse)
 def meta():
     from app.cache import get_cache
 
@@ -413,7 +425,7 @@ def meta():
 # ---------------------------------------------------------------------------
 
 
-@app.get("/api/v1/leagues")
+@app.get("/api/v1/leagues", response_model=list[LeagueEntry])
 def leagues():
     from app.cache import get_cache
     from app.queries.league_queries import get_league_catalog
@@ -472,7 +484,7 @@ def league_stats(
 # ---------------------------------------------------------------------------
 
 
-@app.get("/api/v1/leaderboard")
+@app.get("/api/v1/leaderboard", response_model=LeaderboardResponse)
 def leaderboard(
     metric: str = Query("si_index"),
     season: str = CURRENT_SEASON,
@@ -543,7 +555,7 @@ def leaderboard(
 # ---------------------------------------------------------------------------
 
 
-@app.get("/api/v1/players/search")
+@app.get("/api/v1/players/search", response_model=list[PlayerSearchResult])
 def player_search(
     q: str = Query(..., min_length=1, max_length=64), limit: int = Query(8, ge=1, le=25)
 ):
@@ -552,7 +564,7 @@ def player_search(
     return _with_session(search_players, q, limit=limit)
 
 
-@app.get("/api/v1/players/by-slug/{slug}")
+@app.get("/api/v1/players/by-slug/{slug}", response_model=PlayerProfileResponse)
 def player_by_slug(slug: str, request: Request):
     from app.api.player_view import build_player_payload
     from app.cache import get_cache
@@ -594,7 +606,7 @@ def player_by_slug(slug: str, request: Request):
     return payload
 
 
-@app.get("/api/v1/players/{player_id}/similar")
+@app.get("/api/v1/players/{player_id}/similar", response_model=list[SimilarPlayerEntry])
 def player_similar(player_id: int, limit: int = Query(5, ge=1, le=10)):
     from app.cache import get_cache
     from app.queries.player_queries import get_player_profile
@@ -627,7 +639,7 @@ def player_similar(player_id: int, limit: int = Query(5, ge=1, le=10)):
 # ---------------------------------------------------------------------------
 
 
-@app.get("/api/v1/players/{player_id}/trend")
+@app.get("/api/v1/players/{player_id}/trend", response_model=TrendResponse)
 def player_trend(
     player_id: int,
     metric: str = Query(...),
@@ -731,7 +743,7 @@ def team_profile(league_slug: str, team_slug: str, season: str | None = None):
 # ---------------------------------------------------------------------------
 
 
-@app.get("/api/v1/coverage")
+@app.get("/api/v1/coverage", response_model=CoverageResponse)
 def coverage(league_id: int | None = None):
     from app.queries.coverage_queries import get_data_coverage
     from app.queries.event_queries import get_statsbomb_competitions
@@ -752,7 +764,7 @@ def coverage(league_id: int | None = None):
         }
 
 
-@app.get("/api/v1/positions")
+@app.get("/api/v1/positions", response_model=list[PositionEntry])
 def positions():
     from app.cache import get_cache
     meta = public_meta()
