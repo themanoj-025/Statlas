@@ -52,17 +52,16 @@ docs/
 ├── ai-assistant/                  live AI-assistant verification (BLOCKED, Part A2)
 │   └── live-verification-log.md   real captured traces or BLOCKED status
 ├── engineering/                   unique engineering records
+│   ├── auth-policy.md             Phase 12 auth policy (password, session, rate-limit, deletion)
+│   ├── fbref-blocker-options.md   FBref access options document (awaiting founder decision)
 │   ├── infra-plan.md              staging + backup strategy
 │   ├── performance-baseline.md    Lighthouse LCP baseline (572–740ms)
-│   ├── postgres-parity-notes.md   Postgres 17 parity proof
-│   ├── timezone-policy.md         UTC policy (DTZ-enforced)
-│   ├── cleanup-audit-2026-08-14.md  repo cleanup audit
-│   ├── phase3-verification-log.md   Phase 3 (trend/maps/sharing) audit — every
+│   ├── phase3-verification-log.md Phase 3 (trend/maps/sharing) audit — every
 │   │                               Part A–D item mapped to code + tests
-│   ├── phase4-security-review.md   Phase 4 payment/API-key security review (D3)
-│   ├── watch-detection-scaling-notes.md  Phase 10 batch-query strategy + scaling path
-│   ├── account-system-audit.md    Phase 12 account system audit (Path 1 — additive build)
-│   └── auth-policy.md             Phase 12 auth policy (password, session, rate-limit, deletion)
+│   ├── phase4-security-review.md  Phase 4 payment/API-key security review (D3)
+│   ├── postgres-parity-notes.md   Postgres 17 parity proof
+│   ├── security-audit-report.md   security audit record
+│   └── timezone-policy.md         UTC policy (DTZ-enforced)
 ├── billing/                       Phase 4 billing
 │   ├── pricing-config.md          tier boundaries + Stripe Products/Prices map
 │   └── live-verification-log.md   live Stripe verification or BLOCKED status (Part A1)
@@ -79,11 +78,12 @@ docs/
     └── pre-launch-human-actions.md  tracked, owned human-action list (all ⬜ pending)
 ```
 
-## What was merged / removed (2026-08-14)
+## What was merged / removed
 
-- **Moved:** `project-docs/*` → `docs/suite/` (15 files, internal links intact).
-- **Removed (superseded by suite):** `design/design-system.md`, `design/component-states-spec.md` (→ `suite/Design.md`); `product/site-map.md`, `product/navigation-and-flows.md` (→ `suite/AppFlow.md` + `suite/PRD.md`); `guides/phase2.md` (→ `suite/ImplementationPlan.md`), `guides/testing.md` (→ `suite/Testing.md`); `engineering/architecture.md` (→ `suite/TechSpec.md`).
-- **Removed (historical one-time records):** `engineering/analysis_report.md`, `engineering/migration_summary.md`, `engineering/folder_structure.md`, `engineering/module_dependency.md`, `engineering/package_overview.md`, `engineering/startup_flow.md`, `engineering/cleanup-audit-2026-08-13.md` (superseded by the 08-14 audit).
+- **2026-08-14:** Moved `project-docs/*` → `docs/suite/` (15 files, internal links intact).
+- **2026-08-14:** Removed superseded files: `design/design-system.md`, `design/component-states-spec.md` (→ `suite/Design.md`); `product/site-map.md`, `product/navigation-and-flows.md` (→ `suite/AppFlow.md` + `suite/PRD.md`); `guides/phase2.md` (→ `suite/ImplementationPlan.md`), `guides/testing.md` (→ `suite/Testing.md`); `engineering/architecture.md` (→ `suite/TechSpec.md`).
+- **2026-08-14:** Removed historical one-time records: `engineering/analysis_report.md`, `engineering/migration_summary.md`, `engineering/folder_structure.md`, `engineering/module_dependency.md`, `engineering/package_overview.md`, `engineering/startup_flow.md`, `engineering/cleanup-audit-2026-08-13.md`.
+- **2026-08-22:** Removed stale/redundant docs: `API_DOCUMENTATION.md` (empty stub), `DEVELOPER_GUIDE.md` (empty stub), `architecture.md` (superseded by `suite/TechSpec.md`), `folder_structure.md` (superseded by this README), `migration_summary.md` (one-time report), `migration/` directory (one-time analysis, decided no restructuring), `engineering/cleanup-audit-2026-08-14.md`, `engineering/cleanup-audit-2026-08-15.md` (one-time audits), `engineering/cicd-validation-report.md` (one-time report), `engineering/account-system-audit.md`, `engineering/watch-detection-scaling-notes.md` (one-time records).
 
 ## Guidance
 
