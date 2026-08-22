@@ -129,10 +129,13 @@ def resolve_player_for_record(
     player = reconciler.match_existing(record)
     created = player is None
     if created:
+        ext_ids = dict(record.external_ids or {})
+        tm_id = ext_ids.get("transfermarkt")
         player = Player(
             canonical_name=record.player_name,
             position_group=getattr(record, "position_group", None),
-            external_ids=dict(record.external_ids or {}),
+            external_ids=ext_ids,
+            transfermarkt_id=int(tm_id) if tm_id else None,
         )
         db.add(player)
         db.flush()
@@ -160,6 +163,11 @@ def resolve_player_for_record(
             pass
     if getattr(record, "nation", None) and player.nationality is None:
         player.nationality = record.nation
+    # Backfill transfermarkt_id from external_ids if missing
+    if player.transfermarkt_id is None:
+        tm_id = (player.external_ids or {}).get("transfermarkt")
+        if tm_id:
+            player.transfermarkt_id = int(tm_id)
     return player, created
 
 
@@ -494,7 +502,7 @@ def run_weekly_refresh(
         from app.models.player import Player
 
         qualifying_rows = (
-            db.query(StatSnapshot.player_id, Player.name)
+            db.query(StatSnapshot.player_id, Player.canonical_name)
             .join(Player, Player.id == StatSnapshot.player_id)
             .filter(
                 StatSnapshot.scrape_date == snapshot_date,

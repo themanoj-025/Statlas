@@ -65,6 +65,7 @@ class Player(Base):
     primary_position: Mapped[str | None] = mapped_column(String(64), nullable=True)
     position_group: Mapped[str | None] = mapped_column(POSITION_GROUP_ENUM, nullable=True)
     external_ids: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    transfermarkt_id: Mapped[int | None] = mapped_column(Integer, nullable=True, unique=True)
     current_team_id: Mapped[int | None] = mapped_column(
         ForeignKey("teams.id"), nullable=True
     )
@@ -75,6 +76,7 @@ class Player(Base):
     __table_args__ = (
         Index("ix_players_canonical_name", "canonical_name"),
         Index("ix_players_position_group", "position_group"),
+        Index("ix_players_transfermarkt_id", "transfermarkt_id"),
     )
 
 
