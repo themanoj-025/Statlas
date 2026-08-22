@@ -27,6 +27,35 @@ def _parse_args() -> argparse.Namespace:
     )
     sub = parser.add_subparsers(dest="command", required=True)
 
+    # --- ingest (real data download) ----------------------------------------
+    ingest = sub.add_parser(
+        "ingest", help="download real data from free sources and seed the DB"
+    )
+    ingest.add_argument(
+        "--season", default=None, help="single season (e.g. 2025-26)"
+    )
+    ingest.add_argument(
+        "--seasons", default=None, help="comma-separated seasons (e.g. 2023-24,2024-25)"
+    )
+    ingest.add_argument(
+        "--leagues", default=None, help="comma-separated league slugs"
+    )
+    ingest.add_argument(
+        "--statsbomb", action="store_true", help="also sync StatsBomb events"
+    )
+    ingest.add_argument(
+        "--dry-run", action="store_true", help="fetch without writing to DB"
+    )
+    ingest.add_argument(
+        "--dataset-mode",
+        choices=["fixture-demo", "production"],
+        default=None,
+        help="override dataset mode (set 'production' after first real scrape)",
+    )
+    ingest.add_argument(
+        "-v", "--verbose", action="store_true", help="debug logging"
+    )
+
     weekly = sub.add_parser("weekly-refresh", help="run the full weekly refresh")
     weekly.add_argument("--season", required=True)
     weekly.add_argument(
@@ -73,6 +102,40 @@ def _parse_args() -> argparse.Namespace:
 
 def main() -> int:
     args = _parse_args()
+
+    if args.command == "ingest":
+        # Delegate to the comprehensive ingestion script's logic
+        import os as _os
+
+        if args.verbose:
+            _os.environ["STATLAS_LOG_LEVEL"] = "DEBUG"
+        if args.dataset_mode:
+            _os.environ["STATLAS_DATASET_MODE"] = args.dataset_mode
+
+        # Build sys.argv for the ingestion script
+        ingest_args = []
+        if args.season:
+            ingest_args += ["--season", args.season]
+        if args.seasons:
+            ingest_args += ["--seasons", args.seasons]
+        if args.leagues:
+            ingest_args += ["--leagues", args.leagues]
+        if args.statsbomb:
+            ingest_args.append("--statsbomb")
+        if args.dry_run:
+            ingest_args.append("--dry-run")
+        if args.verbose:
+            ingest_args.append("-v")
+
+        # Run the ingestion script's main() with patched argv
+        old_argv = sys.argv
+        try:
+            sys.argv = ["statlas ingest"] + ingest_args
+            from scripts.ingest_real_data import main as ingest_main
+
+            return ingest_main()
+        finally:
+            sys.argv = old_argv
 
     if args.command == "weekly-refresh":
         from app.orchestration.weekly_refresh import run_weekly_refresh
