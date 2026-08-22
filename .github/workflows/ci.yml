@@ -98,6 +98,14 @@ jobs:
       - name: Typecheck
         run: npx tsc --noEmit
 
+      # ESLint + Stylelint — enforce frontend code quality on every push/PR.
+      # Rules defined in web/eslint.config.mjs and web/.stylelintrc.json.
+      - name: ESLint
+        run: npx eslint .
+
+      - name: Stylelint
+        run: npx stylelint '**/*.css'
+
       # Pure-logic tests (share.ts / chartSvg.ts) run on Node's built-in test
       # runner with type stripping — the permalink round-trip and OG-image
       # data quality gates (Part C) are enforced in CI.
