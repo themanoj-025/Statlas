@@ -73,9 +73,19 @@ class MarketDataSource(ABC):
 
     @abstractmethod
     def fetch_valuations(
-        self, player_ids: list[int], as_of: datetime
+        self, player_ids: list[int], as_of: datetime,
+        player_names: list[str] | None = None,
     ) -> list[MarketValuationRecord]:
-        """Fetch current market valuations for specified players."""
+        """Fetch current market valuations for specified players.
+
+        Args:
+            player_ids: Internal player IDs.
+            as_of: Valuation date.
+            player_names: Optional player full names (same order as player_ids).
+                Sources that require name-based URLs (e.g. Transfermarkt) use
+                this to construct correct slugs.  When None, sources may fall
+                back to ID-only lookup.
+        """
         ...
 
     @abstractmethod
@@ -85,7 +95,8 @@ class MarketDataSource(ABC):
 
     @abstractmethod
     def fetch_contracts(
-        self, player_ids: list[int], as_of: datetime
+        self, player_ids: list[int], as_of: datetime,
+        player_names: list[str] | None = None,
     ) -> list[ContractRecord]:
         """Fetch contract status for specified players."""
         ...
@@ -102,7 +113,8 @@ class FixtureMarketDataSource(MarketDataSource):
         self._rng = random.Random(seed)
 
     def fetch_valuations(
-        self, player_ids: list[int], as_of: datetime
+        self, player_ids: list[int], as_of: datetime,
+        player_names: list[str] | None = None,
     ) -> list[MarketValuationRecord]:
         """Generate synthetic valuations based on player attributes."""
         records = []
@@ -131,7 +143,8 @@ class FixtureMarketDataSource(MarketDataSource):
         return []
 
     def fetch_contracts(
-        self, player_ids: list[int], as_of: datetime
+        self, player_ids: list[int], as_of: datetime,
+        player_names: list[str] | None = None,
     ) -> list[ContractRecord]:
         """Generate synthetic contract statuses."""
         records = []
