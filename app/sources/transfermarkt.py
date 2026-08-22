@@ -219,63 +219,87 @@ class TransfermarktSource(MarketDataSource):
     # -- Player profile parsing ---------------------------------------------
 
     def _parse_player_profile(self, soup: BeautifulSoup) -> dict[str, Any]:
-        """Extract player info from a Transfermarkt profile page."""
+        """Extract player info from a Transfermarkt profile page.
+
+        Handles the real Transfermarkt HTML structure:
+        - Name in ``h1.data-header__headline``
+        - Market value in ``div.data-header__market-value-wrapper``
+        - Player details in ``div.info-table`` using paired
+          ``span.info-table__content`` elements (label + value)
+        - Additional details in ``div.data-header__details``
+        """
         data: dict[str, Any] = {}
 
-        # Player name
+        # Player name (h1 > div.data-header__headline-wrapper)
         name_el = soup.select_one(
-            ".data-header__headline-wrapper, h1.tw-text-2xl"
+            "h1.data-header__headline, "
+            ".data-header__headline-wrapper, "
+            "h1.tw-text-2xl"
         )
         if name_el:
             data["name"] = name_el.get_text(strip=True)
 
         # Market value
         mv_el = soup.select_one(
-            "div.tm-player-market-value-development__current-value, "
-            "div.data-header__market-value-wrapper"
+            "div.data-header__market-value-wrapper, "
+            "div.tm-player-market-value-development__current-value"
         )
         if mv_el:
-            data["market_value_text"] = mv_el.get_text(strip=True)
-            data["market_value_eur"] = _parse_market_value(
-                mv_el.get_text(strip=True)
-            )
+            mv_text = mv_el.get_text(strip=True)
+            # Strip trailing "Last update: ..." if present
+            if "Last update" in mv_text:
+                mv_text = mv_text.split("Last update")[0].strip()
+            data["market_value_text"] = mv_text
+            data["market_value_eur"] = _parse_market_value(mv_text)
 
-        # Info table (DOB, nationality, position, etc.)
-        info_box = soup.select_one(
-            "div.info-table, div.data-header__details"
-        )
-        if info_box:
-            for row in info_box.select("tr"):
-                label_el = row.select_one("th, span.info-table__content--bold")
-                value_el = row.select_one("td, span.info-table__content")
-                if label_el and value_el:
-                    label = label_el.get_text(strip=True).rstrip(":")
-                    value = value_el.get_text(strip=True)
+        # Info table: div.info-table with paired spans
+        # Real HTML: <div class="info-table">
+        #   <span class="info-table__content info-table__content--regular">Label:</span>
+        #   <span class="info-table__content info-table__content--bold">Value</span>
+        #   ...
+        # </div>
+        for info_box in soup.select("div.info-table"):
+            spans = info_box.select("span.info-table__content")
+            for i in range(0, len(spans) - 1, 2):
+                label = spans[i].get_text(strip=True).rstrip(":")
+                value = spans[i + 1].get_text(strip=True)
+                if label:
                     data[label.lower()] = value
+
+        # Fallback: data-header__details (li elements)
+        if len(data) <= 1:  # only name so far
+            for li in soup.select("div.data-header__details li"):
+                label_el = li.select_one(".data-header__label")
+                content_el = li.select_one(".data-header__content")
+                if label_el and content_el:
+                    label = label_el.get_text(strip=True).rstrip(":")
+                    value = content_el.get_text(strip=True)
+                    if label:
+                        data[label.lower()] = value
 
         return data
 
     # -- MarketDataSource interface ------------------------------------------
 
     def fetch_valuations(
-        self, player_ids: list[int], as_of: datetime
+        self, player_ids: list[int], as_of: datetime,
+        player_names: list[str] | None = None,
     ) -> list[MarketValuationRecord]:
         """Fetch current market valuations for specified players.
 
-        Uses the Transfermarkt market value API endpoint (embedded JSON in
-        the player profile page) for efficient bulk lookups.
+        Strategy:
+        1. CEAPI JSON endpoint (``/ceapi/marketValueDevelopment/graph/{id}``)
+           — no slug needed, returns full history with latest value.
+        2. Profile page fallback — requires name slug for correct URL.
         """
         records: list[MarketValuationRecord] = []
+        names = player_names or [None] * len(player_ids)  # type: ignore[list-item]
 
-        for pid in player_ids:
+        for pid, name in zip(player_ids, names):
             try:
-                url = f"{TRANSFERMARKT_BASE}/marktwertverlauf/spieler/{pid}"
-                soup = self._soup(url)
-
-                # The market value page has a JSON data attribute with history
-                mv_data = self._extract_market_value_history(soup, pid)
+                # Strategy 1: CEAPI JSON endpoint (no slug needed)
+                mv_data = self.fetch_market_value_history(pid)
                 if mv_data:
-                    # Get the most recent valuation
                     latest = mv_data[-1]
                     records.append(
                         MarketValuationRecord(
@@ -286,12 +310,21 @@ class TransfermarktSource(MarketDataSource):
                             low_range=latest["value"] * 0.85,
                             high_range=latest["value"] * 1.15,
                             confidence_level="medium",
-                            raw={"tm_player_id": pid, "history_count": len(mv_data)},
+                            raw={
+                                "tm_player_id": pid,
+                                "history_count": len(mv_data),
+                                "club": latest.get("club", ""),
+                            },
                         )
                     )
-                else:
-                    # Fallback: try the profile page for current value
-                    profile_url = f"{TRANSFERMARKT_BASE}/profil/spieler/{pid}"
+                    continue
+
+                # Strategy 2: Profile page fallback (needs name slug)
+                slug = self._name_to_slug(name) if name else None
+                if slug:
+                    profile_url = (
+                        f"{TRANSFERMARKT_BASE}/{slug}/profil/spieler/{pid}"
+                    )
                     profile_soup = self._soup(profile_url)
                     profile = self._parse_player_profile(profile_soup)
                     mv = profile.get("market_value_eur")
@@ -308,27 +341,129 @@ class TransfermarktSource(MarketDataSource):
                                 raw={"tm_player_id": pid, "source": "profile_fallback"},
                             )
                         )
+                else:
+                    logger.debug(
+                        "No name for player %s, cannot build profile URL", pid
+                    )
             except Exception as exc:
                 logger.warning("Failed to fetch valuation for player %s: %s", pid, exc)
 
         return records
 
+    # -- Slug helpers ---------------------------------------------------------
+
+    @staticmethod
+    def _name_to_slug(name: str) -> str:
+        """Convert a player full name to a Transfermarkt URL slug.
+
+        Examples:
+            'Kylian Mbappe'   -> 'kylian-mbappe'
+            'Erling Haaland'  -> 'erling-haaland'
+            'Lionel Messi'    -> 'lionel-messi'
+        """
+        import unicodedata
+
+        # Normalize unicode (e.g. accents)
+        nfkd = unicodedata.normalize("NFKD", name)
+        ascii_name = "".join(c for c in nfkd if not unicodedata.combining(c))
+        slug = ascii_name.lower().strip()
+        slug = re.sub(r"[^a-z0-9\s-]", "", slug)  # keep only safe chars
+        slug = re.sub(r"\s+", "-", slug)  # spaces -> hyphens
+        slug = re.sub(r"-+", "-", slug)  # collapse multiple hyphens
+        return slug.strip("-")
+
+    def _resolve_slug(self, player_id: int) -> str | None:
+        """Resolve a Transfermarkt player slug by searching for the ID.
+
+        Uses the quick-search page to find the profile URL for a given
+        Transfermarkt player ID.  Returns None if the player cannot be found.
+        """
+        try:
+            search_url = (
+                f"{TRANSFERMARKT_BASE}/schnellsuche/ergebnis/schnellsuche"
+                f"?query={player_id}"
+            )
+            html = self._fetch(search_url)
+            soup = BeautifulSoup(html, "html.parser")
+            # Find the link containing /profil/spieler/{id}
+            target = f"/profil/spieler/{player_id}"
+            for a in soup.select("a[href*='/profil/spieler/']"):
+                href = a.get("href", "")
+                if target in href:
+                    # href like /kylian-mbappe/profil/spieler/342229
+                    parts = href.strip("/").split("/")
+                    if len(parts) >= 2:
+                        return parts[0]  # the slug
+        except Exception as exc:
+            logger.debug("Slug resolution failed for %s: %s", player_id, exc)
+        return None
+
+    def fetch_market_value_history(
+        self, player_id: int
+    ) -> list[dict[str, Any]]:
+        """Fetch market value history via Transfermarkt's CEAPI JSON endpoint.
+
+        The ``/ceapi/marketValueDevelopment/graph/{id}`` endpoint returns
+        structured JSON without requiring any HTML scraping or browser JS.
+
+        Response format::
+            {
+              "list": [
+                {"x": 1449010800000, "y": 50000, "mw": "\u20ac50k",
+                 "datum_mw": "02/12/2015", "verein": "AS Monaco U19", ...},
+                ...
+              ],
+              "current": {"y": 200000000},
+              "highest": {"y": 200000000},
+              "highest_date": "17/12/2018",
+              "last_change": {...}
+            }
+        """
+        ceapi_url = (
+            f"{TRANSFERMARKT_BASE}/ceapi/marketValueDevelopment/graph/{player_id}"
+        )
+        try:
+            html = self._fetch(ceapi_url)
+            # _fetch returns a string; parse it as JSON
+            import json as _json
+            data = _json.loads(html)
+        except Exception as exc:
+            logger.debug("CEAPI fetch failed for player %s: %s", player_id, exc)
+            return []
+
+        result: list[dict[str, Any]] = []
+        for entry in data.get("list", []):
+            try:
+                ts_ms = entry["x"]
+                value = float(entry["y"])
+                dt = datetime.fromtimestamp(ts_ms / 1000, tz=timezone.utc)
+                if value > 0:
+                    result.append({
+                        "date": dt,
+                        "value": value,
+                        "club": entry.get("verein", ""),
+                        "age": entry.get("age", ""),
+                        "display_value": entry.get("mw", ""),
+                    })
+            except (KeyError, ValueError, OSError):
+                continue
+
+        result.sort(key=lambda x: x["date"])
+        return result
+
+    # Keep the old HTML-based extractor as a fallback for testing with fixtures
     def _extract_market_value_history(
         self, soup: BeautifulSoup, player_id: int
     ) -> list[dict[str, Any]]:
-        """Extract market value history from the market value chart page.
+        """Fallback: extract market value history from embedded Highcharts data.
 
-        Transfermarkt embeds chart data in a <script> tag as JSON.
+        Used when the CEAPI endpoint is unavailable or for test fixtures.
         """
         result: list[dict[str, Any]] = []
-
-        # Look for the embedded JSON data in script tags
         for script in soup.find_all("script"):
             text = script.string or ""
             if not text.strip():
                 continue
-            # Transfermarkt embeds chart data as [timestamp_ms, value] pairs
-            # inside Highcharts.Chart({series: [{data: [[ts, val], ...]}]})
             if "Highcharts" in text or "series" in text or "data" in text:
                 pairs = re.findall(r"\[(\d+),\s*(\d+)\]", text)
                 for ts, val in pairs:
@@ -341,8 +476,6 @@ class TransfermarktSource(MarketDataSource):
                             result.append({"date": dt, "value": value})
                     except (ValueError, OSError):
                         continue
-
-        # Sort by date ascending
         result.sort(key=lambda x: x["date"])
         return result
 
@@ -449,7 +582,8 @@ class TransfermarktSource(MarketDataSource):
         )
 
     def fetch_contracts(
-        self, player_ids: list[int], as_of: datetime
+        self, player_ids: list[int], as_of: datetime,
+        player_names: list[str] | None = None,
     ) -> list[ContractRecord]:
         """Fetch contract status for specified players.
 
@@ -457,10 +591,21 @@ class TransfermarktSource(MarketDataSource):
         and estimated salary.
         """
         records: list[ContractRecord] = []
+        names = player_names or [None] * len(player_ids)  # type: ignore[list-item]
 
-        for pid in player_ids:
+        for pid, name in zip(player_ids, names):
             try:
-                url = f"{TRANSFERMARKT_BASE}/profil/spieler/{pid}"
+                slug = self._name_to_slug(name) if name else None
+                if slug:
+                    url = f"{TRANSFERMARKT_BASE}/{slug}/profil/spieler/{pid}"
+                else:
+                    # No name available — try slug resolution via search
+                    slug = self._resolve_slug(pid)
+                    if slug:
+                        url = f"{TRANSFERMARKT_BASE}/{slug}/profil/spieler/{pid}"
+                    else:
+                        logger.debug("No slug for player %s, skipping contract fetch", pid)
+                        continue
                 soup = self._soup(url)
                 contract = self._parse_contract_from_profile(soup, pid, as_of)
                 if contract:
