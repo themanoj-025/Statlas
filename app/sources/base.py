@@ -208,6 +208,7 @@ def fetch_with_retry(
     params: dict[str, Any] | None = None,
     method: str = "GET",
     data: dict[str, Any] | None = None,
+    session: Any | None = None,
 ) -> str:
     """HTTP GET (default) or POST with rate limiting, caching, and backoff.
 
@@ -230,7 +231,8 @@ def fetch_with_retry(
     for delay in backoff_delays():
         limiter.wait()
         try:
-            resp = requests.request(
+            _session = session or requests
+            resp = _session.request(
                 method, url, headers=headers, params=params, data=data, timeout=timeout
             )
             if resp.status_code in (429, 503):
