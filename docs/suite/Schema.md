@@ -7,7 +7,7 @@
 | Owner | Staff Engineer (data) |
 | Status | In Review |
 
-Source of truth: `app/schema.sql` (DDL) + SQLAlchemy models in `app/models.py`. This doc mirrors both; any change must land in all three (Rules.md RULE-007).
+Source of truth: `app/schema.sql` (DDL) + SQLAlchemy models in `app/models/` (domain-specific modules: `player.py`, `stats.py`, `user.py`, etc.). This doc mirrors both; any change must land in all three (Rules.md RULE-007).
 
 ## 1. ER Diagram
 
@@ -279,7 +279,7 @@ erDiagram
 |---|---|---|
 | leagues.tier | `top-5`, `second-tier`, `other` | config/tiers.json |
 | players.position_group | `GK`, `CB`, `FB`, `DM`, `CM`, `AM`, `W`, `ST` | methodology.md §index |
-| stat_snapshots.source | `fbref`, `understat`, `statsbomb`, `api_football` | schema.sql + models.py |
+| stat_snapshots.source | `fbref`, `understat`, `statsbomb`, `api_football` | schema.sql + models/ |
 | data_coverage.status | `active`, `stale`, `failed` | schema.sql |
 | metric ids (16) | `si_gls_p90`, `si_xg_p90`, `si_sh_p90`, `si_prgp_p90`, `si_prgc_p90`, `si_xag_p90`, `si_kp_p90`, `si_tkl_p90`, … | config/metric_registry.json |
 | qualifying_minutes | `900` | metric_registry.json |
