@@ -89,15 +89,6 @@ def get_leaderboard(
     return entries[:limit]
 
 
-def _team_name(db: Session, team_id: int | None) -> str | None:
-    if team_id is None:
-        return None
-    from app.models import Team
-
-    team = db.get(Team, team_id)
-    return team.name if team else None
-
-
 # ---------------------------------------------------------------------------
 # Phase 2: filtered + paginated leaderboard (leaderboard page consumption)
 # ---------------------------------------------------------------------------
