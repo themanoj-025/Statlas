@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import SanitizedHTML from "@/components/SanitizedHTML";
 
 const DOCS: Record<string, { title: string; category: string; content: string }> = {
   "getting-started": {
@@ -243,7 +244,7 @@ export default async function DocPage({ params }: PageProps) {
       <p className="kicker">{doc.category}</p>
       <h1 className="page__title">{doc.title}</h1>
 
-      <div className="prose" dangerouslySetInnerHTML={{ __html: doc.content }} />
+      <SanitizedHTML html={doc.content} className="prose" />
 
       <div style={{ marginTop: "var(--space-6)" }}>
         <Link href="/docs" style={{ fontSize: "var(--text-sm)" }}>&larr; Back to documentation</Link>

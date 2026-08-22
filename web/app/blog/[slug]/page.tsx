@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import SanitizedHTML from "@/components/SanitizedHTML";
 
 // Blog posts are currently static content (no CMS). Each slug maps to a
 // hardcoded post. When a CMS is added, this page should fetch from it.
@@ -212,7 +213,7 @@ export default async function BlogPostPage({ params }: PageProps) {
       </nav>
 
       {/* Content */}
-      <div className="prose" dangerouslySetInnerHTML={{ __html: post.content }} />
+      <SanitizedHTML html={post.content} className="prose" />
 
       {/* Share */}
       <section className="card" style={{ padding: "var(--space-4)", marginTop: "var(--space-6)" }}>
