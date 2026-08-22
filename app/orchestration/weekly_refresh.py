@@ -43,6 +43,7 @@ from app.config import load_tiers
 from app.models import DataCoverage, League, Player, StatSnapshot, Team
 from app.reconciliation import Reconciler
 from app.sources.market_data import FixtureMarketDataSource
+from app.sources.transfermarkt import TransfermarktSource
 
 logger = logging.getLogger(__name__)
 
@@ -503,8 +504,13 @@ def run_weekly_refresh(
         ]
 
         if qualifying_player_ids:
-            # Fetch and store market valuations (fixture or real source)
-            market_source = FixtureMarketDataSource(seed=42)
+            # Fetch and store market valuations (real Transfermarkt or fixture fallback)
+            try:
+                market_source = TransfermarktSource()
+                logger.info("using real Transfermarkt source for market data")
+            except Exception:
+                market_source = FixtureMarketDataSource(seed=42)
+                logger.info("Transfermarkt unavailable, using fixture market data")
             valuation_records = market_source.fetch_valuations(
                 qualifying_player_ids, as_of=snapshot_date
             )
