@@ -85,7 +85,7 @@ class PlayerNameAlias(Base):
     player_id: Mapped[int] = mapped_column(ForeignKey("players.id"), nullable=False)
     source: Mapped[str] = mapped_column(SOURCE_ENUM, nullable=False)
     source_name_string: Mapped[str] = mapped_column(String(128), nullable=False)
-    player: Mapped[Player] = relationship()
+    player: Mapped[Player] = relationship(lazy="selectin")
 
     __table_args__ = (
         UniqueConstraint(
@@ -127,8 +127,8 @@ class EmergingPlayerScore(Base):
     score: Mapped[float] = mapped_column(Float, nullable=False)
     contributing_factors: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
 
-    player: Mapped[Player] = relationship()
-    league: Mapped[League] = relationship()
+    player: Mapped[Player] = relationship(lazy="selectin")
+    league: Mapped[League] = relationship(lazy="selectin")
 
     __table_args__ = (
         UniqueConstraint(
