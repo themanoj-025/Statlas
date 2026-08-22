@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { PricingClient } from "./PricingClient";
+import { ROICalculator } from "./ROICalculator";
 
 export const metadata: Metadata = {
   title: "Pricing",
@@ -18,6 +19,9 @@ export default function PricingPage() {
         gated. Pro adds volume and export for scouts and media.
       </p>
       <PricingClient />
+
+      <h2 style={{ marginTop: "var(--space-6)", fontSize: "var(--text-xl)" }}>Calculate your ROI</h2>
+      <ROICalculator />
 
       <h2 style={{ marginTop: "var(--space-6)", fontSize: "var(--text-xl)" }}>Questions worth asking</h2>
       <div className="faq">

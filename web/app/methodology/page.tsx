@@ -341,6 +341,57 @@ export default async function MethodologyPage() {
           this page&rsquo;s update and a dated changelog entry. A formula change without its
           methodology update is treated as a failed change.
         </p>
+
+        <h2>Frequently asked questions</h2>
+        <div className="faq">
+          <details>
+            <summary>Why use percentiles instead of raw stats?</summary>
+            <p>
+              Percentiles normalise across position groups and league tiers. A &ldquo;good&rdquo;
+              pass completion rate means something different for a centre-back than for a striker.
+              Percentiles answer &ldquo;how does this compare to positional peers?&rdquo; — which
+              is the question scouts and analysts actually ask.
+            </p>
+          </details>
+          <details>
+            <summary>How often is data updated?</summary>
+            <p>
+              Weekly, currently scheduled for Wednesday 03:00 UTC. Each recomputation creates a new
+              immutable snapshot; past snapshots are preserved and never rewritten.
+            </p>
+          </details>
+          <details>
+            <summary>How do you handle transfers mid-season?</summary>
+            <p>
+              A player&rsquo;s statistics are keyed to the team in the snapshot that recorded them.
+              After a transfer, new snapshots reflect the new club. Percentiles are computed within
+              the league tier, so a player moving between Tier 1 leagues does not change their
+              comparison group.
+            </p>
+          </details>
+          <details>
+            <summary>Can I trust the data?</summary>
+            <p>
+              Every stat block carries its snapshot date. Every metric traces to a published formula.
+              The anomaly gate blocks flagged values from publication. If a number on the site does
+              not match the published methodology, that is a bug — report it at data@statlas.com.
+            </p>
+          </details>
+          <details>
+            <summary>How do you calculate playing time?</summary>
+            <p>
+              League minutes only. Minutes from cup competitions, international matches, or friendlies
+              are not included. The qualifying threshold is 900 league minutes in the current season.
+            </p>
+          </details>
+          <details>
+            <summary>What about penalty kicks?</summary>
+            <p>
+              The current Index includes penalties in the goals and xG inputs. This is a documented
+              MVP simplification. Removing penalty contributions is planned for a future iteration.
+            </p>
+          </details>
+        </div>
       </div>
     </div>
   );

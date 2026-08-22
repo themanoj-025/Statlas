@@ -14,14 +14,11 @@ const NAV_ITEMS = [
   { href: "/positions", label: "Leaderboards" },
   { href: "/archetypes", label: "Archetypes" },
   { href: "/transfers", label: "Transfers" },
-  { href: "/leagues", label: "Leagues" },
-  { href: "/search", label: "Search" },
   { href: "/compare", label: "Compare" },
-  { href: "/trend", label: "Trend" },
-  { href: "/tactical", label: "Tactical" },
+  { href: "/search", label: "Search" },
+  { href: "/features", label: "Features" },
   { href: "/methodology", label: "Methodology" },
   { href: "/pricing", label: "Pricing" },
-  { href: "/data-coverage", label: "Data coverage" },
 ];
 
 export function Header() {
