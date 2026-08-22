@@ -76,6 +76,7 @@ class Reconciler:
         self._players = db.query(Player).all()
         self._team_names: dict[int, str] = {t.id: t.name for t in db.query(Team).all()}
         self._by_external: dict[tuple[str, Any], Player] = {}
+        self._by_transfermarkt: dict[int, Player] = {}
         self._by_norm_name: dict[str, list[Player]] = {}
         # Iterate a COPY: register_player() appends to self._players (so records
         # created mid-batch resolve against each other), which would otherwise
@@ -90,11 +91,25 @@ class Reconciler:
         for key, value in (player.external_ids or {}).items():
             if value not in (None, "", 0):
                 self._by_external[(key, value)] = player
+        if player.transfermarkt_id:
+            self._by_transfermarkt[player.transfermarkt_id] = player
         norm = strip_suffixes(player.canonical_name)
         self._by_norm_name.setdefault(norm, []).append(player)
 
     # -- lookup helpers -------------------------------------------------------
+
+    def find_by_transfermarkt_id(self, tm_id: int) -> Player | None:
+        """Direct O(1) lookup by Transfermarkt player ID."""
+        return self._by_transfermarkt.get(tm_id)
+
     def find_by_external(self, external_ids: dict[str, Any]) -> Player | None:
+        # Fast path: Transfermarkt ID via dedicated index
+        tm_id = external_ids.get("transfermarkt") if external_ids else None
+        if tm_id:
+            player = self._by_transfermarkt.get(int(tm_id))
+            if player:
+                return player
+        # General path: scan external_ids dict
         for key, value in (external_ids or {}).items():
             if value not in (None, "", 0) and (key, value) in self._by_external:
                 return self._by_external[(key, value)]
