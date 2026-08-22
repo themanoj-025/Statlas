@@ -175,13 +175,15 @@ class PasswordResetConfirmBody(BaseModel):
 
 
 @router.post("/auth/password-reset/request")
-def password_reset_request(body: PasswordResetRequestBody):
+def password_reset_request(request: Request, body: PasswordResetRequestBody):
     """Request a password reset. Always returns the same response to prevent
-    account enumeration. Rate-limited to 3 attempts per hour per email."""
+    account enumeration. Rate-limited to 3/hour per email AND 10/hour per IP."""
     from app.rate_limiting import get_rate_limiter
 
     email_lower = body.email.lower()
+    client_ip = request.client.host if request.client else "unknown"
     limiter = get_rate_limiter()
+    # Per-email limit: prevents spamming reset emails to one account
     if limiter.is_limited(
         f"password_reset:{email_lower}",
         max_attempts=3,
@@ -190,6 +192,17 @@ def password_reset_request(body: PasswordResetRequestBody):
         raise HTTPException(
             status_code=429,
             detail="Too many password reset requests. Try again in 1 hour.",
+            headers={"Retry-After": "3600"},
+        )
+    # Per-IP limit: prevents account enumeration via bulk email probing
+    if limiter.is_limited(
+        f"password_reset_ip:{client_ip}",
+        max_attempts=10,
+        window_seconds=3600,
+    ):
+        raise HTTPException(
+            status_code=429,
+            detail="Too many password reset requests from this IP. Try again in 1 hour.",
             headers={"Retry-After": "3600"},
         )
     with session_scope() as db:
@@ -208,8 +221,23 @@ def password_reset_request(body: PasswordResetRequestBody):
 
 
 @router.post("/auth/password-reset/confirm")
-def password_reset_confirm(body: PasswordResetConfirmBody):
-    """Confirm a password reset with the token. Revokes all existing sessions."""
+def password_reset_confirm(request: Request, body: PasswordResetConfirmBody):
+    """Confirm a password reset with the token. Revokes all existing sessions.
+    Rate-limited to 10 attempts per hour per IP to prevent token brute-force."""
+    from app.rate_limiting import get_rate_limiter
+
+    client_ip = request.client.host if request.client else "unknown"
+    limiter = get_rate_limiter()
+    if limiter.is_limited(
+        f"password_reset_confirm_ip:{client_ip}",
+        max_attempts=10,
+        window_seconds=3600,
+    ):
+        raise HTTPException(
+            status_code=429,
+            detail="Too many password reset attempts from this IP. Try again in 1 hour.",
+            headers={"Retry-After": "3600"},
+        )
     with session_scope() as db:
         user_id = auth.consume_password_reset_token(db, body.token)
         if user_id is None:
