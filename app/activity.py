@@ -62,5 +62,7 @@ def log_activity(
             metadata_=metadata,
         )
     )
-    db.commit()
+    # Commit is handled by the session_scope context manager — calling
+    # db.commit() here would flush prematurely when nested inside another
+    # session_scope block (e.g. the player profile endpoint).
     return True

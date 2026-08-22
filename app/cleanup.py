@@ -31,43 +31,35 @@ def cleanup_expired_tokens(db: Session) -> dict[str, int]:
     now = datetime.now(timezone.utc)
     stats: dict[str, int] = {}
 
-    # Expired or revoked session tokens
-    expired_sessions = (
+    # Expired or revoked session tokens — batch delete avoids loading all
+    # rows into memory (matches the pattern in cleanup_old_analytics).
+    stats["session_tokens"] = (
         db.query(SessionToken)
         .filter(
             (SessionToken.expires_at < now) | (SessionToken.revoked_at.isnot(None))
         )
-        .all()
+        .delete(synchronize_session=False)
     )
-    stats["session_tokens"] = len(expired_sessions)
-    for row in expired_sessions:
-        db.delete(row)
 
     # Used or expired password-reset tokens
-    expired_resets = (
+    stats["password_reset_tokens"] = (
         db.query(PasswordResetToken)
         .filter(
             (PasswordResetToken.used_at.isnot(None))
             | (PasswordResetToken.expires_at < now)
         )
-        .all()
+        .delete(synchronize_session=False)
     )
-    stats["password_reset_tokens"] = len(expired_resets)
-    for row in expired_resets:
-        db.delete(row)
 
     # Used or expired email-verification tokens
-    expired_verifications = (
+    stats["email_verification_tokens"] = (
         db.query(EmailVerificationToken)
         .filter(
             (EmailVerificationToken.used_at.isnot(None))
             | (EmailVerificationToken.expires_at < now)
         )
-        .all()
+        .delete(synchronize_session=False)
     )
-    stats["email_verification_tokens"] = len(expired_verifications)
-    for row in expired_verifications:
-        db.delete(row)
 
     db.commit()
 
