@@ -49,9 +49,19 @@ class RedisRateLimiter:
         current = int(self.redis.get(rk) or 0)
         return max(0, max_attempts - current)
 
+    def get_count(self, key: str) -> int:
+        """Current hit count for a key (without incrementing)."""
+        rk = self._key(key)
+        current = self.redis.get(rk)
+        return int(current) if current else 0
+
     def reset(self, key: str) -> None:
         """Reset rate limit for a key (e.g. after successful login)."""
         self.redis.delete(self._key(key))
+
+    def reset_all(self) -> None:
+        """Clear all rate-limit state. No-op for Redis (keys expire naturally)."""
+        pass  # Redis keys expire via TTL; nothing to clear globally.
 
 
 # ---------------------------------------------------------------------------
@@ -82,6 +92,15 @@ class InMemoryRateLimiter:
         now = time.monotonic()
         window = [t for t in self._hits.get(key, []) if now - t < window_seconds]
         return max(0, max_attempts - len(window))
+
+    def get_count(self, key: str) -> int:
+        """Current hit count for a key (without incrementing).
+
+        Returns the raw count of timestamps stored for the key, regardless of
+        window expiry. Callers that need window-aware counts should use
+        is_limited() or get_remaining() instead.
+        """
+        return len(self._hits.get(key, []))
 
     def reset(self, key: str) -> None:
         self._hits.pop(key, None)
