@@ -233,7 +233,7 @@ Statlas/
 │   ├── activity.py                # Phase 13 activity tracking (60s dedup, view logging)
 │   ├── auth.py                    # password hashing, sessions, rate limiting (Phase 4+12)
 │   ├── db.py                      # engine/session management
-│   ├── models.py                  # ORM models mirroring schema.sql
+│   ├── models/                    # ORM models mirroring schema.sql (domain-specific modules)
 │   ├── orchestration/
 │   │   ├── __init__.py
 │   │   ├── event_link.py          # StatsBomb event → player name linking
@@ -578,20 +578,24 @@ Statlas/
 - **Side effects**: engine/session singleton globals; DB connection; table creation.
 - **Inbound deps**: imported by `app/cli.py`, `app/api/main.py`, tests, seed script.
 
-#### `app/models.py` (737 lines)
+#### `app/models/` (14 domain modules)
 - **Type**: SQLAlchemy ORM models — the code-side mirror of `schema.sql`.
-- **Key exports**: `Base` (DeclarativeBase), enums, and 19 model classes:
-  `League`, `Team`, `Player`, `PlayerNameAlias`, `StatSnapshot`, `PercentileSnapshot`,
-  `MatchEvent`, `DataCoverage`, `IngestionAnomaly`, `ReconciliationQueue`, `Fixture`,
-  `User`, `SessionToken`, `Subscription`, `ApiKey`, `WebhookEvent`, `AssistantQuota`,
-  plus the Phase 7 workspace set: `Shortlist`, `ShortlistEntry`, `EntryNote`, `EntryTag`,
-  `StatusHistory`, the Phase 8 search set: `SavedSearch`, `SearchHistory`, and the Phase 9
-  report set: `Report` (report_json + verification_log, data_snapshot_date for
-  reproducibility) and `ReportQuota` (a SEPARATE monthly allowance from
-  `AssistantQuota` — sharing one pool would cause confusing "why did my chat quota
-  drop" experiences), and the Phase 10 watch set: `Watch`, `WatchAlert` (dedupe-key
-  unique constraint = the idempotency guarantee), `NotificationPreferences`
-  (email_enabled + per-type prefs + digest frequency + one-click unsubscribe token).
+- **Key exports**: `Base` (DeclarativeBase) from `base.py`, enums, and 59 model classes across domain modules:
+  - `base.py` — `Base` + 26 enums
+  - `player.py` — `League`, `Team`, `Player`, `PlayerNameAlias`, `Fixture`, `EmergingPlayerScore`
+  - `stats.py` — `StatSnapshot`, `PercentileSnapshot`, `MatchEvent`, `DataCoverage`, `IngestionAnomaly`, `ReconciliationQueue`
+  - `user.py` — `User`, `SessionToken`, `PasswordResetToken`, `EmailVerificationToken`, `Subscription`, `ApiKey`, `WebhookEvent`, `AssistantQuota`
+  - `workspace.py` — `Shortlist`, `ShortlistEntry`, `EntryNote`, `EntryTag`, `StatusHistory`
+  - `search.py` — `SavedSearch`, `SearchHistory`
+  - `report.py` — `Report`, `ReportQuota`
+  - `watch.py` — `Watch`, `WatchAlert`, `NotificationPreferences`
+  - `dashboard.py` — `ActivityLog`, `DashboardState`, `SavedPlayer`
+  - `analytics.py` — `AnalyticsEvent`, `AnalyticsSession`, `DailyMetric`, `FeatureUsage`, `CohortRetention`, `AnalyticsAlert`, `AnalyticsAccessLog`
+  - `clustering.py` — `ClusteringModel`, `ArchetypeDefinition`, `ArchetypeAssignment`, `ClusteringMonitoringLog`
+  - `transfer.py` — `MarketValuation`, `TransferHistory`, `ContractStatus`
+  - `org.py` — `Organization`, `OrgMembership`, `OrgSettings`, `OrgInvite`, `AuditLog`, `Comment`, `Mention`
+  - `tactical.py` — `MatchPassingNetwork`, `MatchSpatialAnalysis`, `MatchFormation`
+  - `__init__.py` — re-exports all models for backward compatibility
 - **Notable logic** *(explicit)*:
   - Enums declared `native_enum=True` (the closeout C3 parity fix) — Postgres gets real
     `CREATE TYPE` enums; SQLite falls back to VARCHAR+CHECK automatically.
@@ -1296,7 +1300,7 @@ Statlas/
 
 ## 7. Data Models & Schemas
 
-All tables are defined in both `app/schema.sql` (PostgreSQL DDL) and `app/models.py`
+All tables are defined in both `app/schema.sql` (PostgreSQL DDL) and `app/models/` (SQLAlchemy models)
 (ORM). Fields below are **explicit** from both files.
 
 ### `leagues`
@@ -1559,7 +1563,7 @@ docker compose down -v                           # full reset (fresh schema on n
 **Internal (module → imports):**
 
 ```
-api/main.py ──► queries/* ──► models.py, compute/* (percentiles, anomaly_check), config.py
+api/main.py ──► queries/* ──► models/*, compute/* (percentiles, anomaly_check), config.py
 api/player_view.py ──► queries/player_queries, sentences, similar_players, event_queries,
                        compute/percentiles (REGISTRY_FLOOR_KEYS), api/registry_view
 api/registry_view.py ──► config.py
@@ -1759,7 +1763,7 @@ Version `0.2.0` (web package). No release tags; phases tracked in
 ## 20. Suggested Onboarding Path
 
 1. Read `docs/CONSTITUTION.md` (rules) → `README.md` (surface) → this overview.
-2. Read `app/schema.sql` + `app/models.py` (data model).
+2. Read `app/schema.sql` + `app/models/` (data model).
 3. Read `app/orchestration/weekly_refresh.py` (pipeline spine) +
    `app/compute/percentiles.py` (the math + gates).
 4. Run `python scripts/seed_dev_db.py` and explore the dev DB with

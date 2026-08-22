@@ -27,7 +27,7 @@ column "position_group" is of type position_group but expression is of type char
 The SQLite test suite never caught this: SQLite has no native enums, so
 `native_enum=False` and `native_enum=True` behave identically there.
 
-**Fix (`app/models.py`):** switch the enum declarations to `native_enum=True`
+**Fix (`app/models/`):** switch the enum declarations to `native_enum=True`
 (the SQLAlchemy default). On PostgreSQL this uses the real enum types that
 `schema.sql`'s `CREATE TYPE` defines (same names), so the ORM and DDL agree.
 On SQLite SQLAlchemy automatically falls back to VARCHAR + CHECK constraints,

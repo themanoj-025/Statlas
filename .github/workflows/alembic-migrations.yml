@@ -6,7 +6,7 @@ on:
     paths:
       - "alembic/**"
       - "alembic.ini"
-      - "app/models.py"
+      - "app/models/**"
       - "app/schema.sql"
       - "app/config.py"
       - "requirements.txt"
@@ -14,7 +14,7 @@ on:
     paths:
       - "alembic/**"
       - "alembic.ini"
-      - "app/models.py"
+      - "app/models/**"
       - "app/schema.sql"
       - "app/config.py"
       - "requirements.txt"
