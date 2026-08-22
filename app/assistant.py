@@ -420,4 +420,26 @@ def _serialize(result: dict[str, Any]) -> str:
     raw = json.dumps(result, default=str)
     if len(raw) <= 12000:
         return raw
+    # Truncate on a structural boundary — slice the Python object first,
+    # then serialize, so the JSON is always valid.
+    meta = {"_truncated": True, "_full_chars": len(raw)}
+    if isinstance(result, dict):
+        partial: dict[str, Any] = {}
+        for k, v in result.items():
+            entry = json.dumps({k: v}, default=str)
+            if len(json.dumps(partial, default=str)) + len(entry) > 11700:
+                break
+            partial[k] = v
+        partial["_meta"] = meta
+        return json.dumps(partial, default=str)
+    if isinstance(result, list):
+        partial_list = []
+        for item in result:
+            entry = json.dumps(item, default=str)
+            if len(json.dumps(partial_list, default=str)) + len(entry) > 11700:
+                break
+            partial_list.append(item)
+        partial_list.append(meta)
+        return json.dumps(partial_list, default=str)
+    # Fallback for non-structurable types — truncate the raw string.
     return raw[:12000] + "\n... [truncated — full data has " + str(len(raw)) + " chars]"
