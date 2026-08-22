@@ -73,7 +73,7 @@ class TestParseMarketValue:
     def test_fixture_value(self):
         soup = _fixture_soup("transfermarkt_player.html")
         mv_el = soup.select_one(
-            "div.tm-player-market-value-development__current-value"
+            "div.data-header__market-value-wrapper"
         )
         assert mv_el is not None
         value = _parse_market_value(mv_el.get_text(strip=True))
@@ -132,7 +132,7 @@ class TestPlayerProfileParsing:
 
         assert data.get("name") == "Erling Haaland"
         assert data.get("market_value_eur") == 180_000_000.0
-        assert "norway" in data.get("nationality", "").lower()
+        assert "norway" in data.get("citizenship", "").lower()
         assert "centre-forward" in data.get("position", "").lower()
 
     def test_contract_from_profile(self):
@@ -167,12 +167,24 @@ class TestPlayerProfileParsing:
 
 
 class TestTransfermarktSourceMocked:
-    def test_fetch_valuations_uses_cache(self):
-        """Verify fetch_valuations goes through the caching fetch layer."""
+    def test_fetch_valuations_uses_ceapi(self):
+        """Verify fetch_valuations uses the CEAPI JSON endpoint."""
+        import json as _json
+
+        ceapi_response = _json.dumps({
+            "list": [
+                {"x": 1672531200000, "y": 170000000, "mw": "\u20ac170.00m",
+                 "datum_mw": "01/01/2023", "verein": "Manchester City", "age": "22"},
+                {"x": 1704067200000, "y": 180000000, "mw": "\u20ac180.00m",
+                 "datum_mw": "01/01/2024", "verein": "Manchester City", "age": "23"},
+            ],
+            "current": {"y": 180000000},
+            "highest": {"y": 180000000},
+        })
         source = TransfermarktSource.__new__(TransfermarktSource)
         source.session = MagicMock()
         source.cache = MagicMock()
-        source.cache.get.return_value = _fixture_html("transfermarkt_player.html")
+        source.cache.get.return_value = ceapi_response
         source.limiter = MagicMock()
         source.tiers = {"leagues": {}}
 

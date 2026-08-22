@@ -489,19 +489,22 @@ def run_weekly_refresh(
     try:
         from app.models import ContractStatus, MarketValuation
 
-        # Collect all player IDs that have qualifying snapshots this run
-        qualifying_player_ids = [
-            pid
-            for (pid,) in (
-                db.query(StatSnapshot.player_id)
-                .filter(
-                    StatSnapshot.scrape_date == snapshot_date,
-                    StatSnapshot.minutes_played >= 900,
-                )
-                .distinct()
-                .all()
+        # Collect all player IDs (and names) that have qualifying snapshots this run.
+        # Names are needed by TransfermarktSource to build correct URL slugs.
+        from app.models.player import Player
+
+        qualifying_rows = (
+            db.query(StatSnapshot.player_id, Player.name)
+            .join(Player, Player.id == StatSnapshot.player_id)
+            .filter(
+                StatSnapshot.scrape_date == snapshot_date,
+                StatSnapshot.minutes_played >= 900,
             )
-        ]
+            .distinct()
+            .all()
+        )
+        qualifying_player_ids = [pid for (pid, _name) in qualifying_rows]
+        qualifying_player_names = [name for (_pid, name) in qualifying_rows]
 
         if qualifying_player_ids:
             # Fetch and store market valuations (real Transfermarkt or fixture fallback)
@@ -512,7 +515,8 @@ def run_weekly_refresh(
                 market_source = FixtureMarketDataSource(seed=42)
                 logger.info("Transfermarkt unavailable, using fixture market data")
             valuation_records = market_source.fetch_valuations(
-                qualifying_player_ids, as_of=snapshot_date
+                qualifying_player_ids, as_of=snapshot_date,
+                player_names=qualifying_player_names,
             )
             from app.compute.market_validation import validate_valuation
 
@@ -557,7 +561,8 @@ def run_weekly_refresh(
 
             # Fetch and store contract statuses
             contract_records = market_source.fetch_contracts(
-                qualifying_player_ids, as_of=snapshot_date
+                qualifying_player_ids, as_of=snapshot_date,
+                player_names=qualifying_player_names,
             )
             contracts_inserted = 0
             for rec in contract_records:
