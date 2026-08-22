@@ -47,9 +47,9 @@ class StatSnapshot(Base):
         SNAPSHOT_STATUS_ENUM, nullable=False, default="ingested"
     )
 
-    player = relationship("Player")
-    team = relationship("Team")
-    league = relationship("League")
+    player = relationship("Player", lazy="selectin")
+    team = relationship("Team", lazy="selectin")
+    league = relationship("League", lazy="selectin")
 
     __table_args__ = (
         UniqueConstraint(
