@@ -16,46 +16,51 @@ export function Footer() {
           <div>
             <p className="site-footer__title">Statlas</p>
             <p style={{ color: "var(--color-text-secondary)", fontSize: "var(--text-sm)", maxWidth: "40ch" }}>
-              A football analytics platform that shows its work. Every metric on
+              Football analytics that shows its work. Every metric on
               this site traces to a published methodology.
             </p>
           </div>
           <div>
             <p className="site-footer__title">Product</p>
             <ul>
+              <li><Link href="/features">Features</Link></li>
               <li><Link href="/positions">Leaderboards</Link></li>
-              <li><Link href="/archetypes">Archetypes</Link></li>
               <li><Link href="/compare">Compare</Link></li>
               <li><Link href="/methodology">Methodology</Link></li>
               <li><Link href="/pricing">Pricing</Link></li>
-              <li><Link href="/help">Help &amp; FAQ</Link></li>
-              <li><Link href="/about">About</Link></li>
+              <li><Link href="/comparison">Comparison</Link></li>
             </ul>
           </div>
           <div>
-            <p className="site-footer__title">Data</p>
+            <p className="site-footer__title">Use Cases</p>
             <ul>
+              <li><Link href="/use-cases/scout">For Scouts</Link></li>
+              <li><Link href="/use-cases/agent">For Agents</Link></li>
+              <li><Link href="/use-cases/analyst">For Analysts</Link></li>
+              <li><Link href="/use-cases/media">For Media</Link></li>
+              <li><Link href="/use-cases/fan">For Fans</Link></li>
+            </ul>
+          </div>
+          <div>
+            <p className="site-footer__title">Resources</p>
+            <ul>
+              <li><Link href="/docs">Documentation</Link></li>
+              <li><Link href="/api-docs">API docs</Link></li>
+              <li><Link href="/blog">Blog</Link></li>
+              <li><Link href="/help">Help &amp; FAQ</Link></li>
               <li><Link href="/data-coverage">Data coverage</Link></li>
               <li><Link href="/changelog">Changelog</Link></li>
-              <li><Link href="/leagues/premier-league/stats">Premier League</Link></li>
-              <li><Link href="/leagues/la-liga/stats">La Liga</Link></li>
             </ul>
           </div>
           <div>
-            <p className="site-footer__title">Developers</p>
+            <p className="site-footer__title">Company</p>
             <ul>
-              <li><Link href="/api-docs">API documentation</Link></li>
-              <li><Link href="/account">Account &amp; API keys</Link></li>
-            </ul>
-          </div>
-          <div>
-            <p className="site-footer__title">Legal</p>
-            <ul>
-              <li><Link href="/legal/terms">Terms of service</Link></li>
-              <li><Link href="/legal/privacy">Privacy policy</Link></li>
-              <li>
-                <a href="mailto:data@statlas.com">data@statlas.com</a>
-              </li>
+              <li><Link href="/about">About</Link></li>
+              <li><Link href="/careers">Careers</Link></li>
+              <li><Link href="/contact">Contact</Link></li>
+              <li><Link href="/status">Status</Link></li>
+              <li><Link href="/legal/terms">Terms</Link></li>
+              <li><Link href="/legal/privacy">Privacy</Link></li>
             </ul>
           </div>
         </div>
