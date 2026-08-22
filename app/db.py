@@ -8,6 +8,7 @@ dialect-neutral types (native_enum=False, JSON) so both work.
 from __future__ import annotations
 
 import logging
+from typing import Any
 
 from sqlalchemy import create_engine
 from sqlalchemy.engine import Engine
@@ -59,13 +60,44 @@ def get_session_factory() -> sessionmaker[Session]:
     return _session_factory
 
 
-def session_scope() -> Session:
+class _SessionContext:
+    """Context manager that wraps a SQLAlchemy Session.
+
+    On successful exit: commits any pending changes.
+    On exception: rolls back all pending changes.
+    Always: closes the session.
+
+    Existing callers that call ``db.commit()`` explicitly inside the block
+    are unaffected — a second commit on an already-committed session is a
+    harmless no-op in SQLAlchemy.
+    """
+
+    def __init__(self, session: Session) -> None:
+        self._session = session
+
+    def __enter__(self) -> Session:
+        return self._session
+
+    def __exit__(self, exc_type: type | None, exc_val: BaseException | None, exc_tb: Any) -> None:
+        if exc_type is not None:
+            self._session.rollback()
+        else:
+            self._session.commit()
+        self._session.close()
+
+
+def session_scope() -> _SessionContext:
     """Return a new Session as a context manager.
 
     Usage: ``with session_scope() as db: ...``
-    The session is automatically closed when the block exits.
+
+    The session is automatically committed on successful exit and rolled
+    back on exception, then closed in both cases.
+
+    Existing callers that call ``db.commit()`` explicitly inside the block
+    are unaffected — a second commit is a harmless no-op.
     """
-    return get_session_factory()()
+    return _SessionContext(get_session_factory()())
 
 
 def dispose_engine() -> None:

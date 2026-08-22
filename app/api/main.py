@@ -38,7 +38,6 @@ from app.api.comment_views import router as comment_router
 from app.api.dashboard_views import router as dashboard_router
 from app.api.e2e_views import router as e2e_router
 from app.api.org_views import router as org_router
-from app.logging_setup import new_request_id
 from app.api.public_views import router as public_api_router
 from app.api.registry_view import public_meta
 from app.api.report_views import router as report_router
@@ -49,6 +48,7 @@ from app.api.watch_views import router as watch_router
 from app.api.workspace_views import router as workspace_router
 from app.config import CURRENT_SEASON, get_settings, load_registry
 from app.db import session_scope
+from app.logging_setup import new_request_id
 
 logger = logging.getLogger(__name__)
 
@@ -304,6 +304,27 @@ def _with_session(fn: Callable[[Any], Any], *args: Any, **kwargs: Any) -> Any:
         return fn(db, *args, **kwargs)
 
 
+def _log_player_view(request: Request, player_id: int) -> None:
+    """Log a player view activity event (best-effort, never breaks response)."""
+    try:
+        from app.activity import log_activity
+
+        with session_scope() as db:
+            user = auth.user_from_session(
+                db, request.cookies.get(get_settings().session_cookie_name)
+            )
+            if user is not None:
+                log_activity(
+                    db,
+                    user_id=user.id,
+                    entity_type="player",
+                    entity_id=player_id,
+                    action_type="viewed",
+                )
+    except Exception as exc:
+        logger.debug("Activity logging failed for player view: %s", exc)
+
+
 # ---------------------------------------------------------------------------
 # Meta / health
 # ---------------------------------------------------------------------------
@@ -356,7 +377,6 @@ def readiness():
 
 @app.get("/api/v1/meta")
 def meta():
-    from fastapi import Response as _Resp
     from app.cache import get_cache
 
     cache = get_cache()
@@ -467,6 +487,7 @@ def leaderboard(
     sort_by: str = Query("value"),
     sort_dir: str | None = Query(None),
 ):
+    from app.cache import get_cache
     from app.queries.leaderboard_queries import get_leaderboard_filtered
 
     if position is not None and position not in VALID_POSITIONS:
@@ -480,8 +501,24 @@ def leaderboard(
     if sort_dir is not None and sort_dir.lower() not in {"asc", "desc"}:
         raise HTTPException(status_code=400, detail=f"sort_dir must be 'asc' or 'desc', got '{sort_dir}'")
 
+    # Cache key: includes all query params that affect the result.
+    # TTL 300s (5 min) — data refreshes weekly, short TTL keeps responses
+    # fresh during rapid navigation while eliminating redundant DB hits.
+    cache = get_cache()
+    cache_key = (
+        f"api:lb:{metric}:{season}:{league or '_'}:{tier or '_'}:"
+        f"{position or '_'}:{min_minutes or '_'}:{page}:{limit}:"
+        f"{sort_by}:{sort_dir or '_'}"
+    )
+    cached = cache.get(cache_key)
+    if cached is not None:
+        try:
+            return _json.loads(cached)
+        except Exception:
+            pass
+
     with session_scope() as db:
-        return get_leaderboard_filtered(
+        result = get_leaderboard_filtered(
             db,
             metric=metric,
             season=season,
@@ -494,6 +531,11 @@ def leaderboard(
             sort_by=sort_by,
             sort_dir=sort_dir,
         )
+    try:
+        cache.set(cache_key, _json.dumps(result, default=str), 300)
+    except Exception:
+        pass
+    return result
 
 
 # ---------------------------------------------------------------------------
@@ -512,9 +554,23 @@ def player_search(
 
 @app.get("/api/v1/players/by-slug/{slug}")
 def player_by_slug(slug: str, request: Request):
-    from app.activity import log_activity
     from app.api.player_view import build_player_payload
+    from app.cache import get_cache
     from app.queries.player_queries import resolve_player_slug
+
+    # Cache: player profiles are read-heavy, change only on weekly refresh.
+    # TTL 300s (5 min). Activity logging runs regardless of cache hit.
+    cache = get_cache()
+    cache_key = f"api:player:{slug}"
+    cached = cache.get(cache_key)
+    if cached is not None:
+        try:
+            payload = _json.loads(cached)
+            # Activity logging still runs on cache hit (best-effort)
+            _log_player_view(request, payload["player"]["player_id"])
+            return payload
+        except Exception:
+            pass
 
     with session_scope() as db:
         resolved = resolve_player_slug(db, slug)
@@ -529,33 +585,41 @@ def player_by_slug(slug: str, request: Request):
         payload["player"]["is_canonical"] = resolved["canonical"]
 
         # Phase 13: log view activity (deduplicated, best-effort)
-        try:
-            user = auth.user_from_session(
-                db, request.cookies.get(get_settings().session_cookie_name)
-            )
-            if user is not None:
-                log_activity(
-                    db,
-                    user_id=user.id,
-                    entity_type="player",
-                    entity_id=resolved["player_id"],
-                    action_type="viewed",
-                )
-        except Exception as exc:
-            logger.debug("Activity logging failed for player view: %s", exc)
+        _log_player_view(request, resolved["player_id"])
 
-        return payload
+    try:
+        cache.set(cache_key, _json.dumps(payload, default=str), 300)
+    except Exception:
+        pass
+    return payload
 
 
 @app.get("/api/v1/players/{player_id}/similar")
 def player_similar(player_id: int, limit: int = Query(5, ge=1, le=10)):
+    from app.cache import get_cache
     from app.queries.player_queries import get_player_profile
     from app.queries.similar_players import get_similar_players
+
+    # Cache: similar players depend on percentile data (weekly refresh).
+    # TTL 300s (5 min) — same rationale as leaderboard.
+    cache = get_cache()
+    cache_key = f"api:similar:{player_id}:{limit}"
+    cached = cache.get(cache_key)
+    if cached is not None:
+        try:
+            return _json.loads(cached)
+        except Exception:
+            pass
 
     with session_scope() as db:
         if get_player_profile(db, player_id) is None:
             raise HTTPException(status_code=404, detail=f"unknown player {player_id}")
-        return get_similar_players(db, player_id, limit=limit)
+        result = get_similar_players(db, player_id, limit=limit)
+    try:
+        cache.set(cache_key, _json.dumps(result, default=str), 300)
+    except Exception:
+        pass
+    return result
 
 
 # ---------------------------------------------------------------------------
