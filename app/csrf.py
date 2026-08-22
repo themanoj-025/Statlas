@@ -8,7 +8,6 @@ from __future__ import annotations
 import hashlib
 import hmac
 import time
-from fastapi import HTTPException, Request
 
 from app.config import get_settings
 
@@ -30,7 +29,14 @@ def _secret_key() -> str:
     settings = get_settings()
     if settings.csrf_secret_key:
         return settings.csrf_secret_key
-    # Fallback: domain-separated derivation (not ideal, but functional)
+    # In production, a missing CSRF secret is a security error — never silently
+    # fall back to a deterministic derivation that an attacker can replicate.
+    if settings.environment == "production":
+        raise RuntimeError(
+            "CSRF_SECRET_KEY must be set in production. "
+            "Run: export CSRF_SECRET_KEY=$(openssl rand -hex 32)"
+        )
+    # Dev/test fallback: deterministic derivation from cookie name.
     return hmac.new(
         b"csrf-protection",
         settings.session_cookie_name.encode(),
