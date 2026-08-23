@@ -1,10 +1,7 @@
 """Tests for app.logging_setup — request IDs, filter, and setup_logging."""
 from __future__ import annotations
 
-import io
 import logging
-
-import pytest
 
 from app.logging_setup import (
     RequestIdFilter,

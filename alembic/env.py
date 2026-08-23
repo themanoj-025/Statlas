@@ -8,10 +8,10 @@ from logging.config import fileConfig
 from sqlalchemy import engine_from_config, pool
 
 from alembic import context
+from app.config import get_settings  # noqa: E402
 
 # Import project models so autogenerate can detect schema changes
 from app.models import Base  # noqa: E402
-from app.config import get_settings  # noqa: E402
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.

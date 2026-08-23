@@ -4,8 +4,6 @@ from __future__ import annotations
 import time
 from unittest.mock import patch
 
-import pytest
-
 from app.csrf import (
     CSRF_TOKEN_TTL,
     generate_csrf_token,
@@ -90,7 +88,7 @@ class TestVerifyCsrfToken:
         """Token older than CSRF_TOKEN_TTL should be rejected."""
         session_id = "test-session"
         # Forge an old token
-        old_timestamp = str(int(time.time()) - CSRF_TOKEN_TTL - 100)
+        str(int(time.time()) - CSRF_TOKEN_TTL - 100)
         # We can't forge the signature without the secret, but we can test
         # that verify_csrf_token returns False for old timestamps.
         # The signature check happens before expiry, but let's generate with
