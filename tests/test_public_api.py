@@ -189,7 +189,7 @@ def test_rate_limit_429_after_cap(seeded_client):
         from app.api import public_views
         from app.rate_limiting import get_rate_limiter
 
-        limiter = get_rate_limiter()
+        get_rate_limiter()
         # We can't easily reset per-key, so reset the entire in-memory limiter
         import app.rate_limiting as rl
 

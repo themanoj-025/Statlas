@@ -216,7 +216,7 @@ class ProgressTracker:
                 if ldata.get("status") != "ok":
                     failures.append((season, league, ldata.get("error", "?")))
         if failures:
-            print(f"\n  Failures:")
+            print("\n  Failures:")
             for season, league, err in failures[:10]:
                 print(f"    {season}/{league}: {err[:60]}")
 
@@ -400,7 +400,7 @@ def ingest_season(
         do_statsbomb=do_statsbomb,
         require_tier_completeness=require_tier_completeness,
     )
-    elapsed = time.monotonic() - t0
+    time.monotonic() - t0
 
     _print_summary(report)
     return report
@@ -483,8 +483,8 @@ def run_backfill(
     already_done = sum(
         1
         for s in seasons
-        for l in all_leagues
-        if tracker.is_completed(s, l)
+        for lg in all_leagues
+        if tracker.is_completed(s, lg)
     )
     remaining = total_tasks - already_done
 
@@ -821,7 +821,7 @@ def main() -> int:
     create_schema()
 
     with session_scope() as db:
-        report = ingest_season(
+        ingest_season(
             db,
             season,
             league_slugs=league_slugs,

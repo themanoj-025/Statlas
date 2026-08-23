@@ -145,7 +145,7 @@ class TransfermarktSource(MarketDataSource):
         limiter: RateLimiter | None = None,
         session: requests.Session | None = None,
     ) -> None:
-        settings = get_settings()
+        get_settings()
         if session is not None:
             self.session = session
         else:

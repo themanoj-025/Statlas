@@ -164,10 +164,9 @@ class TestLoginRateLimiting:
 
     def test_lockout_expiry(self, db):
         """After the rate-limit window expires, the account should be unlocked."""
-        from app.rate_limiting import InMemoryRateLimiter
-
         # Force in-memory rate limiter for deterministic testing
         import app.rate_limiting as rl
+        from app.rate_limiting import InMemoryRateLimiter
         rl._limiter = InMemoryRateLimiter()
 
         for _ in range(auth.LOGIN_MAX_FAILURES):

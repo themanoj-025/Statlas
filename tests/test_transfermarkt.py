@@ -7,9 +7,8 @@ from __future__ import annotations
 
 from datetime import datetime, timezone
 from pathlib import Path
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
-import pytest
 from bs4 import BeautifulSoup
 
 from app.sources.base import SourceError

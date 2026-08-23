@@ -16,9 +16,8 @@ import logging
 from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel, Field
 
-from app import assistant, auth
+from app import assistant
 from app.api.deps import require_user
-from app.config import get_settings
 from app.db import session_scope
 
 logger = logging.getLogger(__name__)

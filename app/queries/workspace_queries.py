@@ -40,7 +40,7 @@ from app.models import (
     StatusHistory,
     Team,
 )
-from app.queries.player_queries import _compact_slug_map, slugify_name
+from app.queries.player_queries import _compact_slug_map
 
 # ---------------------------------------------------------------------------
 # Pipeline definition (docs/product/scouting-pipeline.md §1)
@@ -569,7 +569,6 @@ def get_shortlist_detail(
                 }
 
     # Batch-compute slugs only for players in this shortlist (not all players).
-    from app.queries.player_queries import _compact_slug_map, slugify_name
 
     entry_player_map = {pid: db.get(Player, pid) for pid in player_ids}
     entry_teams = {

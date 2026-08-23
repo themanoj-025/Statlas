@@ -35,19 +35,18 @@ from __future__ import annotations
 
 import argparse
 import logging
-import sys
 import os
-from datetime import datetime, timezone
+import sys
+from datetime import datetime
 from typing import Any
 
 # Ensure project root is on sys.path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
-from app.config import get_settings, load_tiers
+from app.config import load_tiers
 from app.sources.transfermarkt import (
     LEAGUE_URL_SLUGS,
     TransfermarktSource,
-    _parse_market_value,
 )
 
 logger = logging.getLogger("tm_squad")
@@ -202,10 +201,8 @@ def fetch_profile_detail(
     src: TransfermarktSource, tm_id: int
 ) -> dict[str, Any]:
     """Fetch a player's profile page for DOB, nationality, height."""
-    from datetime import date as date_cls
 
     try:
-        profile_url = f"https://www.transfermarkt.com/profil/spieler/{tm_id}"
         # Use the resolve approach: we need the slug
         # For profile fetch we just use the CEAPI + profile combo
         # The profile page needs a slug, so we search for it
@@ -246,7 +243,7 @@ def fetch_profile_detail(
 
 
 def run(args: argparse.Namespace) -> None:
-    tiers = load_tiers()
+    load_tiers()
     src = TransfermarktSource()
 
     # Determine leagues to process
@@ -337,13 +334,13 @@ def run(args: argparse.Namespace) -> None:
         clubs_summary[p["club_name"]] = clubs_summary.get(p["club_name"], 0) + 1
 
     print(f"\n{'=' * 60}")
-    print(f"TRANSFERMARKT SQUAD INGESTION COMPLETE")
+    print("TRANSFERMARKT SQUAD INGESTION COMPLETE")
     print(f"{'=' * 60}")
     print(f"Total players: {len(all_players)}")
     print(f"Clubs: {len(clubs_summary)}")
     print(f"Created: {created}")
     print(f"Updated: {updated}")
-    print(f"\nBy club:")
+    print("\nBy club:")
     for club, count in sorted(clubs_summary.items()):
         print(f"  {club:<30} {count} players")
     print(f"{'=' * 60}")

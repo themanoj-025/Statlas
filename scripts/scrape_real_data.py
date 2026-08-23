@@ -11,8 +11,8 @@ sys.path.insert(0, str(PROJECT_ROOT))
 os.environ["STATLAS_DATASET_MODE"] = "production"
 os.environ.setdefault("DATABASE_URL", f"sqlite+pysqlite:///{PROJECT_ROOT / 'data' / 'dev.db'}")
 
-from app.config import load_registry, load_tiers
-from app.db import create_schema, session_scope
+from app.config import load_tiers
+from app.db import session_scope
 from app.orchestration.weekly_refresh import run_weekly_refresh
 from app.sources.fbref import FBrefSource
 from app.sources.understat import UnderstatSource

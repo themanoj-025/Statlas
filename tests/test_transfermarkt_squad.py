@@ -2,13 +2,11 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
-import pytest
 from bs4 import BeautifulSoup
 
-from app.sources.transfermarkt import TransfermarktSource, _parse_market_value
+from app.sources.transfermarkt import TransfermarktSource
 from tests.conftest import fixtures_dir
 
 
