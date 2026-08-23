@@ -25,6 +25,7 @@ structure changes beyond recovery (Constitution: fail loudly, never guess).
 
 from __future__ import annotations
 
+import contextlib
 import logging
 import re
 from datetime import datetime, timezone
@@ -335,10 +336,8 @@ class TransfermarktSource(MarketDataSource):
             squad_size = 0
             if kader_link:
                 size_text = kader_link.get_text(strip=True)
-                try:
+                with contextlib.suppress(ValueError):
                     squad_size = int(size_text)
-                except ValueError:
-                    pass
 
             # Total market value
             mv_cell = row.select_one("td.rechts")
@@ -406,10 +405,8 @@ class TransfermarktSource(MarketDataSource):
             # Age (td[5])
             age = None
             if len(cells) > 5:
-                try:
+                with contextlib.suppress(ValueError, TypeError):
                     age = int(cells[5].get_text(strip=True))
-                except (ValueError, TypeError):
-                    pass
 
             # Contract expires (td[7])
             contract_expires = ""

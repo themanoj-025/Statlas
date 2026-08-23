@@ -23,9 +23,10 @@ from __future__ import annotations
 import hashlib
 import hmac
 import logging
+from collections.abc import Callable
 from dataclasses import dataclass
 from html import escape as html_escape
-from typing import Any, Callable
+from typing import Any
 
 from app.config import get_settings
 

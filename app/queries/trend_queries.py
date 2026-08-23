@@ -174,7 +174,7 @@ def get_player_trend(
     # Transfer + gap detection over the windowed points (real, derived from
     # data — never curated milestones).
     gaps: list[dict[str, Any]] = []
-    for i, point in enumerate(points):
+    for i, _point in enumerate(points):
         if i + 1 >= len(points):
             break
         missed = [

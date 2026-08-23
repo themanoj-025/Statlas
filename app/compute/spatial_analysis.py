@@ -260,7 +260,7 @@ def compute_pressure_success(
 
         # Check if team regains possession within next 3 events
         for future_idx in range(idx + 1, min(idx + 4, len(event_list))):
-            future_ev, future_pid, future_type = event_list[future_idx]
+            _future_ev, future_pid, future_type = event_list[future_idx]
             if future_pid in team_set and future_type in ("Pass", "Ball Receipt*"):
                 zone_success[zone]["success"] += 1
                 break

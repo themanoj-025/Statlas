@@ -530,7 +530,7 @@ def test_change_password_rate_limit(client):
     register_user(client)
 
     # 5 failed attempts (wrong current password) should all return 400
-    for i in range(5):
+    for _i in range(5):
         resp = client.post(
             "/api/v1/auth/change-password",
             json={"current_password": "wrongpass", "new_password": "NewPass123!"},
@@ -567,7 +567,7 @@ def test_verify_email_rate_limit(client):
     register_user(client)
     body = {"email": "scout@example.com"}
 
-    for i in range(5):
+    for _i in range(5):
         resp = client.post("/api/v1/auth/verify-email/request", json=body)
         assert resp.status_code == 200
 
