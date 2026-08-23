@@ -84,7 +84,7 @@ def detect_hidden_gems(
     team_ids = {p.current_team_id for p in players_map.values() if p.current_team_id}
     teams_map = {t.id: t for t in db.query(Team).filter(Team.id.in_(team_ids)).all()} if team_ids else {}
     league_ids = {t.league_id for t in teams_map.values() if t.league_id}
-    leagues_map = {l.id: l for l in db.query(League).filter(League.id.in_(league_ids)).all()} if league_ids else {}
+    leagues_map = {lg.id: lg for lg in db.query(League).filter(League.id.in_(league_ids)).all()} if league_ids else {}
 
     # Batch-load latest market valuations.
     from sqlalchemy import func as sqlfunc

@@ -4,11 +4,8 @@ RedisCacheBackend is tested via mocks; InMemoryCacheBackend is tested directly.
 """
 from __future__ import annotations
 
-import json
 import time
 from unittest.mock import MagicMock, patch
-
-import pytest
 
 from app.cache import (
     InMemoryCacheBackend,
@@ -16,7 +13,6 @@ from app.cache import (
     cached,
     get_cache,
 )
-
 
 # ---------------------------------------------------------------------------
 # InMemoryCacheBackend

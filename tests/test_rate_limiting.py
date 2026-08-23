@@ -8,15 +8,11 @@ from __future__ import annotations
 import time
 from unittest.mock import MagicMock, patch
 
-import pytest
-
 from app.rate_limiting import (
     InMemoryRateLimiter,
     RedisRateLimiter,
-    _limiter,
     get_rate_limiter,
 )
-
 
 # ---------------------------------------------------------------------------
 # InMemoryRateLimiter
@@ -161,7 +157,6 @@ class TestGetRateLimiter:
 
     def test_falls_back_to_in_memory_without_redis(self):
         """When Redis is unavailable, get_rate_limiter returns InMemoryRateLimiter."""
-        import app.rate_limiting as rl
 
         # Patch redis to raise on import/ping
         with patch.dict("sys.modules", {"redis": None}):
