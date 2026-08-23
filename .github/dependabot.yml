@@ -1,44 +1,68 @@
-# Statlas — Dependabot configuration (closeout C5: dependency scanning).
-# Automated dependency updates surface known-vulnerability fixes early; the
-# enforced vulnerability gates live in .github/workflows/ci.yml
-# (pip-audit + npm audit). PRs from these jobs run the same CI gates.
-
 version: 2
 updates:
-  - package-ecosystem: "pip"
-    directory: "/"
-    schedule:
-      interval: "weekly"
-      day: "monday"
-      time: "06:00"
-      timezone: "UTC"
-    open-pull-requests-limit: 5
-    labels:
-      - "dependencies"
-      - "python"
-
-  - package-ecosystem: "npm"
-    directory: "/web"
-    schedule:
-      interval: "weekly"
-      day: "monday"
-      time: "06:30"
-      timezone: "UTC"
-    open-pull-requests-limit: 5
-    labels:
-      - "dependencies"
-      - "javascript"
-
-  - package-ecosystem: "pre-commit"
-    directory: "/"
-    schedule:
-      interval: "weekly"
-      day: "monday"
-      time: "09:00"
-      timezone: "Asia/Kolkata"
-    labels:
-      - "dependencies"
-      - "pre-commit"
-    commit-message:
-      prefix: "chore(deps)"
-      include: "scope"
+- package-ecosystem: pip
+  directory: /
+  schedule:
+    interval: weekly
+    day: monday
+    time: 06:00
+    timezone: UTC
+  open-pull-requests-limit: 5
+  labels:
+  - dependencies
+  - python
+- package-ecosystem: npm
+  directory: /web
+  schedule:
+    interval: weekly
+    day: monday
+    time: 06:30
+    timezone: UTC
+  open-pull-requests-limit: 5
+  labels:
+  - dependencies
+  - javascript
+- package-ecosystem: pre-commit
+  directory: /
+  schedule:
+    interval: weekly
+    day: monday
+    time: 09:00
+    timezone: Asia/Kolkata
+  labels:
+  - dependencies
+  - pre-commit
+  commit-message:
+    prefix: chore(deps)
+    include: scope
+- package-ecosystem: github-actions
+  directory: /
+  schedule:
+    interval: weekly
+    day: monday
+    time: 09:00
+    timezone: Asia/Kolkata
+  labels:
+  - dependencies
+  - github-actions
+  commit-message:
+    prefix: chore(deps)
+    include: scope
+- package-ecosystem: docker
+  directory: /
+  schedule: &id001
+    interval: weekly
+    day: monday
+    time: 09:00
+    timezone: Asia/Kolkata
+  labels: &id002
+  - dependencies
+  - docker
+  commit-message: &id003
+    prefix: chore(deps)
+    include: scope
+- package-ecosystem: docker
+  directory: /web
+  schedule: *id001
+  labels: *id002
+  commit-message: *id003
