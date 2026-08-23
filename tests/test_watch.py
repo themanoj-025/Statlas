@@ -854,7 +854,7 @@ def test_api_watch_requires_signin(client):
 
 def test_api_follow_flow_alert_list_and_preferences(client, db):
     with db_module.session_scope() as session:
-        player_id, team_id = _seed_api_entity(session)
+        player_id, _team_id = _seed_api_entity(session)
     _register(client)
 
     resp = client.post(

@@ -14,11 +14,14 @@ target-version = "py310" # code floor; local dev and CI run Python 3.14
 # annotations, BLE001 blind excepts (intentional in weekly_refresh enrichment),
 # SIM* style simplifications, B017 test assertion.
 select = ["E4", "E7", "E9", "F", "I", "DTZ"]
+ignore = ["DTZ007"]  # strptime without tz is acceptable for date-only parsing
 
 [tool.ruff.lint.per-file-ignores]
 # seed_dev_db.py sets DATABASE_URL via os.environ.setdefault BEFORE importing
 # db (db reads the URL at import time) — the E402 is the script's point.
 "scripts/seed_dev_db.py" = ["E402"]
+# DTZ007 strptime without timezone is acceptable for date-only parsing
+"scripts/*.py" = ["E402"]
 
 [tool.mypy]
 python_version = "3.11"

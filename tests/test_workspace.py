@@ -95,7 +95,7 @@ def workspace_data(db):
     """One free user, one pro user, two players — the shared CRUD scaffold."""
     free = make_user(db, "free@example.com")
     pro = make_pro_user(db, "pro@example.com")
-    league, team = make_league_team(db)
+    _league, team = make_league_team(db)
     haaland = make_player(db, "Erling Haaland", team)
     salah = make_player(db, "Mohamed Salah", team)
     return {"free": free, "pro": pro, "haaland": haaland, "salah": salah}

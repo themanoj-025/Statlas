@@ -152,7 +152,7 @@ class TestLoginRateLimiting:
     def test_no_lockout_below_threshold(self, db):
         for _ in range(auth.LOGIN_MAX_FAILURES - 1):
             auth.record_login_failure("test@example.com")
-        locked, retry_after = auth.is_login_locked("test@example.com")
+        locked, _retry_after = auth.is_login_locked("test@example.com")
         assert not locked
 
     def test_lockout_at_threshold(self, db):

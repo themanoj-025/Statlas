@@ -20,7 +20,7 @@ import logging
 import re
 import time
 from collections.abc import Callable
-from contextlib import asynccontextmanager
+from contextlib import asynccontextmanager, suppress
 from datetime import datetime, timezone
 from typing import Any
 
@@ -438,10 +438,8 @@ def leagues():
         except Exception:
             pass
     result = _with_session(get_league_catalog)
-    try:
+    with suppress(Exception):
         cache.set("api:leagues", _json.dumps(result, default=str), ttl=300)
-    except Exception:
-        pass
     return result
 
 
@@ -543,10 +541,8 @@ def leaderboard(
             sort_by=sort_by,
             sort_dir=sort_dir,
         )
-    try:
+    with suppress(Exception):
         cache.set(cache_key, _json.dumps(result, default=str), 300)
-    except Exception:
-        pass
     return result
 
 
@@ -599,10 +595,8 @@ def player_by_slug(slug: str, request: Request):
         # Phase 13: log view activity (deduplicated, best-effort)
         _log_player_view(request, resolved["player_id"])
 
-    try:
+    with suppress(Exception):
         cache.set(cache_key, _json.dumps(payload, default=str), 300)
-    except Exception:
-        pass
     return payload
 
 
@@ -627,10 +621,8 @@ def player_similar(player_id: int, limit: int = Query(5, ge=1, le=10)):
         if get_player_profile(db, player_id) is None:
             raise HTTPException(status_code=404, detail=f"unknown player {player_id}")
         result = get_similar_players(db, player_id, limit=limit)
-    try:
+    with suppress(Exception):
         cache.set(cache_key, _json.dumps(result, default=str), 300)
-    except Exception:
-        pass
     return result
 
 
@@ -787,10 +779,8 @@ def positions():
         for group in meta["position_groups"]:
             out.append({**group, "qualifying_counts": counts_by_group.get(group["code"], {})})
         result = out
-    try:
+    with suppress(Exception):
         cache.set(cache_key, _json.dumps(result, default=str), ttl=300)
-    except Exception:
-        pass
     return result
 
 

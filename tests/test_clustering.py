@@ -266,7 +266,7 @@ class TestFeatureMatrix:
         for i in range(10):
             _make_player(db, f"CM Player {i}", "CM", league=premier_league)
 
-        player_ids, _, X, _ = build_feature_matrix(db, season="2025-26")
+        player_ids, _, _X, _ = build_feature_matrix(db, season="2025-26")
         assert len(player_ids) == 10  # Only CM players
 
     def test_build_feature_matrix_filters_by_minutes(
@@ -276,7 +276,7 @@ class TestFeatureMatrix:
         _make_player(db, "Qualified Player", "CM", minutes=1500, league=premier_league)
         _make_player(db, "Unqualified Player", "CM", minutes=500, league=premier_league)
 
-        player_ids, _, X, _ = build_feature_matrix(db, season="2025-26")
+        player_ids, _, _X, _ = build_feature_matrix(db, season="2025-26")
         assert len(player_ids) == 1
 
     def test_build_feature_matrix_filters_by_season(
@@ -288,7 +288,7 @@ class TestFeatureMatrix:
         )
         _make_player(db, "Old Player", "CM", season="2024-25", league=premier_league)
 
-        player_ids, _, X, _ = build_feature_matrix(db, season="2025-26")
+        player_ids, _, _X, _ = build_feature_matrix(db, season="2025-26")
         assert len(player_ids) == 1
 
     def test_build_feature_matrix_filters_by_position(
@@ -300,15 +300,15 @@ class TestFeatureMatrix:
         for i in range(5):
             _make_player(db, f"ST Player {i}", "ST", league=premier_league)
 
-        player_ids_cm, _, X_cm, _ = build_feature_matrix(db, position_group="CM")
+        player_ids_cm, _, _X_cm, _ = build_feature_matrix(db, position_group="CM")
         assert len(player_ids_cm) == 5
 
-        player_ids_st, _, X_st, _ = build_feature_matrix(db, position_group="ST")
+        player_ids_st, _, _X_st, _ = build_feature_matrix(db, position_group="ST")
         assert len(player_ids_st) == 5
 
     def test_build_feature_matrix_empty_when_no_data(self, db: Session):
         """Empty database should return empty arrays."""
-        player_ids, feature_names, X, raw_stats = build_feature_matrix(db)
+        player_ids, feature_names, X, _raw_stats = build_feature_matrix(db)
         assert len(player_ids) == 0
         assert len(feature_names) == 0
         assert X.shape[0] == 0
