@@ -203,7 +203,7 @@ def send_digests(
         .all()
     )
     by_user: dict[int, list[tuple[WatchAlert, dict[str, Any]]]] = defaultdict(list)
-    for user, prefs, alert, watch in rows:
+    for user, prefs, alert, _watch in rows:
         if not bool((prefs.alert_type_preferences or {}).get(alert.alert_type, True)):
             continue  # opted out of this trigger type — skip, not delivered
         by_user[user.id].append((alert, alert.detail or {}))

@@ -518,8 +518,5 @@ def plan_limits(request: Request):
     """What the CURRENT plan can do — the honest upsell data source (A4)."""
     with session_scope() as db:
         user = auth.user_from_session(db, _session_token(request))
-        if user is None:
-            plan = "free"
-        else:
-            plan = auth.effective_plan(db, user.id)
+        plan = "free" if user is None else auth.effective_plan(db, user.id)
     return {"plan": plan, "limits": pricing_limits(plan)}

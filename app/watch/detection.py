@@ -310,27 +310,26 @@ def _evaluate_player(
             tp = curr.percentiles.get(metric)
             if fp is None or tp is None:
                 continue  # missing data for either snapshot — never guess
-            if abs(tp - fp) >= threshold:
-                if _try_insert_alert(
-                    db,
-                    watch,
-                    ALERT_TYPE_PERCENTILE,
-                    dedupe_key=f"{metric}:{_iso(prev_date)}:{_iso(curr_date)}",
-                    detail={
-                        "metric": metric,
-                        "metric_name": _metric_name(metric),
-                        "from_percentile": fp,
-                        "to_percentile": tp,
-                        "from_snapshot_date": _iso(prev_date),
-                        "to_snapshot_date": _iso(curr_date),
-                        "from_minutes": prev.minutes,
-                        "to_minutes": curr.minutes,
-                        "from_league": _league_name(db, prev.league_id),
-                        "to_league": _league_name(db, curr.league_id),
-                        "entity_name": player.canonical_name if player else None,
-                    },
-                ):
-                    report.add_alert(ALERT_TYPE_PERCENTILE)
+            if abs(tp - fp) >= threshold and _try_insert_alert(
+                db,
+                watch,
+                ALERT_TYPE_PERCENTILE,
+                dedupe_key=f"{metric}:{_iso(prev_date)}:{_iso(curr_date)}",
+                detail={
+                    "metric": metric,
+                    "metric_name": _metric_name(metric),
+                    "from_percentile": fp,
+                    "to_percentile": tp,
+                    "from_snapshot_date": _iso(prev_date),
+                    "to_snapshot_date": _iso(curr_date),
+                    "from_minutes": prev.minutes,
+                    "to_minutes": curr.minutes,
+                    "from_league": _league_name(db, prev.league_id),
+                    "to_league": _league_name(db, curr.league_id),
+                    "entity_name": player.canonical_name if player else None,
+                },
+            ):
+                report.add_alert(ALERT_TYPE_PERCENTILE)
 
     # --- club_change ---------------------------------------------------------
     if (
@@ -448,21 +447,20 @@ def _evaluate_team(
         prev_season is not None
         and curr_season != prev_season
         and curr_first_date == snapshot_date
+    ) and _try_insert_alert(
+        db,
+        watch,
+        ALERT_TYPE_NEW_SEASON,
+        dedupe_key=f"season:{curr_season}",
+        detail={
+            "new_season": curr_season,
+            "previous_season": prev_season,
+            "snapshot_date": _iso(curr_first_date),
+            "entity_type": "team",
+            "entity_name": team.name,
+        },
     ):
-        if _try_insert_alert(
-            db,
-            watch,
-            ALERT_TYPE_NEW_SEASON,
-            dedupe_key=f"season:{curr_season}",
-            detail={
-                "new_season": curr_season,
-                "previous_season": prev_season,
-                "snapshot_date": _iso(curr_first_date),
-                "entity_type": "team",
-                "entity_name": team.name,
-            },
-        ):
-            report.add_alert(ALERT_TYPE_NEW_SEASON)
+        report.add_alert(ALERT_TYPE_NEW_SEASON)
 
     # --- data_coverage_change --------------------------------------------------
     league_id = team.league_id
@@ -475,22 +473,21 @@ def _evaluate_team(
         curr_covered = (
             league_id in coverage_seasons and curr_season in coverage_seasons[league_id]
         )
-        if not prev_covered and curr_covered:
-            if _try_insert_alert(
-                db,
-                watch,
-                ALERT_TYPE_COVERAGE,
-                dedupe_key=f"coverage:{league_id}:{curr_season}",
-                detail={
-                    "signal": "coverage_gained",
-                    "league": _league_name(db, league_id),
-                    "season": curr_season,
-                    "coverage_source": "statsbomb",
-                    "entity_type": "team",
-                    "entity_name": team.name,
-                },
-            ):
-                report.add_alert(ALERT_TYPE_COVERAGE)
+        if not prev_covered and curr_covered and _try_insert_alert(
+            db,
+            watch,
+            ALERT_TYPE_COVERAGE,
+            dedupe_key=f"coverage:{league_id}:{curr_season}",
+            detail={
+                "signal": "coverage_gained",
+                "league": _league_name(db, league_id),
+                "season": curr_season,
+                "coverage_source": "statsbomb",
+                "entity_type": "team",
+                "entity_name": team.name,
+            },
+        ):
+            report.add_alert(ALERT_TYPE_COVERAGE)
 
 
 # ---------------------------------------------------------------------------

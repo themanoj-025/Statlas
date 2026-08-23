@@ -362,11 +362,7 @@ def analyze_formation_conformity(
 
         # Check deviation from nominal zone
         in_zone = True
-        if nominal_line == "DEF" and avg_x > 55:
-            in_zone = False
-        elif nominal_line == "MID" and (avg_x < 35 or avg_x > 85):
-            in_zone = False
-        elif nominal_line == "FWD" and avg_x < 65:
+        if nominal_line == "DEF" and avg_x > 55 or nominal_line == "MID" and (avg_x < 35 or avg_x > 85) or nominal_line == "FWD" and avg_x < 65:
             in_zone = False
 
         conformity[pid] = {

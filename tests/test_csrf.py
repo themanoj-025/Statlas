@@ -144,7 +144,7 @@ class TestCSRFMiddlewareIntegration:
         from app.csrf import generate_csrf_token, verify_csrf_token
 
         token = generate_csrf_token("session-A")
-        ts, sig = token.split(":")
+        ts, _sig = token.split(":")
         tampered = f"{ts}:00000000000000000000000000000000"
         assert verify_csrf_token(tampered, "session-A") is False
 

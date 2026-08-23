@@ -13,6 +13,7 @@ Minimal email/password auth built on stdlib only:
 
 from __future__ import annotations
 
+import contextlib
 import hashlib
 import hmac
 import secrets
@@ -402,10 +403,8 @@ def _record_lockout(email: str) -> None:
 
     limiter = get_rate_limiter()
     key = f"lockout_count:{email}"
-    try:
+    with contextlib.suppress(Exception):
         limiter.is_limited(key, max_attempts=999, window_seconds=LOCKOUT_ESCALATION_WINDOW)
-    except Exception:
-        pass
 
 
 def _escalated_lockout_seconds(email: str) -> int:

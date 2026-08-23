@@ -271,7 +271,7 @@ def train_clustering_model(
     )
 
     # 1. Build feature matrix
-    player_ids, feature_names, X, raw_stats = build_feature_matrix(
+    player_ids, feature_names, X, _raw_stats = build_feature_matrix(
         db, season=season, position_group=position_group
     )
 
@@ -806,7 +806,7 @@ def assign_all_players(
     pipeline: Pipeline = joblib.load(model_path)
 
     # Build feature matrix for all qualifying players
-    player_ids, feature_names, X, raw_stats = build_feature_matrix(db, season=season)
+    player_ids, feature_names, X, _raw_stats = build_feature_matrix(db, season=season)
 
     if len(X) == 0:
         report.errors.append("No qualifying players found")

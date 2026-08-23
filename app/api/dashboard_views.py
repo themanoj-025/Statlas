@@ -107,7 +107,7 @@ def dashboard_summary(request: Request):
             # Get most-viewed position groups from recent activity
             viewed_positions = dq.get_top_viewed_positions(db, user.id)
             seen_player_ids: set[int] = set()
-            for pos in viewed_positions[:3]:
+            for _pos in viewed_positions[:3]:
                 gems = detect_hidden_gems(
                     db, min_stat_percentile=75, max_market_value=30_000_000, limit=3
                 )
