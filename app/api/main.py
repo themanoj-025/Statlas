@@ -223,7 +223,7 @@ async def security_and_rate_limit_middleware(request: Request, call_next):
         from app.api.public_views import apply_rate_limit_headers
 
         apply_rate_limit_headers(response, request)
-    except Exception:  # header decoration must never break a response
+    except (AttributeError, KeyError, TypeError):  # header decoration must never break a response
         pass
 
     # --- Security headers ---
@@ -279,7 +279,7 @@ async def security_and_rate_limit_middleware(request: Request, call_next):
             status_code=response.status_code,
             duration_seconds=duration_ms / 1000,
         )
-    except Exception:  # metrics must never break a response
+    except (OSError, ConnectionError, ValueError):  # metrics must never break a response
         pass
 
     return response
@@ -333,7 +333,7 @@ def _log_player_view(request: Request, player_id: int) -> None:
                     entity_id=player_id,
                     action_type="viewed",
                 )
-    except Exception as exc:
+    except (OSError, ValueError) as exc:
         logger.debug("Activity logging failed for player view: %s", exc)
 
 
@@ -353,7 +353,7 @@ def health():
 
         with session_scope() as db:
             db.execute(text("SELECT 1"))
-    except Exception as exc:
+    except (OSError, RuntimeError) as exc:
         db_status = f"unhealthy: {exc}"
     try:
         from app.cache import get_cache
@@ -361,7 +361,7 @@ def health():
         cache = get_cache()
         if hasattr(cache, 'redis'):
             cache.redis.ping()
-    except Exception as exc:
+    except (OSError, ConnectionError) as exc:
         redis_status = f"unhealthy: {exc}"
 
     overall = "ok" if db_status == "healthy" and redis_status == "healthy" else "degraded"
@@ -396,7 +396,7 @@ def meta():
     if cached is not None:
         try:
             return _json.loads(cached)
-        except Exception:
+        except (ValueError, TypeError, _json.JSONDecodeError):
             pass
 
     settings = get_settings()
@@ -415,7 +415,7 @@ def meta():
     }
     try:
         cache.set("api:meta", _json.dumps(result, default=str), ttl=300)
-    except Exception:
+    except (OSError, ConnectionError, TypeError):
         pass  # caching failure must never break the response
     return result
 
@@ -435,7 +435,7 @@ def leagues():
     if cached is not None:
         try:
             return _json.loads(cached)
-        except Exception:
+        except (ValueError, TypeError, _json.JSONDecodeError):
             pass
     result = _with_session(get_league_catalog)
     with suppress(Exception):
@@ -524,7 +524,7 @@ def leaderboard(
     if cached is not None:
         try:
             return _json.loads(cached)
-        except Exception:
+        except (ValueError, TypeError, _json.JSONDecodeError):
             pass
 
     with session_scope() as db:
@@ -577,7 +577,7 @@ def player_by_slug(slug: str, request: Request):
             # Activity logging still runs on cache hit (best-effort)
             _log_player_view(request, payload["player"]["player_id"])
             return payload
-        except Exception:
+        except (ValueError, TypeError, _json.JSONDecodeError):
             pass
 
     with session_scope() as db:
@@ -614,7 +614,7 @@ def player_similar(player_id: int, limit: int = Query(5, ge=1, le=10)):
     if cached is not None:
         try:
             return _json.loads(cached)
-        except Exception:
+        except (ValueError, TypeError, _json.JSONDecodeError):
             pass
 
     with session_scope() as db:
@@ -768,7 +768,7 @@ def positions():
     if cached is not None:
         try:
             return _json.loads(cached)
-        except Exception:
+        except (ValueError, TypeError, _json.JSONDecodeError):
             pass
 
     with session_scope() as db:

@@ -511,7 +511,7 @@ def compute_arpu(db: Session, date: datetime | None = None) -> dict:
         from app.config import load_pricing
         pricing = load_pricing()
         PRO_PRICE_EUR = float(pricing.get("plans", {}).get("pro", {}).get("price_monthly_eur", 49.0))
-    except Exception:
+    except (OSError, ValueError, KeyError):
         PRO_PRICE_EUR = 49.0  # fallback if pricing.json unreadable
 
     mrr = pro_users * PRO_PRICE_EUR
