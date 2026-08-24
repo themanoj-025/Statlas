@@ -1,14 +1,37 @@
 import type { MetadataRoute } from "next";
 
+const API_URL =
+  process.env.NEXT_PUBLIC_API_URL || process.env.API_URL || "http://localhost:8000";
+
+/**
+ * Fetch slugs from the API with a timeout and fallback.
+ * Returns an empty array on any failure — sitemap always builds.
+ */
+async function fetchSlugs(path: string, timeoutMs = 5000): Promise<string[]> {
+  try {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), timeoutMs);
+    const res = await fetch(`${API_URL}${path}`, {
+      signal: controller.signal,
+      next: { revalidate: 3600 },
+    });
+    clearTimeout(timer);
+    if (!res.ok) return [];
+    const data = await res.json();
+    return Array.isArray(data) ? data : [];
+  } catch {
+    return [];
+  }
+}
+
 /**
  * Dynamic sitemap.xml — Constitution §5: public pages (methodology,
  * player profiles, league pages) must be crawlable for SEO.
  *
- * Static routes are listed here; dynamic routes (players, leagues)
- * would need a data fetch in production — for now, we include the
- * static routes and a note for future dynamic generation.
+ * Static routes are always included. Dynamic routes (players, leagues)
+ * are fetched from the API at build time with a timeout + fallback.
  */
-export default function sitemap(): MetadataRoute.Sitemap {
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl =
     process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
 
@@ -37,16 +60,25 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${baseUrl}/legal/privacy`, lastModified: now, changeFrequency: "yearly", priority: 0.2 },
   ];
 
-  // TODO: In production, fetch player slugs and league slugs from the API
-  // and add them as dynamic routes for full SEO coverage.
-  // Example:
-  // const players = await fetch(`${API_URL}/api/v1/players/search?q=a&limit=5000`);
-  // const playerRoutes = players.map(p => ({
-  //   url: `${baseUrl}/players/${p.slug}`,
-  //   lastModified: now,
-  //   changeFrequency: "weekly",
-  //   priority: 0.8,
-  // }));
+  // Dynamic routes — fetch player and league slugs from the API
+  const [playerSlugs, leagueSlugs] = await Promise.all([
+    fetchSlugs("/api/v1/players/search?q=a&limit=5000"),
+    fetchSlugs("/api/v1/leagues?limit=200"),
+  ]);
 
-  return staticRoutes;
+  const playerRoutes: MetadataRoute.Sitemap = playerSlugs.map((slug) => ({
+    url: `${baseUrl}/players/${slug}`,
+    lastModified: now,
+    changeFrequency: "weekly" as const,
+    priority: 0.8,
+  }));
+
+  const leagueRoutes: MetadataRoute.Sitemap = leagueSlugs.map((slug) => ({
+    url: `${baseUrl}/leagues/${slug}`,
+    lastModified: now,
+    changeFrequency: "weekly" as const,
+    priority: 0.7,
+  }));
+
+  return [...staticRoutes, ...playerRoutes, ...leagueRoutes];
 }
