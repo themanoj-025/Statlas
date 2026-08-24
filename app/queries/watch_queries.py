@@ -81,7 +81,7 @@ def _entity_slug(db: Session, entity_type: str, entity_id: int) -> str | None:
             return None
         try:
             return get_player_slug(db, entity_id)
-        except Exception:  # slug resolution must never break an alert read
+        except (OSError, ValueError):  # slug resolution must never break an alert read
             return None
     team = db.get(Team, entity_id)
     if team is None:

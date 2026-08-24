@@ -388,7 +388,7 @@ def _get_lockout_count(email: str) -> int:
     key = f"lockout_count:{email}"
     try:
         return limiter.get_count(key)
-    except Exception:
+    except (OSError, ConnectionError):
         return 0
 
 

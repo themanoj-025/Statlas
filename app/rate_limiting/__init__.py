@@ -142,7 +142,7 @@ def get_rate_limiter() -> RedisRateLimiter | InMemoryRateLimiter:
         client.ping()  # verify connectivity
         _limiter = RedisRateLimiter(client)
         logger.info("Using Redis-backed rate limiter (%s)", settings.redis_url)
-    except Exception:
+    except (OSError, ConnectionError):
         logger.warning(
             "Redis unavailable — falling back to in-memory rate limiter "
             "(not suitable for multi-worker production)"
