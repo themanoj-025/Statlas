@@ -165,7 +165,7 @@ def verify_webhook_signature(payload: bytes, sig_header: str | None) -> dict[str
 
     try:
         event = stripe.Webhook.construct_event(payload, sig_header, secret)
-    except Exception as exc:  # stripe.SignatureVerificationError and friends
+    except (ValueError, TypeError, OSError) as exc:  # stripe.SignatureVerificationError and friends
         raise WebhookVerificationError(f"Signature verification failed: {exc}") from exc
     # stripe SDK returns an Event object; the handlers expect a plain dict.
     if hasattr(event, "to_dict"):

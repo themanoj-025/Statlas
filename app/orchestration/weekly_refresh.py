@@ -304,7 +304,7 @@ def publish_run(db: Session, computed_date: datetime) -> int:
         cache.delete_pattern("api:player:*")
         cache.delete_pattern("api:positions:*")
         cache.delete_pattern("api:meta")
-    except Exception as exc:
+    except (OSError, ConnectionError) as exc:
         logger.warning("Cache invalidation failed after publish (non-fatal): %s", exc)
     return len(rows)
 
@@ -369,7 +369,7 @@ def run_weekly_refresh(
                     now=snapshot_date,
                 )
                 report.leagues_scraped.append(f"{league_slug}:fbref")
-            except Exception as exc:
+            except (OSError, ValueError, ConnectionError) as exc:
                 report.errors.append(f"fbref {league_slug}: {exc}")
                 logger.exception("fbref scrape failed for %s", league_slug)
 
@@ -392,7 +392,7 @@ def run_weekly_refresh(
                     now=snapshot_date,
                 )
                 report.leagues_scraped.append(f"{league_slug}:understat")
-            except Exception as exc:
+            except (OSError, ValueError, ConnectionError) as exc:
                 report.errors.append(f"understat {league_slug}: {exc}")
                 logger.exception("understat scrape failed for %s", league_slug)
 
@@ -487,7 +487,7 @@ def run_weekly_refresh(
                 )
         else:
             logger.info("No active clustering model — archetype assignment skipped")
-    except Exception as exc:
+    except (ValueError, TypeError, OSError) as exc:
         report.errors.append(f"archetype assignment: {exc}")
         logger.exception("archetype assignment failed")
 
@@ -519,7 +519,7 @@ def run_weekly_refresh(
             try:
                 market_source = TransfermarktSource()
                 logger.info("using real Transfermarkt source for market data")
-            except Exception:
+            except (ImportError, OSError, ValueError):
                 market_source = FixtureMarketDataSource(seed=42)
                 logger.info("Transfermarkt unavailable, using fixture market data")
             valuation_records = market_source.fetch_valuations(
@@ -601,7 +601,7 @@ def run_weekly_refresh(
             report.market_contracts_inserted = contracts_inserted
 
             report.leagues_scraped.append("market_data")
-    except Exception as exc:
+    except (OSError, ValueError, ImportError) as exc:
         report.errors.append(f"market data ingestion: {exc}")
         logger.exception("market data ingestion failed")
 
@@ -610,7 +610,7 @@ def run_weekly_refresh(
         for competition in statsbomb_competitions or []:
             try:
                 statsbomb_source.sync_competition(db, competition)
-            except Exception as exc:
+            except (OSError, ValueError) as exc:
                 report.errors.append(
                     f"statsbomb {competition.get('competition_id')}: {exc}"
                 )
@@ -629,7 +629,7 @@ def run_weekly_refresh(
             try:
                 fixtures = api_football_source.fetch_fixtures(league_slug, season)
                 store_fixtures(db, fixtures)
-            except Exception as exc:
+            except (OSError, ValueError) as exc:
                 report.errors.append(f"api_football {league_slug}: {exc}")
 
     db.commit()

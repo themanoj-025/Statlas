@@ -127,7 +127,7 @@ def get_cache() -> CacheBackend:
         client.ping()
         _backend = RedisCacheBackend(client)
         logger.info("Using Redis cache backend")
-    except Exception:
+    except (OSError, ConnectionError):
         logger.warning("Redis unavailable — using in-memory cache (dev/test only)")
         _backend = InMemoryCacheBackend()
 
@@ -157,7 +157,7 @@ def invalidate_pattern(pattern: str) -> int:
             before = len(cache._store)
             cache.delete_pattern(pattern)
             return before - len(cache._store)
-    except Exception:
+    except (OSError, ConnectionError, ValueError):
         logger.warning("Cache invalidation failed for pattern: %s", pattern)
         return 0
 
@@ -195,7 +195,7 @@ def cached(ttl: int = 3600, prefix: str = ""):
             if result is not None:
                 try:
                     cache.set(cache_key, json.dumps(result, default=str), ttl)
-                except Exception:
+                except (OSError, ConnectionError, TypeError):
                     pass  # caching failure must never break the request
             return result
 
