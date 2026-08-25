@@ -76,8 +76,45 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     title="Statlas API",
     version="1.0.0",
-    description="Versioned internal API for the Statlas frontend (Phase 2).",
+    description="Versioned internal API for the Statlas frontend.\n\n"
+    "Sports analytics platform with player stats, tactical analysis, and AI assistant.",
     lifespan=lifespan,
+    docs_url="/docs",
+    redoc_url="/redoc",
+    openapi_tags=[
+        {
+            "name": "health",
+            "description": "Service health check endpoints",
+        },
+        {
+            "name": "billing",
+            "description": "Subscription and billing management",
+        },
+        {
+            "name": "players",
+            "description": "Player data and statistics",
+        },
+        {
+            "name": "tactical",
+            "description": "Tactical analysis and formations",
+        },
+        {
+            "name": "search",
+            "description": "Player and team search",
+        },
+        {
+            "name": "reports",
+            "description": "Report generation and export",
+        },
+        {
+            "name": "assistant",
+            "description": "AI-powered sports analysis assistant",
+        },
+        {
+            "name": "workspace",
+            "description": "User workspace and saved analyses",
+        },
+    ],
 )
 
 _settings = get_settings()
