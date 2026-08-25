@@ -7,6 +7,8 @@ Every response traces recommendations to specific factors.
 
 from __future__ import annotations
 
+from typing import Any
+
 from fastapi import APIRouter, HTTPException, Query
 
 from app.db import session_scope
@@ -20,7 +22,7 @@ router = APIRouter(prefix="/api/v1/transfers", tags=["transfers"])
 
 
 @router.get("/valuation/{player_id}")
-def valuation_comparison(player_id: int):
+def valuation_comparison(player_id: int) -> dict[str, Any]:
     """Compare a player's statistical performance rank to their market valuation.
 
     Returns stat-based value proxy, market valuation, gap, and explanation.
@@ -42,7 +44,7 @@ def undervalued_players(
     position_group: str | None = Query(None),
     threshold: float = Query(0.2, ge=0.0, le=1.0),
     limit: int = Query(20, ge=1, le=100),
-):
+) -> dict[str, Any]:
     """Find players where stat-based value exceeds market valuation by threshold.
 
     Returns ranked list with explanations of why each player may be undervalued.
@@ -65,7 +67,7 @@ def overvalued_players(
     position_group: str | None = Query(None),
     threshold: float = Query(0.2, ge=0.0, le=1.0),
     limit: int = Query(20, ge=1, le=100),
-):
+) -> dict[str, Any]:
     """Find players where market valuation exceeds stat-based value by threshold.
 
     Overvaluation can be legitimate (young potential, scarcity premium, celebrity factor).
@@ -98,7 +100,7 @@ def transfer_candidates(
     contract_expiring: bool | None = Query(None),
     min_minutes: float = Query(900, ge=0),
     limit: int = Query(20, ge=1, le=100),
-):
+) -> dict[str, Any]:
     """Multi-condition transfer candidate search combining market and performance data.
 
     Combines Phase 8's filtering with market data (valuations, contract status)
@@ -121,7 +123,7 @@ def transfer_candidates(
 
 
 @router.get("/templates")
-def candidate_templates():
+def candidate_templates() -> list[dict[str, Any]]:
     """Pre-built transfer search templates for common recruitment scenarios.
 
     Returns customizable templates like "Young Talent Abroad",
@@ -140,7 +142,7 @@ def profile_match(
         description="Comma-separated key attributes (e.g., progressive_passing,pressing)",
     ),
     limit: int = Query(20, ge=1, le=100),
-):
+) -> dict[str, Any]:
     """Find players matching a tactical/statistical profile.
 
     Use archetypes and stat percentiles to find players who fit
@@ -174,7 +176,7 @@ def hidden_gems(
     min_stat_percentile: float = Query(75, ge=50, le=99),
     max_market_value: float = Query(30_000_000, ge=0),
     limit: int = Query(20, ge=1, le=100),
-):
+) -> list[dict[str, Any]]:
     """Find high-performing players not yet captured by major market valuations.
 
     Hidden gems: strong statistical profile + low market value + recent improvement.
@@ -197,7 +199,7 @@ def age_opportunities(
     max_age: int = Query(24, ge=16, le=30),
     min_stat_percentile: float = Query(75, ge=50, le=99),
     limit: int = Query(20, ge=1, le=100),
-):
+) -> list[dict[str, Any]]:
     """Find young players performing above their market valuation.
 
     High-ceiling, uncertain opportunities — limited track record means
@@ -220,7 +222,7 @@ def age_opportunities(
 def position_scarcity(
     min_stat_percentile: float = Query(70, ge=50, le=99),
     limit: int = Query(20, ge=1, le=100),
-):
+) -> list[dict[str, Any]]:
     """Find players in scarce position profiles who are undervalued.
 
     Some positions command premium prices — this identifies high performers
@@ -248,7 +250,7 @@ def transfer_risk(
     player_id: int,
     target_league_tier: str | None = Query(None),
     target_position_group: str | None = Query(None),
-):
+) -> dict[str, Any]:
     """Assess the risk of transferring a player to a new context.
 
     Factors in league tier transition, position change, sample size,
@@ -266,7 +268,7 @@ def transfer_risk(
 
 
 @router.get("/confidence/{player_id}")
-def valuation_confidence(player_id: int):
+def valuation_confidence(player_id: int) -> dict[str, Any]:
     """Score how confident we can be in a player's market valuation.
 
     Factors: data recency, market presence, stat sample size, contract clarity.

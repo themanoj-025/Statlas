@@ -47,7 +47,7 @@ class WebhookVerificationError(RuntimeError):
 # ---------------------------------------------------------------------------
 
 
-def _stripe_client():
+def _stripe_client() -> Any:
     """Import + configure the Stripe SDK. Raises BillingNotConfiguredError
     when no secret key is present (never a silent no-op)."""
     settings = get_settings()

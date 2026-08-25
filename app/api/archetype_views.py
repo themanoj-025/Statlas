@@ -8,6 +8,8 @@ Constitution Addendum §3.5: Every archetype output has a real explanation.
 
 from __future__ import annotations
 
+from typing import Any
+
 from fastapi import APIRouter, HTTPException, Query
 
 from app.db import session_scope
@@ -16,7 +18,7 @@ router = APIRouter(prefix="/api/v1/archetypes", tags=["archetypes"])
 
 
 @router.get("")
-def archetype_overview():
+def archetype_overview() -> dict[str, Any]:
     """High-level overview of all player archetypes for the active model.
 
     Returns archetype definitions with player counts, descriptions, and
@@ -29,7 +31,7 @@ def archetype_overview():
 
 
 @router.get("/models")
-def model_list():
+def model_list() -> list[dict[str, Any]]:
     """List all registered clustering models (including archived)."""
     from app.queries.archetype_queries import get_model_list
 
@@ -38,7 +40,7 @@ def model_list():
 
 
 @router.get("/model")
-def active_model():
+def active_model() -> dict[str, Any]:
     """Get the currently active clustering model metadata."""
     from app.queries.archetype_queries import get_active_model
 
@@ -50,7 +52,7 @@ def active_model():
 
 
 @router.get("/{cluster_id}")
-def archetype_detail(cluster_id: int, limit: int = Query(50, ge=1, le=200)):
+def archetype_detail(cluster_id: int, limit: int = Query(50, ge=1, le=200)) -> dict[str, Any]:
     """Get players in a specific archetype, sorted by typicality.
 
     Returns the archetype definition and a paginated list of players
@@ -80,7 +82,7 @@ def archetype_detail(cluster_id: int, limit: int = Query(50, ge=1, le=200)):
 
 
 @router.get("/player/{player_id}")
-def player_archetype(player_id: int):
+def player_archetype(player_id: int) -> dict[str, Any]:
     """Get the archetype assignment for a specific player.
 
     Returns archetype name, description, distance-to-center (typicality),

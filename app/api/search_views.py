@@ -13,6 +13,8 @@ Domain error mapping:
 
 from __future__ import annotations
 
+from typing import Any
+
 import logging
 
 from fastapi import APIRouter, HTTPException, Query, Request
@@ -97,7 +99,7 @@ class SaveSearchBody(QueryDefinitionBody):
 
 
 @router.post("/execute")
-def execute(body: ExecuteBody, request: Request):
+def execute(body: ExecuteBody, request: Request) -> dict[str, Any]:
     user = _optional_user(request)
     with session_scope() as db:
         try:
@@ -116,19 +118,19 @@ def execute(body: ExecuteBody, request: Request):
 
 
 @router.get("/presets")
-def presets():
+def presets() -> list[dict[str, Any]]:
     return {"presets": ss.list_presets()}
 
 
 @router.get("/saved")
-def saved_searches(request: Request):
+def saved_searches(request: Request) -> list[dict[str, Any]]:
     user = _require_user(request)
     with session_scope() as db:
         return {"searches": ss.list_saved_searches(db, user.id)}
 
 
 @router.post("/saved", status_code=201)
-def save_search(body: SaveSearchBody, request: Request):
+def save_search(body: SaveSearchBody, request: Request) -> dict[str, Any]:
     user = _require_user(request)
     with session_scope() as db:
         try:
@@ -144,7 +146,7 @@ def save_search(body: SaveSearchBody, request: Request):
 
 
 @router.post("/saved/{search_id}/run")
-def run_saved(search_id: int, body: RunBody, request: Request):
+def run_saved(search_id: int, body: RunBody, request: Request) -> dict[str, Any]:
     user = _require_user(request)
     with session_scope() as db:
         try:
@@ -162,7 +164,7 @@ def run_saved(search_id: int, body: RunBody, request: Request):
 
 
 @router.delete("/saved/{search_id}")
-def delete_saved(search_id: int, request: Request):
+def delete_saved(search_id: int, request: Request) -> dict[str, str]:
     user = _require_user(request)
     with session_scope() as db:
         try:
@@ -173,14 +175,14 @@ def delete_saved(search_id: int, request: Request):
 
 
 @router.get("/history")
-def history(request: Request, limit: int = Query(20, ge=1, le=50)):
+def history(request: Request, limit: int = Query(20, ge=1, le=50)) -> dict[str, Any]:
     user = _require_user(request)
     with session_scope() as db:
         return {"entries": ss.get_search_history(db, user.id, limit=limit)}
 
 
 @router.post("/history/{history_id}/rerun")
-def rerun_history(history_id: int, body: RunBody, request: Request):
+def rerun_history(history_id: int, body: RunBody, request: Request) -> dict[str, Any]:
     user = _require_user(request)
     with session_scope() as db:
         try:

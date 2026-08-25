@@ -20,6 +20,8 @@ Routes:
 
 from __future__ import annotations
 
+from typing import Any
+
 from fastapi import APIRouter, HTTPException, Query, Request
 from pydantic import BaseModel, Field
 
@@ -30,7 +32,7 @@ from app.queries import org_queries as oq
 router = APIRouter(prefix="/api/v1/orgs", tags=["organizations"])
 
 
-def _require_user(request: Request):
+def _require_user(request: Request) -> User:
     return require_user(request)
 
 
@@ -72,7 +74,7 @@ class UpdateSettingsBody(BaseModel):
 
 
 @router.post("", status_code=201)
-def create_organization(body: CreateOrgBody, request: Request):
+def create_organization(body: CreateOrgBody, request: Request) -> dict[str, Any]:
     """Create a new organization. The creator becomes the owner."""
     user = _require_user(request)
     with session_scope() as db:
@@ -89,7 +91,7 @@ def create_organization(body: CreateOrgBody, request: Request):
 
 
 @router.get("")
-def list_organizations(request: Request):
+def list_organizations(request: Request) -> list[dict[str, Any]]:
     """List all organizations the current user belongs to."""
     user = _require_user(request)
     with session_scope() as db:
@@ -97,7 +99,7 @@ def list_organizations(request: Request):
 
 
 @router.get("/{org_id}")
-def get_organization(org_id: int, request: Request):
+def get_organization(org_id: int, request: Request) -> dict[str, Any]:
     """Get organization details. Must be a member."""
     user = _require_user(request)
     with session_scope() as db:
@@ -115,7 +117,7 @@ def get_organization(org_id: int, request: Request):
 
 
 @router.post("/{org_id}/invite", status_code=201)
-def invite_member(org_id: int, body: InviteMemberBody, request: Request):
+def invite_member(org_id: int, body: InviteMemberBody, request: Request) -> dict[str, str]:
     """Invite a member to the organization."""
     user = _require_user(request)
     with session_scope() as db:
@@ -128,7 +130,7 @@ def invite_member(org_id: int, body: InviteMemberBody, request: Request):
 
 
 @router.post("/{org_id}/accept-invite")
-def accept_invite(org_id: int, body: AcceptInviteBody, request: Request):
+def accept_invite(org_id: int, body: AcceptInviteBody, request: Request) -> dict[str, str]:
     """Accept an org invitation using the invite token."""
     user = _require_user(request)
     with session_scope() as db:
@@ -139,7 +141,7 @@ def accept_invite(org_id: int, body: AcceptInviteBody, request: Request):
 
 
 @router.get("/{org_id}/members")
-def list_members(org_id: int, request: Request):
+def list_members(org_id: int, request: Request) -> list[dict[str, Any]]:
     """List all members of the organization."""
     user = _require_user(request)
     with session_scope() as db:
@@ -151,7 +153,7 @@ def list_members(org_id: int, request: Request):
 @router.post("/{org_id}/members/{target_user_id}/role")
 def change_member_role(
     org_id: int, target_user_id: int, body: ChangeRoleBody, request: Request
-):
+) -> dict[str, str]:
     """Change a member's role. Owner/manager only."""
     user = _require_user(request)
     with session_scope() as db:
@@ -164,7 +166,7 @@ def change_member_role(
 
 
 @router.post("/{org_id}/members/{target_user_id}/remove")
-def remove_member(org_id: int, target_user_id: int, request: Request):
+def remove_member(org_id: int, target_user_id: int, request: Request) -> dict[str, str]:
     """Remove a member from the organization."""
     user = _require_user(request)
     with session_scope() as db:
@@ -182,7 +184,7 @@ def remove_member(org_id: int, target_user_id: int, request: Request):
 
 
 @router.get("/{org_id}/settings")
-def get_settings(org_id: int, request: Request):
+def get_settings(org_id: int, request: Request) -> dict[str, Any]:
     """Get organization settings. Must be a member."""
     user = _require_user(request)
     with session_scope() as db:
@@ -195,7 +197,7 @@ def get_settings(org_id: int, request: Request):
 
 
 @router.put("/{org_id}/settings")
-def update_settings(org_id: int, body: UpdateSettingsBody, request: Request):
+def update_settings(org_id: int, body: UpdateSettingsBody, request: Request) -> dict[str, Any]:
     """Update organization settings. Owner/manager only."""
     user = _require_user(request)
     with session_scope() as db:
@@ -219,7 +221,7 @@ def get_audit_log(
     request: Request,
     limit: int = Query(50, ge=1, le=200),
     offset: int = Query(0, ge=0),
-):
+) -> list[dict[str, Any]]:
     """Get audit log entries. Owner/manager only."""
     user = _require_user(request)
     with session_scope() as db:
