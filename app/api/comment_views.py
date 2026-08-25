@@ -13,6 +13,8 @@ Routes:
 
 from __future__ import annotations
 
+from typing import Any
+
 import re
 
 from fastapi import APIRouter, HTTPException, Query, Request
@@ -26,7 +28,7 @@ from app.queries import org_queries as oq
 router = APIRouter(prefix="/api/v1/comments", tags=["comments"])
 
 
-def _require_user(request: Request):
+def _require_user(request: Request) -> User:
     return require_user(request)
 
 
@@ -57,7 +59,7 @@ def list_comments(
     org_id: int = Query(...),
     limit: int = Query(50, ge=1, le=200),
     offset: int = Query(0, ge=0),
-):
+) -> list[dict[str, Any]]:
     """List comments on a resource. Must be an org member with resource access."""
     user = _require_user(request)
     with session_scope() as db:
@@ -100,7 +102,7 @@ def add_comment(
     body: AddCommentBody,
     request: Request,
     org_id: int = Query(...),
-):
+) -> dict[str, Any]:
     """Add a comment to a resource. Parses @mentions for notifications."""
     user = _require_user(request)
     with session_scope() as db:
@@ -165,7 +167,7 @@ def add_comment(
 
 
 @router.put("/{comment_id}")
-def edit_comment(comment_id: int, body: EditCommentBody, request: Request):
+def edit_comment(comment_id: int, body: EditCommentBody, request: Request) -> dict[str, Any]:
     """Edit a comment. Only the author can edit. Org membership verified."""
     user = _require_user(request)
     with session_scope() as db:
@@ -188,7 +190,7 @@ def edit_comment(comment_id: int, body: EditCommentBody, request: Request):
 
 
 @router.delete("/{comment_id}")
-def delete_comment(comment_id: int, request: Request):
+def delete_comment(comment_id: int, request: Request) -> dict[str, str]:
     """Soft-delete a comment. Author or org manager/owner can delete.
     Org membership verified to prevent cross-org deletion."""
     user = _require_user(request)
@@ -226,7 +228,7 @@ def activity_feed(
     request: Request,
     org_id: int = Query(...),
     limit: int = Query(50, ge=1, le=200),
-):
+) -> list[dict[str, Any]]:
     """Get activity feed for a resource (comments + status changes)."""
     user = _require_user(request)
     with session_scope() as db:

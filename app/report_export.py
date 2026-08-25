@@ -278,7 +278,7 @@ def _sin(deg: float) -> float:
 # ---------------------------------------------------------------------------
 
 
-def _header_footer(canvas, doc):
+def _header_footer(canvas, doc) -> tuple[str, str]:
     canvas.saveState()
     canvas.setFillColor(SURFACE)
     canvas.rect(0, _PAGE_H - 30 * mm, _PAGE_W, 30 * mm, stroke=0, fill=1)

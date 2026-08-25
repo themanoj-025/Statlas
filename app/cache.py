@@ -162,7 +162,7 @@ def invalidate_pattern(pattern: str) -> int:
         return 0
 
 
-def cached(ttl: int = 3600, prefix: str = ""):
+def cached(ttl: int = 3600, prefix: str = "") -> Any:
     """Decorator that caches a function's return value.
 
     Usage::

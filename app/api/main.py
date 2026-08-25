@@ -343,7 +343,7 @@ def _log_player_view(request: Request, player_id: int) -> None:
 
 
 @app.get("/api/v1/health", response_model=HealthResponse)
-def health():
+def health() -> dict[str, Any]:
     """Health check that verifies database and Redis connectivity."""
     settings = get_settings()
     db_status = "healthy"
@@ -375,7 +375,7 @@ def health():
 
 
 @app.get("/api/v1/readiness")
-def readiness():
+def readiness() -> dict[str, Any]:
     """Readiness check — returns 503 if not ready to serve traffic."""
     try:
         from sqlalchemy import text
@@ -388,7 +388,7 @@ def readiness():
 
 
 @app.get("/api/v1/meta", response_model=MetaResponse)
-def meta():
+def meta() -> dict[str, Any]:
     from app.cache import get_cache
 
     cache = get_cache()
@@ -426,7 +426,7 @@ def meta():
 
 
 @app.get("/api/v1/leagues", response_model=list[LeagueEntry])
-def leagues():
+def leagues() -> list[dict[str, Any]]:
     from app.cache import get_cache
     from app.queries.league_queries import get_league_catalog
 
@@ -444,7 +444,7 @@ def leagues():
 
 
 @app.get("/api/v1/leagues/{league_slug}")
-def league_detail(league_slug: str):
+def league_detail(league_slug: str) -> dict[str, Any]:
     from app.queries.league_queries import get_league_detail
 
     detail = _with_session(get_league_detail, league_slug)
@@ -454,7 +454,7 @@ def league_detail(league_slug: str):
 
 
 @app.get("/api/v1/leagues/{league_slug}/hub")
-def league_hub(league_slug: str, season: str | None = None):
+def league_hub(league_slug: str, season: str | None = None) -> dict[str, Any]:
     from app.queries.league_page_queries import get_league_hub_data
 
     hub = _with_session(get_league_hub_data, league_slug, season=season)
@@ -469,7 +469,7 @@ def league_stats(
     metric: str = Query("si_gls_p90"),
     season: str | None = None,
     limit: int = Query(200, ge=1, le=1000),
-):
+) -> dict[str, Any]:
     from app.queries.league_queries import get_league_stats_table
 
     return _with_session(
@@ -496,7 +496,7 @@ def leaderboard(
     limit: int = Query(25, ge=1, le=100),
     sort_by: str = Query("value"),
     sort_dir: str | None = Query(None),
-):
+) -> dict[str, Any]:
     from app.cache import get_cache
     from app.queries.leaderboard_queries import get_leaderboard_filtered
 
@@ -554,14 +554,14 @@ def leaderboard(
 @app.get("/api/v1/players/search", response_model=list[PlayerSearchResult])
 def player_search(
     q: str = Query(..., min_length=1, max_length=64), limit: int = Query(8, ge=1, le=25)
-):
+) -> list[dict[str, Any]]:
     from app.queries.player_queries import search_players
 
     return _with_session(search_players, q, limit=limit)
 
 
 @app.get("/api/v1/players/by-slug/{slug}", response_model=PlayerProfileResponse)
-def player_by_slug(slug: str, request: Request):
+def player_by_slug(slug: str, request: Request) -> dict[str, Any]:
     from app.api.player_view import build_player_payload
     from app.cache import get_cache
     from app.queries.player_queries import resolve_player_slug
@@ -601,7 +601,7 @@ def player_by_slug(slug: str, request: Request):
 
 
 @app.get("/api/v1/players/{player_id}/similar", response_model=list[SimilarPlayerEntry])
-def player_similar(player_id: int, limit: int = Query(5, ge=1, le=10)):
+def player_similar(player_id: int, limit: int = Query(5, ge=1, le=10)) -> list[dict[str, Any]]:
     from app.cache import get_cache
     from app.queries.player_queries import get_player_profile
     from app.queries.similar_players import get_similar_players
@@ -636,7 +636,7 @@ def player_trend(
     player_id: int,
     metric: str = Query(...),
     window: int = Query(5, ge=1, le=50),
-):
+) -> dict[str, Any]:
     from app.queries.trend_queries import get_player_trend
 
     with session_scope() as db:
@@ -652,7 +652,7 @@ def player_trend(
 
 
 @app.get("/api/v1/players/{player_id}/events")
-def player_event_coverage(player_id: int):
+def player_event_coverage(player_id: int) -> dict[str, Any]:
     from app.queries.event_queries import get_player_event_coverage
 
     return _with_session(get_player_event_coverage, player_id)
@@ -663,7 +663,7 @@ def player_event_matches(
     player_id: int,
     competition: str | None = None,
     season: str | None = None,
-):
+) -> list[dict[str, Any]]:
     from app.queries.event_queries import get_player_event_matches
 
     return _with_session(
@@ -677,7 +677,7 @@ def player_event_shots(
     match: str | None = None,
     competition: str | None = None,
     season: str | None = None,
-):
+) -> list[dict[str, Any]]:
     from app.queries.event_queries import get_player_events
 
     return _with_session(
@@ -696,7 +696,7 @@ def player_event_passes(
     match: str | None = None,
     competition: str | None = None,
     season: str | None = None,
-):
+) -> list[dict[str, Any]]:
     from app.queries.event_queries import get_player_events
 
     return _with_session(
@@ -715,7 +715,7 @@ def player_event_passes(
 
 
 @app.get("/api/v1/clubs/{league_slug}/{team_slug}")
-def team_profile(league_slug: str, team_slug: str, season: str | None = None):
+def team_profile(league_slug: str, team_slug: str, season: str | None = None) -> dict[str, Any]:
     from app.queries.team_queries import get_team_profile
 
     with session_scope() as db:
@@ -736,7 +736,7 @@ def team_profile(league_slug: str, team_slug: str, season: str | None = None):
 
 
 @app.get("/api/v1/coverage", response_model=CoverageResponse)
-def coverage(league_id: int | None = None):
+def coverage(league_id: int | None = None) -> dict[str, Any]:
     from app.queries.coverage_queries import get_data_coverage
     from app.queries.event_queries import get_statsbomb_competitions
 
@@ -757,7 +757,7 @@ def coverage(league_id: int | None = None):
 
 
 @app.get("/api/v1/positions", response_model=list[PositionEntry])
-def positions():
+def positions() -> list[dict[str, Any]]:
     from app.cache import get_cache
     meta = public_meta()
     from app.queries.leaderboard_queries import get_qualifying_counts
@@ -785,7 +785,7 @@ def positions():
 
 
 @app.get("/api/v1/methodology")
-def methodology():
+def methodology() -> dict[str, Any]:
     return public_meta()
 
 
@@ -795,7 +795,7 @@ def methodology():
 
 
 @app.get("/metrics")
-def metrics():
+def metrics() -> Any:
     """Prometheus-format metrics for production monitoring.
 
     Exposes request counts, durations (histogram), error counts, cache stats,

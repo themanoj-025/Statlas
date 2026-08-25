@@ -16,6 +16,8 @@ verification gate runs identically on every generation regardless of narrator.
 
 from __future__ import annotations
 
+from typing import Any
+
 import logging
 
 from fastapi import APIRouter, HTTPException, Request
@@ -36,7 +38,7 @@ router = APIRouter(prefix="/api/v1/reports", tags=["reports"])
 _require_user = require_user
 
 
-def _narrator():
+def _narrator() -> Any:
     if get_settings().reports_dev_narrator:
         return reports.deterministic_narrator
     return None
@@ -68,21 +70,21 @@ class GenerateBody(BaseModel):
 
 
 @router.get("/quota")
-def report_quota(request: Request):
+def report_quota(request: Request) -> dict[str, Any]:
     user = _require_user(request)
     with session_scope() as db:
         return reports.get_report_quota(db, user.id)
 
 
 @router.get("")
-def list_reports(request: Request):
+def list_reports(request: Request) -> list[dict[str, Any]]:
     user = _require_user(request)
     with session_scope() as db:
         return {"reports": reports.list_reports(db, user.id)}
 
 
 @router.post("", status_code=201)
-def generate(body: GenerateBody, request: Request):
+def generate(body: GenerateBody, request: Request) -> dict[str, Any]:
     """Generate a scouting report. Rate-limited to 10 per user per hour."""
     from app.rate_limiting import get_rate_limiter
 
@@ -110,7 +112,7 @@ def generate(body: GenerateBody, request: Request):
 
 
 @router.get("/{report_id}")
-def get_report(report_id: int, request: Request):
+def get_report(report_id: int, request: Request) -> dict[str, Any]:
     user = _require_user(request)
     with session_scope() as db:
         try:
@@ -120,7 +122,7 @@ def get_report(report_id: int, request: Request):
 
 
 @router.post("/{report_id}/regenerate", status_code=201)
-def regenerate(report_id: int, request: Request):
+def regenerate(report_id: int, request: Request) -> dict[str, Any]:
     """Re-run the stored report's definition against CURRENT data (the stored
     report itself is never mutated — a fresh report row is created, matching
     the Phase 8 'results may have changed since last run' discipline).
@@ -157,7 +159,7 @@ def regenerate(report_id: int, request: Request):
 
 
 @router.delete("/{report_id}", status_code=204)
-def delete_report(report_id: int, request: Request):
+def delete_report(report_id: int, request: Request) -> dict[str, str]:
     user = _require_user(request)
     with session_scope() as db:
         try:
@@ -172,7 +174,7 @@ def delete_report(report_id: int, request: Request):
 # ---------------------------------------------------------------------------
 
 
-def _load_verified(db, user_id: int, report_id: int):
+def _load_verified(db, user_id: int, report_id: int) -> Any:
     payload = reports.get_report(db, user_id, report_id)
     if payload["status"] == "needs_review":
         raise HTTPException(
@@ -183,7 +185,7 @@ def _load_verified(db, user_id: int, report_id: int):
 
 
 @router.get("/{report_id}/export.json")
-def export_json(report_id: int, request: Request):
+def export_json(report_id: int, request: Request) -> dict[str, Any]:
     user = _require_user(request)
     with session_scope() as db:
         try:
@@ -201,7 +203,7 @@ def export_json(report_id: int, request: Request):
 
 
 @router.get("/{report_id}/export.pdf")
-def export_pdf(report_id: int, request: Request):
+def export_pdf(report_id: int, request: Request) -> Any:
     user = _require_user(request)
     with session_scope() as db:
         try:
@@ -221,7 +223,7 @@ def export_pdf(report_id: int, request: Request):
 
 
 @router.get("/{report_id}/export.csv")
-def export_csv(report_id: int, request: Request):
+def export_csv(report_id: int, request: Request) -> Any:
     user = _require_user(request)
     with session_scope() as db:
         try:

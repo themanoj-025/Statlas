@@ -13,6 +13,8 @@ this module only maps the domain errors to HTTP statuses:
 
 from __future__ import annotations
 
+from typing import Any
+
 import logging
 
 from fastapi import APIRouter, HTTPException, Query, Request
@@ -95,7 +97,7 @@ class TagBody(BaseModel):
 
 
 @router.get("")
-def workspace_overview(request: Request):
+def workspace_overview(request: Request) -> dict[str, Any]:
     user = _require_user(request)
     with session_scope() as db:
         shortlists = wq.list_shortlists(db, user.id)
@@ -107,21 +109,21 @@ def tag_suggestions(
     request: Request,
     prefix: str = Query("", max_length=64),
     limit: int = Query(10, ge=1, le=25),
-):
+) -> list[str]:
     user = _require_user(request)
     with session_scope() as db:
         return {"tags": wq.get_user_tag_suggestions(db, user.id, prefix, limit=limit)}
 
 
 @router.get("/memberships")
-def memberships(request: Request, player_id: int):
+def memberships(request: Request, player_id: int) -> list[dict[str, Any]]:
     user = _require_user(request)
     with session_scope() as db:
         return {"shortlist_ids": wq.get_shortlist_memberships(db, user.id, player_id)}
 
 
 @router.post("", status_code=201)
-def create_shortlist(body: CreateShortlistBody, request: Request):
+def create_shortlist(body: CreateShortlistBody, request: Request) -> dict[str, Any]:
     user = _require_user(request)
     with session_scope() as db:
         try:
@@ -133,7 +135,7 @@ def create_shortlist(body: CreateShortlistBody, request: Request):
 
 
 @router.post("/{shortlist_id}/remove")
-def remove_shortlist(shortlist_id: int, request: Request):
+def remove_shortlist(shortlist_id: int, request: Request) -> dict[str, str]:
     user = _require_user(request)
     with session_scope() as db:
         try:
@@ -144,7 +146,7 @@ def remove_shortlist(shortlist_id: int, request: Request):
 
 
 @router.get("/{shortlist_id}")
-def shortlist_detail(shortlist_id: int, request: Request):
+def shortlist_detail(shortlist_id: int, request: Request) -> dict[str, Any]:
     user = _require_user(request)
     with session_scope() as db:
         try:
@@ -155,7 +157,7 @@ def shortlist_detail(shortlist_id: int, request: Request):
 
 
 @router.post("/{shortlist_id}/entries", status_code=201)
-def add_entry(shortlist_id: int, body: AddEntryBody, request: Request):
+def add_entry(shortlist_id: int, body: AddEntryBody, request: Request) -> dict[str, Any]:
     user = _require_user(request)
     with session_scope() as db:
         try:
@@ -171,7 +173,7 @@ def add_entry(shortlist_id: int, body: AddEntryBody, request: Request):
 
 
 @router.post("/entries/{entry_id}/status")
-def change_status(entry_id: int, body: StatusBody, request: Request):
+def change_status(entry_id: int, body: StatusBody, request: Request) -> dict[str, Any]:
     user = _require_user(request)
     with session_scope() as db:
         try:
@@ -183,7 +185,7 @@ def change_status(entry_id: int, body: StatusBody, request: Request):
 
 
 @router.post("/entries/{entry_id}/priority")
-def change_priority(entry_id: int, body: PriorityBody, request: Request):
+def change_priority(entry_id: int, body: PriorityBody, request: Request) -> dict[str, Any]:
     user = _require_user(request)
     with session_scope() as db:
         try:
@@ -193,7 +195,7 @@ def change_priority(entry_id: int, body: PriorityBody, request: Request):
 
 
 @router.post("/entries/{entry_id}/notes", status_code=201)
-def add_note(entry_id: int, body: NoteBody, request: Request):
+def add_note(entry_id: int, body: NoteBody, request: Request) -> dict[str, Any]:
     user = _require_user(request)
     with session_scope() as db:
         try:
@@ -203,7 +205,7 @@ def add_note(entry_id: int, body: NoteBody, request: Request):
 
 
 @router.post("/entries/{entry_id}/tags", status_code=201)
-def add_tag(entry_id: int, body: TagBody, request: Request):
+def add_tag(entry_id: int, body: TagBody, request: Request) -> dict[str, Any]:
     user = _require_user(request)
     with session_scope() as db:
         try:
@@ -213,7 +215,7 @@ def add_tag(entry_id: int, body: TagBody, request: Request):
 
 
 @router.post("/entries/{entry_id}/tags/remove")
-def remove_tag(entry_id: int, body: TagBody, request: Request):
+def remove_tag(entry_id: int, body: TagBody, request: Request) -> dict[str, str]:
     user = _require_user(request)
     with session_scope() as db:
         try:
@@ -224,7 +226,7 @@ def remove_tag(entry_id: int, body: TagBody, request: Request):
 
 
 @router.post("/entries/{entry_id}/remove")
-def remove_entry(entry_id: int, request: Request):
+def remove_entry(entry_id: int, request: Request) -> dict[str, str]:
     user = _require_user(request)
     with session_scope() as db:
         try:

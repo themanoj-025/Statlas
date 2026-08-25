@@ -13,6 +13,8 @@ statuses:
 
 from __future__ import annotations
 
+from typing import Any
+
 import hashlib
 import hmac
 import logging
@@ -70,14 +72,14 @@ class PreferencesBody(BaseModel):
 
 
 @router.get("")
-def my_watches(request: Request):
+def my_watches(request: Request) -> list[dict[str, Any]]:
     user = _require_user(request)
     with session_scope() as db:
         return {"watches": wq.list_watches(db, user.id)}
 
 
 @router.post("", status_code=201)
-def follow(body: FollowBody, request: Request):
+def follow(body: FollowBody, request: Request) -> dict[str, Any]:
     user = _require_user(request)
     with session_scope() as db:
         try:
@@ -93,7 +95,7 @@ def follow(body: FollowBody, request: Request):
 
 
 @router.post("/{watch_id}/unfollow")
-def unfollow(watch_id: int, request: Request):
+def unfollow(watch_id: int, request: Request) -> dict[str, str]:
     user = _require_user(request)
     with session_scope() as db:
         try:
@@ -114,7 +116,7 @@ def alerts(
     include_read: bool = Query(False),
     include_dismissed: bool = Query(False),
     limit: int = Query(50, ge=1, le=200),
-):
+) -> list[dict[str, Any]]:
     user = _require_user(request)
     with session_scope() as db:
         return {
@@ -129,7 +131,7 @@ def alerts(
 
 
 @router.get("/alerts/{alert_id}")
-def alert_detail(alert_id: int, request: Request):
+def alert_detail(alert_id: int, request: Request) -> dict[str, Any]:
     user = _require_user(request)
     with session_scope() as db:
         try:
@@ -139,7 +141,7 @@ def alert_detail(alert_id: int, request: Request):
 
 
 @router.post("/alerts/{alert_id}/read")
-def mark_read(alert_id: int, request: Request):
+def mark_read(alert_id: int, request: Request) -> dict[str, str]:
     user = _require_user(request)
     with session_scope() as db:
         try:
@@ -150,7 +152,7 @@ def mark_read(alert_id: int, request: Request):
 
 
 @router.post("/alerts/{alert_id}/dismiss")
-def dismiss(alert_id: int, request: Request):
+def dismiss(alert_id: int, request: Request) -> dict[str, str]:
     user = _require_user(request)
     with session_scope() as db:
         try:
@@ -166,14 +168,14 @@ def dismiss(alert_id: int, request: Request):
 
 
 @router.get("/preferences")
-def preferences(request: Request):
+def preferences(request: Request) -> dict[str, Any]:
     user = _require_user(request)
     with session_scope() as db:
         return wq.get_preferences(db, user.id)
 
 
 @router.put("/preferences")
-def update_preferences(body: PreferencesBody, request: Request):
+def update_preferences(body: PreferencesBody, request: Request) -> dict[str, Any]:
     user = _require_user(request)
     with session_scope() as db:
         try:
@@ -189,7 +191,7 @@ def update_preferences(body: PreferencesBody, request: Request):
 
 
 @router.post("/preferences/rotate-token")
-def rotate_token(request: Request):
+def rotate_token(request: Request) -> dict[str, Any]:
     user = _require_user(request)
     with session_scope() as db:
         return wq.rotate_unsubscribe_token(db, user.id)
@@ -214,7 +216,7 @@ def unsubscribe(
     user: int,
     token: str = Query(..., max_length=64),
     sig: str = Query(..., max_length=64),
-):
+) -> dict[str, str]:
     """One-click unsubscribe from email. Invalid/expired signatures are
     rejected with an honest message rather than silently doing nothing."""
     if not _check_sig(user, token, sig):
