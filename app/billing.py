@@ -203,7 +203,7 @@ def process_webhook(db: Session, event: dict[str, Any]) -> dict[str, Any]:
     try:
         db.flush()  # fires the unique constraint -> protects against races
         _dispatch(db, event, row)
-    except Exception:
+    except (ValueError, KeyError, TypeError, OSError):
         db.rollback()
         logger.exception(
             "webhook processing failed for event %s (%s)", event_id, event_type
