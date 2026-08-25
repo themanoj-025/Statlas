@@ -7,6 +7,8 @@ queries/dashboard_queries.py and activity.py.
 
 from __future__ import annotations
 
+from typing import Any
+
 import logging
 
 from fastapi import APIRouter, HTTPException, Request
@@ -38,7 +40,7 @@ class ActivityRequest(BaseModel):
 
 
 @router.post("/activity")
-def log_user_activity(request: Request, body: ActivityRequest):
+def log_user_activity(request: Request, body: ActivityRequest) -> dict[str, str]:
     """Log a user activity event (with 60s deduplication).
 
     Called from the frontend on page load (player/team profile views)
@@ -86,7 +88,7 @@ def log_user_activity(request: Request, body: ActivityRequest):
 
 
 @router.get("/summary")
-def dashboard_summary(request: Request):
+def dashboard_summary(request: Request) -> dict[str, Any]:
     """Aggregate counts for workspace shortcuts + recent activity + trending
     + recommended — a single round-trip for the dashboard page.
     """
@@ -142,7 +144,7 @@ class SavePlayerRequest(BaseModel):
 
 
 @router.post("/saved-players")
-def save_player_endpoint(request: Request, body: SavePlayerRequest):
+def save_player_endpoint(request: Request, body: SavePlayerRequest) -> dict[str, str]:
     """Bookmark a player (lightweight save, distinct from shortlists)."""
     user = _require_user(request)
     with session_scope() as db:
@@ -151,7 +153,7 @@ def save_player_endpoint(request: Request, body: SavePlayerRequest):
 
 
 @router.delete("/saved-players/{player_id}")
-def unsave_player_endpoint(request: Request, player_id: int):
+def unsave_player_endpoint(request: Request, player_id: int) -> dict[str, str]:
     """Remove a player from the user's saved list."""
     user = _require_user(request)
     with session_scope() as db:
@@ -169,7 +171,7 @@ class DismissRequest(BaseModel):
 
 
 @router.post("/dismiss-recommendation")
-def dismiss_recommendation_endpoint(request: Request, body: DismissRequest):
+def dismiss_recommendation_endpoint(request: Request, body: DismissRequest) -> dict[str, str]:
     """Dismiss a recommended player (won't reappear for 30 days)."""
     user = _require_user(request)
     with session_scope() as db:

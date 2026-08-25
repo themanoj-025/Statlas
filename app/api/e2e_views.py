@@ -50,7 +50,7 @@ class GrantProBody(BaseModel):
 @router.post("/grant-pro")
 def grant_pro(
     body: GrantProBody, request: Request
-):  # noqa: ARG001 — Request kept for symmetry
+) -> dict[str, str]:  # noqa: ARG001 — Request kept for symmetry
     """Give a registered account active Pro access (an e2e fixture)."""
     _require_e2e()
     with session_scope() as db:
@@ -86,7 +86,7 @@ class SeedAlertBody(BaseModel):
 
 
 @router.post("/seed-alert")
-def seed_alert(body: SeedAlertBody):
+def seed_alert(body: SeedAlertBody) -> dict[str, str]:
     """Follow a player for the account and generate a REAL percentile-movement
     alert via the actual detection job (an e2e fixture; disabled outside e2e).
 

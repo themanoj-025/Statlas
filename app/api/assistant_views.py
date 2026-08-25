@@ -11,6 +11,8 @@ POST /api/v1/assistant/chat — the grounded function-calling assistant.
 
 from __future__ import annotations
 
+from typing import Any
+
 import logging
 
 from fastapi import APIRouter, HTTPException, Request
@@ -50,7 +52,7 @@ def _rate_limit(user_id: int) -> None:
 
 
 @router.post("/assistant/chat")
-def chat(body: ChatBody, request: Request):
+def chat(body: ChatBody, request: Request) -> dict[str, Any]:
     if not assistant.assistant_configured():
         raise HTTPException(
             status_code=503,
@@ -80,7 +82,7 @@ def chat(body: ChatBody, request: Request):
 
 
 @router.get("/assistant/quota")
-def assistant_quota(request: Request):
+def assistant_quota(request: Request) -> dict[str, Any]:
     user = require_user(request)
     with session_scope() as db:
         from app.models import User as UserModel

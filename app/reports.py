@@ -486,7 +486,7 @@ def gather_report_context(
     return context
 
 
-def _owned_entry_for_report(db: Session, entry_id: int, user_id: int | None):
+def _owned_entry_for_report(db: Session, entry_id: int, user_id: int | None) -> Any:
     """The shortlist entry for a report — must belong to the requesting user
     (D4). Foreign/missing entries raise ReportNotFound -> 404, the Phase 7/8
     never-leak-existence rule."""

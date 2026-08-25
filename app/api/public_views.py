@@ -60,14 +60,14 @@ def create_api_key(body: KeyCreateBody, request: Request):
 
 
 @router.get("/keys")
-def list_keys(request: Request):
+def list_keys(request: Request) -> list[dict[str, Any]]:
     user = _require_user(request)
     with session_scope() as db:
         return {"keys": api_keys.list_api_keys(db, user.id)}
 
 
 @router.delete("/keys/{key_id}")
-def revoke_key(key_id: int, request: Request):
+def revoke_key(key_id: int, request: Request) -> dict[str, str]:
     user = _require_user(request)
     with session_scope() as db:
         ok = api_keys.revoke_api_key(db, user.id, key_id)
@@ -153,7 +153,7 @@ def public_search(
     request: Request,
     q: str = Query(..., min_length=1, max_length=64),
     _: tuple = Depends(api_key_dependency),
-):
+) -> dict[str, Any]:
     results = _run(player_queries.search_players, q, 10)
     return {"results": results}
 
@@ -162,7 +162,7 @@ def public_search(
 def public_percentiles(
     request: Request, player_id: int, _: tuple = Depends(api_key_dependency),
     response: Response = None,  # type: ignore[assignment]
-):
+) -> dict[str, Any]:
     data = _run(player_queries.get_player_percentiles, player_id)
     if data is None:
         raise HTTPException(
@@ -183,7 +183,7 @@ def public_leaderboard(
     limit: int = Query(25, ge=1, le=100),
     _: tuple = Depends(api_key_dependency),
     response: Response = None,  # type: ignore[assignment]
-):
+) -> dict[str, Any]:
     if not league:
         raise HTTPException(
             status_code=400,

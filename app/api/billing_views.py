@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import logging
 from datetime import datetime, timezone
+from typing import Any
 
 from fastapi import APIRouter, HTTPException, Request, Response
 from pydantic import BaseModel, EmailStr, Field
@@ -84,7 +85,7 @@ _require_user = require_user
 
 
 @router.post("/auth/register", status_code=201)
-def register(body: RegisterBody, response: Response, request: Request):
+def register(body: RegisterBody, response: Response, request: Request) -> dict[str, Any]:
     # Rate limit: 5 registrations per IP per 10 minutes
     from app.rate_limiting import get_rate_limiter
 
@@ -117,7 +118,7 @@ def register(body: RegisterBody, response: Response, request: Request):
 
 
 @router.post("/auth/login")
-def login(body: LoginBody, response: Response):
+def login(body: LoginBody, response: Response) -> dict[str, Any]:
     email_lower = body.email.lower()
     # Rate limiting: check lockout first (Phase 12 — Part C2)
     locked, retry_after = auth.is_login_locked(email_lower)
@@ -140,7 +141,7 @@ def login(body: LoginBody, response: Response):
 
 
 @router.post("/auth/logout")
-def logout(request: Request, response: Response):
+def logout(request: Request, response: Response) -> dict[str, bool]:
     with session_scope() as db:
         auth.revoke_session(db, _session_token(request))
     response.delete_cookie(get_settings().session_cookie_name, path="/")
@@ -149,7 +150,7 @@ def logout(request: Request, response: Response):
 
 
 @router.get("/auth/me")
-def me(request: Request):
+def me(request: Request) -> dict[str, Any]:
     with session_scope() as db:
         user = auth.user_from_session(db, _session_token(request))
         if user is None:
@@ -175,7 +176,7 @@ class PasswordResetConfirmBody(BaseModel):
 
 
 @router.post("/auth/password-reset/request")
-def password_reset_request(request: Request, body: PasswordResetRequestBody):
+def password_reset_request(request: Request, body: PasswordResetRequestBody) -> dict[str, str]:
     """Request a password reset. Always returns the same response to prevent
     account enumeration. Rate-limited to 3/hour per email AND 10/hour per IP."""
     from app.rate_limiting import get_rate_limiter
@@ -221,7 +222,7 @@ def password_reset_request(request: Request, body: PasswordResetRequestBody):
 
 
 @router.post("/auth/password-reset/confirm")
-def password_reset_confirm(request: Request, body: PasswordResetConfirmBody):
+def password_reset_confirm(request: Request, body: PasswordResetConfirmBody) -> dict[str, str]:
     """Confirm a password reset with the token. Revokes all existing sessions.
     Rate-limited to 10 attempts per hour per IP to prevent token brute-force."""
     from app.rate_limiting import get_rate_limiter
@@ -269,7 +270,7 @@ class VerifyEmailConfirmBody(BaseModel):
 
 
 @router.post("/auth/verify-email/request")
-def verify_email_request(request: Request, body: VerifyEmailRequestBody | None = None):
+def verify_email_request(request: Request, body: VerifyEmailRequestBody | None = None) -> dict[str, str]:
     """Request email verification for the signed-in user.
     Rate-limited to 5 per user per hour to prevent email spam."""
     from app.rate_limiting import get_rate_limiter
@@ -291,7 +292,7 @@ def verify_email_request(request: Request, body: VerifyEmailRequestBody | None =
 
 
 @router.post("/auth/verify-email/confirm")
-def verify_email_confirm(body: VerifyEmailConfirmBody):
+def verify_email_confirm(body: VerifyEmailConfirmBody) -> dict[str, str]:
     """Confirm email verification."""
     with session_scope() as db:
         user_id = auth.consume_email_verification_token(db, body.token)
@@ -332,7 +333,7 @@ class AccountDeleteBody(BaseModel):
 
 
 @router.put("/auth/profile")
-def update_profile(request: Request, body: ProfileUpdateBody):
+def update_profile(request: Request, body: ProfileUpdateBody) -> dict[str, Any]:
     """Update the signed-in user's profile."""
     user = _require_user(request)
     with session_scope() as db:
@@ -348,7 +349,7 @@ def update_profile(request: Request, body: ProfileUpdateBody):
 
 
 @router.post("/auth/change-password")
-def change_password(request: Request, body: ChangePasswordBody, response: Response):
+def change_password(request: Request, body: ChangePasswordBody, response: Response) -> dict[str, str]:
     """Change password for the signed-in user. Revokes all other sessions.
     Rate-limited to 5 attempts per 10 minutes to prevent brute force."""
     from app.rate_limiting import get_rate_limiter
@@ -381,7 +382,7 @@ def change_password(request: Request, body: ChangePasswordBody, response: Respon
 
 
 @router.post("/auth/delete-account")
-def delete_account(request: Request, body: AccountDeleteBody):
+def delete_account(request: Request, body: AccountDeleteBody) -> dict[str, str]:
     """Request account deletion. Sets pending_deletion with a 30-day grace period."""
     user = _require_user(request)
     if not body.confirm_delete:
@@ -394,7 +395,7 @@ def delete_account(request: Request, body: AccountDeleteBody):
 
 
 @router.post("/auth/cancel-deletion")
-def cancel_deletion(request: Request):
+def cancel_deletion(request: Request) -> dict[str, str]:
     """Cancel a pending account deletion."""
     user = _require_user(request)
     with session_scope() as db:
@@ -444,7 +445,7 @@ class CheckoutBody(BaseModel):
 
 
 @router.post("/billing/checkout")
-def checkout(body: CheckoutBody, request: Request):
+def checkout(body: CheckoutBody, request: Request) -> dict[str, Any]:
     user = _require_user(request)
     success_url = _validate_redirect_url(body.success_url)
     cancel_url = _validate_redirect_url(body.cancel_url)
@@ -458,7 +459,7 @@ def checkout(body: CheckoutBody, request: Request):
 
 
 @router.post("/billing/portal")
-def billing_portal(request: Request, body: dict[str, str] | None = None):
+def billing_portal(request: Request, body: dict[str, str] | None = None) -> dict[str, Any]:
     user = _require_user(request)
     return_url = _validate_redirect_url((body or {}).get("return_url") or "/account")
     try:
@@ -490,7 +491,7 @@ async def stripe_webhook(request: Request):
 
 
 @router.get("/billing/subscription")
-def subscription_status(request: Request):
+def subscription_status(request: Request) -> dict[str, Any]:
     user = _require_user(request)
     with session_scope() as db:
         sub = auth.current_subscription(db, user.id)
@@ -514,7 +515,7 @@ def subscription_status(request: Request):
 
 
 @router.get("/billing/limits")
-def plan_limits(request: Request):
+def plan_limits(request: Request) -> dict[str, Any]:
     """What the CURRENT plan can do — the honest upsell data source (A4)."""
     with session_scope() as db:
         user = auth.user_from_session(db, _session_token(request))
