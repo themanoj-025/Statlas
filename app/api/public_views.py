@@ -161,7 +161,7 @@ def public_search(
 @router.get("/public/players/{player_id}/percentiles")
 def public_percentiles(
     request: Request, player_id: int, _: tuple = Depends(api_key_dependency),
-    response: Response = None,  # type: ignore[assignment]
+    response: Response | None = None,
 ) -> dict[str, Any]:
     data = _run(player_queries.get_player_percentiles, player_id)
     if data is None:
@@ -182,7 +182,7 @@ def public_leaderboard(
     position: str | None = None,
     limit: int = Query(25, ge=1, le=100),
     _: tuple = Depends(api_key_dependency),
-    response: Response = None,  # type: ignore[assignment]
+    response: Response | None = None,
 ) -> dict[str, Any]:
     if not league:
         raise HTTPException(

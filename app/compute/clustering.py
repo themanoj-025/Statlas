@@ -237,7 +237,7 @@ def find_optimal_k(
     if not scores:
         return DEFAULT_N_CLUSTERS, {}
 
-    best_k = max(scores, key=scores.get)  # type: ignore[arg-type]
+    best_k = max(scores, key=lambda k: scores[k])
     return best_k, scores
 
 
