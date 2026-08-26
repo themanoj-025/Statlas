@@ -13,7 +13,7 @@ via string-based ``relationship()`` calls).
 from __future__ import annotations
 
 # 10. Analytics domain
-from app.models.analytics import (  # noqa: F401
+from app.models.analytics import (  
     AnalyticsAccessLog,
     AnalyticsAlert,
     AnalyticsEvent,
@@ -24,7 +24,7 @@ from app.models.analytics import (  # noqa: F401
 )
 
 # 1. Base class + all enums (must be first)
-from app.models.base import (  # noqa: F401
+from app.models.base import (  
     ACCOUNT_STATUS_ENUM,
     ACTION_TYPE_ENUM,
     ALERT_TYPE_ENUM,
@@ -58,7 +58,7 @@ from app.models.base import (  # noqa: F401
 )
 
 # 11. Clustering domain (ML archetypes)
-from app.models.clustering import (  # noqa: F401
+from app.models.clustering import (  
     ArchetypeAssignment,
     ArchetypeDefinition,
     ClusteringModel,
@@ -66,14 +66,14 @@ from app.models.clustering import (  # noqa: F401
 )
 
 # 9. Dashboard domain
-from app.models.dashboard import (  # noqa: F401
+from app.models.dashboard import (  
     ActivityLog,
     DashboardState,
     SavedPlayer,
 )
 
 # 13. Organization domain (RBAC, audit, comments)
-from app.models.org import (  # noqa: F401
+from app.models.org import (  
     AuditLog,
     Comment,
     Mention,
@@ -84,7 +84,7 @@ from app.models.org import (  # noqa: F401
 )
 
 # 2. Player domain (League, Team, Player, aliases, fixtures, emerging)
-from app.models.player import (  # noqa: F401
+from app.models.player import (  
     EmergingPlayerScore,
     Fixture,
     League,
@@ -94,19 +94,19 @@ from app.models.player import (  # noqa: F401
 )
 
 # 7. Report domain
-from app.models.report import (  # noqa: F401
+from app.models.report import (  
     Report,
     ReportQuota,
 )
 
 # 6. Search domain
-from app.models.search import (  # noqa: F401
+from app.models.search import (  
     SavedSearch,
     SearchHistory,
 )
 
 # 3. Stats domain (snapshots, percentiles, events, coverage, anomalies)
-from app.models.stats import (  # noqa: F401
+from app.models.stats import (  
     DataCoverage,
     IngestionAnomaly,
     MatchEvent,
@@ -116,21 +116,21 @@ from app.models.stats import (  # noqa: F401
 )
 
 # 14. Tactical domain
-from app.models.tactical import (  # noqa: F401
+from app.models.tactical import (  
     MatchFormation,
     MatchPassingNetwork,
     MatchSpatialAnalysis,
 )
 
 # 12. Transfer domain
-from app.models.transfer import (  # noqa: F401
+from app.models.transfer import (  
     ContractStatus,
     MarketValuation,
     TransferHistory,
 )
 
 # 4. User domain (accounts, sessions, subscriptions, API keys, quotas)
-from app.models.user import (  # noqa: F401
+from app.models.user import (  
     ApiKey,
     AssistantQuota,
     EmailVerificationToken,
@@ -142,14 +142,14 @@ from app.models.user import (  # noqa: F401
 )
 
 # 8. Watch domain
-from app.models.watch import (  # noqa: F401
+from app.models.watch import (  
     NotificationPreferences,
     Watch,
     WatchAlert,
 )
 
 # 5. Workspace domain (shortlists, entries, notes, tags, status history)
-from app.models.workspace import (  # noqa: F401
+from app.models.workspace import (  
     EntryNote,
     EntryTag,
     Shortlist,
