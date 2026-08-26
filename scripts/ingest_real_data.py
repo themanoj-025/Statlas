@@ -51,15 +51,16 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
-sys.path.insert(0, str(PROJECT_ROOT))
 
 # Default to SQLite dev.db for local runs; override with DATABASE_URL env var.
 os.environ.setdefault(
     "DATABASE_URL", f"sqlite+pysqlite:///{PROJECT_ROOT / 'data' / 'dev.db'}"
 )
 
-from app.config import CURRENT_SEASON, get_settings, load_tiers  # noqa: E402
-from app.db import create_schema, session_scope  # noqa: E402
+sys.path.insert(0, str(PROJECT_ROOT))
+
+from app.config import CURRENT_SEASON, get_settings, load_tiers
+from app.db import create_schema, session_scope
 
 logger = logging.getLogger("ingest")
 

@@ -32,16 +32,17 @@ import sys
 from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
-sys.path.insert(0, str(PROJECT_ROOT))
 
 os.environ.setdefault(
     "DATABASE_URL", f"sqlite+pysqlite:///{PROJECT_ROOT / 'data' / 'dev.db'}"
 )
 
-from app.config import load_registry  # noqa: E402
-from app.db import session_scope  # noqa: E402
-from app.models import PercentileSnapshot, StatSnapshot  # noqa: E402
-from app.queries.similar_players import (  # noqa: E402
+sys.path.insert(0, str(PROJECT_ROOT))
+
+from app.config import load_registry
+from app.db import session_scope
+from app.models import PercentileSnapshot, StatSnapshot
+from app.queries.similar_players import (
     KEY_DIFFERENCE_MIN_GAP,
     MATCHED_STRENGTH_MAX_DIFF,
     MATCHED_STRENGTH_MIN_PERCENTILE,
