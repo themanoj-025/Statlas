@@ -393,7 +393,7 @@ def get_recommended_players(
 
     # Top 2 position groups the user is interested in
     top_positions = sorted(
-        position_counts, key=position_counts.get, reverse=True  # type: ignore[arg-type]
+        position_counts, key=lambda k: position_counts[k], reverse=True
     )[:2]
 
     # Step 4: Find similar unseen players ranked by average percentile

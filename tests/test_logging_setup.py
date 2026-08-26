@@ -20,7 +20,7 @@ class TestRequestIdFilter:
         )
         request_id_var.set("abc-123")
         assert filt.filter(record) is True
-        assert record.request_id == "abc-123"  # type: ignore[attr-defined]
+        assert getattr(record, "request_id") == "abc-123"
 
     def test_default_request_id(self):
         """Without setting a ContextVar, the default '-' is used."""
@@ -31,7 +31,7 @@ class TestRequestIdFilter:
             msg="test", args=(), exc_info=None,
         )
         assert filt.filter(record) is True
-        assert record.request_id == "-"  # type: ignore[attr-defined]
+        assert getattr(record, "request_id") == "-"
 
     def test_filter_always_returns_true(self):
         filt = RequestIdFilter()

@@ -512,7 +512,7 @@ class TransfermarktSource(MarketDataSource):
         2. Profile page fallback — requires name slug for correct URL.
         """
         records: list[MarketValuationRecord] = []
-        names = player_names or [None] * len(player_ids)  # type: ignore[list-item]
+        names: list[str | None] = player_names or [None] * len(player_ids)
 
         for pid, name in zip(player_ids, names):
             try:
@@ -810,7 +810,7 @@ class TransfermarktSource(MarketDataSource):
         and estimated salary.
         """
         records: list[ContractRecord] = []
-        names = player_names or [None] * len(player_ids)  # type: ignore[list-item]
+        names: list[str | None] = player_names or [None] * len(player_ids)
 
         for pid, name in zip(player_ids, names):
             try:
