@@ -406,7 +406,7 @@ def _execute_tool(
         return {"error": f"Unknown tool {name}."}
     try:
         return spec["call"](db, **tool_input)
-    except Exception as exc:  # tool failures surface in the result, not the API
+    except (ValueError, KeyError, RuntimeError) as exc:  # tool failures surface in the result, not the API
         logger.exception("assistant tool %s failed", name)
         return {"error": f"Tool {name} failed: {exc}"}
 

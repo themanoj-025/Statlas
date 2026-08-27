@@ -275,7 +275,7 @@ class TransfermarktSource(MarketDataSource):
                 )
                 all_players.extend(players)
                 logger.info("    Parsed %d players from %s", len(players), club["name"])
-            except Exception as exc:
+            except (requests.RequestException, ValueError, KeyError, OSError) as exc:
                 logger.warning(
                     "  Failed to fetch squad for %s: %s", club["name"], exc
                 )
@@ -564,7 +564,7 @@ class TransfermarktSource(MarketDataSource):
                     logger.debug(
                         "No name for player %s, cannot build profile URL", pid
                     )
-            except Exception as exc:
+            except (requests.RequestException, ValueError, KeyError, OSError) as exc:
                 logger.warning("Failed to fetch valuation for player %s: %s", pid, exc)
 
         return records
@@ -613,7 +613,7 @@ class TransfermarktSource(MarketDataSource):
                     parts = href.strip("/").split("/")
                     if len(parts) >= 2:
                         return parts[0]  # the slug
-        except Exception as exc:
+        except (requests.RequestException, ValueError, KeyError, OSError) as exc:
             logger.debug("Slug resolution failed for %s: %s", player_id, exc)
         return None
 
@@ -646,7 +646,7 @@ class TransfermarktSource(MarketDataSource):
             # _fetch returns a string; parse it as JSON
             import json as _json
             data = _json.loads(html)
-        except Exception as exc:
+        except (requests.RequestException, ValueError, KeyError, OSError) as exc:
             logger.debug("CEAPI fetch failed for player %s: %s", player_id, exc)
             return []
 
@@ -715,7 +715,7 @@ class TransfermarktSource(MarketDataSource):
                 logger.info(
                     "Transfermarkt: %s transfers from %s", len(league_records), slug
                 )
-            except Exception as exc:
+            except (requests.RequestException, ValueError, KeyError, OSError) as exc:
                 logger.warning("Failed to fetch transfers for %s: %s", slug, exc)
 
         return records
@@ -738,7 +738,7 @@ class TransfermarktSource(MarketDataSource):
                     record = self._parse_transfer_row(row, league_slug)
                     if record and record.transfer_date >= since:
                         records.append(record)
-                except Exception as exc:
+                except (requests.RequestException, ValueError, KeyError, OSError) as exc:
                     logger.debug("Failed to parse transfer row: %s", exc)
 
         return records
@@ -829,7 +829,7 @@ class TransfermarktSource(MarketDataSource):
                 contract = self._parse_contract_from_profile(soup, pid, as_of)
                 if contract:
                     records.append(contract)
-            except Exception as exc:
+            except (requests.RequestException, ValueError, KeyError, OSError) as exc:
                 logger.warning("Failed to fetch contract for player %s: %s", pid, exc)
 
         return records
