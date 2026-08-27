@@ -90,7 +90,7 @@ def follow(body: FollowBody, request: Request) -> dict[str, Any]:
                 body.entity_id,
                 followed_metrics=body.followed_metrics,
             )
-        except Exception as exc:  # noqa: BLE001 — domain mapping below
+        except (wq.WatchNotFound, wq.EntityNotFound, wq.WatchLimitExceeded, ValueError) as exc:
             raise _map_error(exc)
 
 
@@ -101,7 +101,7 @@ def unfollow(watch_id: int, request: Request) -> dict[str, str]:
         try:
             wq.unfollow_entity(db, user.id, watch_id)
             return {"ok": True}
-        except Exception as exc:  # noqa: BLE001
+        except (wq.WatchNotFound, wq.EntityNotFound, wq.WatchLimitExceeded, ValueError) as exc:
             raise _map_error(exc)
 
 
@@ -136,7 +136,7 @@ def alert_detail(alert_id: int, request: Request) -> dict[str, Any]:
     with session_scope() as db:
         try:
             return wq.get_alert(db, user.id, alert_id)
-        except Exception as exc:  # noqa: BLE001
+        except (wq.WatchNotFound, wq.EntityNotFound, wq.WatchLimitExceeded, ValueError) as exc:
             raise _map_error(exc)
 
 
@@ -147,7 +147,7 @@ def mark_read(alert_id: int, request: Request) -> dict[str, str]:
         try:
             wq.mark_alert_read(db, user.id, alert_id)
             return {"ok": True}
-        except Exception as exc:  # noqa: BLE001
+        except (wq.WatchNotFound, wq.EntityNotFound, wq.WatchLimitExceeded, ValueError) as exc:
             raise _map_error(exc)
 
 
@@ -158,7 +158,7 @@ def dismiss(alert_id: int, request: Request) -> dict[str, str]:
         try:
             wq.dismiss_alert(db, user.id, alert_id)
             return {"ok": True}
-        except Exception as exc:  # noqa: BLE001
+        except (wq.WatchNotFound, wq.EntityNotFound, wq.WatchLimitExceeded, ValueError) as exc:
             raise _map_error(exc)
 
 
@@ -186,7 +186,7 @@ def update_preferences(body: PreferencesBody, request: Request) -> dict[str, Any
                 alert_type_preferences=body.alert_type_preferences,
                 digest_frequency=body.digest_frequency,
             )
-        except Exception as exc:  # noqa: BLE001
+        except (wq.WatchNotFound, wq.EntityNotFound, wq.WatchLimitExceeded, ValueError) as exc:
             raise _map_error(exc)
 
 

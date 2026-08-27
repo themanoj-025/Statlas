@@ -1,3 +1,4 @@
+
 """Organization queries — RBAC enforcement, membership management, and resource access.
 
 Constitution §4: Every read/write checks membership + role before returning data.
@@ -12,6 +13,7 @@ RBAC Roles and Permissions (Addendum Part 3.1):
 
 from __future__ import annotations
 
+from sqlalchemy.exc import SQLAlchemyError
 import logging
 from datetime import datetime, timedelta, timezone
 from typing import Any
@@ -582,7 +584,7 @@ def _log_audit(
             detail=detail or {},
         )
         db.add(log_entry)
-    except Exception as exc:
+    except (SQLAlchemyError, ValueError) as exc:
         logger.warning("Audit log write failed for %s/%s: %s", resource_type, resource_id, exc)
 
 

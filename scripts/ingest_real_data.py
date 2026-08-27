@@ -1,3 +1,4 @@
+
 #!/usr/bin/env python3
 """Statlas real-data ingestion -- downloads live data from free sources and
 seeds the database through the full pipeline.
@@ -41,6 +42,7 @@ Environment variables:
 
 from __future__ import annotations
 
+import requests
 import argparse
 import json
 import logging
@@ -363,7 +365,7 @@ def ingest_season(
         statsbomb_source = StatsBombOpenDataSource()
         try:
             statsbomb_competitions = statsbomb_source.fetch_competitions()
-        except Exception as exc:
+        except (requests.RequestException, ValueError, KeyError, OSError) as exc:
             logger.warning("Could not fetch StatsBomb competitions: %s", exc)
             statsbomb_competitions = []
 
@@ -377,14 +379,14 @@ def ingest_season(
                     print(f"    {r.player_name:30s} {r.team_name:20s} {r.minutes_played:6.0f} min")
                 if len(records) > 3:
                     print(f"    ... and {len(records) - 3} more")
-            except Exception as exc:
+            except (requests.RequestException, ValueError, KeyError, OSError) as exc:
                 print(f"  {slug} (FBRef): FAILED -- {exc}")
             league_cfg = tiers_cfg["leagues"].get(slug, {})
             if league_cfg.get("tier") == "tier_1":
                 try:
                     u_records = understat.fetch_league_stats(slug, season)
                     print(f"  {slug} (Understat): {len(u_records)} players")
-                except Exception as exc:
+                except (requests.RequestException, ValueError, KeyError, OSError) as exc:
                     print(f"  {slug} (Understat): FAILED -- {exc}")
         return None
 
@@ -420,7 +422,7 @@ def sync_statsbomb_events(db, max_competitions: int | None = None) -> dict:
 
     try:
         competitions = source.fetch_competitions()
-    except Exception as exc:
+    except (requests.RequestException, ValueError, KeyError, OSError) as exc:
         logger.error("Failed to fetch StatsBomb competitions: %s", exc)
         return {"error": str(exc)}
 
@@ -450,7 +452,7 @@ def sync_statsbomb_events(db, max_competitions: int | None = None) -> dict:
             total["events"] += result.get("events", 0)
             count += 1
             print(f"  OK {cname}: {result.get('matches', 0)} matches, {result.get('events', 0)} events")
-        except Exception as exc:
+        except (requests.RequestException, ValueError, KeyError, OSError) as exc:
             print(f"  FAIL {cname}: {exc}")
 
     print(f"\n  Total: {total['matches']} matches, {total['events']} events")
@@ -542,7 +544,7 @@ def run_backfill(
                     f"\r  [OK] {season}/{league}: "
                     f"{snaps} snapshots, {league_elapsed:.0f}s -- {status}       "
                 )
-            except Exception as exc:
+            except (requests.RequestException, ValueError, KeyError, OSError) as exc:
                 league_elapsed = time.monotonic() - t0
                 tracker.mark_failed(season, league, str(exc))
                 tasks_completed += 1

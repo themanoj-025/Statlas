@@ -63,7 +63,7 @@ def main() -> int:
                 f"[{'OK ' if ok else 'FAIL'}] {preset['name']:<42} -> {total:>4} players"
                 + (f"  | {', '.join(top)}" if top else "")
             )
-        except Exception as exc:  # noqa: BLE001 — a broken preset is a failure
+        except (ValueError, KeyError, OSError) as exc:  # a broken preset is a failure
             failures += 1
             rows.append(
                 {
