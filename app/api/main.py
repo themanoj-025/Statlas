@@ -420,7 +420,7 @@ def readiness() -> dict[str, Any]:
         with session_scope() as db:
             db.execute(text("SELECT 1"))
         return {"ready": True}
-    except Exception as exc:
+    except (ValueError, OSError) as exc:
         raise HTTPException(status_code=503, detail=f"Database unavailable: {exc}")
 
 

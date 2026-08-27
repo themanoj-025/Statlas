@@ -1,3 +1,4 @@
+
 #!/usr/bin/env python3
 """Bulk ingestion: scrape all players from a Transfermarkt league squad page.
 
@@ -33,6 +34,7 @@ Environment variables:
 
 from __future__ import annotations
 
+import requests
 import argparse
 import logging
 import os
@@ -237,7 +239,7 @@ def fetch_profile_detail(
             result["height"] = height
 
         return result
-    except Exception as exc:
+    except (requests.RequestException, ValueError, KeyError, OSError) as exc:
         logger.debug("Profile fetch failed for TM %s: %s", tm_id, exc)
         return {}
 
@@ -276,7 +278,7 @@ def run(args: argparse.Namespace) -> None:
             players = src.fetch_squad_players(lg, season=season)
             all_players.extend(players)
             logger.info("  %s: %d players scraped", lg, len(players))
-        except Exception as exc:
+        except (requests.RequestException, ValueError, KeyError, OSError) as exc:
             logger.error("  %s FAILED: %s", lg, exc)
 
     if not all_players:

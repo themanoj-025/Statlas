@@ -113,7 +113,7 @@ def execute(body: ExecuteBody, request: Request) -> dict[str, Any]:
                 sort_by=body.sort_by,
                 sort_dir=body.sort_dir,
             )
-        except Exception as exc:  # noqa: BLE001 — domain mapping below
+        except (ss.SearchNotFound, ss.SearchLimitExceeded, ss.InvalidQuery, ValueError) as exc:
             raise _map_error(exc)
 
 
@@ -141,7 +141,7 @@ def save_search(body: SaveSearchBody, request: Request) -> dict[str, Any]:
                 body.query_definition,
                 description=body.description,
             )
-        except Exception as exc:  # noqa: BLE001
+        except (ss.SearchNotFound, ss.SearchLimitExceeded, ss.InvalidQuery, ValueError) as exc:
             raise _map_error(exc)
 
 
@@ -159,7 +159,7 @@ def run_saved(search_id: int, body: RunBody, request: Request) -> dict[str, Any]
                 sort_by=body.sort_by,
                 sort_dir=body.sort_dir,
             )
-        except Exception as exc:  # noqa: BLE001
+        except (ss.SearchNotFound, ss.SearchLimitExceeded, ss.InvalidQuery, ValueError) as exc:
             raise _map_error(exc)
 
 
@@ -170,7 +170,7 @@ def delete_saved(search_id: int, request: Request) -> dict[str, str]:
         try:
             ss.delete_saved_search(db, user.id, search_id)
             return {"ok": True}
-        except Exception as exc:  # noqa: BLE001
+        except (ss.SearchNotFound, ss.SearchLimitExceeded, ss.InvalidQuery, ValueError) as exc:
             raise _map_error(exc)
 
 
@@ -195,5 +195,5 @@ def rerun_history(history_id: int, body: RunBody, request: Request) -> dict[str,
                 sort_by=body.sort_by,
                 sort_dir=body.sort_dir,
             )
-        except Exception as exc:  # noqa: BLE001
+        except (ss.SearchNotFound, ss.SearchLimitExceeded, ss.InvalidQuery, ValueError) as exc:
             raise _map_error(exc)
