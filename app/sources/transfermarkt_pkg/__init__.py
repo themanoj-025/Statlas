@@ -7,6 +7,6 @@ This file re-exports ``TransfermarktSource`` so existing
 continues to work unchanged.
 """
 
-from app.sources.transfermarkt_pkg.source import TransfermarktSource  # noqa: F401
+from app.sources.transfermarkt_pkg.source import TransfermarktSource
 
 __all__ = ["TransfermarktSource"]
