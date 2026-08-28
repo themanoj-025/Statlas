@@ -1,18 +1,13 @@
-"""Transfermarkt source -- re-exports for backward compatibility.
+"""Transfermarkt source -- re-exports for backward compatibility."""
 
-All logic has been moved to app.sources.transfermarkt_pkg.
-"""
-from __future__ import annotations
-
-from app.sources.transfermarkt_pkg import (
-    LEAGUE_URL_SLUGS,
-    TRANSFERMARKT_BASE,
+from app.sources.transfermarkt_pkg.constants import LEAGUE_URL_SLUGS, TRANSFERMARKT_BASE
+from app.sources.transfermarkt_pkg.parsers import (
     TransfermarktSchemaChangedError,
-    TransfermarktSource,
     _parse_date,
     _parse_market_value,
     _parse_transfer_fee,
 )
+from app.sources.transfermarkt_pkg.source import TransfermarktSource
 
 __all__ = [
     "LEAGUE_URL_SLUGS",
