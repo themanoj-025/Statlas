@@ -30,4 +30,4 @@ reportlab>=4.0,<5.0.0
 # Phase 19 — Production readiness
 redis>=5.0.0,<6.0.0 # Redis client for rate limiting, caching, and job queues
 alembic>=1.13.0,<2.0.0 # Database migration management
-python-json-logger>=3.0.0,<4.0.0 # Structured JSON logging
+python-json-logger>=4.2.0,<5.0.0 # Structured JSON logging
