@@ -1,7 +1,7 @@
 # Statlas Phase 1 — data pipeline dependencies
 # Production and development. Tests run on SQLite; production targets PostgreSQL.
 
-requests>=2.31,<3.0.0
+requests>=2.34.2,<3.0.0
 beautifulsoup4>=4.12,<5.0.0
 SQLAlchemy>=2.0,<3.0.0
 psycopg2-binary>=2.9,<3.0.0 # PostgreSQL driver for production DATABASE_URL
