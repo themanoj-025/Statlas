@@ -52,7 +52,7 @@ _session_token = session_token
 
 
 @router.post("/keys", status_code=201)
-def create_api_key(body: KeyCreateBody, request: Request):
+def create_api_key(body: KeyCreateBody, request: Request) -> Any:
     user = _require_user(request)
     with session_scope() as db:
         result = api_keys.generate_api_key(db, user, body.name)
@@ -79,7 +79,7 @@ def revoke_key(key_id: int, request: Request) -> dict[str, str]:
 
 
 @router.post("/keys/{key_id}/rotate")
-def rotate_key(key_id: int, request: Request, body: KeyRotateBody | None = None):
+def rotate_key(key_id: int, request: Request, body: KeyRotateBody | None = None) -> Any:
     user = _require_user(request)
     with session_scope() as db:
         result = api_keys.rotate_api_key(

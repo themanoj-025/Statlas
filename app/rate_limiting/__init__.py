@@ -28,7 +28,7 @@ __all__ = [
 class RedisRateLimiter:
     """Sliding-window rate limiter backed by Redis INCR + EXPIRE."""
 
-    def __init__(self, redis_client: "redis_lib.Redis", prefix: str = "ratelimit:"):
+    def __init__(self, redis_client: "redis_lib.Redis", prefix: str = "ratelimit:") -> Any:
         self.redis = redis_client
         self.prefix = prefix
 

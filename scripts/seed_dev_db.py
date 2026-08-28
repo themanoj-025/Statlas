@@ -797,7 +797,7 @@ def synthetic_leagues(
 
 
 class _FakeSource:
-    def __init__(self, source_name: str, records: list[RawPlayerStatRecord]):
+    def __init__(self, source_name: str, records: list[RawPlayerStatRecord]) -> Any:
         self.source_name = source_name
         self.records = records
 
