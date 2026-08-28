@@ -13,7 +13,7 @@ pydantic>=2.13.4,<3.0.0
 
 # Development / tests
 pytest>=8.0,<9.0.0
-httpx>=0.27,<1.0.0 # fastapi TestClient (tests/test_api.py)
+httpx>=0.28.1,<1.0.0 # fastapi TestClient (tests/test_api.py)
 ruff>=0.16.4,<1.0.0 # lint gate (CI + local); enforced set in pyproject.toml
 pip-audit>=2.10.1,<3.0.0 # dependency vulnerability scan (C5 closeout; enforced in CI)
 
