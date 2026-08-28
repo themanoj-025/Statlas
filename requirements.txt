@@ -20,7 +20,7 @@ pip-audit>=2.10.1,<3.0.0 # dependency vulnerability scan (C5 closeout; enforced 
 # Phase 4 — billing + AI assistant
 stripe>=15.5.0,<16.0.0
 anthropic>=0.121.0,<1.0.0
-email-validator>=2.0,<3.0.0 # pydantic EmailStr (app/api/billing_views.py) — required at import time
+email-validator>=2.3.0,<3.0.0 # pydantic EmailStr (app/api/billing_views.py) — required at import time
 
 # Phase 14 — ML platform (player clustering & archetypes)
 scikit-learn>=1.9.0,<2.0.0 # k-means clustering, preprocessing pipeline, evaluation metrics
