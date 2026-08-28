@@ -30,7 +30,7 @@ SNAPSHOT_DATE = datetime(2026, 8, 12, 3, 0, 0, tzinfo=timezone.utc)
 
 
 @pytest.fixture()
-def db():
+def db() -> Any:
     engine = create_engine(
         "sqlite+pysqlite:///:memory:",
         poolclass=StaticPool,
@@ -61,7 +61,7 @@ def premier_league(db) -> League:
 
 
 @pytest.fixture()
-def small_pool():
+def small_pool() -> Any:
     """Tests compute percentiles with small synthetic pools; the registry's
     min_pool_size (30) and qualifying threshold are test-overridden. The loaded
     registry is a process-wide cached object, so the override applies to the
@@ -78,7 +78,7 @@ def fixtures_dir() -> Path:
     return FIXTURES_DIR
 
 
-def compute_and_publish(db, *, snapshot_date, season, **kwargs):
+def compute_and_publish(db, *, snapshot_date, season, **kwargs) -> Any:
     """Compute percentile/index rows AND publish them — the pipeline's publish
     gate (run_weekly_refresh step 6). Tests that seed directly must go through
     this: the query layer serves PUBLISHED rows only (Constitution: nothing is
@@ -98,7 +98,7 @@ def compute_and_publish(db, *, snapshot_date, season, **kwargs):
 
 
 @pytest.fixture(autouse=True)
-def _ensure_clean_rate_limiter():
+def _ensure_clean_rate_limiter() -> Any:
     """Reset the in-memory rate limiter before every test to prevent
     cross-test rate-limit exhaustion (e.g., multiple registrations from
     the same test IP)."""

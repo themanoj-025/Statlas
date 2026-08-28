@@ -472,7 +472,7 @@ def billing_portal(request: Request, body: dict[str, str] | None = None) -> dict
 
 
 @router.post("/billing/webhook")
-async def stripe_webhook(request: Request):
+async def stripe_webhook(request: Request) -> Any:
     """Stripe webhook endpoint. Auth = the verified signature, never a cookie.
     Returns 200 for every VALID event (including duplicates) and 400/503 for
     anything that must not be silently dropped."""

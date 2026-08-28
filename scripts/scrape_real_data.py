@@ -23,7 +23,7 @@ logger = logging.getLogger("real_scrape")
 SEASON = "2025-26"
 SNAPSHOT_DATE = datetime.now(timezone.utc)
 
-def main():
+def main() -> Any:
     # Initialize real sources
     fbref = FBrefSource()
     understat = UnderstatSource()
