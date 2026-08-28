@@ -168,7 +168,7 @@ def cached(ttl: int = 3600, prefix: str = "") -> Any:
     Usage::
 
         @cached(ttl=3600, prefix="player")
-        def get_player_profile(db, player_id):
+        def get_player_profile(db, player_id) -> Any:
             ...
     """
     def decorator(func: Callable[..., Any]) -> Callable[..., Any]:

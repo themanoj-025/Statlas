@@ -232,7 +232,7 @@ def main() -> int:
                 records_unmatched: int = 0
                 errors: list = dc_field(default_factory=list)
 
-                def add(self, **kw):
+                def add(self, **kw) -> Any:
                     for k, v in kw.items():
                         if hasattr(self, k):
                             setattr(self, k, getattr(self, k) + v)

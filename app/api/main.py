@@ -69,7 +69,7 @@ from app.api.middleware import (
 logger = logging.getLogger(__name__)
 
 @asynccontextmanager
-async def lifespan(app: FastAPI):
+async def lifespan(app: FastAPI) -> Any:
     """Application lifespan — configure logging on startup."""
     from app.logging_setup import setup_logging
 
@@ -160,7 +160,7 @@ VALID_POSITIONS = {"GK", "CB", "FB", "DM", "CM", "AM", "W", "ST"}
 
 
 @app.exception_handler(ValueError)
-async def value_error_handler(_, exc: ValueError):
+async def value_error_handler(_, exc: ValueError) -> Any:
     return JSONResponse(
         status_code=400,
         content={"error": {"code": "validation_error", "message": str(exc)}},
@@ -168,7 +168,7 @@ async def value_error_handler(_, exc: ValueError):
 
 
 @app.exception_handler(HTTPException)
-async def http_exception_handler(request: Request, exc: HTTPException):
+async def http_exception_handler(request: Request, exc: HTTPException) -> Any:
     """Standardized error envelope for all HTTP exceptions."""
     return JSONResponse(
         status_code=exc.status_code,
