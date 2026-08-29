@@ -55,7 +55,7 @@ jobs:
       # In-memory SQLite only — no database service needed (tests/conftest.py
       # `db` fixture; Postgres is exercised via schema.sql parity, not CI).
       - name: Pytest
-        run: pytest -q
+        run: pip install pytest-cov && pytest -q --cov=. --cov-report=term-missing --cov-fail-under=55
 
       # C5 closeout — enforced dependency vulnerability scan. Fails the job on
       # any known vulnerability in the Python dependency tree. Use
