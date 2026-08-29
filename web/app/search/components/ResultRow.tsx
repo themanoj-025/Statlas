@@ -6,7 +6,7 @@ import { formatNumber } from "@/lib/format";
 import { AddToShortlist } from "@/components/AddToShortlist";
 import { useAuth } from "@/components/AuthProvider";
 
-function ResultRow({ entry }: { entry: SearchResultEntry }) {
+export function ResultRow({ entry }: { entry: SearchResultEntry }) {
   return (
     <tr>
       <td>
