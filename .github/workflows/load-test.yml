@@ -1,0 +1,22 @@
+name: Load Test
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 2 * * 0'
+jobs:
+  load-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run k6 load test
+        uses: grafana/k6-action@v0.3.1
+        with:
+          filename: load-test.js
+        env:
+          K6_BASE_URL: ${{ vars.K6_BASE_URL || 'http://localhost:8000' }}
+      - name: Upload results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: k6-results
+          path: k6-results/
