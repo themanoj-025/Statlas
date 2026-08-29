@@ -1,0 +1,21 @@
+python:
+  - changed-files:
+    - any-glob-to-any-file: ['**/*.py', 'requirements*.txt', 'pyproject.toml']
+typescript:
+  - changed-files:
+    - any-glob-to-any-file: ['**/*.ts', '**/*.tsx', 'package.json']
+frontend:
+  - changed-files:
+    - any-glob-to-any-file: ['frontend/**', 'web/**']
+backend:
+  - changed-files:
+    - any-glob-to-any-file: ['backend/**', 'api/**', 'app/**']
+tests:
+  - changed-files:
+    - any-glob-to-any-file: ['**/*test*', '**/*spec*']
+ci:
+  - changed-files:
+    - any-glob-to-any-file: ['.github/**']
+docs:
+  - changed-files:
+    - any-glob-to-any-file: ['**/*.md', 'docs/**']

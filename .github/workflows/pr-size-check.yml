@@ -1,0 +1,17 @@
+name: PR Size Check
+on:
+  pull_request:
+    types: [opened, synchronize]
+jobs:
+  check-size:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Check PR size
+        run: |
+          ADDITIONS=$(git diff --stat origin/${{ github.base_ref }}...HEAD | tail -1 | awk '{print $4}')
+          if [ "$ADDITIONS" -gt 500 ]; then
+            echo "⚠️ PR has $ADDITIONS additions (limit: 500). Consider splitting."
+          fi
