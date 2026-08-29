@@ -778,7 +778,7 @@ def client(monkeypatch):
         yield c
 
 
-from app.api.main import app  # noqa: E402
+from app.api.main import app
 
 
 def _register(client, email: str = "pro-api@example.com"):

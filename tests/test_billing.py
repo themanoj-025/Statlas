@@ -36,7 +36,7 @@ os.environ["STRIPE_WEBHOOK_SECRET"] = "whsec_test_dummy_webhook_secret"
 os.environ["STRIPE_PRICE_PRO_MONTHLY"] = "price_test_pro_monthly"
 os.environ["STRIPE_BILLING_PORTAL_ENABLED"] = "true"
 
-from app.api.main import app  # noqa: E402
+from app.api.main import app
 
 # ---------------------------------------------------------------------------
 # Test-mode webhook signature helper (real construct_event path)

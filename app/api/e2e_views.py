@@ -49,8 +49,8 @@ class GrantProBody(BaseModel):
 
 @router.post("/grant-pro")
 def grant_pro(
-    body: GrantProBody, request: Request
-) -> dict[str, str]:  # noqa: ARG001 — Request kept for symmetry
+    body: GrantProBody, _request: Request
+) -> dict[str, str]:
     """Give a registered account active Pro access (an e2e fixture)."""
     _require_e2e()
     with session_scope() as db:
