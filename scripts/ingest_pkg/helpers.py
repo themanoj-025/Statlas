@@ -42,8 +42,6 @@ Environment variables:
 
 from __future__ import annotations
 
-import requests
-import argparse
 import json
 import logging
 import os
@@ -51,6 +49,8 @@ import sys
 import time
 from datetime import datetime, timezone
 from pathlib import Path
+
+import requests
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 
@@ -61,8 +61,7 @@ os.environ.setdefault(
 
 sys.path.insert(0, str(PROJECT_ROOT))
 
-from app.config import CURRENT_SEASON, get_settings, load_tiers
-from app.db import create_schema, session_scope
+from app.config import load_tiers
 
 logger = logging.getLogger("ingest")
 

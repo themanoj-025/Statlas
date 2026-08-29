@@ -23,12 +23,12 @@ from app.config import plan_limits
 from app.models import ApiKey, User
 
 __all__ = [
+    "api_rate_limit_for_plan",
+    "authenticate_api_key",
     "generate_api_key",
     "list_api_keys",
     "revoke_api_key",
     "rotate_api_key",
-    "authenticate_api_key",
-    "api_rate_limit_for_plan",
 ]
 
 KEY_PREFIX = "sl_"

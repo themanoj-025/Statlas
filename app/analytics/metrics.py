@@ -360,7 +360,7 @@ def compute_retention_cohort(
     results = []
 
     # Check retention for months 0 through 12 using proper month arithmetic.
-    for months_after in range(0, 13):
+    for months_after in range(13):
         # Compute the actual start of the Nth month after cohort_month.
         raw_month = cohort_month.month + months_after
         check_year = cohort_month.year + (raw_month - 1) // 12

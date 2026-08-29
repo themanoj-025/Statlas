@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-
 TRANSFERMARKT_BASE = "https://www.transfermarkt.com"
 
 # Transfermarkt league slug -> wettbewerb code (must match tiers.json).

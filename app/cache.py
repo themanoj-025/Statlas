@@ -15,10 +15,10 @@ logger = logging.getLogger(__name__)
 
 __all__ = [
     "CacheBackend",
-    "RedisCacheBackend",
     "InMemoryCacheBackend",
-    "get_cache",
+    "RedisCacheBackend",
     "cached",
+    "get_cache",
     "invalidate_pattern",
 ]
 

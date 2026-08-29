@@ -62,7 +62,7 @@ class UnderstatSchemaChangedError(SchemaChangedError):
 
 def canonical_season_to_understat(season: str) -> str:
     """'2025-26' -> '2025' (Understat URL year format)."""
-    return season.split("-")[0]
+    return season.split("-", maxsplit=1)[0]
 
 
 def extract_players_json(html: str) -> list[dict[str, Any]]:

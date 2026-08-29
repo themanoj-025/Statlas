@@ -12,17 +12,15 @@ from sqlalchemy.orm import Session
 from app.auth import has_pro_access
 from app.config import get_settings
 from app.models import Player, Report
-from app.reports_pkg.confidence import compute_report_confidence
 from app.reports_pkg.constants import (
     REPORT_SOURCE_LABEL,
     WORKSPACE_SOURCE_LABEL,
-    PlayerHasNoData,
     ReportLimitExceeded,
-    ReportNotFound,
     ReportNotConfigured,
+    ReportNotFound,
 )
 from app.reports_pkg.context import gather_report_context
-from app.reports_pkg.narrators import deterministic_narrator, _narrate_via_anthropic
+from app.reports_pkg.narrators import _narrate_via_anthropic
 from app.reports_pkg.quota import _consume_report_quota
 from app.reports_pkg.verification import verify_report
 

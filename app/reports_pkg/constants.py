@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-
 # ---------------------------------------------------------------------------
 # Constants (documented in docs/product/scouting-reports.md)
 # ---------------------------------------------------------------------------

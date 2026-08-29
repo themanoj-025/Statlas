@@ -13,9 +13,8 @@ Routes:
 
 from __future__ import annotations
 
-from typing import Any
-
 import re
+from typing import Any
 
 from fastapi import APIRouter, HTTPException, Query, Request
 from pydantic import BaseModel, Field

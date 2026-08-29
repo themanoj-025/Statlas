@@ -48,11 +48,11 @@ class User(Base):
         onupdate=func.now(),
     )
 
-    subscriptions: Mapped[list["Subscription"]] = relationship(
+    subscriptions: Mapped[list[Subscription]] = relationship(
         back_populates="user", cascade="all, delete-orphan"
     )
-    api_keys: Mapped[list["ApiKey"]] = relationship(back_populates="user")
-    sessions: Mapped[list["SessionToken"]] = relationship(back_populates="user")
+    api_keys: Mapped[list[ApiKey]] = relationship(back_populates="user")
+    sessions: Mapped[list[SessionToken]] = relationship(back_populates="user")
 
     __table_args__ = (
         UniqueConstraint("email", name="uq_users_email"),
