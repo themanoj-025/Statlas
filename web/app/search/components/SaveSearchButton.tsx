@@ -6,7 +6,7 @@ import { formatNumber } from "@/lib/format";
 import { AddToShortlist } from "@/components/AddToShortlist";
 import { useAuth } from "@/components/AuthProvider";
 
-function SaveSearchButton({ queryDefinition, onSaved }: { queryDefinition: QueryDefinition; onSaved: () => void }) {
+export function SaveSearchButton({ queryDefinition, onSaved }: { queryDefinition: QueryDefinition; onSaved: () => void }) {
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
