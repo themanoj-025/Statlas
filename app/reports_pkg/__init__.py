@@ -6,6 +6,7 @@ exactly as `from app.reports import X` did before the split.
 
 from app.reports_pkg.confidence import compute_report_confidence
 from app.reports_pkg.constants import (
+    _NARRATIVE_FIELDS,
     CONFIDENCE_HIGH,
     CONFIDENCE_MEDIUM,
     CONFIDENCE_WEIGHTS,
@@ -16,9 +17,8 @@ from app.reports_pkg.constants import (
     WORKSPACE_SOURCE_LABEL,
     PlayerHasNoData,
     ReportLimitExceeded,
-    ReportNotFound,
     ReportNotConfigured,
-    _NARRATIVE_FIELDS,
+    ReportNotFound,
 )
 from app.reports_pkg.context import (
     _age_from_dob,

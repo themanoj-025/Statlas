@@ -13,11 +13,11 @@ RBAC Roles and Permissions (Addendum Part 3.1):
 
 from __future__ import annotations
 
-from sqlalchemy.exc import SQLAlchemyError
 import logging
 from datetime import datetime, timedelta, timezone
 from typing import Any
 
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
 from app import auth

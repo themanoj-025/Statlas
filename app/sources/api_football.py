@@ -130,7 +130,7 @@ class APIFootballSource:
 
     @staticmethod
     def canonical_season_to_year(season: str) -> int:
-        return int(season.split("-")[0])
+        return int(season.split("-", maxsplit=1)[0])
 
     @staticmethod
     def parse_fixtures(

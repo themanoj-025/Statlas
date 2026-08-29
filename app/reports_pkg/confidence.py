@@ -5,7 +5,11 @@ from __future__ import annotations
 from datetime import datetime, timezone
 from typing import Any
 
-from app.reports_pkg.constants import CONFIDENCE_HIGH, CONFIDENCE_MEDIUM, CONFIDENCE_WEIGHTS
+from app.reports_pkg.constants import (
+    CONFIDENCE_HIGH,
+    CONFIDENCE_MEDIUM,
+    CONFIDENCE_WEIGHTS,
+)
 
 
 def compute_report_confidence(

@@ -228,8 +228,8 @@ def test_no_meaningful_differences_edge_case():
 
 def test_no_shared_standout_strengths_edge_case():
     """Mid-range alignment -> matched strengths empty (honest, not padded)."""
-    a = {mid: 45.0 for mid in OUTFIELD}
-    b = {mid: 48.0 for mid in OUTFIELD}
+    a = dict.fromkeys(OUTFIELD, 45.0)
+    b = dict.fromkeys(OUTFIELD, 48.0)
     exp = _explain(a, b)
     assert exp["matched_strengths"] == []
     assert exp["key_differences"] == []

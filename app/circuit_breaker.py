@@ -20,8 +20,9 @@ from __future__ import annotations
 
 import logging
 import time
+from collections.abc import Callable
 from enum import Enum
-from typing import Any, Callable
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -99,7 +100,7 @@ class CircuitBreaker:
 
         return wrapper
 
-    def __enter__(self) -> "CircuitBreaker":
+    def __enter__(self) -> CircuitBreaker:
         if self.is_open():
             raise CircuitBreakerOpenError(f"Circuit breaker {self.name} is OPEN")
         return self

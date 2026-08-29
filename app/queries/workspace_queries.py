@@ -164,7 +164,7 @@ def _entry_counts(db: Session, shortlist_ids: list[int]) -> dict[int, dict[str, 
         .all()
     )
     out: dict[int, dict[str, Any]] = {
-        sid: {"entry_count": 0, "status_breakdown": {s: 0 for s in ALL_STATUSES}}
+        sid: {"entry_count": 0, "status_breakdown": dict.fromkeys(ALL_STATUSES, 0)}
         for sid in shortlist_ids
     }
     for shortlist_id, status, count in rows:
