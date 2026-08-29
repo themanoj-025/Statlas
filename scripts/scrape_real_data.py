@@ -27,13 +27,13 @@ def main() -> Any:
     # Initialize real sources
     fbref = FBrefSource()
     understat = UnderstatSource()
-    
+
     # Get all configured leagues
     tiers_config = load_tiers()
     all_league_slugs = list(tiers_config["leagues"].keys())
-    
+
     logger.info(f"Starting real scrape for {len(all_league_slugs)} leagues. This will take a while due to rate limits.")
-    
+
     with session_scope() as db:
         # We don't require tier completeness here so that percentiles are computed even if it gets interrupted
         report = run_weekly_refresh(
@@ -47,7 +47,7 @@ def main() -> Any:
             api_football_source=None, # skip fixtures for speed
             require_tier_completeness=False
         )
-        
+
         logger.info("=== Scrape Complete ===")
         logger.info(f"Leagues Scraped: {report.leagues_scraped}")
         logger.info(f"Records Ingested: {report.records_ingested}")

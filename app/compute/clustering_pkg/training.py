@@ -19,7 +19,6 @@ from .constants import (
     CLUSTERING_MIN_MINUTES,
     DEFAULT_N_CLUSTERS,
     MODEL_DIR,
-    SILHOUETTE_THRESHOLD,
     ClusteringReport,
 )
 from .data import build_feature_matrix

@@ -19,7 +19,7 @@ class RequestIdFilter(logging.Filter):
     """Inject request_id from ContextVar into every log record."""
 
     def filter(self, record: logging.LogRecord) -> bool:
-        setattr(record, "request_id", request_id_var.get())
+        record.request_id = request_id_var.get()
         return True
 
 

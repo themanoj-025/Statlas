@@ -34,13 +34,14 @@ Environment variables:
 
 from __future__ import annotations
 
-import requests
 import argparse
 import logging
 import os
 import sys
 from datetime import datetime
 from typing import Any
+
+import requests
 
 # Ensure project root is on sys.path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))

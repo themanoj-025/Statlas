@@ -383,7 +383,7 @@ def get_preferences(db: Session, user_id: int) -> dict[str, Any]:
     if prefs is None:
         prefs = NotificationPreferences(
             user_id=user_id,
-            alert_type_preferences={t: True for t in ALERT_TYPES},
+            alert_type_preferences=dict.fromkeys(ALERT_TYPES, True),
         )
         db.add(prefs)
         db.commit()
@@ -410,7 +410,7 @@ def update_preferences(
     if prefs is None:
         prefs = NotificationPreferences(
             user_id=user_id,
-            alert_type_preferences={t: True for t in ALERT_TYPES},
+            alert_type_preferences=dict.fromkeys(ALERT_TYPES, True),
         )
         db.add(prefs)
 
@@ -454,7 +454,7 @@ def _unsubscribe_token(db: Session, user_id: int) -> str:
     if prefs is None:
         prefs = NotificationPreferences(
             user_id=user_id,
-            alert_type_preferences={t: True for t in ALERT_TYPES},
+            alert_type_preferences=dict.fromkeys(ALERT_TYPES, True),
         )
         db.add(prefs)
     prefs.unsubscribe_token = token

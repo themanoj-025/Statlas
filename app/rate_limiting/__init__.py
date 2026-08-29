@@ -15,8 +15,8 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 __all__ = [
-    "RedisRateLimiter",
     "InMemoryRateLimiter",
+    "RedisRateLimiter",
     "get_rate_limiter",
 ]
 
@@ -28,7 +28,7 @@ __all__ = [
 class RedisRateLimiter:
     """Sliding-window rate limiter backed by Redis INCR + EXPIRE."""
 
-    def __init__(self, redis_client: "redis_lib.Redis", prefix: str = "ratelimit:") -> Any:
+    def __init__(self, redis_client: redis_lib.Redis, prefix: str = "ratelimit:") -> Any:
         self.redis = redis_client
         self.prefix = prefix
 
@@ -61,7 +61,7 @@ class RedisRateLimiter:
 
     def reset_all(self) -> None:
         """Clear all rate-limit state. No-op for Redis (keys expire naturally)."""
-        pass  # Redis keys expire via TTL; nothing to clear globally.
+        # Redis keys expire via TTL; nothing to clear globally.
 
 
 # ---------------------------------------------------------------------------

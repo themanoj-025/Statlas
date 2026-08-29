@@ -49,7 +49,7 @@ class MetricsCollector:
         # Duration histogram (buckets: 10ms, 50ms, 100ms, 500ms, 1s, 2s, 5s, 10s)
         buckets = [0.01, 0.05, 0.1, 0.5, 1.0, 2.0, 5.0, 10.0]
         if key not in self._request_duration_bucket:
-            self._request_duration_bucket[key] = {b: 0 for b in buckets}
+            self._request_duration_bucket[key] = dict.fromkeys(buckets, 0)
         for b in buckets:
             if duration_seconds <= b:
                 self._request_duration_bucket[key][b] += 1

@@ -23,7 +23,6 @@ Usage:
 
 from __future__ import annotations
 
-import json
 import logging
 import os
 import random
@@ -41,9 +40,6 @@ os.environ.setdefault(
 )
 
 
-from app.config import load_registry
-from app.db import create_schema, session_scope
-from app.orchestration.weekly_refresh import run_weekly_refresh
 from app.sources.base import RawPlayerStatRecord
 
 logging.basicConfig(level=logging.WARNING, format="%(levelname)s %(name)s: %(message)s")

@@ -24,7 +24,6 @@ from typing import Any
 from fastapi import FastAPI, HTTPException, Query, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
-from starlette.middleware.gzip import GZipMiddleware
 
 from app.api.analytics_views import router as analytics_router
 from app.api.archetype_views import router as archetype_router
@@ -33,6 +32,12 @@ from app.api.billing_views import router as billing_router
 from app.api.comment_views import router as comment_router
 from app.api.dashboard_views import router as dashboard_router
 from app.api.e2e_views import router as e2e_router
+from app.api.helpers import _log_player_view, _with_session
+from app.api.middleware import (
+    body_size_limit_middleware,
+    csrf_middleware,
+    security_and_rate_limit_middleware,
+)
 from app.api.org_views import router as org_router
 from app.api.public_views import router as public_api_router
 from app.api.registry_view import public_meta
@@ -56,15 +61,6 @@ from app.api.watch_views import router as watch_router
 from app.api.workspace_views import router as workspace_router
 from app.config import CURRENT_SEASON, get_settings, load_registry
 from app.db import session_scope
-from app.logging_setup import new_request_id
-
-from app.api.helpers import _log_player_view, _with_session
-from app.api.middleware import (
-    CSRF_EXEMPT_PATHS,
-    body_size_limit_middleware,
-    csrf_middleware,
-    security_and_rate_limit_middleware,
-)
 
 logger = logging.getLogger(__name__)
 

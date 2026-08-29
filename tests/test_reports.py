@@ -123,7 +123,7 @@ def seed_player(
         season=SEASON,
         scrape_date=SNAPSHOT_DATE,
         source="fbref",
-        raw_stats={m: 1.0 for m in (percentiles or {})},
+        raw_stats=dict.fromkeys(percentiles or {}, 1.0),
         minutes_played=minutes,
         matches_played=int(minutes / 90),
         status="published",
