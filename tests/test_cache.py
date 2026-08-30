@@ -8,6 +8,8 @@ import time
 from unittest.mock import MagicMock, patch
 
 from app.cache import (
+
+pytestmark = pytest.mark.slow
     InMemoryCacheBackend,
     RedisCacheBackend,
     cached,
@@ -246,6 +248,7 @@ class TestGetCache:
 
     def teardown_method(self):
         import app.cache as cache_mod
+
 
         cache_mod._backend = None
 

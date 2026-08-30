@@ -10,6 +10,8 @@ from app.sources.transfermarkt import TransfermarktSource
 from tests.conftest import fixtures_dir
 
 
+
+pytestmark = pytest.mark.slow
 def _fixture_html(filename: str) -> str:
     with open(fixtures_dir() / filename, encoding="utf-8") as f:
         return f.read()
@@ -154,6 +156,7 @@ class TestIngestScriptHelpers:
     def test_upsert_updates_existing_players(self, db):
         from app.models.player import Player
         from scripts.ingest_transfermarkt_squad import upsert_players
+
 
         # Create an existing player
         existing = Player(

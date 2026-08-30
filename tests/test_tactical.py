@@ -22,6 +22,8 @@ import math
 from sqlalchemy.orm import Session
 
 from app.models import (
+
+pytestmark = pytest.mark.slow
     DataCoverage,
     League,
     MatchEvent,
@@ -642,5 +644,6 @@ class TestAPIEndpoints:
 
     def test_main_includes_tactical(self):
         from app.api.tactical_views import router as t
+
 
         assert t.prefix == "/api/v1/tactical"

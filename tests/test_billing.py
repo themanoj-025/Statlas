@@ -19,6 +19,8 @@ import hashlib
 import hmac
 import json
 
+
+pytestmark = pytest.mark.slow
 # --- configure Stripe test keys BEFORE importing the app ----------------------
 import os
 import time
@@ -608,6 +610,7 @@ def test_checkout_allows_relative_redirect(client, monkeypatch):
     register_user(client)
     # Mock Stripe to avoid real API calls
     import app.billing as _billing
+
 
     created = {}
 

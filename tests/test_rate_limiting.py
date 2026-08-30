@@ -9,6 +9,8 @@ import time
 from unittest.mock import MagicMock, patch
 
 from app.rate_limiting import (
+
+pytestmark = pytest.mark.slow
     InMemoryRateLimiter,
     RedisRateLimiter,
     get_rate_limiter,
@@ -152,6 +154,7 @@ class TestGetRateLimiter:
     def teardown_method(self):
         """Reset the module singleton after each test."""
         import app.rate_limiting as rl
+
 
         rl._limiter = None
 
