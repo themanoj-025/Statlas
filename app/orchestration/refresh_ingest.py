@@ -8,7 +8,11 @@ from typing import Any
 
 from sqlalchemy.orm import Session
 
-from app.orchestration.weekly_refresh import RefreshReport, load_tiers, ensure_league_catalog
+from app.orchestration.weekly_refresh import (
+    RefreshReport,
+    ensure_league_catalog,
+    load_tiers,
+)
 
 logger = logging.getLogger(__name__)
 
