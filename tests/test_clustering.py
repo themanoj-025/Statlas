@@ -23,8 +23,6 @@ import pytest
 from sqlalchemy.orm import Session
 
 from app.compute.clustering import (
-
-pytestmark = pytest.mark.slow
     CLUSTERING_FEATURES,
     SILHOUETTE_THRESHOLD,
     _generate_archetype_description,
@@ -39,6 +37,8 @@ pytestmark = pytest.mark.slow
     rollback_model,
     train_clustering_model,
 )
+
+pytestmark = pytest.mark.slow
 from app.models import (
     ClusteringModel,
     ClusteringMonitoringLog,

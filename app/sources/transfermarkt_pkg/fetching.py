@@ -51,8 +51,6 @@ from app.sources.market_data import (
 logger = logging.getLogger(__name__)
 
 from app.sources.transfermarkt_pkg.constants import LEAGUE_URL_SLUGS, TRANSFERMARKT_BASE
-
-
 from app.sources.transfermarkt_pkg.parsers import (
     TransfermarktSchemaChangedError,
     _parse_date,
@@ -108,7 +106,7 @@ class TransfermarktSource(MarketDataSource):
         if tm_slug is None or tm_code is None:
             raise SourceError(f"Missing Transfermarkt config for '{league_slug}'")
         # Season format: "2025-26" -> "2025" for Transfermarkt
-        year = season.split("-")[0]
+        year = season.split("-", maxsplit=1)[0]
         return (
             f"{TRANSFERMARKT_BASE}/{tm_slug}/alletransfers/wettbewerb/{tm_code}"
             f"?saison_id={year}"

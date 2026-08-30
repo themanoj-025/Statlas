@@ -51,8 +51,6 @@ from app.sources.market_data import (
 logger = logging.getLogger(__name__)
 
 from app.sources.transfermarkt_pkg.constants import LEAGUE_URL_SLUGS, TRANSFERMARKT_BASE
-
-
 from app.sources.transfermarkt_pkg.parsers import (
     TransfermarktSchemaChangedError,
     _parse_date,
@@ -62,11 +60,7 @@ from app.sources.transfermarkt_pkg.parsers import (
 
 
 class TransfermarktSource(MarketDataSource):
-
-
-"""
-transfers.py — Transfer and contract data fetching.
-"""
+    """Transfer and contract data fetching."""
 
     def fetch_transfers(self, since: datetime) -> list[TransferRecord]:
         """Fetch transfer records for all leagues since a given date.

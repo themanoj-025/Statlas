@@ -9,12 +9,12 @@ import time
 from unittest.mock import MagicMock, patch
 
 from app.rate_limiting import (
-
-pytestmark = pytest.mark.slow
     InMemoryRateLimiter,
     RedisRateLimiter,
     get_rate_limiter,
 )
+
+pytestmark = pytest.mark.slow
 
 # ---------------------------------------------------------------------------
 # InMemoryRateLimiter

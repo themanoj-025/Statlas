@@ -8,13 +8,13 @@ import time
 from unittest.mock import MagicMock, patch
 
 from app.cache import (
-
-pytestmark = pytest.mark.slow
     InMemoryCacheBackend,
     RedisCacheBackend,
     cached,
     get_cache,
 )
+
+pytestmark = pytest.mark.slow
 
 # ---------------------------------------------------------------------------
 # InMemoryCacheBackend

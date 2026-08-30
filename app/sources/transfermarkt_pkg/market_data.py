@@ -51,8 +51,6 @@ from app.sources.market_data import (
 logger = logging.getLogger(__name__)
 
 from app.sources.transfermarkt_pkg.constants import LEAGUE_URL_SLUGS, TRANSFERMARKT_BASE
-
-
 from app.sources.transfermarkt_pkg.parsers import (
     TransfermarktSchemaChangedError,
     _parse_date,
@@ -62,11 +60,7 @@ from app.sources.transfermarkt_pkg.parsers import (
 
 
 class TransfermarktSource(MarketDataSource):
-
-
-"""
-market_data.py — Player valuation and market value history.
-"""
+    """Player valuation and market value history."""
 
     def fetch_valuations(
         self, player_ids: list[int], as_of: datetime,
@@ -265,5 +259,3 @@ market_data.py — Player valuation and market value history.
                         continue
         result.sort(key=lambda x: x["date"])
         return result
-
-    def fetch_transfers(self, since: datetime) -> list[TransferRecord]:

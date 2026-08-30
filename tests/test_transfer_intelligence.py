@@ -20,8 +20,6 @@ from datetime import datetime, timedelta, timezone
 from sqlalchemy.orm import Session
 
 from app.models import (
-
-pytestmark = pytest.mark.slow
     ContractStatus,
     League,
     MarketValuation,
@@ -30,6 +28,8 @@ pytestmark = pytest.mark.slow
     StatSnapshot,
     Team,
 )
+
+pytestmark = pytest.mark.slow
 
 # ---------------------------------------------------------------------------
 # Helpers

@@ -29,8 +29,6 @@ import app.db as db_module
 from app.config import get_settings
 from app.db import create_schema
 from app.models import (
-
-pytestmark = pytest.mark.slow
     DataCoverage,
     IngestionAnomaly,
     League,
@@ -44,6 +42,8 @@ pytestmark = pytest.mark.slow
     Watch,
     WatchAlert,
 )
+
+pytestmark = pytest.mark.slow
 from app.queries import watch_queries as wq
 from app.watch import delivery
 from app.watch.detection import (
