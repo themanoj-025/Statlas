@@ -4,8 +4,8 @@ Enabled via OTEL_ENABLED=true environment variable.
 When disabled, all tracing calls are no-ops (zero overhead).
 """
 
-import os
 import logging
+import os
 
 logger = logging.getLogger(__name__)
 
@@ -28,7 +28,9 @@ def setup_tracing(service_name: str) -> bool:
         # Use OTLP exporter if configured, otherwise console
         otlp_endpoint = os.environ.get("OTEL_EXPORTER_OTLP_ENDPOINT")
         if otlp_endpoint:
-            from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExporter
+            from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import (
+                OTLPSpanExporter,
+            )
             exporter = OTLPSpanExporter(endpoint=otlp_endpoint)
         else:
             from opentelemetry.sdk.trace.export import ConsoleSpanExporter
