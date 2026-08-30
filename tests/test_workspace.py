@@ -23,8 +23,6 @@ from fastapi.testclient import TestClient
 import app.db as db_module
 from app.db import create_schema, session_scope
 from app.models import (
-
-pytestmark = pytest.mark.slow
     EntryNote,
     EntryTag,
     League,
@@ -38,6 +36,8 @@ pytestmark = pytest.mark.slow
     Team,
     User,
 )
+
+pytestmark = pytest.mark.slow
 from app.queries import workspace_queries as wq
 
 # ---------------------------------------------------------------------------
@@ -605,7 +605,6 @@ def client():
 
 
 from app.api.main import app
-
 
 
 def _register(client, email: str = "api-scout@example.com"):
