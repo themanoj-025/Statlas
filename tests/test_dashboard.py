@@ -50,7 +50,7 @@ _Session = sessionmaker(bind=_engine)
 
 
 @pytest.fixture(autouse=True)
-def _setup_db():
+def _setup_db() -> None:
     Base.metadata.create_all(_engine)
     with _Session() as db:
         yield db
@@ -125,7 +125,7 @@ def _seed_percentiles(
 
 
 class TestActivityLogging:
-    def test_log_creates_row(self, db: Session):
+    def test_log_creates_row(self, db: Session) -> None:
         user = _create_user(db)
         player = _create_player(db, "Player A")
 
@@ -142,7 +142,7 @@ class TestActivityLogging:
         assert len(rows) == 1
         assert rows[0].user_id == user.id
 
-    def test_dedup_within_window(self, db: Session):
+    def test_dedup_within_window(self, db: Session) -> None:
         """Same user + same entity within 60s = no duplicate."""
         user = _create_user(db)
         player = _create_player(db, "Player B")
@@ -166,7 +166,7 @@ class TestActivityLogging:
         assert second is False
         assert db.query(ActivityLog).count() == 1
 
-    def test_no_dedup_after_window(self, db: Session):
+    def test_no_dedup_after_window(self, db: Session) -> None:
         """After the dedup window, the same action is logged again."""
         user = _create_user(db)
         player = _create_player(db, "Player C")
@@ -196,7 +196,7 @@ class TestActivityLogging:
         assert second is True
         assert db.query(ActivityLog).count() == 2
 
-    def test_different_entities_not_deduped(self, db: Session):
+    def test_different_entities_not_deduped(self, db: Session) -> None:
         user = _create_user(db)
         p1 = _create_player(db, "Player D")
         p2 = _create_player(db, "Player E")
@@ -225,7 +225,7 @@ class TestActivityLogging:
 
 
 class TestWorkspaceSummary:
-    def test_empty_workspace(self, db: Session):
+    def test_empty_workspace(self, db: Session) -> None:
         user = _create_user(db)
         summary = get_workspace_summary(db, user.id)
         assert summary["shortlist_count"] == 0
@@ -234,7 +234,7 @@ class TestWorkspaceSummary:
         assert summary["watch_count"] == 0
         assert summary["unread_alert_count"] == 0
 
-    def test_counts_shortlists(self, db: Session):
+    def test_counts_shortlists(self, db: Session) -> None:
         user = _create_user(db)
         db.add(Shortlist(user_id=user.id, name="List 1"))
         db.add(Shortlist(user_id=user.id, name="List 2"))
@@ -243,7 +243,7 @@ class TestWorkspaceSummary:
         summary = get_workspace_summary(db, user.id)
         assert summary["shortlist_count"] == 2
 
-    def test_excludes_deleted_shortlists(self, db: Session):
+    def test_excludes_deleted_shortlists(self, db: Session) -> None:
         user = _create_user(db)
         db.add(Shortlist(user_id=user.id, name="Active"))
         db.add(
@@ -350,7 +350,7 @@ class TestTrendingPlayers:
 
         return user, trending_player, static_player
 
-    def test_returns_players_with_upward_movement(self, db: Session):
+    def test_returns_players_with_upward_movement(self, db: Session) -> None:
         user, trending_player, _ = self._setup_trending(db)
 
         trending = get_trending_players(db, user.id)
@@ -358,7 +358,7 @@ class TestTrendingPlayers:
         assert trending[0]["player_id"] == trending_player.id
         assert trending[0]["avg_gain"] > 5.0
 
-    def test_excludes_viewed_players(self, db: Session):
+    def test_excludes_viewed_players(self, db: Session) -> None:
         user, trending_player, _ = self._setup_trending(db)
 
         # Log the user as having viewed this player
@@ -380,7 +380,7 @@ class TestTrendingPlayers:
 
 
 class TestRecommendations:
-    def test_recommends_similar_position_unseen(self, db: Session):
+    def test_recommends_similar_position_unseen(self, db: Session) -> None:
         """User who viewed CM players gets recommended other CMs."""
         user = _create_user(db)
         league = League(
@@ -461,7 +461,7 @@ class TestRecommendations:
         assert cm1.id not in rec_ids
         assert cm2.id not in rec_ids
 
-    def test_excludes_dismissed(self, db: Session):
+    def test_excludes_dismissed(self, db: Session) -> None:
         user = _create_user(db)
         league = League(
             name="Test League",
@@ -513,7 +513,7 @@ class TestRecommendations:
 
 
 class TestSavedPlayers:
-    def test_save_and_list(self, db: Session):
+    def test_save_and_list(self, db: Session) -> None:
         user = _create_user(db)
         player = _create_player(db, "Saved One")
 
@@ -525,7 +525,7 @@ class TestSavedPlayers:
         assert len(saved) == 1
         assert saved[0]["player_id"] == player.id
 
-    def test_duplicate_save_is_idempotent(self, db: Session):
+    def test_duplicate_save_is_idempotent(self, db: Session) -> None:
         user = _create_user(db)
         player = _create_player(db, "Saved Twice")
 
@@ -535,7 +535,7 @@ class TestSavedPlayers:
         saved = get_saved_players(db, user.id)
         assert len(saved) == 1
 
-    def test_unsave(self, db: Session):
+    def test_unsave(self, db: Session) -> None:
         user = _create_user(db)
         player = _create_player(db, "To Remove")
 
@@ -546,7 +546,7 @@ class TestSavedPlayers:
         saved = get_saved_players(db, user.id)
         assert len(saved) == 0
 
-    def test_unsave_nonexistent_returns_false(self, db: Session):
+    def test_unsave_nonexistent_returns_false(self, db: Session) -> None:
         user = _create_user(db)
         removed = unsave_player(db, user.id, 99999)
         assert removed is False
@@ -558,19 +558,19 @@ class TestSavedPlayers:
 
 
 class TestDashboardState:
-    def test_get_or_create_creates(self, db: Session):
+    def test_get_or_create_creates(self, db: Session) -> None:
         user = _create_user(db)
         state = get_or_create_dashboard_state(db, user.id)
         assert state.user_id == user.id
         assert state.dismissed_recommendations == []
 
-    def test_get_or_create_reuses(self, db: Session):
+    def test_get_or_create_reuses(self, db: Session) -> None:
         user = _create_user(db)
         s1 = get_or_create_dashboard_state(db, user.id)
         s2 = get_or_create_dashboard_state(db, user.id)
         assert s1.id == s2.id
 
-    def test_dismiss_persists(self, db: Session):
+    def test_dismiss_persists(self, db: Session) -> None:
         user = _create_user(db)
         dismiss_recommendation(db, user.id, 42)
         state = get_or_create_dashboard_state(db, user.id)

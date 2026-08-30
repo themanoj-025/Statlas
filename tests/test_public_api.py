@@ -31,7 +31,7 @@ SEASON = "2025-26"
 
 
 @pytest.fixture()
-def seeded_client():
+def seeded_client() -> None:
     """Seeded DB (players with published percentiles) + signed-in user."""
     db_module._engine = None
     db_module._session_factory = None
@@ -69,7 +69,7 @@ def create_key(client) -> str:
     return resp.json()["key"]
 
 
-def make_api_business(client):
+def make_api_business(client) -> None:
     """Upgrade the signed-in user to api_business (key rate limits apply)."""
     with session_scope() as db:
         user = db.query(User).filter(User.email == "dev@example.com").first()
@@ -77,7 +77,7 @@ def make_api_business(client):
         db.commit()
 
 
-def test_key_created_with_one_time_reveal_and_hashed_storage(seeded_client):
+def test_key_created_with_one_time_reveal_and_hashed_storage(seeded_client) -> None:
     raw = create_key(seeded_client)
     assert raw.startswith("sl_")
     with session_scope() as db:
@@ -92,7 +92,7 @@ def test_key_created_with_one_time_reveal_and_hashed_storage(seeded_client):
     assert "key" not in listed[0]
 
 
-def test_key_auth_resolves_and_serves_real_data(seeded_client):
+def test_key_auth_resolves_and_serves_real_data(seeded_client) -> None:
     make_api_business(seeded_client)
     raw = create_key(seeded_client)
     resp = seeded_client.get(
@@ -109,12 +109,12 @@ def test_key_auth_resolves_and_serves_real_data(seeded_client):
     assert resp.headers["x-ratelimit-limit"] is not None
 
 
-def test_public_endpoints_require_key(seeded_client):
+def test_public_endpoints_require_key(seeded_client) -> None:
     resp = seeded_client.get("/api/v1/public/players/1/percentiles")
     assert resp.status_code == 401
 
 
-def test_revoked_key_fails(seeded_client):
+def test_revoked_key_fails(seeded_client) -> None:
     raw = create_key(seeded_client)
     key_id = seeded_client.get("/api/v1/keys").json()["keys"][0]["id"]
     resp = seeded_client.delete(f"/api/v1/keys/{key_id}")
@@ -129,7 +129,7 @@ def test_revoked_key_fails(seeded_client):
     assert "revoked" in msg.lower()
 
 
-def test_rotate_mints_new_key_and_revokes_old(seeded_client):
+def test_rotate_mints_new_key_and_revokes_old(seeded_client) -> None:
     make_api_business(seeded_client)
     old_raw = create_key(seeded_client)
     key_id = seeded_client.get("/api/v1/keys").json()["keys"][0]["id"]
@@ -155,7 +155,7 @@ def test_rotate_mints_new_key_and_revokes_old(seeded_client):
     )
 
 
-def test_rate_limit_headers_and_403_for_non_api_plan(seeded_client):
+def test_rate_limit_headers_and_403_for_non_api_plan(seeded_client) -> None:
     # Free plan: public API not included -> explicit 403, not silence.
     raw = create_key(seeded_client)
     resp = seeded_client.get(
@@ -168,7 +168,7 @@ def test_rate_limit_headers_and_403_for_non_api_plan(seeded_client):
     assert "api business" in msg.lower()
 
 
-def test_rate_limit_429_after_cap(seeded_client):
+def test_rate_limit_429_after_cap(seeded_client) -> None:
     make_api_business(seeded_client)
     raw = create_key(seeded_client)
     from app.api import public_views
@@ -214,7 +214,7 @@ def test_rate_limit_429_after_cap(seeded_client):
         public_views._WINDOW = original
 
 
-def test_leaderboard_public_endpoint(seeded_client):
+def test_leaderboard_public_endpoint(seeded_client) -> None:
     make_api_business(seeded_client)
     raw = create_key(seeded_client)
     resp = seeded_client.get(

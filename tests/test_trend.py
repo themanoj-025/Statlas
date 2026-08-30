@@ -36,7 +36,7 @@ def _snap(db, player, team, date, raw, minutes=1000, status="ingested"):
 
 
 @pytest.fixture()
-def trend_env(db):
+def trend_env(db) -> dict[str, object]:
     """A league + two teams + two players, then helper builders."""
     league = League(
         slug="premier-league", name="Premier League", country="England", tier="tier_1"
@@ -66,7 +66,7 @@ def trend_env(db):
     return {"db": db, "league": league, "t_a": t_a, "t_b": t_b, "p_a": p_a, "p_b": p_b}
 
 
-def _seed_history(env, dates, player, team, base=0.5, drift=0.0):
+def _seed_history(env, dates, player, team, base=0.5, drift=0.0) -> None:
     """One snapshot per date for `player`, with the metric drifting by `drift`
     per step so ordering assertions are exact."""
     db = env["db"]
@@ -75,7 +75,7 @@ def _seed_history(env, dates, player, team, base=0.5, drift=0.0):
     db.commit()
 
 
-def test_gap_is_flagged_not_interpolated(trend_env):
+def test_gap_is_flagged_not_interpolated(trend_env) -> None:
     """Quality gate Part D: a deliberately missing snapshot produces an
     explicit break (gap_after + gaps span), never a false smooth line."""
     env = trend_env
@@ -114,7 +114,7 @@ def test_gap_is_flagged_not_interpolated(trend_env):
     assert points[4]["raw"] == 1.0
 
 
-def test_rolling_window_keeps_last_n(trend_env):
+def test_rolling_window_keeps_last_n(trend_env) -> None:
     env = trend_env
     db, player, team = env["db"], env["p_a"], env["t_a"]
     dates = [T0 + timedelta(days=7 * i) for i in range(8)]
@@ -133,7 +133,7 @@ def test_rolling_window_keeps_last_n(trend_env):
     assert full["available"] == 8
 
 
-def test_insufficient_history_is_honest(trend_env):
+def test_insufficient_history_is_honest(trend_env) -> None:
     env = trend_env
     db, player, team = env["db"], env["p_a"], env["t_a"]
     dates = [T0 + timedelta(days=7 * i) for i in range(3)]
@@ -147,7 +147,7 @@ def test_insufficient_history_is_honest(trend_env):
     assert trend["insufficient"] is True  # UI copy: "3 of 5 minimum snapshots"
 
 
-def test_transfer_annotation_derived_from_team_change(trend_env):
+def test_transfer_annotation_derived_from_team_change(trend_env) -> None:
     env = trend_env
     db = env["db"]
     dates = [T0 + timedelta(days=7 * i) for i in range(4)]
@@ -167,7 +167,7 @@ def test_transfer_annotation_derived_from_team_change(trend_env):
     assert event["team_to"] == "Liverpool"
 
 
-def test_percentile_mode_serves_only_published_rows(trend_env):
+def test_percentile_mode_serves_only_published_rows(trend_env) -> None:
     env = trend_env
     db, player, team = env["db"], env["p_a"], env["t_a"]
     dates = [T0 + timedelta(days=7 * i) for i in range(5)]
@@ -199,7 +199,7 @@ def test_percentile_mode_serves_only_published_rows(trend_env):
     assert pcts == [50.0, 60.0, None, None, None]  # unpublished -> None, never guessed
 
 
-def test_flagged_snapshot_is_marked(trend_env):
+def test_flagged_snapshot_is_marked(trend_env) -> None:
     env = trend_env
     db, player, team = env["db"], env["p_a"], env["t_a"]
     dates = [T0 + timedelta(days=7 * i) for i in range(3)]
@@ -214,7 +214,7 @@ def test_flagged_snapshot_is_marked(trend_env):
     assert [p["anomaly"] for p in trend["points"]] == [False, True, False]
 
 
-def test_validation_and_missing_player(trend_env):
+def test_validation_and_missing_player(trend_env) -> None:
     env = trend_env
     db, player, team = env["db"], env["p_a"], env["t_a"]
     _snap(db, player, team, T0, {"si_gls_p90": 0.5})

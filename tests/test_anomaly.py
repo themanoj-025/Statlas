@@ -42,7 +42,7 @@ def _snapshot(db, name, raw, source="fbref", minutes=1000, league=None):
     return snap
 
 
-def test_impossible_value_is_flagged(db, premier_league):
+def test_impossible_value_is_flagged(db, premier_league) -> None:
     snap = _snapshot(db, "A", {"si_gls_p90": 99.0}, league=premier_league)
     flagged = check_snapshot_bounds(db, snapshot_date=SNAPSHOT_DATE)
     assert flagged == 1
@@ -56,7 +56,7 @@ def test_impossible_value_is_flagged(db, premier_league):
     assert blocked_player_ids(db, snapshot_date=SNAPSHOT_DATE) == {snap.player_id}
 
 
-def test_minutes_and_matches_bounds(db, premier_league):
+def test_minutes_and_matches_bounds(db, premier_league) -> None:
     _snapshot(db, "A", {"si_gls_p90": 0.3}, minutes=-5, league=premier_league)
     flagged = check_snapshot_bounds(db, snapshot_date=SNAPSHOT_DATE)
     assert flagged == 1
@@ -64,13 +64,13 @@ def test_minutes_and_matches_bounds(db, premier_league):
     assert anomaly.field_name == "minutes_played"
 
 
-def test_undocumented_metric_is_an_anomaly(db, premier_league):
+def test_undocumented_metric_is_an_anomaly(db, premier_league) -> None:
     _snapshot(db, "A", {"si_gls_p90": 0.3, "magic_score": 9000}, league=premier_league)
     assert check_snapshot_bounds(db, snapshot_date=SNAPSHOT_DATE) == 1
     assert db.query(IngestionAnomaly).one().field_name == "magic_score"
 
 
-def test_empty_fbref_extraction_is_flagged(db, premier_league):
+def test_empty_fbref_extraction_is_flagged(db, premier_league) -> None:
     """A played fbref snapshot with zero extracted registry metrics is a
     schema-drift red flag (silent rename would otherwise pass unnoticed)."""
     _snapshot(db, "A", {}, source="fbref", league=premier_league)
@@ -83,7 +83,7 @@ def test_empty_fbref_extraction_is_flagged(db, premier_league):
     assert blocked_player_ids(db, snapshot_date=SNAPSHOT_DATE) == {player_a.id}
 
 
-def test_resolution_unblocks_player(db, premier_league):
+def test_resolution_unblocks_player(db, premier_league) -> None:
     snap = _snapshot(db, "A", {"si_gls_p90": 99.0}, league=premier_league)
     check_snapshot_bounds(db, snapshot_date=SNAPSHOT_DATE)
     assert blocked_player_ids(db, snapshot_date=SNAPSHOT_DATE) == {snap.player_id}
@@ -93,7 +93,7 @@ def test_resolution_unblocks_player(db, premier_league):
     assert blocked_player_ids(db, snapshot_date=SNAPSHOT_DATE) == set()
 
 
-def test_cross_source_divergence_is_flagged(db, premier_league):
+def test_cross_source_divergence_is_flagged(db, premier_league) -> None:
     fbref = _snapshot(
         db,
         "A",

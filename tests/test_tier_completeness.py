@@ -100,7 +100,7 @@ def _seed_st_cohort(db, league: League, prefix: str, n: int = 5) -> list[Player]
     return players
 
 
-def test_cross_tier_transfer_same_season_no_collision(db, small_pool):
+def test_cross_tier_transfer_same_season_no_collision(db, small_pool) -> None:
     """A player with qualifying snapshots in two tiers the same season must get
     percentile rows for BOTH tiers without a unique-key collision, each row
     attached to its own tier's snapshot."""
@@ -180,7 +180,7 @@ def test_cross_tier_transfer_same_season_no_collision(db, small_pool):
     assert all(r.stat_snapshot_id == t2_snapshot.id for r in tier3_rows)
 
 
-def test_tier_completeness_gate_withholds_incomplete_tier(db, small_pool):
+def test_tier_completeness_gate_withholds_incomplete_tier(db, small_pool) -> None:
     """§1.4 gate: when require_tier_completeness=True, a tier missing ANY of its
     leagues is withheld entirely — no partially-populated pool is ranked."""
     from app.compute.percentiles import compute_percentiles
@@ -201,7 +201,7 @@ def test_tier_completeness_gate_withholds_incomplete_tier(db, small_pool):
     assert any("tier_1" in item for item in report.skipped_incomplete_tiers)
 
 
-def test_tier_completeness_gate_passes_when_tier_complete(db, small_pool):
+def test_tier_completeness_gate_passes_when_tier_complete(db, small_pool) -> None:
     """When every league in the tier is covered, the gate lets the tier through."""
     from app.compute.percentiles import compute_percentiles
 
@@ -233,7 +233,7 @@ def test_tier_completeness_gate_passes_when_tier_complete(db, small_pool):
     assert "tier_3" not in report.skipped_incomplete_tiers
 
 
-def test_gate_off_by_default_preserves_prior_behavior(db, small_pool):
+def test_gate_off_by_default_preserves_prior_behavior(db, small_pool) -> None:
     """require_tier_completeness defaults to False — existing single-league
     integration contracts keep working (documented in weekly_refresh)."""
     from app.compute.percentiles import compute_percentiles

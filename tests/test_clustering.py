@@ -244,7 +244,7 @@ class TestFeatureMatrix:
 
     def test_build_feature_matrix_returns_correct_shape(
         self, db: Session, premier_league: League
-    ):
+    ) -> None:
         """Feature matrix should have correct dimensions."""
         # Create 25 CM players
         for i in range(25):
@@ -261,7 +261,7 @@ class TestFeatureMatrix:
 
     def test_build_feature_matrix_excludes_gk(
         self, db: Session, premier_league: League
-    ):
+    ) -> None:
         """Goalkeepers should be excluded from clustering."""
         for i in range(5):
             _make_player(db, f"GK Player {i}", "GK", league=premier_league)
@@ -273,7 +273,7 @@ class TestFeatureMatrix:
 
     def test_build_feature_matrix_filters_by_minutes(
         self, db: Session, premier_league: League
-    ):
+    ) -> None:
         """Players below minimum minutes should be excluded."""
         _make_player(db, "Qualified Player", "CM", minutes=1500, league=premier_league)
         _make_player(db, "Unqualified Player", "CM", minutes=500, league=premier_league)
@@ -283,7 +283,7 @@ class TestFeatureMatrix:
 
     def test_build_feature_matrix_filters_by_season(
         self, db: Session, premier_league: League
-    ):
+    ) -> None:
         """Only players from the requested season should be included."""
         _make_player(
             db, "Current Player", "CM", season="2025-26", league=premier_league
@@ -295,7 +295,7 @@ class TestFeatureMatrix:
 
     def test_build_feature_matrix_filters_by_position(
         self, db: Session, premier_league: League
-    ):
+    ) -> None:
         """Position filter should work correctly."""
         for i in range(5):
             _make_player(db, f"CM Player {i}", "CM", league=premier_league)
@@ -308,7 +308,7 @@ class TestFeatureMatrix:
         player_ids_st, _, _X_st, _ = build_feature_matrix(db, position_group="ST")
         assert len(player_ids_st) == 5
 
-    def test_build_feature_matrix_empty_when_no_data(self, db: Session):
+    def test_build_feature_matrix_empty_when_no_data(self, db: Session) -> None:
         """Empty database should return empty arrays."""
         player_ids, feature_names, X, _raw_stats = build_feature_matrix(db)
         assert len(player_ids) == 0
@@ -324,7 +324,7 @@ class TestFeatureMatrix:
 class TestClusteringTraining:
     """Tests for clustering model training."""
 
-    def test_train_model_basic(self, db: Session, premier_league: League):
+    def test_train_model_basic(self, db: Session, premier_league: League) -> None:
         """Basic training should succeed and produce a valid model."""
         for i in range(30):
             _make_player(db, f"Player {i}", "CM", league=premier_league)
@@ -351,7 +351,7 @@ class TestClusteringTraining:
 
     def test_train_model_registers_in_registry(
         self, db: Session, premier_league: League
-    ):
+    ) -> None:
         """Trained model should be registered in the model registry."""
         for i in range(30):
             _make_player(db, f"Player {i}", "CM", league=premier_league)
@@ -371,7 +371,7 @@ class TestClusteringTraining:
         assert model.training_data_size == 30
         assert model.training_date is not None
 
-    def test_train_model_insufficient_data(self, db: Session, premier_league: League):
+    def test_train_model_insufficient_data(self, db: Session, premier_league: League) -> None:
         """Training with insufficient data should fail gracefully."""
         for i in range(5):
             _make_player(db, f"Player {i}", "CM", league=premier_league)
@@ -387,7 +387,7 @@ class TestClusteringTraining:
         assert len(report.errors) > 0
         assert "Insufficient" in report.errors[0]
 
-    def test_train_model_saves_pipeline(self, db: Session, premier_league: League):
+    def test_train_model_saves_pipeline(self, db: Session, premier_league: League) -> None:
         """Trained model should save a pipeline file."""
         for i in range(30):
             _make_player(db, f"Player {i}", "CM", league=premier_league)
@@ -405,7 +405,7 @@ class TestClusteringTraining:
         # Clean up
         model_path.unlink()
 
-    def test_train_model_with_explicit_k(self, db: Session, premier_league: League):
+    def test_train_model_with_explicit_k(self, db: Session, premier_league: League) -> None:
         """Training with explicit k should use that value."""
         for i in range(30):
             _make_player(db, f"Player {i}", "CM", league=premier_league)
@@ -434,7 +434,7 @@ class TestClusteringTraining:
 class TestOptimalK:
     """Tests for optimal k selection."""
 
-    def test_find_optimal_k_returns_valid_range(self):
+    def test_find_optimal_k_returns_valid_range(self) -> None:
         """Optimal k should be in a reasonable range."""
         rng = np.random.RandomState(42)
         X = rng.randn(100, 10)
@@ -445,7 +445,7 @@ class TestOptimalK:
         assert best_k in scores
         assert len(scores) > 0
 
-    def test_find_optimal_k_with_custom_range(self):
+    def test_find_optimal_k_with_custom_range(self) -> None:
         """Custom k range should be respected."""
         rng = np.random.RandomState(42)
         X = rng.randn(100, 10)
@@ -464,7 +464,7 @@ class TestOptimalK:
 class TestArchetypeNaming:
     """Tests for archetype naming and description generation."""
 
-    def test_generate_name_high_feature(self):
+    def test_generate_name_high_feature(self) -> None:
         """Name should indicate high value for above-average features."""
         distinguishing = [
             {
@@ -478,7 +478,7 @@ class TestArchetypeNaming:
         assert "High-" in name
         assert "Pressing" in name
 
-    def test_generate_name_low_feature(self):
+    def test_generate_name_low_feature(self) -> None:
         """Name should indicate low value for below-average features."""
         distinguishing = [
             {
@@ -492,12 +492,12 @@ class TestArchetypeNaming:
         assert "Low-" in name
         assert "Pass Completion" in name
 
-    def test_generate_name_empty_features(self):
+    def test_generate_name_empty_features(self) -> None:
         """Empty features should return unknown archetype."""
         name = _generate_archetype_name([], CLUSTERING_FEATURES)
         assert name == "Unknown Archetype"
 
-    def test_generate_description_with_features(self):
+    def test_generate_description_with_features(self) -> None:
         """Description should include feature directions."""
         distinguishing = [
             {
@@ -517,7 +517,7 @@ class TestArchetypeNaming:
         assert "above-average" in desc
         assert "50 players" in desc
 
-    def test_generate_description_empty_features(self):
+    def test_generate_description_empty_features(self) -> None:
         """Empty features should return generic description."""
         desc = _generate_archetype_description([], 0)
         assert "statistical clustering" in desc
@@ -531,7 +531,7 @@ class TestArchetypeNaming:
 class TestPlayerAssignment:
     """Tests for player archetype assignment."""
 
-    def test_assign_player_to_archetype(self, db: Session, premier_league: League):
+    def test_assign_player_to_archetype(self, db: Session, premier_league: League) -> None:
         """Player assignment should return valid archetype data."""
         # Train a model first
         players = []
@@ -562,14 +562,14 @@ class TestPlayerAssignment:
         # Clean up
         Path("data/models/test_assign_1.0.joblib").unlink(missing_ok=True)
 
-    def test_assign_player_no_model(self, db: Session, premier_league: League):
+    def test_assign_player_no_model(self, db: Session, premier_league: League) -> None:
         """Assignment should return None when no model is active."""
         _make_player(db, "Solo Player", "CM", league=premier_league)
 
         result = assign_player_to_archetype(db, 1)
         assert result is None
 
-    def test_assign_player_below_minutes(self, db: Session, premier_league: League):
+    def test_assign_player_below_minutes(self, db: Session, premier_league: League) -> None:
         """Players below minutes threshold should not be assigned."""
         player = _make_player(
             db, "Short Player", "CM", minutes=500, league=premier_league
@@ -591,7 +591,7 @@ class TestPlayerAssignment:
 
         Path("data/models/test_below_min_1.0.joblib").unlink(missing_ok=True)
 
-    def test_assign_all_players(self, db: Session, premier_league: League):
+    def test_assign_all_players(self, db: Session, premier_league: League) -> None:
         """Batch assignment should work for all qualifying players."""
         for i in range(30):
             _make_player(db, f"Batch Player {i}", "CM", league=premier_league)
@@ -626,7 +626,7 @@ class TestPlayerAssignment:
 class TestModelDeployment:
     """Tests for model deployment and rollback."""
 
-    def test_deploy_model(self, db: Session, premier_league: League):
+    def test_deploy_model(self, db: Session, premier_league: League) -> None:
         """Deploying a model should set it to in_production."""
         for i in range(30):
             _make_player(db, f"Deploy Player {i}", "CM", league=premier_league)
@@ -649,7 +649,7 @@ class TestModelDeployment:
 
         Path("data/models/test_deploy_1.0.joblib").unlink(missing_ok=True)
 
-    def test_deploy_archives_previous(self, db: Session, premier_league: League):
+    def test_deploy_archives_previous(self, db: Session, premier_league: League) -> None:
         """Deploying a new model should archive the old one."""
         for i in range(30):
             _make_player(db, f"Archive Player {i}", "CM", league=premier_league)
@@ -685,7 +685,7 @@ class TestModelDeployment:
         Path("data/models/test_archive_1.0.joblib").unlink(missing_ok=True)
         Path("data/models/test_archive_2.0.joblib").unlink(missing_ok=True)
 
-    def test_rollback_model(self, db: Session, premier_league: League):
+    def test_rollback_model(self, db: Session, premier_league: League) -> None:
         """Rollback should restore the previous model."""
         for i in range(30):
             _make_player(db, f"Rollback Player {i}", "CM", league=premier_league)
@@ -721,7 +721,7 @@ class TestModelDeployment:
         Path("data/models/test_rollback_1.0.joblib").unlink(missing_ok=True)
         Path("data/models/test_rollback_2.0.joblib").unlink(missing_ok=True)
 
-    def test_deploy_rejects_low_silhouette(self, db: Session, premier_league: League):
+    def test_deploy_rejects_low_silhouette(self, db: Session, premier_league: League) -> None:
         """Deploying should reject models with silhouette below threshold."""
         for i in range(30):
             _make_player(db, f"Low Score Player {i}", "CM", league=premier_league)
@@ -755,7 +755,7 @@ class TestModelDeployment:
 class TestMonitoring:
     """Tests for model monitoring."""
 
-    def test_check_staleness_fresh_model(self, db: Session, premier_league: League):
+    def test_check_staleness_fresh_model(self, db: Session, premier_league: League) -> None:
         """Fresh model should not be stale."""
         for i in range(30):
             _make_player(db, f"Fresh Player {i}", "CM", league=premier_league)
@@ -778,7 +778,7 @@ class TestMonitoring:
 
         Path("data/models/test_staleness_1.0.joblib").unlink(missing_ok=True)
 
-    def test_check_staleness_old_model(self, db: Session, premier_league: League):
+    def test_check_staleness_old_model(self, db: Session, premier_league: League) -> None:
         """Model with old training date should be stale."""
         for i in range(30):
             _make_player(db, f"Old Player {i}", "CM", league=premier_league)
@@ -818,7 +818,7 @@ class TestMonitoring:
 class TestClusterCenters:
     """Tests for cluster center computation."""
 
-    def test_compute_cluster_centers(self, db: Session, premier_league: League):
+    def test_compute_cluster_centers(self, db: Session, premier_league: League) -> None:
         """Cluster centers should be correctly computed."""
         for i in range(30):
             _make_player(db, f"Center Player {i}", "CM", league=premier_league)
@@ -860,7 +860,7 @@ class TestClusterCenters:
 class TestGovernanceCheckpoints:
     """Verify all governance checkpoints from the ML Constitution Addendum §6."""
 
-    def test_model_card_completed(self, db: Session, premier_league: League):
+    def test_model_card_completed(self, db: Session, premier_league: League) -> None:
         """Model card should exist for every trained model."""
         for i in range(30):
             _make_player(db, f"Card Player {i}", "CM", league=premier_league)
@@ -881,7 +881,7 @@ class TestGovernanceCheckpoints:
 
         Path("data/models/test_card_1.0.joblib").unlink(missing_ok=True)
 
-    def test_training_data_reproducible(self, db: Session, premier_league: League):
+    def test_training_data_reproducible(self, db: Session, premier_league: League) -> None:
         """Same query should produce same data."""
         for i in range(20):
             _make_player(db, f"Repro Player {i}", "CM", league=premier_league)
@@ -894,11 +894,11 @@ class TestGovernanceCheckpoints:
         assert features1 == features2
         np.testing.assert_array_equal(X1, X2)
 
-    def test_decision_threshold_documented(self):
+    def test_decision_threshold_documented(self) -> None:
         """Decision threshold should be documented and used."""
         assert SILHOUETTE_THRESHOLD == 0.30
 
-    def test_model_versioning(self, db: Session, premier_league: League):
+    def test_model_versioning(self, db: Session, premier_league: League) -> None:
         """Models should be versioned, never overwritten."""
         for i in range(30):
             _make_player(db, f"Version Player {i}", "CM", league=premier_league)
@@ -928,7 +928,7 @@ class TestGovernanceCheckpoints:
         Path("data/models/test_versioning_1.0.joblib").unlink(missing_ok=True)
         Path("data/models/test_versioning_2.0.joblib").unlink(missing_ok=True)
 
-    def test_rollback_plan_defined(self, db: Session, premier_league: League):
+    def test_rollback_plan_defined(self, db: Session, premier_league: League) -> None:
         """Rollback plan should be defined for every model."""
         for i in range(30):
             _make_player(db, f"Rollback Plan Player {i}", "CM", league=premier_league)
@@ -947,7 +947,7 @@ class TestGovernanceCheckpoints:
 
         Path("data/models/test_rollback_plan_1.0.joblib").unlink(missing_ok=True)
 
-    def test_explainability_mechanism(self, db: Session, premier_league: League):
+    def test_explainability_mechanism(self, db: Session, premier_league: League) -> None:
         """Every archetype assignment must include distinguishing features."""
         for i in range(30):
             _make_player(db, f"Explain Player {i}", "CM", league=premier_league)

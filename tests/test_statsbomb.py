@@ -27,7 +27,7 @@ def _fixture_fetcher() -> dict[str, str]:
     }
 
 
-def test_build_event_rows_pure():
+def test_build_event_rows_pure() -> None:
     events = json.loads(
         FIXTURES.joinpath("statsbomb_events.json").read_text(encoding="utf-8")
     )
@@ -43,7 +43,7 @@ def test_build_event_rows_pure():
     assert rows[1]["event_type"] == "Pass"
 
 
-def test_sync_competition_stores_events_and_coverage(db):
+def test_sync_competition_stores_events_and_coverage(db) -> None:
     urls = _fixture_fetcher()
     source = StatsBombOpenDataSource(fetcher=lambda url: urls[url.split("/data/")[1]])
     competition = json.loads(urls["competitions.json"])[0]
@@ -66,7 +66,7 @@ def test_sync_competition_stores_events_and_coverage(db):
     assert row.last_successful_scrape is not None
 
 
-def test_resync_is_idempotent(db):
+def test_resync_is_idempotent(db) -> None:
     urls = _fixture_fetcher()
     source = StatsBombOpenDataSource(fetcher=lambda url: urls[url.split("/data/")[1]])
     competition = json.loads(urls["competitions.json"])[0]

@@ -160,46 +160,46 @@ def _make_defensive_event(
 class TestZoneAssignment:
     """C1 — Pitch zone definitions."""
 
-    def test_defensive_left(self):
+    def test_defensive_left(self) -> None:
         from app.compute.spatial_analysis import assign_zone, assign_zone_name
 
         assert assign_zone(10, 10) == (0, 0)
         assert assign_zone_name(10, 10) == "defensive_left"
 
-    def test_attacking_right(self):
+    def test_attacking_right(self) -> None:
         from app.compute.spatial_analysis import assign_zone, assign_zone_name
 
         assert assign_zone(110, 70) == (3, 2)
         assert assign_zone_name(110, 70) == "attacking_right"
 
-    def test_center_midfield(self):
+    def test_center_midfield(self) -> None:
         from app.compute.spatial_analysis import assign_zone, assign_zone_name
 
         assert assign_zone(60, 40) == (1, 1) or assign_zone(60, 40) == (2, 1)
         name = assign_zone_name(60, 40)
         assert "center" in name
 
-    def test_third_assignment(self):
+    def test_third_assignment(self) -> None:
         from app.compute.spatial_analysis import assign_third
 
         assert assign_third(10) == "defensive"
         assert assign_third(60) == "middle"
         assert assign_third(100) == "attacking"
 
-    def test_width_assignment(self):
+    def test_width_assignment(self) -> None:
         from app.compute.spatial_analysis import assign_width
 
         assert assign_width(5) == "left"
         assert assign_width(40) == "center"
         assert assign_width(75) == "right"
 
-    def test_boundary_values(self):
+    def test_boundary_values(self) -> None:
         from app.compute.spatial_analysis import assign_zone
 
         assert assign_zone(0, 0) == (0, 0)
         assert assign_zone(120, 80) == (3, 2)
 
-    def test_all_zones_covered(self):
+    def test_all_zones_covered(self) -> None:
         from app.compute.spatial_analysis import assign_zone_name
 
         found_zones = set()
@@ -218,7 +218,7 @@ class TestZoneAssignment:
 class TestPassingNetwork:
     """B1-B2 — Network construction and metrics."""
 
-    def test_build_network_empty(self, db: Session):
+    def test_build_network_empty(self, db: Session) -> None:
         from app.compute.passing_network import build_passing_network
 
         result = build_passing_network(db, "nonexistent_match")
@@ -226,7 +226,7 @@ class TestPassingNetwork:
         assert result["edges"] == []
         assert result["total_passes"] == 0
 
-    def test_build_network_basic(self, db: Session):
+    def test_build_network_basic(self, db: Session) -> None:
         from app.compute.passing_network import build_passing_network
 
         league = _make_league(db)
@@ -247,7 +247,7 @@ class TestPassingNetwork:
         # Edges: p1→p2 (2 passes), p2→p1 (1 pass)
         assert len(result["edges"]) == 2
 
-    def test_network_metrics(self, db: Session):
+    def test_network_metrics(self, db: Session) -> None:
         from app.compute.passing_network import (
             build_passing_network,
             compute_network_metrics,
@@ -305,7 +305,7 @@ class TestPassingNetwork:
             assert 0 <= node["betweenness_centrality"] <= 1
             assert 0 <= node["clustering_coefficient"] <= 1
 
-    def test_network_with_incomplete_passes(self, db: Session):
+    def test_network_with_incomplete_passes(self, db: Session) -> None:
         from app.compute.passing_network import build_passing_network
 
         league = _make_league(db)
@@ -342,7 +342,7 @@ class TestPassingNetwork:
 class TestTacticalStyle:
     """B3 — Tactical style detection."""
 
-    def test_possession_style(self):
+    def test_possession_style(self) -> None:
         from app.compute.passing_network import detect_tactical_style
 
         network = {
@@ -354,7 +354,7 @@ class TestTacticalStyle:
         result = detect_tactical_style(network, metrics)
         assert result["style"] == "insufficient_data"
 
-    def test_insufficient_data(self):
+    def test_insufficient_data(self) -> None:
         from app.compute.passing_network import detect_tactical_style
 
         result = detect_tactical_style({"total_passes": 0, "nodes": []}, {"nodes": []})
@@ -369,7 +369,7 @@ class TestTacticalStyle:
 class TestAnomalyDetection:
     """B4 — Anomaly detection in passing networks."""
 
-    def test_no_anomalies(self):
+    def test_no_anomalies(self) -> None:
         from app.compute.passing_network import detect_network_anomalies
 
         result = detect_network_anomalies(
@@ -378,7 +378,7 @@ class TestAnomalyDetection:
         )
         assert result == []
 
-    def test_disconnected_player(self):
+    def test_disconnected_player(self) -> None:
         from app.compute.passing_network import detect_network_anomalies
 
         metrics = {
@@ -415,14 +415,14 @@ class TestAnomalyDetection:
 class TestHeatmaps:
     """C2-C3 — Pressure and possession heatmaps."""
 
-    def test_pressure_heatmap_empty(self, db: Session):
+    def test_pressure_heatmap_empty(self, db: Session) -> None:
         from app.compute.spatial_analysis import compute_pressure_heatmap
 
         result = compute_pressure_heatmap(db, "nonexistent")
         assert result["total_actions"] == 0
         assert all(v == 0 for v in result["zone_densities"].values())
 
-    def test_pressure_heatmap_with_data(self, db: Session):
+    def test_pressure_heatmap_with_data(self, db: Session) -> None:
         from app.compute.spatial_analysis import compute_pressure_heatmap
 
         league = _make_league(db)
@@ -440,7 +440,7 @@ class TestHeatmaps:
         # Should have at least one zone with non-zero density
         assert any(v > 0 for v in result["zone_densities"].values())
 
-    def test_possession_heatmap(self, db: Session):
+    def test_possession_heatmap(self, db: Session) -> None:
         from app.compute.spatial_analysis import compute_possession_heatmap
 
         league = _make_league(db)
@@ -464,7 +464,7 @@ class TestHeatmaps:
 class TestPressureSuccess:
     """C4 — Pressure success rate per zone."""
 
-    def test_pressure_success_empty(self, db: Session):
+    def test_pressure_success_empty(self, db: Session) -> None:
         from app.compute.spatial_analysis import compute_pressure_success
 
         result = compute_pressure_success(db, "nonexistent")
@@ -472,7 +472,7 @@ class TestPressureSuccess:
             v["total_pressures"] == 0 for v in result["zone_success_rates"].values()
         )
 
-    def test_pressure_success_with_turnover(self, db: Session):
+    def test_pressure_success_with_turnover(self, db: Session) -> None:
         from app.compute.spatial_analysis import compute_pressure_success
 
         league = _make_league(db)
@@ -500,13 +500,13 @@ class TestPressureSuccess:
 class TestCoverageCheck:
     """Coverage gating for tactical data."""
 
-    def test_has_tactical_data_no_events(self, db: Session):
+    def test_has_tactical_data_no_events(self, db: Session) -> None:
         from app.compute.spatial_analysis import has_tactical_data
 
         result = has_tactical_data(db, "nonexistent")
         assert result["has_coverage"] is False
 
-    def test_has_tactical_data_with_events(self, db: Session):
+    def test_has_tactical_data_with_events(self, db: Session) -> None:
         from app.compute.spatial_analysis import has_tactical_data
 
         league = _make_league(db)
@@ -532,14 +532,14 @@ class TestCoverageCheck:
 class TestFormationDetection:
     """D1-D2 — Formation detection and stability."""
 
-    def test_formation_unknown_match(self, db: Session):
+    def test_formation_unknown_match(self, db: Session) -> None:
         from app.compute.formation import detect_formation
 
         result = detect_formation(db, "nonexistent")
         assert result["formation_str"] == "unknown"
         assert result["confidence"] == 0
 
-    def test_formation_basic_433(self, db: Session):
+    def test_formation_basic_433(self, db: Session) -> None:
         from app.compute.formation import detect_formation
 
         league = _make_league(db)
@@ -582,7 +582,7 @@ class TestFormationDetection:
         assert result["formation"][1] == 3  # midfielders
         assert result["formation"][2] == 3  # forwards
 
-    def test_formation_stability(self, db: Session):
+    def test_formation_stability(self, db: Session) -> None:
         from app.compute.formation import analyze_formation_stability
 
         league = _make_league(db)
@@ -601,7 +601,7 @@ class TestFormationDetection:
         assert len(result["windows"]) == 4  # 120 / 30 = 4 windows
         assert 0 <= result["stability_score"] <= 1
 
-    def test_formation_conformity(self, db: Session):
+    def test_formation_conformity(self, db: Session) -> None:
         from app.compute.formation import analyze_formation_conformity
 
         league = _make_league(db)
@@ -631,7 +631,7 @@ class TestFormationDetection:
 class TestAPIEndpoints:
     """Verify tactical API endpoints are registered."""
 
-    def test_tactical_router_registered(self):
+    def test_tactical_router_registered(self) -> None:
         from app.api.tactical_views import router
 
         routes = [r.path for r in router.routes]
@@ -642,7 +642,7 @@ class TestAPIEndpoints:
         assert any("formation" in p for p in routes)
         assert any("coverage" in p for p in routes)
 
-    def test_main_includes_tactical(self):
+    def test_main_includes_tactical(self) -> None:
         from app.api.tactical_views import router as t
 
 

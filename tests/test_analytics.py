@@ -86,7 +86,7 @@ def pro_user(db: Session) -> User:
 class TestEventSchema:
     """Tests for event schema validation."""
 
-    def test_known_event_accepted(self, db: Session, staff_user: User):
+    def test_known_event_accepted(self, db: Session, staff_user: User) -> None:
         """Known events with all required properties are accepted."""
         event = track_event(
             db,
@@ -97,7 +97,7 @@ class TestEventSchema:
         assert event.id is not None
         assert event.event_name == "user_login"
 
-    def test_unknown_event_rejected(self, db: Session):
+    def test_unknown_event_rejected(self, db: Session) -> None:
         """Unknown events raise ValueError."""
         with pytest.raises(ValueError, match="Unknown event"):
             track_event(
@@ -107,7 +107,7 @@ class TestEventSchema:
                 user_id=1,
             )
 
-    def test_missing_property_rejected(self, db: Session):
+    def test_missing_property_rejected(self, db: Session) -> None:
         """Events with missing required properties raise ValueError."""
         with pytest.raises(ValueError, match="missing required properties"):
             track_event(
@@ -117,13 +117,13 @@ class TestEventSchema:
                 user_id=1,
             )
 
-    def test_all_events_have_schemas(self):
+    def test_all_events_have_schemas(self) -> None:
         """Every event in REQUIRED_PROPERTIES has at least one property."""
         for name, props in REQUIRED_PROPERTIES.items():
             assert isinstance(props, list), f"Event {name} properties must be a list"
             assert len(props) > 0, f"Event {name} must have at least one required property"
 
-    def test_event_properties_stored(self, db: Session, staff_user: User):
+    def test_event_properties_stored(self, db: Session, staff_user: User) -> None:
         """Event properties are stored as JSON."""
         event = track_event(
             db,
@@ -142,7 +142,7 @@ class TestEventSchema:
 class TestSessionTracking:
     """Tests for session creation and management."""
 
-    def test_session_created_on_first_event(self, db: Session, staff_user: User):
+    def test_session_created_on_first_event(self, db: Session, staff_user: User) -> None:
         """A new session is created when the first event arrives."""
         session_id = "test-session-001"
         track_event(
@@ -163,7 +163,7 @@ class TestSessionTracking:
         assert session.user_id == staff_user.id
         assert session.event_count == 1
 
-    def test_session_extended_on_subsequent_events(self, db: Session, staff_user: User):
+    def test_session_extended_on_subsequent_events(self, db: Session, staff_user: User) -> None:
         """Subsequent events extend the session."""
         session_id = "test-session-002"
 
@@ -190,7 +190,7 @@ class TestSessionTracking:
         )
         assert session.event_count == 2
 
-    def test_anonymous_events_accepted(self, db: Session):
+    def test_anonymous_events_accepted(self, db: Session) -> None:
         """Events without user_id or session_id are accepted."""
         event = track_event(
             db,
@@ -207,12 +207,12 @@ class TestSessionTracking:
 class TestActiveUsers:
     """Tests for daily and monthly active user computation."""
 
-    def test_dau_zero_when_no_events(self, db: Session):
+    def test_dau_zero_when_no_events(self, db: Session) -> None:
         """DAU is 0 when no events exist for the date."""
         result = compute_dau(db, datetime(2025, 1, 1, tzinfo=timezone.utc))
         assert result["dau_total"] == 0
 
-    def test_dau_counts_unique_users(self, db: Session, staff_user: User, free_user: User):
+    def test_dau_counts_unique_users(self, db: Session, staff_user: User, free_user: User) -> None:
         """DAU counts unique active users, not events."""
         now = datetime.now(timezone.utc)
 
@@ -235,7 +235,7 @@ class TestActiveUsers:
         result = compute_dau(db, now)
         assert result["dau_total"] == 2
 
-    def test_dau_by_tier(self, db: Session, staff_user: User, free_user: User):
+    def test_dau_by_tier(self, db: Session, staff_user: User, free_user: User) -> None:
         """DAU correctly breaks down by subscription tier."""
         now = datetime.now(timezone.utc)
 
@@ -257,7 +257,7 @@ class TestActiveUsers:
         assert result["dau_pro"] == 1
         assert result["dau_free"] == 1
 
-    def test_mau_counts_month(self, db: Session, staff_user: User):
+    def test_mau_counts_month(self, db: Session, staff_user: User) -> None:
         """MAU counts all unique active users in the month."""
         now = datetime.now(timezone.utc)
 
@@ -279,14 +279,14 @@ class TestActiveUsers:
 class TestFeatureAdoption:
     """Tests for feature adoption and engagement metrics."""
 
-    def test_feature_usage_empty_day(self, db: Session):
+    def test_feature_usage_empty_day(self, db: Session) -> None:
         """Feature usage returns all features with 0 adoption on empty day."""
         result = compute_feature_usage(db, datetime(2025, 1, 1, tzinfo=timezone.utc))
         assert len(result) > 0
         for feature in result:
             assert feature["adoption_count"] == 0
 
-    def test_feature_usage_with_events(self, db: Session, staff_user: User):
+    def test_feature_usage_with_events(self, db: Session, staff_user: User) -> None:
         """Feature usage correctly counts adoption."""
         now = datetime.now(timezone.utc)
 
@@ -309,13 +309,13 @@ class TestFeatureAdoption:
 class TestConversionFunnel:
     """Tests for the Free → Pro conversion funnel."""
 
-    def test_funnel_empty(self, db: Session):
+    def test_funnel_empty(self, db: Session) -> None:
         """Empty funnel returns 0 for all steps."""
         result = compute_conversion_funnel(db)
         assert result["step_1_signups"] == 0
         assert result["overall_conversion"] == 0
 
-    def test_funnel_with_signups(self, db: Session):
+    def test_funnel_with_signups(self, db: Session) -> None:
         """Funnel counts signups correctly."""
         now = datetime.now(timezone.utc)
         start = now - timedelta(days=30)
@@ -341,14 +341,14 @@ class TestConversionFunnel:
 class TestRetention:
     """Tests for cohort retention computation."""
 
-    def test_retention_empty_cohort(self, db: Session):
+    def test_retention_empty_cohort(self, db: Session) -> None:
         """Empty cohort returns empty list."""
         result = compute_retention_cohort(
             db, datetime(2020, 1, 1, tzinfo=timezone.utc)
         )
         assert result == []
 
-    def test_retention_cohort_with_users(self, db: Session):
+    def test_retention_cohort_with_users(self, db: Session) -> None:
         """Retention computes correctly for a cohort with active users."""
         now = datetime.now(timezone.utc)
         cohort_start = now - timedelta(days=60)
@@ -376,13 +376,13 @@ class TestRetention:
 class TestChurn:
     """Tests for churn rate computation."""
 
-    def test_churn_zero_pro_users(self, db: Session):
+    def test_churn_zero_pro_users(self, db: Session) -> None:
         """Churn rate is 0 when no Pro users exist."""
         result = compute_churn_rate(db)
         assert result["churn_rate_pct"] == 0
         assert result["annualized_churn_pct"] == 0
 
-    def test_churn_with_cancellations(self, db: Session, pro_user: User):
+    def test_churn_with_cancellations(self, db: Session, pro_user: User) -> None:
         """Churn rate computed correctly with cancellations."""
         now = datetime.now(timezone.utc)
 
@@ -407,13 +407,13 @@ class TestChurn:
 class TestARPU:
     """Tests for ARPU and LTV computation."""
 
-    def test_arpu_zero_users(self, db: Session):
+    def test_arpu_zero_users(self, db: Session) -> None:
         """ARPU is 0 when no Pro users exist."""
         result = compute_arpu(db)
         assert result["arpu_eur"] == 0
         assert result["mrr_eur"] == 0
 
-    def test_arpu_with_pro_users(self, db: Session, pro_user: User):
+    def test_arpu_with_pro_users(self, db: Session, pro_user: User) -> None:
         """ARPU computed correctly with Pro users."""
         now = datetime.now(timezone.utc)
 
@@ -436,12 +436,12 @@ class TestARPU:
 class TestAlerts:
     """Tests for threshold and anomaly alerts."""
 
-    def test_anomaly_no_data(self, db: Session):
+    def test_anomaly_no_data(self, db: Session) -> None:
         """Anomaly detection returns None with no data."""
         result = detect_anomalies(db, "dau_total")
         assert result is None
 
-    def test_alert_model_stores(self, db: Session):
+    def test_alert_model_stores(self, db: Session) -> None:
         """Alerts can be stored and retrieved."""
         alert = AnalyticsAlert(
             alert_name="test_alert",
@@ -466,7 +466,7 @@ class TestAlerts:
 class TestAnalyticsAPI:
     """Tests for analytics API endpoints."""
 
-    def test_event_schema_endpoint(self, client):
+    def test_event_schema_endpoint(self, client) -> None:
         """Event schema endpoint returns all known events."""
         resp = client.get("/api/v1/analytics/events/schema")
         assert resp.status_code == 200
@@ -475,7 +475,7 @@ class TestAnalyticsAPI:
         assert "user_login" in data["events"]
         assert "feature_viewed" in data["events"]
 
-    def test_track_event_unknown(self, client):
+    def test_track_event_unknown(self, client) -> None:
         """Tracking an unknown event returns 400."""
         resp = client.post(
             "/api/v1/analytics/events",
@@ -483,7 +483,7 @@ class TestAnalyticsAPI:
         )
         assert resp.status_code == 400
 
-    def test_track_event_missing_properties(self, client):
+    def test_track_event_missing_properties(self, client) -> None:
         """Tracking event with missing properties returns 400."""
         resp = client.post(
             "/api/v1/analytics/events",
@@ -491,7 +491,7 @@ class TestAnalyticsAPI:
         )
         assert resp.status_code == 400
 
-    def test_track_event_valid(self, client, staff_user: User):
+    def test_track_event_valid(self, client, staff_user: User) -> None:
         """Tracking a valid event returns 200."""
         resp = client.post(
             "/api/v1/analytics/events",
@@ -505,77 +505,77 @@ class TestAnalyticsAPI:
         assert data["status"] == "ok"
         assert "event_id" in data
 
-    def test_dau_requires_auth(self, client):
+    def test_dau_requires_auth(self, client) -> None:
         """DAU endpoint requires authentication."""
         resp = client.get("/api/v1/analytics/metrics/dau")
         assert resp.status_code == 401
 
-    def test_mau_requires_auth(self, client):
+    def test_mau_requires_auth(self, client) -> None:
         """MAU endpoint requires authentication."""
         resp = client.get("/api/v1/analytics/metrics/mau")
         assert resp.status_code == 401
 
-    def test_features_requires_auth(self, client):
+    def test_features_requires_auth(self, client) -> None:
         """Feature usage endpoint requires authentication."""
         resp = client.get("/api/v1/analytics/metrics/features")
         assert resp.status_code == 401
 
-    def test_conversion_requires_auth(self, client):
+    def test_conversion_requires_auth(self, client) -> None:
         """Conversion funnel endpoint requires authentication."""
         resp = client.get("/api/v1/analytics/metrics/conversion")
         assert resp.status_code == 401
 
-    def test_retention_requires_auth(self, client):
+    def test_retention_requires_auth(self, client) -> None:
         """Retention endpoint requires authentication."""
         resp = client.get("/api/v1/analytics/metrics/retention")
         assert resp.status_code == 401
 
-    def test_churn_requires_auth(self, client):
+    def test_churn_requires_auth(self, client) -> None:
         """Churn endpoint requires authentication."""
         resp = client.get("/api/v1/analytics/metrics/churn")
         assert resp.status_code == 401
 
-    def test_arpu_requires_auth(self, client):
+    def test_arpu_requires_auth(self, client) -> None:
         """ARPU endpoint requires authentication."""
         resp = client.get("/api/v1/analytics/metrics/arpu")
         assert resp.status_code == 401
 
-    def test_executive_dashboard_requires_auth(self, client):
+    def test_executive_dashboard_requires_auth(self, client) -> None:
         """Executive dashboard requires authentication."""
         resp = client.get("/api/v1/analytics/dashboard/executive")
         assert resp.status_code == 401
 
-    def test_product_dashboard_requires_auth(self, client):
+    def test_product_dashboard_requires_auth(self, client) -> None:
         """Product dashboard requires authentication."""
         resp = client.get("/api/v1/analytics/dashboard/product")
         assert resp.status_code == 401
 
-    def test_operations_dashboard_requires_auth(self, client):
+    def test_operations_dashboard_requires_auth(self, client) -> None:
         """Operations dashboard requires authentication."""
         resp = client.get("/api/v1/analytics/dashboard/operations")
         assert resp.status_code == 401
 
-    def test_cohort_dashboard_requires_auth(self, client):
+    def test_cohort_dashboard_requires_auth(self, client) -> None:
         """Cohort dashboard requires authentication."""
         resp = client.get("/api/v1/analytics/dashboard/cohorts")
         assert resp.status_code == 401
 
-    def test_alerts_requires_auth(self, client):
+    def test_alerts_requires_auth(self, client) -> None:
         """Alerts endpoint requires authentication."""
         resp = client.get("/api/v1/analytics/alerts")
         assert resp.status_code == 401
 
-    def test_anomalies_requires_auth(self, client):
+    def test_anomalies_requires_auth(self, client) -> None:
         """Anomalies endpoint requires authentication."""
         resp = client.get("/api/v1/analytics/anomalies")
         assert resp.status_code == 401
 
-    def test_alert_check_requires_auth(self, client):
+    def test_alert_check_requires_auth(self, client) -> None:
         """Alert check endpoint requires authentication."""
         resp = client.post("/api/v1/analytics/alerts/check")
         assert resp.status_code == 401
 
-    def test_routes_registered(self, client):
+    def test_routes_registered(self, client) -> None:
         """All analytics routes are registered."""
         routes = [r.path for r in client.app.routes]
         analytics_routes = [r for r in routes if "/analytics/" in r]
@@ -588,7 +588,7 @@ class TestAnalyticsAPI:
 class TestDataIntegrity:
     """Tests for data integrity and Constitution compliance."""
 
-    def test_events_are_append_only(self, db: Session, staff_user: User):
+    def test_events_are_append_only(self, db: Session, staff_user: User) -> None:
         """Events are never mutated or deleted after creation."""
         event = track_event(
             db,
@@ -605,7 +605,7 @@ class TestDataIntegrity:
         stored = db.query(AnalyticsEvent).filter_by(id=original_id).first()
         assert stored.created_at == original_time
 
-    def test_daily_metrics_unique_constraint(self, db: Session):
+    def test_daily_metrics_unique_constraint(self, db: Session) -> None:
         """Daily metrics enforce unique constraint per date/name/tier.
 
         Note: SQLite in tests may not enforce the unique constraint on

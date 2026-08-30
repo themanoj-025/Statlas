@@ -30,7 +30,7 @@ pytestmark = pytest.mark.slow
 
 
 @pytest.fixture()
-def db():
+def db() -> None:
     engine = create_engine("sqlite:///:memory:")
     Base.metadata.create_all(engine)
     SessionLocal = sessionmaker(bind=engine)
@@ -58,14 +58,14 @@ def _create_user(
 
 
 class TestPasswordReset:
-    def test_create_and_consume_token(self, db):
+    def test_create_and_consume_token(self, db) -> None:
         user = _create_user(db)
         raw_token = auth.create_password_reset_token(db, user.id)
 
         user_id = auth.consume_password_reset_token(db, raw_token)
         assert user_id == user.id
 
-    def test_single_use_token(self, db):
+    def test_single_use_token(self, db) -> None:
         user = _create_user(db)
         raw_token = auth.create_password_reset_token(db, user.id)
 
@@ -74,7 +74,7 @@ class TestPasswordReset:
         result = auth.consume_password_reset_token(db, raw_token)
         assert result is None
 
-    def test_expired_token_rejected(self, db):
+    def test_expired_token_rejected(self, db) -> None:
         user = _create_user(db)
         # Create a token and manually expire it
         raw_token = auth.create_password_reset_token(db, user.id)
@@ -89,11 +89,11 @@ class TestPasswordReset:
         result = auth.consume_password_reset_token(db, raw_token)
         assert result is None
 
-    def test_invalid_token_rejected(self, db):
+    def test_invalid_token_rejected(self, db) -> None:
         result = auth.consume_password_reset_token(db, "totally-invalid-token")
         assert result is None
 
-    def test_password_changes_after_reset(self, db):
+    def test_password_changes_after_reset(self, db) -> None:
         user = _create_user(db, password="old-password")
         raw_token = auth.create_password_reset_token(db, user.id)
         user_id = auth.consume_password_reset_token(db, raw_token)
@@ -113,14 +113,14 @@ class TestPasswordReset:
 
 
 class TestEmailVerification:
-    def test_create_and_consume_token(self, db):
+    def test_create_and_consume_token(self, db) -> None:
         user = _create_user(db)
         raw_token = auth.create_email_verification_token(db, user.id)
 
         user_id = auth.consume_email_verification_token(db, raw_token)
         assert user_id == user.id
 
-    def test_single_use_token(self, db):
+    def test_single_use_token(self, db) -> None:
         user = _create_user(db)
         raw_token = auth.create_email_verification_token(db, user.id)
 
@@ -128,7 +128,7 @@ class TestEmailVerification:
         result = auth.consume_email_verification_token(db, raw_token)
         assert result is None
 
-    def test_expired_token_rejected(self, db):
+    def test_expired_token_rejected(self, db) -> None:
         user = _create_user(db)
         raw_token = auth.create_email_verification_token(db, user.id)
         from app.models import EmailVerificationToken
@@ -151,20 +151,20 @@ class TestEmailVerification:
 
 
 class TestLoginRateLimiting:
-    def test_no_lockout_below_threshold(self, db):
+    def test_no_lockout_below_threshold(self, db) -> None:
         for _ in range(auth.LOGIN_MAX_FAILURES - 1):
             auth.record_login_failure("test@example.com")
         locked, _retry_after = auth.is_login_locked("test@example.com")
         assert not locked
 
-    def test_lockout_at_threshold(self, db):
+    def test_lockout_at_threshold(self, db) -> None:
         for _ in range(auth.LOGIN_MAX_FAILURES):
             auth.record_login_failure("test@example.com")
         locked, retry_after = auth.is_login_locked("test@example.com")
         assert locked
         assert retry_after > 0
 
-    def test_lockout_expiry(self, db):
+    def test_lockout_expiry(self, db) -> None:
         """After the rate-limit window expires, the account should be unlocked."""
         # Force in-memory rate limiter for deterministic testing
         import app.rate_limiting as rl
@@ -185,14 +185,14 @@ class TestLoginRateLimiting:
         locked, _ = auth.is_login_locked("test@example.com")
         assert not locked
 
-    def test_clear_failures_on_success(self, db):
+    def test_clear_failures_on_success(self, db) -> None:
         for _ in range(auth.LOGIN_MAX_FAILURES - 1):
             auth.record_login_failure("test@example.com")
         auth.clear_login_failures("test@example.com")
         locked, _ = auth.is_login_locked("test@example.com")
         assert not locked
 
-    def test_different_emails_independent(self, db):
+    def test_different_emails_independent(self, db) -> None:
         for _ in range(auth.LOGIN_MAX_FAILURES):
             auth.record_login_failure("a@example.com")
         locked_a, _ = auth.is_login_locked("a@example.com")
@@ -207,7 +207,7 @@ class TestLoginRateLimiting:
 
 
 class TestProfileUpdate:
-    def test_user_payload_includes_profile_fields(self, db):
+    def test_user_payload_includes_profile_fields(self, db) -> None:
         user = _create_user(db)
         payload = auth.user_payload(user)
         assert "display_name" in payload
@@ -219,14 +219,14 @@ class TestProfileUpdate:
         assert payload["email_verified_at"] is None
         assert payload["account_status"] == "active"
 
-    def test_display_name_update(self, db):
+    def test_display_name_update(self, db) -> None:
         user = _create_user(db)
         user.display_name = "Test Scout"
         db.commit()
         payload = auth.user_payload(user)
         assert payload["display_name"] == "Test Scout"
 
-    def test_timezone_update(self, db):
+    def test_timezone_update(self, db) -> None:
         user = _create_user(db)
         user.timezone = "Europe/London"
         db.commit()
@@ -240,14 +240,14 @@ class TestProfileUpdate:
 
 
 class TestAccountDeletion:
-    def test_pending_deletion_status(self, db):
+    def test_pending_deletion_status(self, db) -> None:
         user = _create_user(db)
         user.account_status = "pending_deletion"
         db.commit()
         db.refresh(user)
         assert user.account_status == "pending_deletion"
 
-    def test_cancel_deletion(self, db):
+    def test_cancel_deletion(self, db) -> None:
         user = _create_user(db)
         user.account_status = "pending_deletion"
         db.commit()
@@ -263,7 +263,7 @@ class TestAccountDeletion:
 
 
 class TestPostMigrationIntegrity:
-    def test_existing_users_retain_shortlists(self, db):
+    def test_existing_users_retain_shortlists(self, db) -> None:
         """Migrated users keep their shortlists after Phase 12 schema changes."""
         user = _create_user(db)
         shortlist = Shortlist(user_id=user.id, name="My Scout List")
@@ -275,7 +275,7 @@ class TestPostMigrationIntegrity:
         assert found is not None
         assert found.name == "My Scout List"
 
-    def test_existing_users_retain_watches(self, db):
+    def test_existing_users_retain_watches(self, db) -> None:
         """Migrated users keep their watches."""
         user = _create_user(db)
         watch = Watch(user_id=user.id, entity_type="player", entity_id=42)
@@ -286,7 +286,7 @@ class TestPostMigrationIntegrity:
         assert found is not None
         assert found.entity_id == 42
 
-    def test_user_plan_unchanged_after_profile_update(self, db):
+    def test_user_plan_unchanged_after_profile_update(self, db) -> None:
         """Updating profile fields does not accidentally reset the plan."""
         user = _create_user(db)
         user.plan = "pro"

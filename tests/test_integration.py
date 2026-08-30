@@ -21,7 +21,7 @@ from tests.conftest import SNAPSHOT_DATE
 SEASON = "2025-26"
 
 
-def _st_raw(gls, xg, sh, prgp, prgc, xag, kp, tkl, int_, press, cmp, dis):
+def _st_raw(gls, xg, sh, prgp, prgc, xag, kp, tkl, int_, press, cmp, dis) -> dict[str, object]:
     return {
         "si_gls_p90": gls,
         "si_xg_p90": xg,
@@ -78,14 +78,14 @@ class FakeFBrefSource:
     def __init__(self, records):
         self.records = records
 
-    def fetch_league_stats(self, league_slug, season):
+    def fetch_league_stats(self, league_slug, season) -> list[object]:
         return [
             r
             for r in self.records
             if r.league_slug == league_slug and r.season == season
         ]
 
-    def get_rate_limit_seconds(self):
+    def get_rate_limit_seconds(self) -> int:
         return 10.0
 
 
@@ -95,18 +95,18 @@ class FakeUnderstatSource:
     def __init__(self, records):
         self.records = records
 
-    def fetch_league_stats(self, league_slug, season):
+    def fetch_league_stats(self, league_slug, season) -> list[object]:
         return [
             r
             for r in self.records
             if r.league_slug == league_slug and r.season == season
         ]
 
-    def get_rate_limit_seconds(self):
+    def get_rate_limit_seconds(self) -> int:
         return 5.0
 
 
-def _fixtures():
+def _fixtures() -> tuple[object, ...]:
     fbref = [
         _st_record("Player A", "aaaaaaaa", "Manchester City", 1000, 0.2, 0.3),
         _st_record("Player B", "bbbbbbbb", "Manchester City", 1100, 0.4, 0.4),
@@ -121,7 +121,7 @@ def _fixtures():
     return fbref, understat
 
 
-def test_full_weekly_refresh_end_to_end(db, small_pool):
+def test_full_weekly_refresh_end_to_end(db, small_pool) -> None:
     fbref, understat = _fixtures()
     report = run_weekly_refresh(
         db,
@@ -193,7 +193,7 @@ def test_full_weekly_refresh_end_to_end(db, small_pool):
     assert leaderboard[-1]["name"] == "Player B"
 
 
-def test_blocked_player_is_excluded_from_pools(db, small_pool):
+def test_blocked_player_is_excluded_from_pools(db, small_pool) -> None:
     fbref, understat = _fixtures()
     run_weekly_refresh(
         db,
