@@ -15,7 +15,7 @@ from tests.conftest import fixtures_dir
 FIXTURES = fixtures_dir()
 
 
-def test_parse_fixtures():
+def test_parse_fixtures() -> None:
     payload = json.loads(
         FIXTURES.joinpath("api_football_fixtures.json").read_text(encoding="utf-8")
     )
@@ -29,13 +29,13 @@ def test_parse_fixtures():
     assert first.kickoff_utc == "2026-08-15T19:30:00+01:00"
 
 
-def test_build_url():
+def test_build_url() -> None:
     assert APIFootballSource.build_url(39, 2025) == (
         "https://v3.football.api-sports.io/fixtures?league=39&season=2025"
     )
 
 
-def test_budget_hard_stop(tmp_path):
+def test_budget_hard_stop(tmp_path) -> None:
     budget = FileBackedBudget(daily_limit=3, path=tmp_path / "budget.json")
     for _ in range(3):
         budget.acquire()
@@ -44,7 +44,7 @@ def test_budget_hard_stop(tmp_path):
         budget.acquire()
 
 
-def test_budget_persists_across_instances(tmp_path):
+def test_budget_persists_across_instances(tmp_path) -> None:
     path = tmp_path / "budget.json"
     first = FileBackedBudget(daily_limit=10, path=path)
     first.acquire()
@@ -53,7 +53,7 @@ def test_budget_persists_across_instances(tmp_path):
     assert second.used == 2
 
 
-def test_budget_rolls_over_next_day(tmp_path):
+def test_budget_rolls_over_next_day(tmp_path) -> None:
     path = tmp_path / "budget.json"
     budget = FileBackedBudget(daily_limit=10, path=path)
     budget.acquire()

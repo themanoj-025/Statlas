@@ -40,7 +40,7 @@ def _state(db) -> dict:
     }
 
 
-def test_rerunning_weekly_refresh_does_not_duplicate_rows(db, small_pool):
+def test_rerunning_weekly_refresh_does_not_duplicate_rows(db, small_pool) -> None:
     first = _run(db)
     state_after_first = _state(db)
     assert first.snapshots_inserted == 7
@@ -54,7 +54,7 @@ def test_rerunning_weekly_refresh_does_not_duplicate_rows(db, small_pool):
     assert second.percentile_rows == 0  # already computed for this snapshot
 
 
-def test_coverage_upsert_does_not_duplicate(db, small_pool):
+def test_coverage_upsert_does_not_duplicate(db, small_pool) -> None:
     _run(db)
     _run(db)
     coverage = db.query(DataCoverage).all()

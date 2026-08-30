@@ -36,40 +36,40 @@ def _fixture_soup(filename: str) -> BeautifulSoup:
 
 
 class TestParseMarketValue:
-    def test_millions(self):
+    def test_millions(self) -> None:
         assert _parse_market_value("€85.00m") == 85_000_000.0
 
-    def test_millions_no_decimal(self):
+    def test_millions_no_decimal(self) -> None:
         assert _parse_market_value("€50m") == 50_000_000.0
 
-    def test_thousands(self):
+    def test_thousands(self) -> None:
         assert _parse_market_value("€500K") == 500_000.0
 
-    def test_billions(self):
+    def test_billions(self) -> None:
         assert _parse_market_value("€1.50bn") == 1_500_000_000.0
 
-    def test_plain_number(self):
+    def test_plain_number(self) -> None:
         assert _parse_market_value("€25000000") == 25_000_000.0
 
-    def test英镑(self):
+    def test英镑(self) -> None:
         assert _parse_market_value("£85.00m") == 85_000_000.0
 
-    def test_dollar(self):
+    def test_dollar(self) -> None:
         assert _parse_market_value("$50.00m") == 50_000_000.0
 
-    def test_empty(self):
+    def test_empty(self) -> None:
         assert _parse_market_value("") is None
 
-    def test_none(self):
+    def test_none(self) -> None:
         assert _parse_market_value(None) is None
 
-    def test_no_match(self):
+    def test_no_match(self) -> None:
         assert _parse_market_value("price unknown") is None
 
-    def test_with_comma(self):
+    def test_with_comma(self) -> None:
         assert _parse_market_value("€1,500.00m") == 1_500_000_000.0
 
-    def test_fixture_value(self):
+    def test_fixture_value(self) -> None:
         soup = _fixture_soup("transfermarkt_player.html")
         mv_el = soup.select_one(
             "div.data-header__market-value-wrapper"
@@ -80,41 +80,41 @@ class TestParseMarketValue:
 
 
 class TestParseTransferFee:
-    def test_free(self):
+    def test_free(self) -> None:
         assert _parse_transfer_fee("Free transfer") == 0.0
 
-    def test_numeric(self):
+    def test_numeric(self) -> None:
         assert _parse_transfer_fee("€10.00m") == 10_000_000.0
 
-    def test_loan(self):
+    def test_loan(self) -> None:
         assert _parse_transfer_fee("Loan") is None
 
-    def test_empty(self):
+    def test_empty(self) -> None:
         assert _parse_transfer_fee("") is None
 
 
 class TestParseDate:
-    def test_standard(self):
+    def test_standard(self) -> None:
         dt = _parse_date("Jan 15, 2024")
         assert dt is not None
         assert dt.year == 2024
         assert dt.month == 1
         assert dt.day == 15
 
-    def test_european(self):
+    def test_european(self) -> None:
         dt = _parse_date("15/01/2024")
         assert dt is not None
         assert dt.year == 2024
 
-    def test_iso(self):
+    def test_iso(self) -> None:
         dt = _parse_date("2024-01-15")
         assert dt is not None
         assert dt.year == 2024
 
-    def test_empty(self):
+    def test_empty(self) -> None:
         assert _parse_date("") is None
 
-    def test_none(self):
+    def test_none(self) -> None:
         assert _parse_date(None) is None
 
 
@@ -124,7 +124,7 @@ class TestParseDate:
 
 
 class TestPlayerProfileParsing:
-    def test_parse_profile(self):
+    def test_parse_profile(self) -> None:
         soup = _fixture_soup("transfermarkt_player.html")
         source = TransfermarktSource.__new__(TransfermarktSource)
         data = source._parse_player_profile(soup)
@@ -134,7 +134,7 @@ class TestPlayerProfileParsing:
         assert "norway" in data.get("citizenship", "").lower()
         assert "centre-forward" in data.get("position", "").lower()
 
-    def test_contract_from_profile(self):
+    def test_contract_from_profile(self) -> None:
         soup = _fixture_soup("transfermarkt_player.html")
         source = TransfermarktSource.__new__(TransfermarktSource)
         as_of = datetime(2026, 8, 22, tzinfo=timezone.utc)
@@ -146,7 +146,7 @@ class TestPlayerProfileParsing:
         assert contract.contract_end_date is not None
         assert contract.contract_end_date.year == 2034
 
-    def test_market_value_history(self):
+    def test_market_value_history(self) -> None:
         soup = _fixture_soup("transfermarkt_player.html")
         source = TransfermarktSource.__new__(TransfermarktSource)
 
@@ -166,7 +166,7 @@ class TestPlayerProfileParsing:
 
 
 class TestTransfermarktSourceMocked:
-    def test_fetch_valuations_uses_ceapi(self):
+    def test_fetch_valuations_uses_ceapi(self) -> None:
         """Verify fetch_valuations uses the CEAPI JSON endpoint."""
         import json as _json
 
@@ -193,7 +193,7 @@ class TestTransfermarktSourceMocked:
         assert records[0].valuation_amount_eur == 180_000_000.0
         assert records[0].player_id == 418560
 
-    def test_fetch_valuations_handles_error_gracefully(self):
+    def test_fetch_valuations_handles_error_gracefully(self) -> None:
         """Failed player lookups should not crash the batch."""
         source = TransfermarktSource.__new__(TransfermarktSource)
         source.session = MagicMock()

@@ -35,7 +35,7 @@ def _player(db, name="Player A"):
     return player
 
 
-def _shot(db, player, match_id="m1", outcome="Goal", xg=0.42, x=95.0, y=40.0):
+def _shot(db, player, match_id="m1", outcome="Goal", xg=0.42, x=95.0, y=40.0) -> None:
     db.add(
         MatchEvent(
             match_id=match_id,
@@ -62,7 +62,7 @@ _pass_counter = 0
 
 def _pass(
     db, player, match_id="m1", completed=True, sx=50.0, ex=70.0, pass_type="Pass"
-):
+) -> None:
     global _pass_counter
     _pass_counter += 1
     db.add(
@@ -87,7 +87,7 @@ def _pass(
     )
 
 
-def _coverage(db, *, identifier="statsbomb:12:2025", status="active"):
+def _coverage(db, *, identifier="statsbomb:12:2025", status="active") -> None:
     db.add(
         DataCoverage(
             source="statsbomb",
@@ -100,7 +100,7 @@ def _coverage(db, *, identifier="statsbomb:12:2025", status="active"):
     db.commit()
 
 
-def test_coverage_gating_without_coverage_row_never_renders(db):
+def test_coverage_gating_without_coverage_row_never_renders(db) -> None:
     """Mandatory quality gate: events exist for the player, but the coverage
     matrix has no row -> has_coverage MUST be False (no map entry point)."""
     player = _player(db)
@@ -128,7 +128,7 @@ def test_coverage_gating_without_coverage_row_never_renders(db):
     )
 
 
-def test_coverage_gating_active_row_unlocks_maps(db):
+def test_coverage_gating_active_row_unlocks_maps(db) -> None:
     player = _player(db)
     _shot(db, player, outcome="Goal", xg=0.42)
     _shot(db, player, outcome="Saved", xg=0.05, match_id="m2")
@@ -165,7 +165,7 @@ def test_coverage_gating_active_row_unlocks_maps(db):
     assert len(get_player_events(db, player.id, event_type="Shot", match_id="m1")) == 1
 
 
-def test_coverage_status_failed_blocks_maps(db):
+def test_coverage_status_failed_blocks_maps(db) -> None:
     player = _player(db)
     _shot(db, player)
     _coverage(db, status="failed")
@@ -176,7 +176,7 @@ def test_coverage_status_failed_blocks_maps(db):
     assert get_player_event_coverage(db, player.id)["has_coverage"] is False
 
 
-def test_pass_queries_and_progressive_derivation(db):
+def test_pass_queries_and_progressive_derivation(db) -> None:
     player = _player(db)
     _pass(db, player, completed=True, sx=50.0, ex=70.0)  # +20 x -> progressive
     _pass(db, player, completed=False, sx=50.0, ex=70.0)  # incomplete, still +20
@@ -207,7 +207,7 @@ def test_pass_queries_and_progressive_derivation(db):
     assert outcomes == {"Complete", "Incomplete"}
 
 
-def test_competition_label_fallback(db):
+def test_competition_label_fallback(db) -> None:
     from app.queries.event_queries import competition_label, parse_statsbomb_identifier
 
     assert competition_label("12") == "Premier League"
@@ -216,7 +216,7 @@ def test_competition_label_fallback(db):
     assert parse_statsbomb_identifier("fbref:premier-league") is None
 
 
-def test_get_statsbomb_competitions_lists_only_covered(db):
+def test_get_statsbomb_competitions_lists_only_covered(db) -> None:
     from app.queries.event_queries import get_statsbomb_competitions
 
     assert get_statsbomb_competitions(db) == []

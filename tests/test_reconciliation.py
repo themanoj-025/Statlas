@@ -16,13 +16,13 @@ from app.reconciliation import (
 from app.sources.base import RawPlayerStatRecord
 
 
-def test_normalize_name():
+def test_normalize_name() -> None:
     assert normalize_name("José Mourinho") == "jose mourinho"
     assert normalize_name("K. De Bruyne") == "k de bruyne"
     assert normalize_name("  Míkel  Arteta  ") == "mikel arteta"
 
 
-def test_strip_suffixes():
+def test_strip_suffixes() -> None:
     assert strip_suffixes("Erling Haaland Jr.") == "erling haaland"
     assert strip_suffixes("Kylian Mbappé") == "kylian mbappe"
     assert strip_suffixes("Frenkie de Jong") == "frenkie de jong"
@@ -44,7 +44,7 @@ def _record(name, team, source="fbref", ext=None, dob=None, **kw):
     )
 
 
-def test_match_by_external_id(db):
+def test_match_by_external_id(db) -> None:
     player = Player(canonical_name="Erling Haaland", external_ids={"fbref": "aaaaaaaa"})
     db.add(player)
     db.commit()
@@ -57,7 +57,7 @@ def test_match_by_external_id(db):
     )
 
 
-def test_match_by_existing_alias(db):
+def test_match_by_existing_alias(db) -> None:
     player = Player(canonical_name="Erling Haaland")
     db.add(player)
     db.flush()  # player_id must exist before the alias row references it
@@ -79,7 +79,7 @@ def test_match_by_existing_alias(db):
     )
 
 
-def test_match_by_exact_name_team_dob(db):
+def test_match_by_exact_name_team_dob(db) -> None:
     team = Team(name="Manchester City", league_id=1)
     db.add(team)
     player = Player(
@@ -96,7 +96,7 @@ def test_match_by_exact_name_team_dob(db):
     assert matched is player
 
 
-def test_unmatched_goes_to_queue_and_resolves_permanently(db):
+def test_unmatched_goes_to_queue_and_resolves_permanently(db) -> None:
     reconciler = Reconciler(db)
     record = _record("El Bicho", "Al-Nassr", source="understat", ext={"understat": 999})
     assert reconciler.match_existing(record) is None
@@ -124,7 +124,7 @@ def test_unmatched_goes_to_queue_and_resolves_permanently(db):
     assert fresh.match_existing(record) is player
 
 
-def test_suffix_variation_matches(db):
+def test_suffix_variation_matches(db) -> None:
     team = Team(name="Borussia Dortmund", league_id=1)
     db.add(team)
     player = Player(canonical_name="Erling Haaland", current_team_id=team.id)

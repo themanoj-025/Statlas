@@ -22,38 +22,38 @@ pytestmark = pytest.mark.slow
 
 
 class TestInMemoryCacheBackend:
-    def test_set_and_get(self):
+    def test_set_and_get(self) -> None:
         cache = InMemoryCacheBackend()
         cache.set("key1", "value1", ttl=60)
         assert cache.get("key1") == "value1"
 
-    def test_get_missing_key(self):
+    def test_get_missing_key(self) -> None:
         cache = InMemoryCacheBackend()
         assert cache.get("nonexistent") is None
 
-    def test_delete(self):
+    def test_delete(self) -> None:
         cache = InMemoryCacheBackend()
         cache.set("key1", "value1", ttl=60)
         cache.delete("key1")
         assert cache.get("key1") is None
 
-    def test_delete_nonexistent_key(self):
+    def test_delete_nonexistent_key(self) -> None:
         cache = InMemoryCacheBackend()
         cache.delete("nonexistent")  # should not raise
 
-    def test_ttl_expiry(self):
+    def test_ttl_expiry(self) -> None:
         cache = InMemoryCacheBackend()
         cache.set("key1", "value1", ttl=0)  # expires immediately
         time.sleep(0.01)
         assert cache.get("key1") is None
 
-    def test_overwrite_key(self):
+    def test_overwrite_key(self) -> None:
         cache = InMemoryCacheBackend()
         cache.set("key1", "v1", ttl=60)
         cache.set("key1", "v2", ttl=60)
         assert cache.get("key1") == "v2"
 
-    def test_delete_pattern_prefix(self):
+    def test_delete_pattern_prefix(self) -> None:
         cache = InMemoryCacheBackend()
         cache.set("player:1:name", "Alice", ttl=60)
         cache.set("player:2:name", "Bob", ttl=60)
@@ -65,20 +65,20 @@ class TestInMemoryCacheBackend:
         assert cache.get("player:2:name") is None
         assert cache.get("team:1:name") == "Arsenal"
 
-    def test_delete_pattern_exact(self):
+    def test_delete_pattern_exact(self) -> None:
         cache = InMemoryCacheBackend()
         cache.set("exact_key", "value", ttl=60)
         cache.delete_pattern("exact_key")
         assert cache.get("exact_key") is None
 
-    def test_get_returns_none_for_expired(self):
+    def test_get_returns_none_for_expired(self) -> None:
         """Expired entries should be cleaned up on access."""
         cache = InMemoryCacheBackend()
         cache._store["old"] = ("value", time.time() - 10)  # expired
         assert cache.get("old") is None
         assert "old" not in cache._store  # cleaned up
 
-    def test_large_value(self):
+    def test_large_value(self) -> None:
         cache = InMemoryCacheBackend()
         big = "x" * 100_000
         cache.set("big", big, ttl=60)
@@ -91,26 +91,26 @@ class TestInMemoryCacheBackend:
 
 
 class TestRedisCacheBackend:
-    def _make_backend(self):
+    def _make_backend(self) -> tuple[object, ...]:
         mock_redis = MagicMock()
         return RedisCacheBackend(mock_redis), mock_redis
 
-    def test_set_calls_setex(self):
+    def test_set_calls_setex(self) -> None:
         backend, mock_redis = self._make_backend()
         backend.set("key1", "value1", ttl=300)
         mock_redis.setex.assert_called_once_with("key1", 300, "value1")
 
-    def test_get_delegates_to_redis(self):
+    def test_get_delegates_to_redis(self) -> None:
         backend, mock_redis = self._make_backend()
         mock_redis.get.return_value = "cached_value"
         assert backend.get("key1") == "cached_value"
 
-    def test_delete(self):
+    def test_delete(self) -> None:
         backend, mock_redis = self._make_backend()
         backend.delete("key1")
         mock_redis.delete.assert_called_once_with("key1")
 
-    def test_delete_pattern_uses_scan(self):
+    def test_delete_pattern_uses_scan(self) -> None:
         backend, mock_redis = self._make_backend()
         # First call: cursor=1, keys=["a:1", "a:2"]
         # Second call: cursor=0, keys=[]
@@ -128,16 +128,16 @@ class TestRedisCacheBackend:
 
 
 class TestCachedDecorator:
-    def setup_method(self):
+    def setup_method(self) -> None:
         import app.cache as cache_mod
 
         cache_mod._backend = InMemoryCacheBackend()
 
-    def test_caches_return_value(self):
+    def test_caches_return_value(self) -> dict[str, object]:
         call_count = 0
 
         @cached(ttl=60, prefix="test_cache_hit")
-        def expensive_fn(_db, x):
+        def expensive_fn(_db, x) -> dict[str, object]:
             nonlocal call_count
             call_count += 1
             return {"result": x * 2}
@@ -193,20 +193,20 @@ class TestCachedDecorator:
         fn(None, 1)
         assert call_count == 2  # expired, called again
 
-    def test_preserves_function_name_and_doc(self):
+    def test_preserves_function_name_and_doc(self) -> int:
         @cached(ttl=60, prefix="test")
-        def my_documented_fn():
+        def my_documented_fn() -> int:
             """This is my docstring."""
             return 42
 
         assert my_documented_fn.__name__ == "my_documented_fn"
         assert my_documented_fn.__doc__ == "This is my docstring."
 
-    def test_kwargs_in_cache_key(self):
+    def test_kwargs_in_cache_key(self) -> dict[str, object]:
         call_count = 0
 
         @cached(ttl=60, prefix="test")
-        def fn(_db, *, metric="si_index", limit=10):
+        def fn(_db, *, metric="si_index", limit=10) -> dict[str, object]:
             nonlocal call_count
             call_count += 1
             return {"metric": metric, "limit": limit}
@@ -215,18 +215,18 @@ class TestCachedDecorator:
         fn(None, metric="si_index", limit=20)  # different kwargs
         assert call_count == 2
 
-    def test_json_serializable_values_cached(self):
+    def test_json_serializable_values_cached(self) -> dict[str, object]:
         @cached(ttl=60, prefix="test")
-        def fn(_db):
+        def fn(_db) -> dict[str, object]:
             return {"nested": {"data": [1, 2, 3]}}
 
         result = fn(None)
         assert result == {"nested": {"data": [1, 2, 3]}}
 
-    def test_cache_hit_returns_deserialized_json(self):
+    def test_cache_hit_returns_deserialized_json(self) -> dict[str, object]:
         """Verify cache hit returns properly deserialized JSON, not a string."""
         @cached(ttl=60, prefix="test")
-        def fn(_db):
+        def fn(_db) -> dict[str, object]:
             return {"key": "value"}
 
         result1 = fn(None)
@@ -241,24 +241,24 @@ class TestCachedDecorator:
 
 
 class TestGetCache:
-    def setup_method(self):
+    def setup_method(self) -> None:
         import app.cache as cache_mod
 
         cache_mod._backend = None
 
-    def teardown_method(self):
+    def teardown_method(self) -> None:
         import app.cache as cache_mod
 
 
         cache_mod._backend = None
 
-    def test_falls_back_to_in_memory(self):
+    def test_falls_back_to_in_memory(self) -> None:
         """Without Redis, get_cache returns InMemoryCacheBackend."""
         with patch.dict("sys.modules", {"redis": None}):
             result = get_cache()
             assert isinstance(result, InMemoryCacheBackend)
 
-    def test_singleton_returns_same_instance(self):
+    def test_singleton_returns_same_instance(self) -> None:
         cache1 = get_cache()
         cache2 = get_cache()
         assert cache1 is cache2

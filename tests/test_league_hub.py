@@ -36,7 +36,7 @@ SEASON = "2025-26"
 
 
 @pytest.fixture()
-def db():
+def db() -> None:
     engine = create_engine("sqlite:///:memory:")
     Base.metadata.create_all(engine)
     SessionLocal = sessionmaker(bind=engine)
@@ -139,7 +139,7 @@ def _seed_percentiles(
 class TestEmergingScoreComputation:
     """Unit tests for compute_emerging_scores against hand-calculated data."""
 
-    def test_player_with_strong_upward_trend_scores_above_threshold(self, db):
+    def test_player_with_strong_upward_trend_scores_above_threshold(self, db) -> None:
         """A player whose percentiles rise steadily across 5 snapshots should
         score above SCORE_THRESHOLD (0.50).
 
@@ -188,7 +188,7 @@ class TestEmergingScoreComputation:
         assert score_row.contributing_factors["trend_magnitude"] > 0
         assert score_row.contributing_factors["trend_consistency"] > 0
 
-    def test_player_with_flat_trend_scores_below_threshold(self, db):
+    def test_player_with_flat_trend_scores_below_threshold(self, db) -> None:
         """A player with no improvement should stay below the threshold."""
         league = _seed_league(db)
         team = _seed_team(db, league)
@@ -213,7 +213,7 @@ class TestEmergingScoreComputation:
         written = compute_emerging_scores(db, snapshot_date=SNAP_DATE, season=SEASON)
         assert written == 0
 
-    def test_unqualified_player_excluded(self, db):
+    def test_unqualified_player_excluded(self, db) -> None:
         """A player below qualifying minutes should never appear in results."""
         registry = load_registry()
         qm = registry.get("qualifying_minutes", 900)
@@ -240,7 +240,7 @@ class TestEmergingScoreComputation:
         written = compute_emerging_scores(db, snapshot_date=SNAP_DATE, season=SEASON)
         assert written == 0
 
-    def test_idempotent_rerun_replaces_rows(self, db):
+    def test_idempotent_rerun_replaces_rows(self, db) -> None:
         """Running compute twice for the same snapshot_date should replace, not duplicate."""
         league = _seed_league(db)
         team = _seed_team(db, league)
@@ -271,7 +271,7 @@ class TestEmergingScoreComputation:
         )
         assert count == 1
 
-    def test_younger_player_scores_higher_than_older_with_same_trend(self, db):
+    def test_younger_player_scores_higher_than_older_with_same_trend(self, db) -> None:
         """A 21-year-old should score higher than a 28-year-old with identical trend data."""
         league = _seed_league(db)
         team = _seed_team(db, league)
@@ -321,7 +321,7 @@ class TestEmergingScoreComputation:
 class TestLeagueHubAggregation:
     """Tests for get_league_hub_data aggregation."""
 
-    def test_hub_returns_standalone_available_false(self, db):
+    def test_hub_returns_standalone_available_false(self, db) -> None:
         """The hub must return standings_available: False (no match data)."""
         league = _seed_league(db)
         _seed_team(db, league, "Team A")
@@ -333,7 +333,7 @@ class TestLeagueHubAggregation:
         assert hub is not None
         assert hub["standings_available"] is False
 
-    def test_hub_returns_empty_when_league_not_found(self, db):
+    def test_hub_returns_empty_when_league_not_found(self, db) -> None:
         from app.queries.league_page_queries import get_league_hub_data
 
 

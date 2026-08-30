@@ -146,7 +146,7 @@ def seed_player(
 
 
 @pytest.fixture()
-def search_data(db):
+def search_data(db) -> dict[str, object]:
     """One free + one pro user, one tier-1 league/team, and a hand-designed
     population of 6 players:
 
@@ -265,7 +265,7 @@ def names(result) -> list[str]:
 # ---------------------------------------------------------------------------
 
 
-def test_multi_condition_and_translation(db, search_data):
+def test_multi_condition_and_translation(db, search_data) -> None:
     """prgp >= 70 AND tkl >= 60, CM only — hand-verified: A, B exactly."""
     result = ss.execute_structured_query(
         db,
@@ -290,7 +290,7 @@ def test_multi_condition_and_translation(db, search_data):
         assert by_metric["si_prgp_p90"]["condition_type"] == "percentile"
 
 
-def test_raw_value_condition_minutes(db, search_data):
+def test_raw_value_condition_minutes(db, search_data) -> None:
     """minutes >= 1500 with no position filter — A, B, D."""
     result = ss.execute_structured_query(
         db,
@@ -306,7 +306,7 @@ def test_raw_value_condition_minutes(db, search_data):
     assert cv["actual"] >= 1500
 
 
-def test_mixed_percentile_and_raw_query(db, search_data):
+def test_mixed_percentile_and_raw_query(db, search_data) -> None:
     """prgp >= 70 (percentile) AND minutes >= 1500 (raw) — A, B."""
     result = ss.execute_structured_query(
         db,
@@ -323,7 +323,7 @@ def test_mixed_percentile_and_raw_query(db, search_data):
     assert set(names(result)) == {"Player A", "Player B"}
 
 
-def test_percentile_lte_and_between(db, search_data):
+def test_percentile_lte_and_between(db, search_data) -> None:
     result = ss.execute_structured_query(
         db,
         qd(
@@ -345,7 +345,7 @@ def test_percentile_lte_and_between(db, search_data):
     assert names(result) == ["Player D"]
 
 
-def test_minutes_floor_always_applied(db, search_data):
+def test_minutes_floor_always_applied(db, search_data) -> None:
     """tkl >= 50 with NO minutes condition — C (800 min, tkl 90) must still be
     excluded by the always-applied 900-minute qualification floor."""
     result = ss.execute_structured_query(
@@ -360,7 +360,7 @@ def test_minutes_floor_always_applied(db, search_data):
     assert "qualification floor" in result["note"]
 
 
-def test_missing_metric_excludes_player(db, search_data):
+def test_missing_metric_excludes_player(db, search_data) -> None:
     """Player E has no prgp percentile row — cannot satisfy a prgp condition."""
     result = ss.execute_structured_query(
         db,
@@ -372,7 +372,7 @@ def test_missing_metric_excludes_player(db, search_data):
     assert result["total"] == 2  # A, B — C below floor, D prgp 40, F prgp 20
 
 
-def test_age_max_with_missing_dob_excluded(db, search_data):
+def test_age_max_with_missing_dob_excluded(db, search_data) -> None:
     """age_max 23 + tkl >= 60 — only A (21). E has no DOB and is excluded,
     D/B are 24, C is below the floor, F fails tkl."""
     result = ss.execute_structured_query(
@@ -387,7 +387,7 @@ def test_age_max_with_missing_dob_excluded(db, search_data):
     assert names(result) == ["Player A"]
 
 
-def test_empty_result_diagnostics_identify_restrictive_condition(db, search_data):
+def test_empty_result_diagnostics_identify_restrictive_condition(db, search_data) -> None:
     """prgp >= 90 returns 0 (C qualifies but is below the floor) — the response
     must include per-condition pass counts and the most-restrictive condition
     so the UI can give actionable guidance instead of a bare 'no results'."""
@@ -407,7 +407,7 @@ def test_empty_result_diagnostics_identify_restrictive_condition(db, search_data
     assert diag["most_restrictive"]["metric_name"] == "Progressive passes per 90"
 
 
-def test_position_group_list_and_tier_filter(db, search_data):
+def test_position_group_list_and_tier_filter(db, search_data) -> None:
     result = ss.execute_structured_query(
         db,
         qd(
@@ -432,7 +432,7 @@ def test_position_group_list_and_tier_filter(db, search_data):
     assert result["total"] == 0
 
 
-def test_sort_by_index_default_and_metric(db, search_data):
+def test_sort_by_index_default_and_metric(db, search_data) -> None:
     r1 = ss.execute_structured_query(
         db,
         qd([{"metric": "si_prgp_p90", "operator": "percentile_gte", "value": 50}]),
@@ -453,7 +453,7 @@ def test_sort_by_index_default_and_metric(db, search_data):
     assert names(r2) == ["Player B", "Player A"]  # 1500 then 2000
 
 
-def test_pagination(db, search_data):
+def test_pagination(db, search_data) -> None:
     result = ss.execute_structured_query(
         db,
         qd([{"metric": "si_prgp_p90", "operator": "percentile_gte", "value": 50}]),
@@ -473,7 +473,7 @@ def test_pagination(db, search_data):
 # ---------------------------------------------------------------------------
 
 
-def test_or_logic_rejected_with_documented_message(db, search_data):
+def test_or_logic_rejected_with_documented_message(db, search_data) -> None:
     with pytest.raises(ss.InvalidQuery) as excinfo:
         ss.execute_structured_query(
             db,
@@ -487,7 +487,7 @@ def test_or_logic_rejected_with_documented_message(db, search_data):
     assert "AND-only" in str(excinfo.value)
 
 
-def test_unknown_metric_rejected(db, search_data):
+def test_unknown_metric_rejected(db, search_data) -> None:
     with pytest.raises(ss.InvalidQuery) as excinfo:
         ss.execute_structured_query(
             db,
@@ -498,7 +498,7 @@ def test_unknown_metric_rejected(db, search_data):
     assert "Metric Registry" in str(excinfo.value)
 
 
-def test_bad_operator_for_minutes_rejected(db, search_data):
+def test_bad_operator_for_minutes_rejected(db, search_data) -> None:
     with pytest.raises(ss.InvalidQuery):
         ss.execute_structured_query(
             db,
@@ -516,7 +516,7 @@ def test_bad_operator_for_minutes_rejected(db, search_data):
         )
 
 
-def test_percentile_out_of_range_rejected(db, search_data):
+def test_percentile_out_of_range_rejected(db, search_data) -> None:
     with pytest.raises(ss.InvalidQuery):
         ss.execute_structured_query(
             db,
@@ -526,7 +526,7 @@ def test_percentile_out_of_range_rejected(db, search_data):
         )
 
 
-def test_between_requires_value_max(db, search_data):
+def test_between_requires_value_max(db, search_data) -> None:
     with pytest.raises(ss.InvalidQuery) as excinfo:
         ss.execute_structured_query(
             db,
@@ -537,7 +537,7 @@ def test_between_requires_value_max(db, search_data):
     assert "value_max" in str(excinfo.value)
 
 
-def test_max_conditions_enforced(db, search_data):
+def test_max_conditions_enforced(db, search_data) -> None:
     many = [{"metric": "si_prgp_p90", "operator": "percentile_gte", "value": 50}] * (
         ss.MAX_CONDITIONS + 1
     )
@@ -546,7 +546,7 @@ def test_max_conditions_enforced(db, search_data):
     assert "at most 8" in str(excinfo.value)
 
 
-def test_unknown_position_and_tier_rejected(db, search_data):
+def test_unknown_position_and_tier_rejected(db, search_data) -> None:
     with pytest.raises(ss.InvalidQuery):
         ss.execute_structured_query(
             db, qd([], position_group="XYZ"), user_id=None, log_history=False
@@ -563,7 +563,7 @@ def test_unknown_position_and_tier_rejected(db, search_data):
         )
 
 
-def test_empty_conditions_rejected(db, search_data):
+def test_empty_conditions_rejected(db, search_data) -> None:
     with pytest.raises(ss.InvalidQuery):
         ss.execute_structured_query(db, qd([]), user_id=None, log_history=False)
 
@@ -573,7 +573,7 @@ def test_empty_conditions_rejected(db, search_data):
 # ---------------------------------------------------------------------------
 
 
-def test_save_list_run_delete(db, search_data):
+def test_save_list_run_delete(db, search_data) -> None:
     user = search_data["free"]
     saved = ss.save_search(
         db,
@@ -596,7 +596,7 @@ def test_save_list_run_delete(db, search_data):
     assert ss.list_saved_searches(db, user.id) == []
 
 
-def test_saved_search_rerun_reflects_current_data(db, search_data):
+def test_saved_search_rerun_reflects_current_data(db, search_data) -> None:
     """A saved search re-run against changed data must return the NEW results
     (the weekly refresh is explicit — never silently cached/stale)."""
     user = search_data["free"]
@@ -626,7 +626,7 @@ def test_saved_search_rerun_reflects_current_data(db, search_data):
     assert second["saved"]["last_run_at"] is not None
 
 
-def test_saved_search_requires_name(db, search_data):
+def test_saved_search_requires_name(db, search_data) -> None:
     with pytest.raises(ss.InvalidQuery):
         ss.save_search(
             db,
@@ -636,7 +636,7 @@ def test_saved_search_requires_name(db, search_data):
         )
 
 
-def test_free_tier_saved_search_cap(db, search_data):
+def test_free_tier_saved_search_cap(db, search_data) -> None:
     user = search_data["free"]
     max_saved = 5
     for i in range(max_saved):
@@ -656,7 +656,7 @@ def test_free_tier_saved_search_cap(db, search_data):
     assert "Upgrade to Pro" in str(excinfo.value)
 
 
-def test_cross_user_saved_search_404(db, search_data):
+def test_cross_user_saved_search_404(db, search_data) -> None:
     free, pro = search_data["free"], search_data["pro"]
     saved = ss.save_search(
         db,
@@ -677,7 +677,7 @@ def test_cross_user_saved_search_404(db, search_data):
 # ---------------------------------------------------------------------------
 
 
-def test_execute_logs_history_automatically(db, search_data):
+def test_execute_logs_history_automatically(db, search_data) -> None:
     user = search_data["free"]
     ss.execute_structured_query(
         db,
@@ -692,7 +692,7 @@ def test_execute_logs_history_automatically(db, search_data):
     assert "≥ 70th pct" in history[0]["summary"]
 
 
-def test_history_not_logged_without_user_or_log_flag(db, search_data):
+def test_history_not_logged_without_user_or_log_flag(db, search_data) -> None:
     user = search_data["free"]
     # Anonymous execution (no user_id) must not log to anyone's history.
     ss.execute_structured_query(
@@ -711,7 +711,7 @@ def test_history_not_logged_without_user_or_log_flag(db, search_data):
     assert ss.get_search_history(db, user.id) == []
 
 
-def test_history_retention_cap(db, search_data):
+def test_history_retention_cap(db, search_data) -> None:
     user = search_data["free"]
     for _ in range(ss.HISTORY_CAP + 5):
         ss.execute_structured_query(
@@ -725,7 +725,7 @@ def test_history_retention_cap(db, search_data):
     assert db.query(SearchHistory).count() == ss.HISTORY_CAP
 
 
-def test_rerun_history_entry_logs_new_row(db, search_data):
+def test_rerun_history_entry_logs_new_row(db, search_data) -> None:
     user = search_data["free"]
     ss.execute_structured_query(
         db,
@@ -739,7 +739,7 @@ def test_rerun_history_entry_logs_new_row(db, search_data):
     assert len(ss.get_search_history(db, user.id)) == 2  # new entry logged
 
 
-def test_cross_user_history_404(db, search_data):
+def test_cross_user_history_404(db, search_data) -> None:
     free, pro = search_data["free"], search_data["pro"]
     ss.execute_structured_query(
         db,
@@ -757,7 +757,7 @@ def test_cross_user_history_404(db, search_data):
 # ---------------------------------------------------------------------------
 
 
-def test_all_presets_validate_and_execute(db, search_data):
+def test_all_presets_validate_and_execute(db, search_data) -> None:
     presets = ss.list_presets()
     assert len(presets) >= 6
     for preset in presets:
@@ -770,7 +770,7 @@ def test_all_presets_validate_and_execute(db, search_data):
         assert "total" in result
 
 
-def test_preset_summarize_query(db):
+def test_preset_summarize_query(db) -> None:
     assert (
         ss.summarize_query(
             {
@@ -792,7 +792,7 @@ def test_preset_summarize_query(db):
 
 
 @pytest.fixture()
-def client():
+def client() -> None:
     db_module._engine = None
     db_module._session_factory = None
     create_schema()
@@ -803,14 +803,14 @@ def client():
 from app.api.main import app
 
 
-def _register(client, email: str = "api-scout@example.com"):
+def _register(client, email: str = "api-scout@example.com") -> None:
     resp = client.post(
         "/api/v1/auth/register", json={"email": email, "password": "Hunter2hunter!"}
     )
     assert resp.status_code == 201, resp.text
 
 
-def _seed_api_player(db):
+def _seed_api_player(db) -> None:
     league = League(
         slug="test-league",
         name="Test League",
@@ -835,7 +835,7 @@ def _seed_api_player(db):
     )
 
 
-def test_api_execute_public_and_history_requires_signin(client):
+def test_api_execute_public_and_history_requires_signin(client) -> None:
     # Execution is public (signed-out users can build queries)...
     resp = client.post(
         "/api/v1/search/execute",
@@ -855,7 +855,7 @@ def test_api_execute_public_and_history_requires_signin(client):
     assert client.get("/api/v1/search/history").status_code == 401
 
 
-def test_api_save_run_delete_and_free_gate(client, db):
+def test_api_save_run_delete_and_free_gate(client, db) -> None:
     with db_module.session_scope() as session:
         _seed_api_player(session)
     _register(client)
@@ -918,7 +918,7 @@ def test_api_save_run_delete_and_free_gate(client, db):
     assert client.delete(f"/api/v1/search/saved/{search_id}").status_code == 200
 
 
-def test_api_invalid_query_400_and_cross_user_404(client, db):
+def test_api_invalid_query_400_and_cross_user_404(client, db) -> None:
     with db_module.session_scope() as session:
         _seed_api_player(session)
     _register(client, "first@example.com")
@@ -962,7 +962,7 @@ def test_api_invalid_query_400_and_cross_user_404(client, db):
     assert client.delete(f"/api/v1/search/saved/{saved}").status_code == 404
 
 
-def test_api_presets_public(client):
+def test_api_presets_public(client) -> None:
     resp = client.get("/api/v1/search/presets")
     assert resp.status_code == 200
     assert len(resp.json()["presets"]) >= 6

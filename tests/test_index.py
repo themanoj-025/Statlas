@@ -26,13 +26,13 @@ WORKED_EXAMPLE = {
 }
 
 
-def test_methodology_worked_example_index_is_72_8():
+def test_methodology_worked_example_index_is_72_8() -> None:
     registry = load_registry()
     score = compute_index(WORKED_EXAMPLE, "ST", registry)
     assert score == 72.8
 
 
-def test_missing_metric_renormalises_weights():
+def test_missing_metric_renormalises_weights() -> None:
     """With >= 8 of 12 metrics present, weights renormalise over the present set.
     Present: gls .30, xg .20, sh .10, prgp .05, prgc .05, xag .10, kp .05, tkl .02
     (weight sum .87). Score = sum(w/present_sum * p) = 67.23 / 0.87 = 77.28."""
@@ -51,7 +51,7 @@ def test_missing_metric_renormalises_weights():
     assert score == 77.28
 
 
-def test_too_few_metrics_yields_none():
+def test_too_few_metrics_yields_none() -> None:
     """Fewer than 8 of 12 metrics present -> no index (displayed as pending,
     never as a low score)."""
     registry = load_registry()
@@ -59,14 +59,14 @@ def test_too_few_metrics_yields_none():
     assert compute_index({"si_gls_p90": 90}, "ST", registry) is None
 
 
-def test_gk_uses_gk_weights():
+def test_gk_uses_gk_weights() -> None:
     registry = load_registry()
     gk = {"si_save_pct": 90, "si_psxg_ga_p90": 80, "si_ga_p90": 70, "si_cross_pct": 60}
     score = compute_index(gk, "GK", registry)
     assert score == round(0.35 * 90 + 0.30 * 80 + 0.20 * 70 + 0.15 * 60, 2) == 78.5
 
 
-def test_every_position_weight_row_sums_to_one():
+def test_every_position_weight_row_sums_to_one() -> None:
     registry = load_registry()
     for group, weights in registry["position_weights"].items():
         assert (
@@ -74,7 +74,7 @@ def test_every_position_weight_row_sums_to_one():
         ), f"{group} weights do not sum to 1.0"
 
 
-def test_verify_index_consistency_flags_discrepancies(db):
+def test_verify_index_consistency_flags_discrepancies(db) -> None:
     """Stored index rows must equal the recomputation (methodology-as-code
     cannot drift). A corrupted row is reported, not silently accepted."""
     from app.models import Player, Team

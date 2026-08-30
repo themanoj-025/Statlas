@@ -33,7 +33,7 @@ def _source_with_html(html: str) -> UnderstatSource:
     return source
 
 
-def test_extract_players_json():
+def test_extract_players_json() -> None:
     data = extract_players_json(FIXTURE.read_text(encoding="utf-8"))
     assert len(data) == 2
     assert data[0]["player_name"] == "Erling Haaland"
@@ -41,12 +41,12 @@ def test_extract_players_json():
     assert data[0]["time"] == "2700"
 
 
-def test_missing_payload_raises():
+def test_missing_payload_raises() -> None:
     with pytest.raises(UnderstatSchemaChangedError):
         extract_players_json("<html><body>nothing here</body></html>")
 
 
-def test_fetch_league_stats_per90_values():
+def test_fetch_league_stats_per90_values() -> None:
     source = _source_with_html(FIXTURE.read_text(encoding="utf-8"))
     records = source.fetch_league_stats("premier-league", "2025-26")
     assert len(records) == 2
@@ -63,20 +63,20 @@ def test_fetch_league_stats_per90_values():
     assert haaland.raw_stats["si_gls_p90"] == pytest.approx(0.8, abs=1e-4)
 
 
-def test_big5_only_guard():
+def test_big5_only_guard() -> None:
     """C4 closeout: specific exception type, not a blind `pytest.raises(Exception)`."""
     source = UnderstatSource(cache=None)
     with pytest.raises(SchemaChangedError):
         source.build_url("championship", "2025-26")  # no understat id configured
 
 
-def test_falls_back_to_players_api_when_payload_dropped():
+def test_falls_back_to_players_api_when_payload_dropped() -> str:
     """Live drift regression: a league page WITHOUT the embedded payload must
     fall back to the POST endpoint (labeled real-response fixture) instead of
     failing — and must raise loudly only when BOTH paths fail."""
     calls: list[tuple[str, dict]] = []
 
-    def fake_fetch(url, *, method="GET", data=None, **kw):
+    def fake_fetch(url, *, method="GET", data=None, **kw) -> str:
         calls.append((method, dict(data or {})))
         if method == "POST":
             return json.dumps(json.loads(API_FIXTURE.read_text(encoding="utf-8")))
@@ -105,11 +105,11 @@ def test_falls_back_to_players_api_when_payload_dropped():
     assert salah.raw_stats["si_gls_p90"] == pytest.approx(29 / 3392 * 90, abs=1e-3)
 
 
-def test_api_fallback_raises_loudly_on_bad_payload():
+def test_api_fallback_raises_loudly_on_bad_payload() -> str:
     """A POST response that is not a success payload must raise loudly — never
     a partial/empty guess."""
 
-    def fake_fetch(url, *, method="GET", data=None, **kw):
+    def fake_fetch(url, *, method="GET", data=None, **kw) -> str:
         if method == "POST":
             return '{"success": false}'
         return "<html><body>no payload</body></html>"

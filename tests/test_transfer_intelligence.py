@@ -156,26 +156,26 @@ def _make_valuation(
 class TestAgeAdjustment:
     """Age-adjustment factor computation."""
 
-    def test_peak_age_returns_1_0(self):
+    def test_peak_age_returns_1_0(self) -> None:
         from app.queries.market_queries import compute_age_adjustment
 
         # CM peak is 27
         result = compute_age_adjustment(27, "CM")
         assert result == 1.0
 
-    def test_younger_than_peak_returns_less_than_1(self):
+    def test_younger_than_peak_returns_less_than_1(self) -> None:
         from app.queries.market_queries import compute_age_adjustment
 
         result = compute_age_adjustment(21, "CM")
         assert 0.5 <= result < 1.0
 
-    def test_older_than_peak_returns_less_than_1(self):
+    def test_older_than_peak_returns_less_than_1(self) -> None:
         from app.queries.market_queries import compute_age_adjustment
 
         result = compute_age_adjustment(33, "CM")
         assert 0.4 <= result < 1.0
 
-    def test_different_positions_different_peaks(self):
+    def test_different_positions_different_peaks(self) -> None:
         from app.queries.market_queries import compute_age_adjustment
 
         # GK peaks later (29) than ST (27)
@@ -183,13 +183,13 @@ class TestAgeAdjustment:
         st_at_28 = compute_age_adjustment(28, "ST")
         assert gk_at_28 > st_at_28  # GK still rising, ST past peak
 
-    def test_very_old_player_has_floor(self):
+    def test_very_old_player_has_floor(self) -> None:
         from app.queries.market_queries import compute_age_adjustment
 
         result = compute_age_adjustment(40, "CM")
         assert result >= 0.4  # Floor
 
-    def test_very_young_player_has_floor(self):
+    def test_very_young_player_has_floor(self) -> None:
         from app.queries.market_queries import compute_age_adjustment
 
         result = compute_age_adjustment(16, "CM")
@@ -199,21 +199,21 @@ class TestAgeAdjustment:
 class TestComputeAgeAtDate:
     """Age computation at a specific date."""
 
-    def test_basic_age(self):
+    def test_basic_age(self) -> None:
         from app.queries.market_queries import compute_age_at_date
 
         dob = datetime(2000, 6, 15, tzinfo=timezone.utc)
         ref = datetime(2026, 8, 19, tzinfo=timezone.utc)
         assert compute_age_at_date(dob, ref) == 26
 
-    def test_birthday_not_yet_passed(self):
+    def test_birthday_not_yet_passed(self) -> None:
         from app.queries.market_queries import compute_age_at_date
 
         dob = datetime(2000, 12, 25, tzinfo=timezone.utc)
         ref = datetime(2026, 8, 19, tzinfo=timezone.utc)
         assert compute_age_at_date(dob, ref) == 25
 
-    def test_none_dob(self):
+    def test_none_dob(self) -> None:
         from app.queries.market_queries import compute_age_at_date
 
         assert compute_age_at_date(None, datetime.now(timezone.utc)) is None
@@ -222,18 +222,18 @@ class TestComputeAgeAtDate:
 class TestStatValueProxy:
     """Stat-based value proxy computation."""
 
-    def test_returns_none_for_missing_player(self, db: Session):
+    def test_returns_none_for_missing_player(self, db: Session) -> None:
         from app.queries.market_queries import compute_stat_value_proxy
 
         assert compute_stat_value_proxy(db, 99999) is None
 
-    def test_returns_none_for_no_snapshots(self, db: Session):
+    def test_returns_none_for_no_snapshots(self, db: Session) -> None:
         from app.queries.market_queries import compute_stat_value_proxy
 
         player = _make_player(db)
         assert compute_stat_value_proxy(db, player.id) is None
 
-    def test_computes_score_with_data(self, db: Session):
+    def test_computes_score_with_data(self, db: Session) -> None:
         from app.queries.market_queries import compute_stat_value_proxy
 
         player = _make_player(db, dob=datetime(2000, 1, 1, tzinfo=timezone.utc))
@@ -256,20 +256,20 @@ class TestStatValueProxy:
 class TestValuationComparison:
     """Valuation comparison framework."""
 
-    def test_returns_none_for_no_market_data(self, db: Session):
+    def test_returns_none_for_no_market_data(self, db: Session) -> None:
         from app.queries.market_queries import get_valuation_comparison
 
         player = _make_player(db)
         assert get_valuation_comparison(db, player.id) is None
 
-    def test_returns_none_for_no_stat_data(self, db: Session):
+    def test_returns_none_for_no_stat_data(self, db: Session) -> None:
         from app.queries.market_queries import get_valuation_comparison
 
         player = _make_player(db)
         _make_valuation(db, player)
         assert get_valuation_comparison(db, player.id) is None
 
-    def test_undervalued_player(self, db: Session):
+    def test_undervalued_player(self, db: Session) -> None:
         from app.queries.market_queries import get_valuation_comparison
 
         player = _make_player(db, dob=datetime(2000, 1, 1, tzinfo=timezone.utc))
@@ -289,7 +289,7 @@ class TestValuationComparison:
         assert result["valuation_gap_eur"] > 0
         assert result["explanation"]  # Has an explanation
 
-    def test_overvalued_player(self, db: Session):
+    def test_overvalued_player(self, db: Session) -> None:
         from app.queries.market_queries import get_valuation_comparison
 
         player = _make_player(db, dob=datetime(1990, 1, 1, tzinfo=timezone.utc))
@@ -312,13 +312,13 @@ class TestValuationComparison:
 class TestUndervaluedPlayers:
     """Undervaluation detection across all players."""
 
-    def test_returns_empty_for_no_data(self, db: Session):
+    def test_returns_empty_for_no_data(self, db: Session) -> None:
         from app.queries.market_queries import get_undervalued_players
 
         result = get_undervalued_players(db)
         assert result == []
 
-    def test_finds_undervalued_players(self, db: Session):
+    def test_finds_undervalued_players(self, db: Session) -> None:
         from app.queries.market_queries import get_undervalued_players
 
         league = _make_league(db)
@@ -351,7 +351,7 @@ class TestUndervaluedPlayers:
 class TestContractScoring:
     """Contract situation scoring."""
 
-    def test_no_contract_returns_unknown(self, db: Session):
+    def test_no_contract_returns_unknown(self, db: Session) -> None:
         from app.queries.transfer_queries import get_contract_situation_score
 
         player = _make_player(db)
@@ -359,7 +359,7 @@ class TestContractScoring:
         assert result["contract_status"] == "unknown"
         assert result["availability_score"] == 50
 
-    def test_expiring_contract_high_availability(self, db: Session):
+    def test_expiring_contract_high_availability(self, db: Session) -> None:
         from app.queries.transfer_queries import get_contract_situation_score
 
         player = _make_player(db)
@@ -378,7 +378,7 @@ class TestContractScoring:
         assert result["availability_score"] >= 80
         assert result["contract_status"] == "expiring_next_season"
 
-    def test_long_contract_low_availability(self, db: Session):
+    def test_long_contract_low_availability(self, db: Session) -> None:
         from app.queries.transfer_queries import get_contract_situation_score
 
         player = _make_player(db)
@@ -400,14 +400,14 @@ class TestContractScoring:
 class TestTransferCandidateSearch:
     """Multi-condition transfer candidate search."""
 
-    def test_returns_empty_for_no_data(self, db: Session):
+    def test_returns_empty_for_no_data(self, db: Session) -> None:
         from app.queries.transfer_queries import get_transfer_candidate_search
 
         result = get_transfer_candidate_search(db)
         assert result["candidates"] == []
         assert result["total"] == 0
 
-    def test_finds_candidates_with_data(self, db: Session):
+    def test_finds_candidates_with_data(self, db: Session) -> None:
         from app.queries.transfer_queries import get_transfer_candidate_search
 
         player = _make_player(db, dob=datetime(2000, 1, 1, tzinfo=timezone.utc))
@@ -423,7 +423,7 @@ class TestTransferCandidateSearch:
         assert len(result["candidates"]) >= 1
         assert result["candidates"][0]["player_id"] == player.id
 
-    def test_position_filter(self, db: Session):
+    def test_position_filter(self, db: Session) -> None:
         from app.queries.transfer_queries import get_transfer_candidate_search
 
         league = _make_league(db)
@@ -447,13 +447,13 @@ class TestTransferCandidateSearch:
 class TestHiddenGems:
     """Hidden gem detection."""
 
-    def test_returns_empty_for_no_data(self, db: Session):
+    def test_returns_empty_for_no_data(self, db: Session) -> None:
         from app.compute.opportunity import detect_hidden_gems
 
         result = detect_hidden_gems(db)
         assert result == []
 
-    def test_detects_hidden_gem(self, db: Session):
+    def test_detects_hidden_gem(self, db: Session) -> None:
         from app.compute.opportunity import detect_hidden_gems
 
         player = _make_player(db, dob=datetime(2000, 1, 1, tzinfo=timezone.utc))
@@ -474,7 +474,7 @@ class TestHiddenGems:
         assert result[0]["opportunity_type"] == "hidden_gem"
         assert result[0]["upside_eur"] > 0
 
-    def test_excludes_high_value_players(self, db: Session):
+    def test_excludes_high_value_players(self, db: Session) -> None:
         from app.compute.opportunity import detect_hidden_gems
 
         player = _make_player(db, dob=datetime(2000, 1, 1, tzinfo=timezone.utc))
@@ -496,13 +496,13 @@ class TestHiddenGems:
 class TestAgeOpportunities:
     """Age opportunity detection."""
 
-    def test_returns_empty_for_no_data(self, db: Session):
+    def test_returns_empty_for_no_data(self, db: Session) -> None:
         from app.compute.opportunity import detect_age_opportunities
 
         result = detect_age_opportunities(db)
         assert result == []
 
-    def test_detects_young_high_performer(self, db: Session):
+    def test_detects_young_high_performer(self, db: Session) -> None:
         from app.compute.opportunity import detect_age_opportunities
 
         player = _make_player(db, dob=datetime(2003, 6, 1, tzinfo=timezone.utc))
@@ -522,13 +522,13 @@ class TestAgeOpportunities:
 class TestPositionScarcity:
     """Position scarcity opportunity detection."""
 
-    def test_returns_empty_for_no_data(self, db: Session):
+    def test_returns_empty_for_no_data(self, db: Session) -> None:
         from app.compute.opportunity import detect_position_scarcity_opportunities
 
         result = detect_position_scarcity_opportunities(db)
         assert result == []
 
-    def test_detects_scarce_position(self, db: Session):
+    def test_detects_scarce_position(self, db: Session) -> None:
         from app.compute.opportunity import detect_position_scarcity_opportunities
 
         # Wingers have a premium factor > 1.0
@@ -544,7 +544,7 @@ class TestPositionScarcity:
         assert result[0]["opportunity_type"] == "position_scarcity"
         assert result[0]["premium_factor"] > 1.0
 
-    def test_excludes_non_scarce_positions(self, db: Session):
+    def test_excludes_non_scarce_positions(self, db: Session) -> None:
         from app.compute.opportunity import detect_position_scarcity_opportunities
 
         # Defensive midfielders have premium factor <= 1.0
@@ -567,7 +567,7 @@ class TestPositionScarcity:
 class TestValuationConfidence:
     """Valuation confidence scoring."""
 
-    def test_no_data_returns_low(self, db: Session):
+    def test_no_data_returns_low(self, db: Session) -> None:
         from app.compute.risk import compute_valuation_confidence
 
         player = _make_player(db)
@@ -575,7 +575,7 @@ class TestValuationConfidence:
         assert result["confidence_level"] == "low"
         assert result["confidence_score"] < 45
 
-    def test_full_data_returns_higher(self, db: Session):
+    def test_full_data_returns_higher(self, db: Session) -> None:
         from app.compute.risk import compute_valuation_confidence
 
         league = _make_league(db)
@@ -615,7 +615,7 @@ class TestValuationConfidence:
 class TestTransferRisk:
     """Transfer risk assessment."""
 
-    def test_basic_risk_assessment(self, db: Session):
+    def test_basic_risk_assessment(self, db: Session) -> None:
         from app.compute.risk import compute_transfer_risk
 
         player = _make_player(db, dob=datetime(2000, 1, 1, tzinfo=timezone.utc))
@@ -628,7 +628,7 @@ class TestTransferRisk:
         assert isinstance(result["risk_factors"], list)
         assert isinstance(result["mitigation_factors"], list)
 
-    def test_league_upgrade_increases_risk(self, db: Session):
+    def test_league_upgrade_increases_risk(self, db: Session) -> None:
         from app.compute.risk import compute_transfer_risk
 
         league = League(
@@ -662,7 +662,7 @@ class TestTransferRisk:
 class TestMarketValidation:
     """Market data validation rules."""
 
-    def test_valid_valuation_passes(self, db: Session):
+    def test_valid_valuation_passes(self, db: Session) -> None:
         from app.compute.market_validation import validate_valuation
 
         player = _make_player(db)
@@ -679,7 +679,7 @@ class TestMarketValidation:
         result = validate_valuation(val, db)
         assert result.is_valid
 
-    def test_negative_valuation_fails(self, db: Session):
+    def test_negative_valuation_fails(self, db: Session) -> None:
         from app.compute.market_validation import validate_valuation
 
         player = _make_player(db)
@@ -695,7 +695,7 @@ class TestMarketValidation:
         assert not result.is_valid
         assert any("below minimum" in i for i in result.issues)
 
-    def test_implausibly_high_valuation_fails(self, db: Session):
+    def test_implausibly_high_valuation_fails(self, db: Session) -> None:
         from app.compute.market_validation import validate_valuation
 
         player = _make_player(db)
@@ -711,7 +711,7 @@ class TestMarketValidation:
         assert not result.is_valid
         assert any("exceeds maximum" in i for i in result.issues)
 
-    def test_wide_range_spread_warns(self, db: Session):
+    def test_wide_range_spread_warns(self, db: Session) -> None:
         from app.compute.market_validation import validate_valuation
 
         player = _make_player(db)
@@ -728,7 +728,7 @@ class TestMarketValidation:
         result = validate_valuation(val, db)
         assert any("spread" in i.lower() for i in result.issues)
 
-    def test_future_date_fails(self, db: Session):
+    def test_future_date_fails(self, db: Session) -> None:
         from app.compute.market_validation import validate_valuation
 
         player = _make_player(db)
@@ -753,7 +753,7 @@ class TestMarketValidation:
 class TestFixtureMarketDataSource:
     """Fixture market data source implementation."""
 
-    def test_fetch_valuations_returns_records(self):
+    def test_fetch_valuations_returns_records(self) -> None:
         from app.sources.market_data import FixtureMarketDataSource
 
         source = FixtureMarketDataSource(seed=42)
@@ -763,7 +763,7 @@ class TestFixtureMarketDataSource:
         assert all(r.valuation_amount_eur > 0 for r in records)
         assert all(r.confidence_level in ("high", "medium", "low") for r in records)
 
-    def test_fetch_contracts_returns_records(self):
+    def test_fetch_contracts_returns_records(self) -> None:
         from app.sources.market_data import FixtureMarketDataSource
 
         source = FixtureMarketDataSource(seed=42)
@@ -773,7 +773,7 @@ class TestFixtureMarketDataSource:
             r.contract_status in ("active", "expiring_next_season") for r in records
         )
 
-    def test_fetch_transfers_returns_empty(self):
+    def test_fetch_transfers_returns_empty(self) -> None:
         from app.sources.market_data import FixtureMarketDataSource
 
         source = FixtureMarketDataSource(seed=42)
@@ -782,7 +782,7 @@ class TestFixtureMarketDataSource:
         )
         assert records == []
 
-    def test_deterministic_with_same_seed(self):
+    def test_deterministic_with_same_seed(self) -> None:
         from app.sources.market_data import FixtureMarketDataSource
 
         source1 = FixtureMarketDataSource(seed=42)
@@ -802,7 +802,7 @@ class TestFixtureMarketDataSource:
 class TestTransferPresets:
     """Transfer search presets."""
 
-    def test_presets_have_required_fields(self):
+    def test_presets_have_required_fields(self) -> None:
         from app.queries.transfer_queries import TRANSFER_PRESETS
 
         assert len(TRANSFER_PRESETS) >= 4  # At least 4 presets
@@ -812,7 +812,7 @@ class TestTransferPresets:
             assert "rationale" in preset
             assert "filters" in preset
 
-    def test_preset_ids_are_unique(self):
+    def test_preset_ids_are_unique(self) -> None:
         from app.queries.transfer_queries import TRANSFER_PRESETS
 
 
