@@ -24,7 +24,7 @@ SEASON = "2025-26"
 
 
 @pytest.fixture()
-def api_client():
+def api_client() -> None:
     """A TestClient over a fresh in-memory DB seeded via the real pipeline."""
     db_module._engine = None
     db_module._session_factory = None
@@ -57,7 +57,7 @@ def api_client():
         yield client
 
 
-def test_health_and_meta(api_client):
+def test_health_and_meta(api_client) -> None:
     health = api_client.get("/api/v1/health")
     assert health.status_code == 200
     assert health.json()["status"] == "ok"
@@ -73,7 +73,7 @@ def test_health_and_meta(api_client):
     assert body["position_groups"][0]["code"] == "GK"
 
 
-def test_search_and_slug_resolution(api_client):
+def test_search_and_slug_resolution(api_client) -> None:
     hits = api_client.get("/api/v1/players/search", params={"q": "Player A"})
     assert hits.status_code == 200
     assert hits.json()[0]["name"] == "Player A"
@@ -98,7 +98,7 @@ def test_search_and_slug_resolution(api_client):
     assert api_client.get("/api/v1/players/search", params={"q": "zzz"}).json() == []
 
 
-def test_leaderboard_endpoints(api_client):
+def test_leaderboard_endpoints(api_client) -> None:
     board = api_client.get(
         "/api/v1/leaderboard",
         params={
@@ -139,7 +139,7 @@ def test_leaderboard_endpoints(api_client):
     assert tier.json()["total"] == 5
 
 
-def test_team_endpoints(api_client):
+def test_team_endpoints(api_client) -> None:
     team = api_client.get("/api/v1/clubs/premier-league/manchester-city")
     assert team.status_code == 200
     body = team.json()
@@ -153,7 +153,7 @@ def test_team_endpoints(api_client):
     )
 
 
-def test_coverage_and_positions(api_client):
+def test_coverage_and_positions(api_client) -> None:
     coverage = api_client.get("/api/v1/coverage")
     assert coverage.status_code == 200
     body = coverage.json()
@@ -167,7 +167,7 @@ def test_coverage_and_positions(api_client):
     assert st["qualifying_counts"]["tier_1"] == 5
 
 
-def test_similar_endpoint(api_client):
+def test_similar_endpoint(api_client) -> None:
     similar = api_client.get("/api/v1/players/1/similar", params={"limit": 3})
     assert similar.status_code == 200
     assert len(similar.json()) >= 1

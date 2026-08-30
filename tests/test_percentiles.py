@@ -71,7 +71,7 @@ def _seed_player(
     return player
 
 
-def test_fractional_rank_formula():
+def test_fractional_rank_formula() -> None:
     values = [0.2, 0.4, 0.6, 0.8, 0.8]
     assert fractional_rank(0.2, values, invert=False) == 0.0
     assert fractional_rank(0.4, values, invert=False) == 20.0
@@ -79,7 +79,7 @@ def test_fractional_rank_formula():
     assert fractional_rank(0.8, values, invert=False) == 70.0  # tied pair midpoint
 
 
-def test_fractional_rank_inverted_for_lower_is_better():
+def test_fractional_rank_inverted_for_lower_is_better() -> None:
     values = [0.2, 0.4, 0.6, 0.8, 0.8]  # dispossessed per 90 — lower is better
     assert fractional_rank(0.2, values, invert=True) == 80.0
     assert fractional_rank(0.4, values, invert=True) == 60.0
@@ -89,7 +89,7 @@ def test_fractional_rank_inverted_for_lower_is_better():
     )  # tied pair shares midpoint
 
 
-def test_percentiles_match_hand_calculated_values(db, premier_league, small_pool):
+def test_percentiles_match_hand_calculated_values(db, premier_league, small_pool) -> None:
     for name, gls in [("A", 0.2), ("B", 0.4), ("C", 0.6), ("D", 0.8), ("E", 0.8)]:
         _seed_player(db, premier_league, name, "ST", gls)
 
@@ -111,7 +111,7 @@ def test_percentiles_match_hand_calculated_values(db, premier_league, small_pool
     assert by_player == {"A": 0.0, "B": 20.0, "C": 40.0, "D": 70.0, "E": 70.0}
 
 
-def test_inverted_metric_percentiles(db, premier_league, small_pool):
+def test_inverted_metric_percentiles(db, premier_league, small_pool) -> None:
     for name, dis in [("A", 0.2), ("B", 0.4), ("C", 0.6), ("D", 0.8), ("E", 0.8)]:
         _seed_player(db, premier_league, name, "ST", gls=0.5, dis=dis)
 
@@ -130,7 +130,7 @@ def test_inverted_metric_percentiles(db, premier_league, small_pool):
     assert by_player == {"A": 80.0, "B": 60.0, "C": 40.0, "D": 10.0, "E": 10.0}
 
 
-def test_tier1_xg_precedence_uses_understat(db, premier_league, small_pool):
+def test_tier1_xg_precedence_uses_understat(db, premier_league, small_pool) -> None:
     """Tier-1 xG must come from Understat (one model per cohort), not FBref."""
     for name, gls in [("A", 0.2), ("B", 0.4), ("C", 0.6), ("D", 0.8), ("E", 0.8)]:
         _seed_player(db, premier_league, name, "ST", gls)
@@ -176,7 +176,7 @@ def test_tier1_xg_precedence_uses_understat(db, premier_league, small_pool):
     assert {p.percentile_value for p, _ in rows} == {40.0}
 
 
-def test_pool_below_minimum_is_skipped(db, premier_league, small_pool):
+def test_pool_below_minimum_is_skipped(db, premier_league, small_pool) -> None:
     for name, gls in [("A", 0.2), ("B", 0.4)]:  # N=2 < min pool (5)
         _seed_player(db, premier_league, name, "ST", gls)
     report = compute_percentiles(db, snapshot_date=SNAPSHOT_DATE, season="2025-26")
@@ -184,7 +184,7 @@ def test_pool_below_minimum_is_skipped(db, premier_league, small_pool):
     assert any("si_gls_p90" in item for item in report.skipped_small_pool)
 
 
-def test_below_threshold_players_are_excluded(db, premier_league, small_pool):
+def test_below_threshold_players_are_excluded(db, premier_league, small_pool) -> None:
     for name, gls in [("A", 0.2), ("B", 0.4), ("C", 0.6), ("D", 0.8), ("E", 0.8)]:
         _seed_player(db, premier_league, name, "ST", gls)
     # 'F' has only 480 minutes — must not enter any pool.

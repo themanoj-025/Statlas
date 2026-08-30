@@ -32,14 +32,14 @@ def _seed_team(db, league, name):
     return team
 
 
-def test_slugify():
+def test_slugify() -> None:
     assert slugify_name("Erling Haaland") == "erling-haaland"
     assert slugify_name("Kevin De Bruyne") == "kevin-de-bruyne"
     assert slugify_name("  José   Mourinho ") == "jose-mourinho"
     assert slugify_name("Player A") == "player-a"
 
 
-def test_slug_collision_resolution(db, premier_league):
+def test_slug_collision_resolution(db, premier_league) -> None:
     """Two 'Alex Smith's on different clubs: BOTH get club-suffixed slugs
     (site-map §1.1 rule 2 — deterministic, never order-dependent)."""
     city = _seed_team(db, premier_league, "Manchester City")
@@ -78,7 +78,7 @@ def test_slug_collision_resolution(db, premier_league):
     assert resolve_player_slug(db, "nobody-here") is None
 
 
-def test_search_matches_aliases(db, premier_league):
+def test_search_matches_aliases(db, premier_league) -> None:
     """Alternate spellings resolve through the alias table (B3)."""
     _seed_team(db, premier_league, "City")
     player = Player(
@@ -104,7 +104,7 @@ def test_search_matches_aliases(db, premier_league):
     assert search_players(db, "zzzznope") == []
 
 
-def test_search_escapes_ilike_wildcards(db, premier_league):
+def test_search_escapes_ilike_wildcards(db, premier_league) -> None:
     """ILIKE wildcards (% and _) in user input are escaped so they are
     treated as literal characters, not pattern metacharacters.
 
@@ -153,7 +153,7 @@ def test_search_escapes_ilike_wildcards(db, premier_league):
     assert player_uother.id not in player_ids
 
 
-def test_similar_players_real_nearest_neighbour(db, premier_league, small_pool):
+def test_similar_players_real_nearest_neighbour(db, premier_league, small_pool) -> None:
     """Cosine similarity is computed from real percentile vectors in-cohort."""
     for name, gls in [("A", 0.2), ("B", 0.4), ("C", 0.6), ("D", 0.8), ("E", 0.9)]:
         _seed_player(db, premier_league, name, "ST", gls)
@@ -177,7 +177,7 @@ def test_similar_players_real_nearest_neighbour(db, premier_league, small_pool):
     assert get_similar_players(db, gk.id) == []
 
 
-def test_leaderboard_filtered_pagination_and_sort(db, premier_league, small_pool):
+def test_leaderboard_filtered_pagination_and_sort(db, premier_league, small_pool) -> None:
     for name, gls in [("A", 0.2), ("B", 0.4), ("C", 0.6), ("D", 0.8), ("E", 0.9)]:
         _seed_player(db, premier_league, name, "ST", gls)
     compute_and_publish(db, snapshot_date=SNAPSHOT_DATE, season=SEASON)
@@ -214,7 +214,7 @@ def test_leaderboard_filtered_pagination_and_sort(db, premier_league, small_pool
     assert all(e["slug"] for e in page1["entries"])
 
 
-def test_team_roster_and_squad_radar(db, premier_league, small_pool):
+def test_team_roster_and_squad_radar(db, premier_league, small_pool) -> None:
     for name, gls in [("A", 0.2), ("B", 0.4), ("C", 0.6), ("D", 0.8), ("E", 0.9)]:
         _seed_player(db, premier_league, name, "ST", gls, team_name="City")
     compute_and_publish(db, snapshot_date=SNAPSHOT_DATE, season=SEASON)
@@ -232,7 +232,7 @@ def test_team_roster_and_squad_radar(db, premier_league, small_pool):
     assert get_team_profile(db, league_slug="premier-league", team_slug="nope") is None
 
 
-def test_team_radar_empty_below_five(db, premier_league, small_pool):
+def test_team_radar_empty_below_five(db, premier_league, small_pool) -> None:
     for name, gls in [("A", 0.2), ("B", 0.4), ("C", 0.6)]:  # only 3 qualified
         _seed_player(db, premier_league, name, "ST", gls, team_name="City")
     compute_and_publish(db, snapshot_date=SNAPSHOT_DATE, season=SEASON)
@@ -241,7 +241,7 @@ def test_team_radar_empty_below_five(db, premier_league, small_pool):
     assert profile["squad_radar"] is None  # the UI renders the explicit empty state
 
 
-def test_radar_axis_status_partial_data(db, premier_league, small_pool):
+def test_radar_axis_status_partial_data(db, premier_league, small_pool) -> None:
     """Radar axes must carry an honest status per metric — below_floor / no_data
     / unranked_pool are explicit states, never a silently plotted zero (B2)."""
     from app.api.player_view import _axis_status

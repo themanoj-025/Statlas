@@ -64,7 +64,7 @@ def make_event(event_id: str, event_type: str, obj: dict) -> dict:
 
 
 @pytest.fixture()
-def client():
+def client() -> None:
     """A TestClient over a fresh in-memory DB (billing tables included)."""
     db_module._engine = None
     db_module._session_factory = None
@@ -121,7 +121,7 @@ def subscription_updated_event(sub_id: str, status: str, period_end: int) -> dic
 # ---------------------------------------------------------------------------
 
 
-def test_register_login_logout_roundtrip(client):
+def test_register_login_logout_roundtrip(client) -> None:
     register_user(client)
     resp = client.get("/api/v1/auth/me")
     assert resp.status_code == 200
@@ -146,7 +146,7 @@ def test_register_login_logout_roundtrip(client):
     assert client.get("/api/v1/auth/me").json()["email"] == "scout@example.com"
 
 
-def test_duplicate_email_rejected(client):
+def test_duplicate_email_rejected(client) -> None:
     register_user(client)
     resp = client.post(
         "/api/v1/auth/register",
@@ -155,7 +155,7 @@ def test_duplicate_email_rejected(client):
     assert resp.status_code == 409
 
 
-def test_password_stored_hashed_not_plaintext(client):
+def test_password_stored_hashed_not_plaintext(client) -> None:
     register_user(client)
     with session_scope() as db:
         user = db.query(User).filter(User.email == "scout@example.com").first()
@@ -171,7 +171,7 @@ def test_password_stored_hashed_not_plaintext(client):
 # ---------------------------------------------------------------------------
 
 
-def test_checkout_requires_signin(client):
+def test_checkout_requires_signin(client) -> None:
     resp = client.post(
         "/api/v1/billing/checkout",
         json={"success_url": "http://x/ok", "cancel_url": "http://x/c"},
@@ -179,19 +179,19 @@ def test_checkout_requires_signin(client):
     assert resp.status_code == 401
 
 
-def test_checkout_creates_session_and_grants_on_webhook(client, monkeypatch):
+def test_checkout_creates_session_and_grants_on_webhook(client, monkeypatch) -> dict[str, object]:
     register_user(client)
     created = {}
 
     class FakeCheckoutSession:
         @staticmethod
-        def create(**kwargs):
+        def create(**kwargs) -> dict[str, object]:
             created.update(kwargs)
             return {"url": "https://checkout.stripe.com/test", "id": "cs_test_fake"}
 
     class FakeCustomer:
         @staticmethod
-        def create(**kwargs):
+        def create(**kwargs) -> dict[str, object]:
             return {"id": "cus_test_1"}
 
     import stripe
@@ -230,14 +230,14 @@ def test_checkout_creates_session_and_grants_on_webhook(client, monkeypatch):
 # ---------------------------------------------------------------------------
 
 
-def test_unsigned_webhook_rejected(client):
+def test_unsigned_webhook_rejected(client) -> None:
     register_user(client)
     raw = json.dumps(checkout_completed_event(1)).encode("utf-8")
     resp = client.post("/api/v1/billing/webhook", content=raw)
     assert resp.status_code == 400  # missing signature header
 
 
-def test_tampered_webhook_rejected(client):
+def test_tampered_webhook_rejected(client) -> None:
     register_user(client)
     event = checkout_completed_event(1)
     raw, sig = signed_event(event)
@@ -257,7 +257,7 @@ def test_tampered_webhook_rejected(client):
 # ---------------------------------------------------------------------------
 
 
-def test_webhook_idempotent_replay(client):
+def test_webhook_idempotent_replay(client) -> None:
     register_user(client)
     with session_scope() as db:
         user = db.query(User).filter(User.email == "scout@example.com").first()
@@ -297,7 +297,7 @@ def _grant_pro(client, user_id: int, sub_id: str = "sub_test_grace") -> None:
     assert resp.status_code == 200
 
 
-def test_payment_failed_enters_grace_period_and_recovery(client):
+def test_payment_failed_enters_grace_period_and_recovery(client) -> None:
     register_user(client)
     with session_scope() as db:
         user_id = db.query(User).filter(User.email == "scout@example.com").first().id
@@ -337,7 +337,7 @@ def test_payment_failed_enters_grace_period_and_recovery(client):
         assert sub.current_period_end is not None
 
 
-def test_payment_failed_then_cancellation_revokes(client):
+def test_payment_failed_then_cancellation_revokes(client) -> None:
     register_user(client)
     with session_scope() as db:
         user_id = db.query(User).filter(User.email == "scout@example.com").first().id
@@ -361,7 +361,7 @@ def test_payment_failed_then_cancellation_revokes(client):
     assert client.get("/api/v1/auth/me").json()["has_pro"] is False  # revoked
 
 
-def test_canceled_keeps_access_to_period_end(client):
+def test_canceled_keeps_access_to_period_end(client) -> None:
     """End-of-period retention: canceled with a future period_end still grants."""
     register_user(client)
     with session_scope() as db:
@@ -383,7 +383,7 @@ def test_canceled_keeps_access_to_period_end(client):
 # ---------------------------------------------------------------------------
 
 
-def test_limits_report_plan_boundaries(client):
+def test_limits_report_plan_boundaries(client) -> None:
     register_user(client)
     resp = client.get("/api/v1/billing/limits")
     assert resp.status_code == 200
@@ -411,7 +411,7 @@ def test_limits_report_plan_boundaries(client):
     assert resp.json()["limits"]["assistant_queries_per_period"] == 200
 
 
-def test_billing_configured_flag(client):
+def test_billing_configured_flag(client) -> None:
     register_user(client)
     body = client.get("/api/v1/billing/subscription").json()
     assert body["billing_configured"] is True  # env keys present in this suite
@@ -422,7 +422,7 @@ def test_billing_configured_flag(client):
 # ---------------------------------------------------------------------------
 
 
-def test_register_rate_limit_allows_under_threshold(client):
+def test_register_rate_limit_allows_under_threshold(client) -> None:
     """First 5 registrations from the same IP should all succeed."""
     for i in range(5):
         resp = client.post(
@@ -432,7 +432,7 @@ def test_register_rate_limit_allows_under_threshold(client):
         assert resp.status_code == 201, f"Registration {i + 1} should succeed"
 
 
-def test_register_rate_limit_blocks_over_threshold(client):
+def test_register_rate_limit_blocks_over_threshold(client) -> None:
     """6th registration from the same IP should be rate-limited (429)."""
     # Exhaust the limit
     for i in range(5):
@@ -451,7 +451,7 @@ def test_register_rate_limit_blocks_over_threshold(client):
     assert "Too many" in resp.json()["error"]["message"]
 
 
-def test_register_rate_limit_resets_after_clear(client):
+def test_register_rate_limit_resets_after_clear(client) -> None:
     """After clearing rate limit state, registrations should succeed again."""
     # Exhaust the limit
     for i in range(5):
@@ -481,7 +481,7 @@ def test_register_rate_limit_resets_after_clear(client):
     assert resp.status_code == 201
 
 
-def test_register_rate_limit_independent_of_email(client):
+def test_register_rate_limit_independent_of_email(client) -> None:
     """Rate limit is per IP, not per email — different emails from same IP count."""
     for i in range(5):
         resp = client.post(
@@ -501,7 +501,7 @@ def test_register_rate_limit_independent_of_email(client):
     assert resp.status_code == 429
 
 
-def test_register_rate_limit_error_message(client):
+def test_register_rate_limit_error_message(client) -> None:
     """Rate limit response includes a clear error message."""
     for i in range(5):
         client.post(
@@ -526,7 +526,7 @@ def test_register_rate_limit_error_message(client):
 # ---------------------------------------------------------------------------
 
 
-def test_change_password_rate_limit(client):
+def test_change_password_rate_limit(client) -> None:
     """Change password endpoint should be rate-limited after 5 attempts."""
     register_user(client)
 
@@ -547,7 +547,7 @@ def test_change_password_rate_limit(client):
     assert resp.json()["error"]["code"] == "http_429"
 
 
-def test_change_password_succeeds_under_limit(client):
+def test_change_password_succeeds_under_limit(client) -> None:
     """Successful password change within rate limit should work."""
     register_user(client)
     resp = client.post(
@@ -563,7 +563,7 @@ def test_change_password_succeeds_under_limit(client):
 # ---------------------------------------------------------------------------
 
 
-def test_verify_email_rate_limit(client):
+def test_verify_email_rate_limit(client) -> None:
     """Verify email endpoint should be rate-limited after 5 requests."""
     register_user(client)
     body = {"email": "scout@example.com"}
@@ -583,7 +583,7 @@ def test_verify_email_rate_limit(client):
 # ---------------------------------------------------------------------------
 
 
-def test_checkout_rejects_external_redirect(client):
+def test_checkout_rejects_external_redirect(client) -> None:
     """success_url pointing to a different domain must be rejected."""
     register_user(client)
     resp = client.post(
@@ -594,7 +594,7 @@ def test_checkout_rejects_external_redirect(client):
     assert "domain" in resp.json()["error"]["message"].lower()
 
 
-def test_checkout_rejects_double_slash_redirect(client):
+def test_checkout_rejects_double_slash_redirect(client) -> None:
     """URLs like //evil.com are protocol-relative and must be rejected."""
     register_user(client)
     resp = client.post(
@@ -604,7 +604,7 @@ def test_checkout_rejects_double_slash_redirect(client):
     assert resp.status_code == 400
 
 
-def test_checkout_allows_relative_redirect(client, monkeypatch):
+def test_checkout_allows_relative_redirect(client, monkeypatch) -> dict[str, object]:
     """Relative paths like /success are always safe."""
     register_user(client)
     # Mock Stripe to avoid real API calls
@@ -615,7 +615,7 @@ def test_checkout_allows_relative_redirect(client, monkeypatch):
 
     class FakeSession:
         @staticmethod
-        def create(**kwargs):
+        def create(**kwargs) -> dict[str, object]:
             created.update(kwargs)
             return {"url": "https://checkout.stripe.com/test", "id": "cs_test"}
 
@@ -624,7 +624,7 @@ def test_checkout_allows_relative_redirect(client, monkeypatch):
 
     class FakeCustomer:
         @staticmethod
-        def create(**kwargs):
+        def create(**kwargs) -> dict[str, object]:
             return {"id": "cus_test"}
 
     class FakeStripe:

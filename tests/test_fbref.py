@@ -21,12 +21,12 @@ def _source_with_html(html: str) -> FBrefSource:
 
 
 @pytest.fixture(autouse=True)
-def _restore(monkeypatch):
+def _restore(monkeypatch) -> None:
     yield
     monkeypatch.undo()
 
 
-def test_combined_headers_are_disambiguated():
+def test_combined_headers_are_disambiguated() -> None:
     """FBref duplicates column names across sections; combined headers must
     keep them apart (e.g. 'Expected xG' vs 'Per 90 Minutes xG')."""
     from bs4 import BeautifulSoup
@@ -42,7 +42,7 @@ def test_combined_headers_are_disambiguated():
     assert first["__fbref_id__"] == "aaaaaaaa"
 
 
-def test_fetch_league_stats_extracts_registry_metrics():
+def test_fetch_league_stats_extracts_registry_metrics() -> None:
     source = _source_with_html(FIXTURE.read_text(encoding="utf-8"))
     records = source.fetch_league_stats("premier-league", "2025-26")
     assert len(records) == 4
@@ -79,7 +79,7 @@ def test_fetch_league_stats_extracts_registry_metrics():
     assert salah.raw_stats["si_sh_p90"] == pytest.approx(3.75, abs=1e-4)
 
 
-def test_goalkeeper_extracts_gk_metrics_only():
+def test_goalkeeper_extracts_gk_metrics_only() -> None:
     source = _source_with_html(FIXTURE.read_text(encoding="utf-8"))
     records = source.fetch_league_stats("premier-league", "2025-26")
     alisson = next(r for r in records if r.player_name == "Alisson Becker")
@@ -96,7 +96,7 @@ def test_goalkeeper_extracts_gk_metrics_only():
     assert "si_gls_p90" not in alisson.raw_stats
 
 
-def test_schema_change_raises_loudly():
+def test_schema_change_raises_loudly() -> None:
     source = _source_with_html(
         "<html><body><p>blocked or changed page</p></body></html>"
     )
@@ -104,11 +104,11 @@ def test_schema_change_raises_loudly():
         source.fetch_league_stats("premier-league", "2025-26")
 
 
-def test_rate_limit_value_is_declared():
+def test_rate_limit_value_is_declared() -> None:
     assert FBrefSource().get_rate_limit_seconds() >= 10.0
 
 
-def test_build_url():
+def test_build_url() -> None:
     source = FBrefSource()
     url = source.build_url("premier-league", "2025-26")
     assert url == ("https://fbref.com/en/comps/9/2025-2026/Premier-League-Stats")

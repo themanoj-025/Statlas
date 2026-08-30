@@ -104,7 +104,7 @@ def _add_member(
 class TestOrganizationCRUD:
     """Organization creation and retrieval."""
 
-    def test_create_organization(self, db: Session):
+    def test_create_organization(self, db: Session) -> None:
         from app.queries.org_queries import create_organization
 
         owner = _make_user(db)
@@ -114,14 +114,14 @@ class TestOrganizationCRUD:
         assert result["slug"] == "juventus-scouting-team"
         assert result["tier"] == "free"
 
-    def test_create_org_auto_slug(self, db: Session):
+    def test_create_org_auto_slug(self, db: Session) -> None:
         from app.queries.org_queries import create_organization
 
         owner = _make_user(db)
         result = create_organization(db, owner.id, "AC Milan Analytics!")
         assert result["slug"] == "ac-milan-analytics"
 
-    def test_create_org_duplicate_slug_fails(self, db: Session):
+    def test_create_org_duplicate_slug_fails(self, db: Session) -> None:
         from app.queries.org_queries import create_organization
 
         owner = _make_user(db)
@@ -129,28 +129,28 @@ class TestOrganizationCRUD:
         with pytest.raises(ValueError, match="already exists"):
             create_organization(db, owner.id, "Test Org")
 
-    def test_create_org_slug_too_short(self, db: Session):
+    def test_create_org_slug_too_short(self, db: Session) -> None:
         from app.queries.org_queries import create_organization
 
         owner = _make_user(db)
         with pytest.raises(ValueError, match="at least 3 characters"):
             create_organization(db, owner.id, "AB", slug="ab")
 
-    def test_create_org_slug_invalid_format(self, db: Session):
+    def test_create_org_slug_invalid_format(self, db: Session) -> None:
         from app.queries.org_queries import create_organization
 
         owner = _make_user(db)
         with pytest.raises(ValueError, match="lowercase letters, numbers, and hyphens"):
             create_organization(db, owner.id, "Bad Slug", slug="Bad Slug!@#")
 
-    def test_create_org_slug_underscore_rejected(self, db: Session):
+    def test_create_org_slug_underscore_rejected(self, db: Session) -> None:
         from app.queries.org_queries import create_organization
 
         owner = _make_user(db)
         with pytest.raises(ValueError, match="lowercase letters, numbers, and hyphens"):
             create_organization(db, owner.id, "Underscore", slug="bad_slug")
 
-    def test_create_org_reserved_slug_rejected(self, db: Session):
+    def test_create_org_reserved_slug_rejected(self, db: Session) -> None:
         from app.queries.org_queries import create_organization
 
         owner = _make_user(db)
@@ -158,7 +158,7 @@ class TestOrganizationCRUD:
             with pytest.raises(ValueError, match="reserved slug"):
                 create_organization(db, owner.id, f"Reserved {reserved}", slug=reserved)
 
-    def test_create_org_valid_slug_formats(self, db: Session):
+    def test_create_org_valid_slug_formats(self, db: Session) -> None:
         from app.queries.org_queries import create_organization
 
         owner = _make_user(db)
@@ -168,7 +168,7 @@ class TestOrganizationCRUD:
             # Reset owner for next iteration
             owner = _make_user(db, email=f"{slug}@test.com")
 
-    def test_get_organization(self, db: Session):
+    def test_get_organization(self, db: Session) -> None:
         from app.queries.org_queries import get_organization
 
         owner = _make_user(db)
@@ -178,7 +178,7 @@ class TestOrganizationCRUD:
         assert result["name"] == "Test FC Scouting"
         assert result["member_count"] == 1  # owner
 
-    def test_list_user_organizations(self, db: Session):
+    def test_list_user_organizations(self, db: Session) -> None:
         from app.queries.org_queries import list_user_organizations
 
         owner = _make_user(db)
@@ -200,7 +200,7 @@ class TestOrganizationCRUD:
 class TestRBAC:
     """RBAC permission enforcement — every role boundary tested."""
 
-    def test_owner_has_all_permissions(self, db: Session):
+    def test_owner_has_all_permissions(self, db: Session) -> None:
         from app.queries.org_queries import user_has_permission
 
         owner = _make_user(db)
@@ -211,7 +211,7 @@ class TestRBAC:
         assert user_has_permission(db, owner.id, org.id, "resource_create")
         assert user_has_permission(db, owner.id, org.id, "audit_view")
 
-    def test_manager_has_limited_permissions(self, db: Session):
+    def test_manager_has_limited_permissions(self, db: Session) -> None:
         from app.queries.org_queries import user_has_permission
 
         owner = _make_user(db)
@@ -224,7 +224,7 @@ class TestRBAC:
         assert user_has_permission(db, manager.id, org.id, "audit_view")
         assert not user_has_permission(db, manager.id, org.id, "org_delete")
 
-    def test_scout_can_create_and_comment(self, db: Session):
+    def test_scout_can_create_and_comment(self, db: Session) -> None:
         from app.queries.org_queries import user_has_permission
 
         owner = _make_user(db)
@@ -238,7 +238,7 @@ class TestRBAC:
         assert not user_has_permission(db, scout.id, org.id, "member_invite")
         assert not user_has_permission(db, scout.id, org.id, "audit_view")
 
-    def test_viewer_can_only_view(self, db: Session):
+    def test_viewer_can_only_view(self, db: Session) -> None:
         from app.queries.org_queries import user_has_permission
 
         owner = _make_user(db)
@@ -251,7 +251,7 @@ class TestRBAC:
         assert not user_has_permission(db, viewer.id, org.id, "resource_comment")
         assert not user_has_permission(db, viewer.id, org.id, "member_invite")
 
-    def test_non_member_has_no_permissions(self, db: Session):
+    def test_non_member_has_no_permissions(self, db: Session) -> None:
         from app.queries.org_queries import user_has_permission
 
         owner = _make_user(db)
@@ -270,7 +270,7 @@ class TestRBAC:
 class TestMemberManagement:
     """Member invite, accept, remove, and role change."""
 
-    def test_invite_member(self, db: Session):
+    def test_invite_member(self, db: Session) -> None:
         from app.queries.org_queries import invite_member
 
         owner = _make_user(db)
@@ -281,7 +281,7 @@ class TestMemberManagement:
         assert result["role"] == "scout"
         assert result["raw_token"]  # Token returned once
 
-    def test_invite_duplicate_pending_fails(self, db: Session):
+    def test_invite_duplicate_pending_fails(self, db: Session) -> None:
         from app.queries.org_queries import invite_member
 
         owner = _make_user(db)
@@ -291,7 +291,7 @@ class TestMemberManagement:
         with pytest.raises(ValueError, match="already pending"):
             invite_member(db, org.id, owner.id, "dup@test.com")
 
-    def test_invite_existing_member_fails(self, db: Session):
+    def test_invite_existing_member_fails(self, db: Session) -> None:
         from app.queries.org_queries import invite_member
 
         owner = _make_user(db)
@@ -300,7 +300,7 @@ class TestMemberManagement:
         with pytest.raises(ValueError, match="already a member"):
             invite_member(db, org.id, owner.id, owner.email)
 
-    def test_seat_limit_enforced(self, db: Session):
+    def test_seat_limit_enforced(self, db: Session) -> None:
         from app.queries.org_queries import invite_member
 
         owner = _make_user(db)
@@ -315,7 +315,7 @@ class TestMemberManagement:
         with pytest.raises(ValueError, match="seat limit"):
             invite_member(db, org.id, owner.id, "overflow@test.com")
 
-    def test_accept_invite(self, db: Session):
+    def test_accept_invite(self, db: Session) -> None:
         from app.queries.org_queries import accept_invite, invite_member
 
         owner = _make_user(db)
@@ -327,7 +327,7 @@ class TestMemberManagement:
         assert result["org_id"] == org.id
         assert result["role"] == "scout"
 
-    def test_accept_expired_invite_fails(self, db: Session):
+    def test_accept_expired_invite_fails(self, db: Session) -> None:
         from app.queries.org_queries import accept_invite
 
         owner = _make_user(db)
@@ -351,7 +351,7 @@ class TestMemberManagement:
         with pytest.raises(ValueError, match="expired"):
             accept_invite(db, raw_token, new_user.id)
 
-    def test_remove_member(self, db: Session):
+    def test_remove_member(self, db: Session) -> None:
         from app.queries.org_queries import list_members, remove_member
 
         owner = _make_user(db)
@@ -365,7 +365,7 @@ class TestMemberManagement:
         members = list_members(db, org.id)
         assert len(members) == 1  # Only owner remains
 
-    def test_cannot_remove_owner(self, db: Session):
+    def test_cannot_remove_owner(self, db: Session) -> None:
         from app.queries.org_queries import remove_member
 
         owner = _make_user(db)
@@ -374,7 +374,7 @@ class TestMemberManagement:
         with pytest.raises(ValueError, match="Cannot remove"):
             remove_member(db, org.id, owner.id, owner.id)
 
-    def test_change_role(self, db: Session):
+    def test_change_role(self, db: Session) -> None:
         from app.queries.org_queries import change_member_role
 
         owner = _make_user(db)
@@ -387,7 +387,7 @@ class TestMemberManagement:
         assert result["old_role"] == "scout"
         assert result["new_role"] == "manager"
 
-    def test_transfer_ownership(self, db: Session):
+    def test_transfer_ownership(self, db: Session) -> None:
         from app.models import Organization
         from app.queries.org_queries import change_member_role
 
@@ -412,7 +412,7 @@ class TestMemberManagement:
 class TestAuditLogging:
     """Audit trail for team changes."""
 
-    def test_audit_log_recorded(self, db: Session):
+    def test_audit_log_recorded(self, db: Session) -> None:
         from app.queries.org_queries import get_audit_log, invite_member
 
         owner = _make_user(db)
@@ -425,7 +425,7 @@ class TestAuditLogging:
         assert log[0]["action"] == "user_added"
         assert log[0]["detail"]["email"] == "new@test.com"
 
-    def test_audit_log_requires_permission(self, db: Session):
+    def test_audit_log_requires_permission(self, db: Session) -> None:
         from app.queries.org_queries import get_audit_log
 
         owner = _make_user(db)
@@ -447,7 +447,7 @@ class TestAuditLogging:
 class TestComments:
     """Comment system with threading and mentions."""
 
-    def test_add_comment(self, db: Session):
+    def test_add_comment(self, db: Session) -> None:
         owner = _make_user(db)
         org = _make_org(db, owner)
 
@@ -464,7 +464,7 @@ class TestComments:
         assert comment.id is not None
         assert comment.text == "Great shortlist!"
 
-    def test_threaded_comments(self, db: Session):
+    def test_threaded_comments(self, db: Session) -> None:
         owner = _make_user(db)
         org = _make_org(db, owner)
 
@@ -491,7 +491,7 @@ class TestComments:
 
         assert reply.parent_id == parent.id
 
-    def test_soft_delete_comment(self, db: Session):
+    def test_soft_delete_comment(self, db: Session) -> None:
         from datetime import datetime, timezone
 
         owner = _make_user(db)
@@ -512,7 +512,7 @@ class TestComments:
 
         assert comment.deleted_at is not None
 
-    def test_mentions_created(self, db: Session):
+    def test_mentions_created(self, db: Session) -> None:
         owner = _make_user(db)
         mentioned = _make_user(db, email="mentioned@test.com", name="Mentioned User")
         org = _make_org(db, owner)
@@ -548,7 +548,7 @@ class TestComments:
 class TestResourceOwnership:
     """Personal vs org-shared resource access."""
 
-    def test_shortlist_default_personal(self, db: Session):
+    def test_shortlist_default_personal(self, db: Session) -> None:
         owner = _make_user(db)
         sl = Shortlist(user_id=owner.id, name="My Shortlist")
         db.add(sl)
@@ -557,7 +557,7 @@ class TestResourceOwnership:
         assert sl.owner_org_id is None
         assert sl.visibility == "personal"
 
-    def test_shortlist_can_be_org_shared(self, db: Session):
+    def test_shortlist_can_be_org_shared(self, db: Session) -> None:
         owner = _make_user(db)
         org = _make_org(db, owner)
 
@@ -582,7 +582,7 @@ class TestResourceOwnership:
 class TestOrgSettings:
     """Organization settings management."""
 
-    def test_get_settings(self, db: Session):
+    def test_get_settings(self, db: Session) -> None:
         from app.queries.org_queries import get_org_settings
 
         owner = _make_user(db)
@@ -593,7 +593,7 @@ class TestOrgSettings:
         assert settings["data_retention_days"] == 90
         assert settings["enable_audit_logging"] is True
 
-    def test_update_settings(self, db: Session):
+    def test_update_settings(self, db: Session) -> None:
         from app.queries.org_queries import update_org_settings
 
         owner = _make_user(db)
@@ -602,7 +602,7 @@ class TestOrgSettings:
         result = update_org_settings(db, org.id, owner.id, data_retention_days=30)
         assert result["data_retention_days"] == 30
 
-    def test_update_settings_requires_permission(self, db: Session):
+    def test_update_settings_requires_permission(self, db: Session) -> None:
         from app.queries.org_queries import update_org_settings
 
         owner = _make_user(db)
@@ -622,7 +622,7 @@ class TestOrgSettings:
 class TestDataIsolation:
     """Cross-org access rejection — the most critical multi-tenant test."""
 
-    def test_cross_org_access_rejected(self, db: Session):
+    def test_cross_org_access_rejected(self, db: Session) -> None:
         from app.queries.org_queries import user_has_permission
 
         owner_a = _make_user(db, email="ownerA@test.com")
@@ -634,7 +634,7 @@ class TestDataIsolation:
         assert not user_has_permission(db, owner_a.id, org_b.id, "resource_view")
         assert not user_has_permission(db, owner_b.id, org_a.id, "resource_view")
 
-    def test_org_member_cannot_see_other_org_resources(self, db: Session):
+    def test_org_member_cannot_see_other_org_resources(self, db: Session) -> None:
         from app.queries.org_queries import user_has_permission
 
 

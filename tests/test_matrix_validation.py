@@ -37,7 +37,7 @@ def tiers():
 # --- Metric Registry: schema validity + uniqueness (Constitution §3) ---------
 
 
-def test_registry_has_schema_version_and_required_keys(registry):
+def test_registry_has_schema_version_and_required_keys(registry) -> None:
     assert isinstance(registry["schema_version"], int)
     for key in (
         "qualifying_minutes",
@@ -50,7 +50,7 @@ def test_registry_has_schema_version_and_required_keys(registry):
         assert key in registry, f"registry missing required key {key!r}"
 
 
-def test_metric_ids_are_unique_and_well_formed(registry):
+def test_metric_ids_are_unique_and_well_formed(registry) -> None:
     ids = list(registry["metrics"].keys())
     assert len(ids) == len(set(ids)), "duplicate metric IDs in registry"
     for mid in ids:
@@ -58,7 +58,7 @@ def test_metric_ids_are_unique_and_well_formed(registry):
         assert mid.startswith("si_"), f"metric id {mid!r} violates si_ prefix rule"
 
 
-def test_every_metric_defines_direction_unit_and_bounds(registry):
+def test_every_metric_defines_direction_unit_and_bounds(registry) -> None:
     for mid, m in registry["metrics"].items():
         assert m["direction"] in {"higher_is_better", "lower_is_better"}, mid
         assert m["kind"] in {
@@ -79,11 +79,11 @@ def test_every_metric_defines_direction_unit_and_bounds(registry):
             assert "fbref" in m or "understat" in m, f"{mid} has no source mapping"
 
 
-def test_position_groups_match_methodology(registry):
+def test_position_groups_match_methodology(registry) -> None:
     assert set(registry["position_groups"]) == EXPECTED_POSITION_GROUPS
 
 
-def test_every_position_weights_row_sums_to_1(registry):
+def test_every_position_weights_row_sums_to_1(registry) -> None:
     weights = registry["position_weights"]
     assert set(weights.keys()) == EXPECTED_POSITION_GROUPS
     for group, row in weights.items():
@@ -98,7 +98,7 @@ def test_every_position_weights_row_sums_to_1(registry):
             ), f"{group} references unknown metric {mid!r}"
 
 
-def test_gk_and_outfield_metric_lists_are_consistent(registry):
+def test_gk_and_outfield_metric_lists_are_consistent(registry) -> None:
     outfield = set(registry["outfield_metrics"])
     gk = set(registry["gk_metrics"])
     assert outfield.isdisjoint(gk), "outfield and GK metric lists overlap"
@@ -107,7 +107,7 @@ def test_gk_and_outfield_metric_lists_are_consistent(registry):
     ), "metric lists do not cover the registry exactly"
 
 
-def test_anomaly_bounds_match_metric_bounds(registry):
+def test_anomaly_bounds_match_metric_bounds(registry) -> None:
     for mid, m in registry["metrics"].items():
         bounds = m["bounds"]
         # Only `derived` differential metrics (e.g. PSxG minus GA) may span
@@ -130,7 +130,7 @@ def test_anomaly_bounds_match_metric_bounds(registry):
 # --- League tiers: schema validity (percentile-rules.md) ---------------------
 
 
-def test_tiers_schema(registry, tiers):
+def test_tiers_schema(registry, tiers) -> None:
     assert tiers["schema_version"] >= 1
     leagues = tiers["leagues"]
     assert isinstance(leagues, dict) and len(leagues) > 0
@@ -149,7 +149,7 @@ def test_tiers_schema(registry, tiers):
 # --- Coverage matrix: no UI claim beyond the matrix (Constitution §3) --------
 
 
-def test_coverage_matrix_exists_and_is_valid_schema():
+def test_coverage_matrix_exists_and_is_valid_schema() -> None:
     assert (
         COVERAGE_MATRIX_PATH.exists()
     ), "data/coverage_matrix.json missing — run scripts/seed_dev_db.py"
@@ -159,7 +159,7 @@ def test_coverage_matrix_exists_and_is_valid_schema():
     assert len(matrix["rows"]) > 0
 
 
-def test_coverage_matrix_rows_are_well_formed():
+def test_coverage_matrix_rows_are_well_formed() -> None:
     matrix = json.loads(COVERAGE_MATRIX_PATH.read_text(encoding="utf-8"))
     seen = set()
     for row in matrix["rows"]:
@@ -171,7 +171,7 @@ def test_coverage_matrix_rows_are_well_formed():
         assert row["last_successful_scrape"], "missing last_successful_scrape"
 
 
-def test_ui_coverage_page_claims_match_matrix():
+def test_ui_coverage_page_claims_match_matrix() -> None:
     """The /data-coverage page copy must not claim more than the matrix holds."""
     matrix = json.loads(COVERAGE_MATRIX_PATH.read_text(encoding="utf-8"))
     sources = {row["source"] for row in matrix["rows"]}
@@ -190,7 +190,7 @@ def test_ui_coverage_page_claims_match_matrix():
         assert len(active) > 0, "UI claims active coverage but matrix has none"
 
 
-def test_dataset_banner_reflects_matrix_mode():
+def test_dataset_banner_reflects_matrix_mode() -> None:
     """The site-wide dataset banner must mirror the matrix's mode.
 
     The banner is client-rendered from GET /api/v1/meta, which serves

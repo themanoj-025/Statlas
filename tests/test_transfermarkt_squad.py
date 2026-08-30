@@ -22,20 +22,20 @@ def _fixture_soup(filename: str) -> BeautifulSoup:
 class TestParseSquadPage:
     """Test _parse_squad_page against the fixture HTML."""
 
-    def test_parses_all_players(self):
+    def test_parses_all_players(self) -> None:
         soup = _fixture_soup("transfermarkt_squad.html")
         source = TransfermarktSource.__new__(TransfermarktSource)
         players = source._parse_squad_page(soup, "Arsenal FC", 11, "premier-league")
         assert len(players) == 4
 
-    def test_extracts_player_ids(self):
+    def test_extracts_player_ids(self) -> None:
         soup = _fixture_soup("transfermarkt_squad.html")
         source = TransfermarktSource.__new__(TransfermarktSource)
         players = source._parse_squad_page(soup, "Arsenal FC", 11, "premier-league")
         tm_ids = [p["transfermarkt_id"] for p in players]
         assert tm_ids == [262749, 476862, 316269, 381976]
 
-    def test_extracts_names(self):
+    def test_extracts_names(self) -> None:
         soup = _fixture_soup("transfermarkt_squad.html")
         source = TransfermarktSource.__new__(TransfermarktSource)
         players = source._parse_squad_page(soup, "Arsenal FC", 11, "premier-league")
@@ -44,7 +44,7 @@ class TestParseSquadPage:
         assert "Martin Odegaard" in names
         assert "Kai Havertz" in names
 
-    def test_extracts_positions(self):
+    def test_extracts_positions(self) -> None:
         soup = _fixture_soup("transfermarkt_squad.html")
         source = TransfermarktSource.__new__(TransfermarktSource)
         players = source._parse_squad_page(soup, "Arsenal FC", 11, "premier-league")
@@ -52,7 +52,7 @@ class TestParseSquadPage:
         assert by_name["David Raya"]["position"] == "Goalkeeper"
         assert by_name["Kai Havertz"]["position"] == "Centre-Forward"
 
-    def test_extracts_ages(self):
+    def test_extracts_ages(self) -> None:
         soup = _fixture_soup("transfermarkt_squad.html")
         source = TransfermarktSource.__new__(TransfermarktSource)
         players = source._parse_squad_page(soup, "Arsenal FC", 11, "premier-league")
@@ -60,14 +60,14 @@ class TestParseSquadPage:
         assert by_name["David Raya"]["age"] == 30
         assert by_name["Martin Odegaard"]["age"] == 27
 
-    def test_extracts_contract_dates(self):
+    def test_extracts_contract_dates(self) -> None:
         soup = _fixture_soup("transfermarkt_squad.html")
         source = TransfermarktSource.__new__(TransfermarktSource)
         players = source._parse_squad_page(soup, "Arsenal FC", 11, "premier-league")
         by_name = {p["name"]: p for p in players}
         assert by_name["David Raya"]["contract_expires"] == "30/06/2028"
 
-    def test_extracts_market_values(self):
+    def test_extracts_market_values(self) -> None:
         soup = _fixture_soup("transfermarkt_squad.html")
         source = TransfermarktSource.__new__(TransfermarktSource)
         players = source._parse_squad_page(soup, "Arsenal FC", 11, "premier-league")
@@ -76,7 +76,7 @@ class TestParseSquadPage:
         assert by_name["David Raya"]["market_value_eur"] == 30_000_000.0
         assert by_name["Martin Odegaard"]["market_value_eur"] == 120_000_000.0
 
-    def test_includes_club_and_league(self):
+    def test_includes_club_and_league(self) -> None:
         soup = _fixture_soup("transfermarkt_squad.html")
         source = TransfermarktSource.__new__(TransfermarktSource)
         players = source._parse_squad_page(soup, "Arsenal FC", 11, "premier-league")
@@ -89,7 +89,7 @@ class TestParseSquadPage:
 class TestExtractClubsFromOverview:
     """Test _extract_clubs_from_overview against a real (cached) page."""
 
-    def test_extracts_clubs_from_live_page(self):
+    def test_extracts_clubs_from_live_page(self) -> None:
         """Verify club extraction works against the actual TM overview page."""
         source = TransfermarktSource.__new__(TransfermarktSource)
         source.session = MagicMock()
@@ -113,7 +113,7 @@ class TestExtractClubsFromOverview:
 class TestIngestScriptHelpers:
     """Test helper functions used by the bulk ingestion script."""
 
-    def test_position_to_group(self):
+    def test_position_to_group(self) -> None:
         from scripts.ingest_transfermarkt_squad import position_to_group
         assert position_to_group("Goalkeeper") == "GK"
         assert position_to_group("Centre-Back") == "CB"
@@ -125,7 +125,7 @@ class TestIngestScriptHelpers:
         assert position_to_group("Centre-Forward") == "ST"
         assert position_to_group("") is None
 
-    def test_upsert_creates_new_players(self, db):
+    def test_upsert_creates_new_players(self, db) -> None:
         from app.models.player import Player
         from scripts.ingest_transfermarkt_squad import upsert_players
 
@@ -151,7 +151,7 @@ class TestIngestScriptHelpers:
         assert p.position_group == "ST"
         assert p.external_ids.get("transfermarkt") == 9999999
 
-    def test_upsert_updates_existing_players(self, db):
+    def test_upsert_updates_existing_players(self, db) -> None:
         from app.models.player import Player
         from scripts.ingest_transfermarkt_squad import upsert_players
 

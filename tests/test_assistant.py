@@ -30,7 +30,7 @@ SEASON = "2025-26"
 
 
 @pytest.fixture()
-def seeded_client():
+def seeded_client() -> None:
     """Fresh in-memory DB seeded via the real pipeline (players with
     published percentiles) + a signed-in user."""
     db_module._engine = None
@@ -129,7 +129,7 @@ def fake_anthropic(monkeypatch):
     return fake
 
 
-def test_assistant_grounded_tool_call_visible(seeded_client, fake_anthropic):
+def test_assistant_grounded_tool_call_visible(seeded_client, fake_anthropic) -> None:
     resp = seeded_client.post(
         "/api/v1/assistant/chat",
         json={
@@ -150,7 +150,7 @@ def test_assistant_grounded_tool_call_visible(seeded_client, fake_anthropic):
     assert body["quota"]["used"] == 1
 
 
-def test_assistant_quota_hard_cap(seeded_client, fake_anthropic):
+def test_assistant_quota_hard_cap(seeded_client, fake_anthropic) -> None:
     # Exhaust the quota directly.
     with session_scope() as db:
         user = db.query(User).filter(User.email == "analyst@example.com").first()
@@ -187,7 +187,7 @@ def test_assistant_quota_hard_cap(seeded_client, fake_anthropic):
     assert "quota" in msg.lower() or "reset" in msg.lower()
 
 
-def test_assistant_requires_signin(seeded_client, fake_anthropic):
+def test_assistant_requires_signin(seeded_client, fake_anthropic) -> None:
     seeded_client.post("/api/v1/auth/logout")
     resp = seeded_client.post(
         "/api/v1/assistant/chat",
@@ -196,7 +196,7 @@ def test_assistant_requires_signin(seeded_client, fake_anthropic):
     assert resp.status_code == 401
 
 
-def test_assistant_unconfigured_returns_503(monkeypatch):
+def test_assistant_unconfigured_returns_503(monkeypatch) -> None:
     """Without ANTHROPIC_API_KEY the endpoint is an honest 503, not a demo."""
     monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
     import app.assistant as assistant_mod
@@ -219,7 +219,7 @@ def test_assistant_unconfigured_returns_503(monkeypatch):
         assert "not configured" in msg.lower()
 
 
-def test_assistant_rate_limit(seeded_client, fake_anthropic):
+def test_assistant_rate_limit(seeded_client, fake_anthropic) -> None:
     """The abuse guard (Part B4) returns 429 after the per-minute cap."""
     from app.api import assistant_views
 
@@ -264,7 +264,7 @@ def test_assistant_rate_limit(seeded_client, fake_anthropic):
         assistant_views._rate_limit = original_fn
 
 
-def test_assistant_quota_endpoint(seeded_client, fake_anthropic):
+def test_assistant_quota_endpoint(seeded_client, fake_anthropic) -> None:
     resp = seeded_client.get("/api/v1/assistant/quota")
     assert resp.status_code == 200
     body = resp.json()

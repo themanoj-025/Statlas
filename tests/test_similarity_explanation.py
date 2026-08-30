@@ -123,7 +123,7 @@ def _explain(anchor, candidate, group="ST"):
 # ---------------------------------------------------------------------------
 
 
-def test_explanation_matches_hand_calculated_fixture():
+def test_explanation_matches_hand_calculated_fixture() -> None:
     exp = _explain(ANCHOR, CANDIDATE)
 
     # matched strengths: the three largest-contribution metrics where both
@@ -153,7 +153,7 @@ def test_explanation_matches_hand_calculated_fixture():
     assert exp["excluded_reason"]
 
 
-def test_explanation_matches_hand_calculated_similarity():
+def test_explanation_matches_hand_calculated_similarity() -> None:
     _explain(ANCHOR, CANDIDATE)  # smoke: builder runs on the fixture
     expected = 41649 / (math.sqrt(45360) * math.sqrt(40961))
     sim, shared, contributions = _cosine_with_components(
@@ -167,7 +167,7 @@ def test_explanation_matches_hand_calculated_similarity():
     assert abs(sim - expected) < 0.001
 
 
-def test_matched_strength_rules_hold_on_fixture():
+def test_matched_strength_rules_hold_on_fixture() -> None:
     exp = _explain(ANCHOR, CANDIDATE)
     for m in exp["matched_strengths"]:
         assert m["player_a_percentile"] >= MATCHED_STRENGTH_MIN_PERCENTILE
@@ -186,7 +186,7 @@ def test_matched_strength_rules_hold_on_fixture():
     assert exp["key_differences"][0]["difference"] == max(all_gaps.values())
 
 
-def test_boundary_gap_of_25_is_a_key_difference():
+def test_boundary_gap_of_25_is_a_key_difference() -> None:
     """Gap exactly at the threshold is a key difference (inclusive boundary)."""
     a = dict(ANCHOR)
     b = dict(CANDIDATE)
@@ -203,7 +203,7 @@ def test_boundary_gap_of_25_is_a_key_difference():
 # ---------------------------------------------------------------------------
 
 
-def test_no_meaningful_differences_edge_case():
+def test_no_meaningful_differences_edge_case() -> None:
     """All gaps small -> key differences must be empty, not force-ranked."""
     a = {
         "si_gls_p90": 72,
@@ -226,7 +226,7 @@ def test_no_meaningful_differences_edge_case():
     assert exp["excluded_metrics"] == []
 
 
-def test_no_shared_standout_strengths_edge_case():
+def test_no_shared_standout_strengths_edge_case() -> None:
     """Mid-range alignment -> matched strengths empty (honest, not padded)."""
     a = dict.fromkeys(OUTFIELD, 45.0)
     b = dict.fromkeys(OUTFIELD, 48.0)
@@ -236,7 +236,7 @@ def test_no_shared_standout_strengths_edge_case():
     assert exp["shared_metrics"] == 12
 
 
-def test_missing_metric_excluded_from_score_and_explanation():
+def test_missing_metric_excluded_from_score_and_explanation() -> None:
     """A metric absent for the candidate is excluded everywhere (never a zero)."""
     candidate = {mid: v for mid, v in CANDIDATE.items() if mid != "si_xag_p90"}
     exp = _explain(ANCHOR, candidate)
@@ -249,7 +249,7 @@ def test_missing_metric_excluded_from_score_and_explanation():
         assert item["metric"] != "si_xag_p90"
 
 
-def test_similarity_score_matches_explanation_shared_set():
+def test_similarity_score_matches_explanation_shared_set() -> None:
     """The score the UI shows is computed over exactly the shared set."""
     candidate = {mid: v for mid, v in CANDIDATE.items() if mid != "si_xag_p90"}
     sim, shared, _ = _cosine_with_components(ANCHOR, candidate, min_shared_metrics=5)
@@ -263,7 +263,7 @@ def test_similarity_score_matches_explanation_shared_set():
 # ---------------------------------------------------------------------------
 
 
-def test_get_similar_players_returns_explanation(db, premier_league):
+def test_get_similar_players_returns_explanation(db, premier_league) -> None:
     anchor = _seed_vector(db, premier_league, "Anchor", ANCHOR)
     _seed_vector(db, premier_league, "Peer", CANDIDATE)
 
@@ -287,7 +287,7 @@ def test_get_similar_players_returns_explanation(db, premier_league):
     assert gls["player_b_percentile"] == CANDIDATE["si_gls_p90"]
 
 
-def test_get_similar_players_excludes_missing_metric(db, premier_league):
+def test_get_similar_players_excludes_missing_metric(db, premier_league) -> None:
     anchor = _seed_vector(db, premier_league, "Anchor", ANCHOR)
     partial = {mid: v for mid, v in CANDIDATE.items() if mid != "si_xag_p90"}
     _seed_vector(db, premier_league, "Partial", partial)
@@ -299,7 +299,7 @@ def test_get_similar_players_excludes_missing_metric(db, premier_league):
     assert results[0]["shared_metrics"] == 11
 
 
-def test_get_similar_players_no_meaningful_differences(db, premier_league):
+def test_get_similar_players_no_meaningful_differences(db, premier_league) -> None:
     a = {mid: 70.0 + i for i, mid in enumerate(OUTFIELD)}
     b = {mid: v + 2 for mid, v in a.items()}
     anchor = _seed_vector(db, premier_league, "Anchor", a)

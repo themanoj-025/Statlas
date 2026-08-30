@@ -93,7 +93,7 @@ def make_player(db, name: str = "Erling Haaland", team: Team | None = None) -> P
 
 
 @pytest.fixture()
-def workspace_data(db):
+def workspace_data(db) -> dict[str, object]:
     """One free user, one pro user, two players — the shared CRUD scaffold."""
     free = make_user(db, "free@example.com")
     pro = make_pro_user(db, "pro@example.com")
@@ -108,7 +108,7 @@ def workspace_data(db):
 # ---------------------------------------------------------------------------
 
 
-def test_default_shortlist_created_lazily(db):
+def test_default_shortlist_created_lazily(db) -> None:
     user = make_user(db)
     shortlists = wq.list_shortlists(db, user.id)
     assert len(shortlists) == 1
@@ -116,7 +116,7 @@ def test_default_shortlist_created_lazily(db):
     assert shortlists[0]["entry_count"] == 0
 
 
-def test_create_and_list_shortlists_with_counts(db, workspace_data):
+def test_create_and_list_shortlists_with_counts(db, workspace_data) -> None:
     user = workspace_data["free"]
     wq.create_shortlist(db, user.id, "Summer 2027 CB targets", "Centre-backs to watch")
     shortlists = wq.list_shortlists(db, user.id)
@@ -126,12 +126,12 @@ def test_create_and_list_shortlists_with_counts(db, workspace_data):
     assert shortlists[0]["description"] == "Centre-backs to watch"
 
 
-def test_create_shortlist_requires_name(db, workspace_data):
+def test_create_shortlist_requires_name(db, workspace_data) -> None:
     with pytest.raises(ValueError):
         wq.create_shortlist(db, workspace_data["free"].id, "   ")
 
 
-def test_delete_shortlist_is_soft(db, workspace_data):
+def test_delete_shortlist_is_soft(db, workspace_data) -> None:
     # A pro user (free users are capped at one shortlist).
     user = workspace_data["pro"]
     wq.list_shortlists(db, user.id)  # creates the default shortlist
@@ -148,7 +148,7 @@ def test_delete_shortlist_is_soft(db, workspace_data):
 # ---------------------------------------------------------------------------
 
 
-def test_add_player_sets_discovered_and_history(db, workspace_data):
+def test_add_player_sets_discovered_and_history(db, workspace_data) -> None:
     user = workspace_data["free"]
     haaland = workspace_data["haaland"]
     shortlists = wq.list_shortlists(db, user.id)
@@ -173,14 +173,14 @@ def test_add_player_sets_discovered_and_history(db, workspace_data):
     assert entry["status_history"][0]["to_status"] == "discovered"
 
 
-def test_add_unknown_player_rejected(db, workspace_data):
+def test_add_unknown_player_rejected(db, workspace_data) -> None:
     user = workspace_data["free"]
     sl_id = wq.list_shortlists(db, user.id)[0]["shortlist_id"]
     with pytest.raises(wq.PlayerNotFound):
         wq.add_player_to_shortlist(db, user.id, sl_id, 999_999)
 
 
-def test_duplicate_player_in_same_shortlist_rejected(db, workspace_data):
+def test_duplicate_player_in_same_shortlist_rejected(db, workspace_data) -> None:
     user = workspace_data["free"]
     haaland = workspace_data["haaland"]
     sl_id = wq.list_shortlists(db, user.id)[0]["shortlist_id"]
@@ -189,7 +189,7 @@ def test_duplicate_player_in_same_shortlist_rejected(db, workspace_data):
         wq.add_player_to_shortlist(db, user.id, sl_id, haaland.id)
 
 
-def test_same_player_ok_in_two_shortlists(db, workspace_data):
+def test_same_player_ok_in_two_shortlists(db, workspace_data) -> None:
     user = workspace_data["pro"]
     haaland = workspace_data["haaland"]
     first = wq.create_shortlist(db, user.id, "Project A")
@@ -201,7 +201,7 @@ def test_same_player_ok_in_two_shortlists(db, workspace_data):
     )
 
 
-def test_re_add_after_remove_restores_entry(db, workspace_data):
+def test_re_add_after_remove_restores_entry(db, workspace_data) -> None:
     user = workspace_data["free"]
     haaland = workspace_data["haaland"]
     sl_id = wq.list_shortlists(db, user.id)[0]["shortlist_id"]
@@ -240,7 +240,7 @@ def _entry(db, workspace_data, user=None):
         ("rejected", "monitoring"),  # the one documented reconsideration exit
     ],
 )
-def test_valid_transitions(db, workspace_data, path):
+def test_valid_transitions(db, workspace_data, path) -> None:
     user = workspace_data["free"]
     entry_id = _entry(db, workspace_data, user)
     wq.update_entry_status(db, user.id, entry_id, path[0])
@@ -258,7 +258,7 @@ def test_valid_transitions(db, workspace_data, path):
         (("rejected", "shortlisted"), "reconsider"),
     ],
 )
-def test_invalid_transitions_rejected(db, workspace_data, path, message_fragment):
+def test_invalid_transitions_rejected(db, workspace_data, path, message_fragment) -> None:
     user = workspace_data["free"]
     entry_id = _entry(db, workspace_data, user)
     wq.update_entry_status(db, user.id, entry_id, path[0])
@@ -267,7 +267,7 @@ def test_invalid_transitions_rejected(db, workspace_data, path, message_fragment
     assert message_fragment in str(excinfo.value)
 
 
-def test_same_status_is_noop_no_history_row(db, workspace_data):
+def test_same_status_is_noop_no_history_row(db, workspace_data) -> None:
     user = workspace_data["free"]
     entry_id = _entry(db, workspace_data, user)
     result = wq.update_entry_status(db, user.id, entry_id, "discovered")
@@ -278,14 +278,14 @@ def test_same_status_is_noop_no_history_row(db, workspace_data):
     assert len(detail["entries"][0]["status_history"]) == 1  # only the initial row
 
 
-def test_unknown_status_rejected(db, workspace_data):
+def test_unknown_status_rejected(db, workspace_data) -> None:
     user = workspace_data["free"]
     entry_id = _entry(db, workspace_data, user)
     with pytest.raises(wq.InvalidStatusTransition):
         wq.update_entry_status(db, user.id, entry_id, "watching-on-tv")
 
 
-def test_status_history_audit_trail_complete(db, workspace_data):
+def test_status_history_audit_trail_complete(db, workspace_data) -> None:
     """Multi-step scenario: several transitions over time — the full history
     must be queryable and ordered (Part E gate)."""
     user = workspace_data["free"]
@@ -328,7 +328,7 @@ def test_status_history_audit_trail_complete(db, workspace_data):
 # ---------------------------------------------------------------------------
 
 
-def test_notes_appended_and_timestamped(db, workspace_data):
+def test_notes_appended_and_timestamped(db, workspace_data) -> None:
     user = workspace_data["free"]
     entry_id = _entry(db, workspace_data, user)
     wq.add_entry_note(db, user.id, entry_id, "First observation")
@@ -344,14 +344,14 @@ def test_notes_appended_and_timestamped(db, workspace_data):
     assert notes[0]["author_user_id"] == user.id
 
 
-def test_empty_note_rejected(db, workspace_data):
+def test_empty_note_rejected(db, workspace_data) -> None:
     user = workspace_data["free"]
     entry_id = _entry(db, workspace_data, user)
     with pytest.raises(ValueError):
         wq.add_entry_note(db, user.id, entry_id, "   ")
 
 
-def test_tags_add_normalize_and_remove(db, workspace_data):
+def test_tags_add_normalize_and_remove(db, workspace_data) -> None:
     user = workspace_data["free"]
     entry_id = _entry(db, workspace_data, user)
     wq.add_entry_tag(db, user.id, entry_id, "Left-Footed")
@@ -370,7 +370,7 @@ def test_tags_add_normalize_and_remove(db, workspace_data):
     assert detail["entries"][0]["tags"] == ["contract expiring"]
 
 
-def test_priority_set_and_cleared(db, workspace_data):
+def test_priority_set_and_cleared(db, workspace_data) -> None:
     user = workspace_data["free"]
     entry_id = _entry(db, workspace_data, user)
     wq.set_entry_priority(db, user.id, entry_id, "high")
@@ -389,14 +389,14 @@ def test_priority_set_and_cleared(db, workspace_data):
 # ---------------------------------------------------------------------------
 
 
-def test_cannot_view_another_users_shortlist(db, workspace_data):
+def test_cannot_view_another_users_shortlist(db, workspace_data) -> None:
     free, pro = workspace_data["free"], workspace_data["pro"]
     sl_id = wq.list_shortlists(db, free.id)[0]["shortlist_id"]
     with pytest.raises(wq.ShortlistNotFound):
         wq.get_shortlist_detail(db, pro.id, sl_id)
 
 
-def test_cannot_modify_another_users_entry(db, workspace_data):
+def test_cannot_modify_another_users_entry(db, workspace_data) -> None:
     free, pro = workspace_data["free"], workspace_data["pro"]
     entry_id = _entry(db, workspace_data, free)
     with pytest.raises(wq.ShortlistNotFound):
@@ -409,7 +409,7 @@ def test_cannot_modify_another_users_entry(db, workspace_data):
         wq.remove_entry_by_id(db, pro.id, entry_id)
 
 
-def test_cannot_add_to_another_users_shortlist(db, workspace_data):
+def test_cannot_add_to_another_users_shortlist(db, workspace_data) -> None:
     free, pro = workspace_data["free"], workspace_data["pro"]
     haaland = workspace_data["haaland"]
     sl_id = wq.list_shortlists(db, free.id)[0]["shortlist_id"]
@@ -417,7 +417,7 @@ def test_cannot_add_to_another_users_shortlist(db, workspace_data):
         wq.add_player_to_shortlist(db, pro.id, sl_id, haaland.id)
 
 
-def test_memberships_only_own(db, workspace_data):
+def test_memberships_only_own(db, workspace_data) -> None:
     free, pro = workspace_data["free"], workspace_data["pro"]
     haaland = workspace_data["haaland"]
     sl_id = wq.list_shortlists(db, free.id)[0]["shortlist_id"]
@@ -431,7 +431,7 @@ def test_memberships_only_own(db, workspace_data):
 # ---------------------------------------------------------------------------
 
 
-def test_soft_delete_preserves_history_and_notes(db, workspace_data):
+def test_soft_delete_preserves_history_and_notes(db, workspace_data) -> None:
     user = workspace_data["free"]
     haaland = workspace_data["haaland"]
     sl_id = wq.list_shortlists(db, user.id)[0]["shortlist_id"]
@@ -458,7 +458,7 @@ def test_soft_delete_preserves_history_and_notes(db, workspace_data):
 # ---------------------------------------------------------------------------
 
 
-def test_free_user_capped_at_one_shortlist(db, workspace_data):
+def test_free_user_capped_at_one_shortlist(db, workspace_data) -> None:
     user = workspace_data["free"]
     wq.create_shortlist(db, user.id, "Second list")
     with pytest.raises(wq.WorkspaceLimitExceeded) as excinfo:
@@ -466,7 +466,7 @@ def test_free_user_capped_at_one_shortlist(db, workspace_data):
     assert "Upgrade to Pro" in str(excinfo.value)
 
 
-def test_pro_user_unlimited_shortlists(db, workspace_data):
+def test_pro_user_unlimited_shortlists(db, workspace_data) -> None:
     user = workspace_data["pro"]
     for i in range(3):
         wq.create_shortlist(db, user.id, f"List {i}")
@@ -474,7 +474,7 @@ def test_pro_user_unlimited_shortlists(db, workspace_data):
     assert len(wq.list_shortlists(db, user.id)) == 3
 
 
-def test_free_entry_cap(db, workspace_data):
+def test_free_entry_cap(db, workspace_data) -> None:
     user = workspace_data["free"]
     sl_id = wq.list_shortlists(db, user.id)[0]["shortlist_id"]
     limit = 10
@@ -489,7 +489,7 @@ def test_free_entry_cap(db, workspace_data):
     assert "10 players" in str(excinfo.value)
 
 
-def test_removed_entries_do_not_count_toward_cap(db, workspace_data):
+def test_removed_entries_do_not_count_toward_cap(db, workspace_data) -> None:
     """Soft-removed players free their slot (honest accounting)."""
     user = workspace_data["free"]
     sl_id = wq.list_shortlists(db, user.id)[0]["shortlist_id"]
@@ -507,7 +507,7 @@ def test_removed_entries_do_not_count_toward_cap(db, workspace_data):
 # ---------------------------------------------------------------------------
 
 
-def test_tag_suggestions_own_only_and_prefix_filtered(db, workspace_data):
+def test_tag_suggestions_own_only_and_prefix_filtered(db, workspace_data) -> None:
     free, pro = workspace_data["free"], workspace_data["pro"]
     free_entry = _entry(db, workspace_data, free)
     wq.add_entry_tag(db, free.id, free_entry, "left-footed")
@@ -548,7 +548,7 @@ def test_tag_suggestions_own_only_and_prefix_filtered(db, workspace_data):
 # ---------------------------------------------------------------------------
 
 
-def test_detail_includes_index_percentile(db, workspace_data):
+def test_detail_includes_index_percentile(db, workspace_data) -> None:
     user = workspace_data["free"]
     haaland = workspace_data["haaland"]
     # Reuse the league/team the workspace_data fixture already created.
@@ -596,7 +596,7 @@ def test_detail_includes_index_percentile(db, workspace_data):
 
 
 @pytest.fixture()
-def client():
+def client() -> None:
     db_module._engine = None
     db_module._session_factory = None
     create_schema()
@@ -607,7 +607,7 @@ def client():
 from app.api.main import app
 
 
-def _register(client, email: str = "api-scout@example.com"):
+def _register(client, email: str = "api-scout@example.com") -> None:
     resp = client.post(
         "/api/v1/auth/register", json={"email": email, "password": "Hunter2hunter!"}
     )
@@ -639,12 +639,12 @@ def _seed_players_via_orm():
         return player.id
 
 
-def test_api_workspace_requires_signin(client):
+def test_api_workspace_requires_signin(client) -> None:
     resp = client.get("/api/v1/workspace")
     assert resp.status_code == 401
 
 
-def test_api_full_flow_and_free_gate(client):
+def test_api_full_flow_and_free_gate(client) -> None:
     _register(client)
     player_id = _seed_players_via_orm()
 
@@ -718,7 +718,7 @@ def test_api_full_flow_and_free_gate(client):
     assert resp.json()["entry_count"] == 0
 
 
-def test_api_cross_user_404_not_403(client):
+def test_api_cross_user_404_not_403(client) -> None:
     _register(client, "first@example.com")
     # Fetch the first user's shortlist id while STILL signed in as them.
     first = client.get("/api/v1/workspace").json()["shortlists"][0]["shortlist_id"]

@@ -162,7 +162,7 @@ def seed_player(
 
 
 @pytest.fixture()
-def report_data(db):
+def report_data(db) -> dict[str, object]:
     """One free + one pro user, one tier-1 league/team, and a population of
     three ST players with full percentile vectors so similarity works."""
     free = make_user(db, "free@example.com")
@@ -225,7 +225,7 @@ def _context(db, player_id, entry_id=None):
 # ---------------------------------------------------------------------------
 
 
-def test_verification_catches_fabricated_number(db, report_data):
+def test_verification_catches_fabricated_number(db, report_data) -> None:
     """A report claiming a percentile that is not in the verified context must
     FAIL verification — the mechanism is code, not prompt discipline."""
     context = _context(db, report_data["anchor"].id)
@@ -241,7 +241,7 @@ def test_verification_catches_fabricated_number(db, report_data):
     assert any("97" in u["claim"] for u in result["unverified"])
 
 
-def test_verification_catches_fabricated_metric_name(db, report_data):
+def test_verification_catches_fabricated_metric_name(db, report_data) -> None:
     context = _context(db, report_data["anchor"].id)
     draft = reports.deterministic_narrator(context)
     draft["sections"]["strengths"][0]["supporting_metric"] = "si_not_a_metric"
@@ -250,7 +250,7 @@ def test_verification_catches_fabricated_metric_name(db, report_data):
     assert any("si_not_a_metric" in u["claim"] for u in result["unverified"])
 
 
-def test_verification_catches_invented_comparable(db, report_data):
+def test_verification_catches_invented_comparable(db, report_data) -> None:
     context = _context(db, report_data["anchor"].id)
     draft = reports.deterministic_narrator(context)
     draft["sections"]["comparable_players"].append(
@@ -266,7 +266,7 @@ def test_verification_catches_invented_comparable(db, report_data):
     assert any("999999" in u["claim"] for u in result["unverified"])
 
 
-def test_verification_catches_wrong_confidence_level(db, report_data):
+def test_verification_catches_wrong_confidence_level(db, report_data) -> None:
     context = _context(db, report_data["anchor"].id)
     draft = reports.deterministic_narrator(context)
     draft["sections"]["recommendation"]["confidence_level"] = (
@@ -277,7 +277,7 @@ def test_verification_catches_wrong_confidence_level(db, report_data):
     assert any(u["kind"] == "confidence" for u in result["unverified"])
 
 
-def test_verification_passes_grounded_output(db, report_data):
+def test_verification_passes_grounded_output(db, report_data) -> None:
     """The deterministic narrator emits ONLY context values, so its output must
     pass — proving the gate accepts genuinely grounded reports, not just that
     it rejects everything."""
@@ -292,7 +292,7 @@ def test_verification_passes_grounded_output(db, report_data):
 # ---------------------------------------------------------------------------
 
 
-def test_confidence_full_season_complete_data_is_high(db, report_data):
+def test_confidence_full_season_complete_data_is_high(db, report_data) -> None:
     conf = reports.compute_report_confidence(
         minutes_played=2700.0,
         qualifying_minutes=900,
@@ -307,7 +307,7 @@ def test_confidence_full_season_complete_data_is_high(db, report_data):
     assert "full-season" in conf["rationale"]
 
 
-def test_confidence_barely_qualifying_sparse_is_lower(db, report_data):
+def test_confidence_barely_qualifying_sparse_is_lower(db, report_data) -> None:
     conf = reports.compute_report_confidence(
         minutes_played=950.0,
         qualifying_minutes=900,
@@ -323,7 +323,7 @@ def test_confidence_barely_qualifying_sparse_is_lower(db, report_data):
     assert "5/12" in conf["rationale"]
 
 
-def test_confidence_below_threshold_is_low(db, report_data):
+def test_confidence_below_threshold_is_low(db, report_data) -> None:
     conf = reports.compute_report_confidence(
         minutes_played=500.0,
         qualifying_minutes=900,
@@ -336,7 +336,7 @@ def test_confidence_below_threshold_is_low(db, report_data):
     assert conf["factors"]["sample_size"]["level"] == "below-threshold"
 
 
-def test_confidence_stale_snapshot_lowers_score(db, report_data):
+def test_confidence_stale_snapshot_lowers_score(db, report_data) -> None:
     fresh = reports.compute_report_confidence(
         minutes_played=2700.0,
         qualifying_minutes=900,
@@ -362,7 +362,7 @@ def test_confidence_stale_snapshot_lowers_score(db, report_data):
 # ---------------------------------------------------------------------------
 
 
-def test_risk_factors_limited_sample(db, report_data):
+def test_risk_factors_limited_sample(db, report_data) -> None:
     risks = reports.derive_risk_factors(
         minutes_played=1200.0,
         qualifying_minutes=900,
@@ -375,7 +375,7 @@ def test_risk_factors_limited_sample(db, report_data):
     assert any(r["basis"] == "single_season" for r in risks)
 
 
-def test_risk_factors_event_data_and_age(db, report_data):
+def test_risk_factors_event_data_and_age(db, report_data) -> None:
     risks = reports.derive_risk_factors(
         minutes_played=3000.0,
         qualifying_minutes=900,
@@ -393,7 +393,7 @@ def test_risk_factors_event_data_and_age(db, report_data):
     assert "outside" in risks[-1]["point"]
 
 
-def test_risk_factors_no_invented_dimensions(db, report_data):
+def test_risk_factors_no_invented_dimensions(db, report_data) -> None:
     """No vague personality/attitude claims — only the documented signals plus
     the out-of-scope statement. The out-of-scope statement may NAME the
     unassessed dimensions (that is its point), but no real risk factor may
@@ -426,7 +426,7 @@ def test_risk_factors_no_invented_dimensions(db, report_data):
 # ---------------------------------------------------------------------------
 
 
-def test_generate_report_pipeline_verified_and_stored(db, report_data):
+def test_generate_report_pipeline_verified_and_stored(db, report_data) -> None:
     pro = report_data["pro"]
     anchor = report_data["anchor"]
     result = reports.generate_report(
@@ -449,7 +449,7 @@ def test_generate_report_pipeline_verified_and_stored(db, report_data):
     assert row.verification_log["passed"] is True
 
 
-def test_generate_report_sections_structure(db, report_data):
+def test_generate_report_sections_structure(db, report_data) -> None:
     pro = report_data["pro"]
     result = reports.generate_report(
         db,
@@ -487,7 +487,7 @@ def test_generate_report_sections_structure(db, report_data):
     )
 
 
-def test_generate_requires_pro(db, report_data):
+def test_generate_requires_pro(db, report_data) -> None:
     free = report_data["free"]
     with pytest.raises(reports.ReportLimitExceeded) as excinfo:
         reports.generate_report(
@@ -501,7 +501,7 @@ def test_generate_requires_pro(db, report_data):
     assert db.query(Report).count() == 0
 
 
-def test_generate_unknown_player(db, report_data):
+def test_generate_unknown_player(db, report_data) -> None:
     pro = report_data["pro"]
     with pytest.raises(reports.PlayerHasNoData):
         reports.generate_report(
@@ -512,7 +512,7 @@ def test_generate_unknown_player(db, report_data):
         )
 
 
-def test_generate_unpublished_player(db, report_data):
+def test_generate_unpublished_player(db, report_data) -> None:
     """A player with no published percentiles cannot have a grounded report."""
     pro = report_data["pro"]
     league = report_data["league"]
@@ -537,7 +537,7 @@ def test_generate_unpublished_player(db, report_data):
 # ---------------------------------------------------------------------------
 
 
-def test_workspace_context_included_when_generated_from_entry(db, report_data):
+def test_workspace_context_included_when_generated_from_entry(db, report_data) -> None:
     pro = report_data["pro"]
     anchor = report_data["anchor"]
     sl = wq.create_shortlist(db, pro.id, "Targets")
@@ -566,7 +566,7 @@ def test_workspace_context_included_when_generated_from_entry(db, report_data):
     assert result["report"]["shortlist_entry_id"] == entry["entry_id"]
 
 
-def test_workspace_context_omitted_when_generated_ad_hoc(db, report_data):
+def test_workspace_context_omitted_when_generated_ad_hoc(db, report_data) -> None:
     pro = report_data["pro"]
     result = reports.generate_report(
         db,
@@ -580,7 +580,7 @@ def test_workspace_context_omitted_when_generated_ad_hoc(db, report_data):
     assert result["report"]["shortlist_entry_id"] is None
 
 
-def test_workspace_entry_of_another_user_rejected(db, report_data):
+def test_workspace_entry_of_another_user_rejected(db, report_data) -> None:
     """The workspace-context lookup must not leak another user's entry."""
     free = report_data["free"]
     anchor = report_data["anchor"]
@@ -602,7 +602,7 @@ def test_workspace_entry_of_another_user_rejected(db, report_data):
 # ---------------------------------------------------------------------------
 
 
-def test_pro_quota_consumed_and_capped(db, report_data):
+def test_pro_quota_consumed_and_capped(db, report_data) -> None:
     pro = report_data["pro"]
     quota = reports.get_report_quota(db, pro.id)
     assert quota["remaining"] == quota["limit"]
@@ -643,7 +643,7 @@ def test_pro_quota_consumed_and_capped(db, report_data):
 # ---------------------------------------------------------------------------
 
 
-def test_cross_user_get_404(db, report_data):
+def test_cross_user_get_404(db, report_data) -> None:
     pro = report_data["pro"]
     other = make_pro_user(db, "other@example.com")
     result = reports.generate_report(
@@ -661,7 +661,7 @@ def test_cross_user_get_404(db, report_data):
     assert reports.list_reports(db, other.id) == []
 
 
-def test_list_reports_own_only_and_ordered(db, report_data):
+def test_list_reports_own_only_and_ordered(db, report_data) -> None:
     pro = report_data["pro"]
     reports.generate_report(
         db,
@@ -684,7 +684,7 @@ def test_list_reports_own_only_and_ordered(db, report_data):
     assert listing[0]["verification_status"] == "passed"
 
 
-def test_delete_report_own(db, report_data):
+def test_delete_report_own(db, report_data) -> None:
     pro = report_data["pro"]
     result = reports.generate_report(
         db,
@@ -713,7 +713,7 @@ def _make_stored(db, report_data):
     )
 
 
-def test_export_json_verbatim(db, report_data):
+def test_export_json_verbatim(db, report_data) -> None:
     stored = _make_stored(db, report_data)
     text = report_export.export_json(stored["report"])
     parsed = json.loads(text)
@@ -722,7 +722,7 @@ def test_export_json_verbatim(db, report_data):
     assert len(parsed["evidence_appendix"]) >= 3
 
 
-def test_export_pdf_wellformed(db, report_data):
+def test_export_pdf_wellformed(db, report_data) -> None:
     stored = _make_stored(db, report_data)
     pdf = report_export.export_pdf(stored["report"], player_name="Anchor Striker")
     assert pdf.startswith(b"%PDF")
@@ -730,14 +730,14 @@ def test_export_pdf_wellformed(db, report_data):
     assert b"STATLAS" in pdf
 
 
-def test_export_pdf_needs_review_contains_warning(db, report_data):
+def test_export_pdf_needs_review_contains_warning(db, report_data) -> None:
     stored = _make_stored(db, report_data)
     stored["report"]["verification"]["status"] = "needs_review"
     pdf = report_export.export_pdf(stored["report"], player_name="Anchor Striker")
     assert b"Needs review" in pdf
 
 
-def test_export_csv_tabular_surfaces(db, report_data):
+def test_export_csv_tabular_surfaces(db, report_data) -> None:
     stored = _make_stored(db, report_data)
     csv_text = report_export.export_csv(stored["report"], player_name="Anchor Striker")
     assert "Statlas Scouting Report — Statistical Profile" in csv_text
@@ -754,7 +754,7 @@ def test_export_csv_tabular_surfaces(db, report_data):
 
 
 @pytest.fixture()
-def client(monkeypatch):
+def client(monkeypatch) -> bool:
     db_module._engine = None
     db_module._session_factory = None
     create_schema()
@@ -772,7 +772,7 @@ def client(monkeypatch):
             return getattr(real, name)
 
         @property
-        def reports_dev_narrator(self):
+        def reports_dev_narrator(self) -> bool:
             return True
 
     monkeypatch.setattr(rv, "get_settings", lambda: _FakeSettings())
@@ -783,7 +783,7 @@ def client(monkeypatch):
 from app.api.main import app
 
 
-def _register(client, email: str = "pro-api@example.com"):
+def _register(client, email: str = "pro-api@example.com") -> None:
     resp = client.post(
         "/api/v1/auth/register", json={"email": email, "password": "Hunter2hunter!"}
     )
@@ -802,7 +802,7 @@ def _register(client, email: str = "pro-api@example.com"):
         db.commit()
 
 
-def _seed_api_data():
+def _seed_api_data() -> None:
     with session_scope() as db:
         league = League(
             slug="test-league",
@@ -838,14 +838,14 @@ def _seed_api_data():
         )
 
 
-def test_api_reports_require_signin(client):
+def test_api_reports_require_signin(client) -> None:
     assert client.get("/api/v1/reports").status_code == 401
     assert client.get("/api/v1/reports/quota").status_code == 401
     resp = client.post("/api/v1/reports", json={"player_id": 1})
     assert resp.status_code == 401
 
 
-def test_api_generate_list_export_flow(client):
+def test_api_generate_list_export_flow(client) -> None:
     _seed_api_data()
     _register(client)
 
@@ -893,7 +893,7 @@ def test_api_generate_list_export_flow(client):
     assert client.get(f"/api/v1/reports/{report_id}").status_code == 404
 
 
-def test_api_free_tier_honest_upsell(client):
+def test_api_free_tier_honest_upsell(client) -> None:
     _seed_api_data()
     _register(client, "free-api@example.com")
     # Pro access comes from the subscription row (auth.has_pro_access) — revoke
@@ -913,7 +913,7 @@ def test_api_free_tier_honest_upsell(client):
     assert "Pro feature" in msg
 
 
-def test_e2e_grant_fixture_disabled_without_flag(client_plain):
+def test_e2e_grant_fixture_disabled_without_flag(client_plain) -> None:
     """The e2e grant fixture 403s unless the e2e-only flag is set — it can
     never grant Pro on a normal deployment."""
     resp = client_plain.post(
@@ -923,7 +923,7 @@ def test_e2e_grant_fixture_disabled_without_flag(client_plain):
 
 
 @pytest.fixture()
-def client_plain():
+def client_plain() -> None:
     """A TestClient WITHOUT the e2e narrator flag — normal operation."""
     db_module._engine = None
     db_module._session_factory = None
@@ -932,7 +932,7 @@ def client_plain():
         yield c
 
 
-def test_api_cross_user_404(client):
+def test_api_cross_user_404(client) -> None:
     _seed_api_data()
     _register(client, "first@example.com")
     player_id = None

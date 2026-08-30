@@ -57,7 +57,7 @@ def _seed(db, league, name, group, gls, minutes=1000, **extra):
     return player
 
 
-def test_ordinal():
+def test_ordinal() -> None:
     assert ordinal(1) == "1st"
     assert ordinal(2) == "2nd"
     assert ordinal(3) == "3rd"
@@ -70,7 +70,7 @@ def test_ordinal():
     assert ordinal(87) == "87th"
 
 
-def test_qualified_player_sentence_grammar(db, premier_league, small_pool):
+def test_qualified_player_sentence_grammar(db, premier_league, small_pool) -> None:
     """A fully-qualified ST: sentence names the top metric, tier and plural."""
     for name, gls in [("A", 0.2), ("B", 0.4), ("C", 0.6), ("D", 0.8), ("E", 0.9)]:
         _seed(db, premier_league, name, "ST", gls)
@@ -85,7 +85,7 @@ def test_qualified_player_sentence_grammar(db, premier_league, small_pool):
     assert "0.2" not in sentence  # never a fabricated number
 
 
-def test_pluralization_per_position(db, premier_league, small_pool):
+def test_pluralization_per_position(db, premier_league, small_pool) -> None:
     """GK -> 'goalkeepers', W -> 'wide attackers', CB -> 'centre-backs'."""
     # five per group so each pool clears the min-pool size (5)
     for i in range(5):
@@ -112,7 +112,7 @@ def test_pluralization_per_position(db, premier_league, small_pool):
         assert plural in build_profile_sentence(db, player.id)
 
 
-def test_percentile_zero_boundary(db, premier_league, small_pool):
+def test_percentile_zero_boundary(db, premier_league, small_pool) -> None:
     """The pool minimum gets the honest 'bottom of the group' phrasing."""
     # A is the bottom of EVERY metric pool (all values scale with gls), so its
     # top percentile is genuinely 0 — the copy must say so honestly.
@@ -143,7 +143,7 @@ def test_percentile_zero_boundary(db, premier_league, small_pool):
     assert "0th percentile" not in sentence  # no false precision
 
 
-def test_pending_qualification_sentence(db, premier_league, small_pool):
+def test_pending_qualification_sentence(db, premier_league, small_pool) -> None:
     """Below-threshold player: pending copy with the real minutes, never a score."""
     player = _seed(db, premier_league, "Sub", "ST", 9.0, minutes=480)
     sentence = build_profile_sentence(db, player.id)
@@ -152,7 +152,7 @@ def test_pending_qualification_sentence(db, premier_league, small_pool):
     assert "Statlas Index" not in sentence
 
 
-def test_zero_qualifying_players(db, premier_league):
+def test_zero_qualifying_players(db, premier_league) -> None:
     """League with zero qualifying players -> coverage-honest sentence."""
     player = _seed(
         db, premier_league, "Only", "ST", 0.5, minutes=100
@@ -161,7 +161,7 @@ def test_zero_qualifying_players(db, premier_league):
     assert "pending qualification" in sentence
 
 
-def test_no_snapshot_at_all(db, premier_league):
+def test_no_snapshot_at_all(db, premier_league) -> None:
     """A player row with no snapshot -> no fabricated claim."""
     player = Player(canonical_name="Ghost", position_group="ST")
     db.add(player)
@@ -170,7 +170,7 @@ def test_no_snapshot_at_all(db, premier_league):
     assert "not in the current data coverage" in sentence
 
 
-def test_tiny_sample_pool(db, premier_league, small_pool):
+def test_tiny_sample_pool(db, premier_league, small_pool) -> None:
     """Pool below minimum size: no percentiles exist -> pending path, honest."""
     for name, gls in [("A", 0.2), ("B", 0.4)]:  # N=2 < min pool (5)
         _seed(db, premier_league, name, "ST", gls)
