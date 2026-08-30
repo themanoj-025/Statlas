@@ -1,5 +1,30 @@
 """Weekly refresh data ingestion helpers."""
 
+from __future__ import annotations
+
+import logging
+from datetime import datetime, timezone
+from typing import Any
+
+from sqlalchemy.orm import Session
+
+from app.orchestration.weekly_refresh import RefreshReport, load_tiers, ensure_league_catalog
+
+logger = logging.getLogger(__name__)
+
+def run_weekly_refresh_ingest(
+    db: Session,
+    season: str,
+    *,
+    snapshot_date: datetime | None = None,
+    league_slugs: list[str] | None = None,
+    fbref_source: Any | None = None,
+    understat_source: Any | None = None,
+    statsbomb_source: Any | None = None,
+    api_football_source: Any | None = None,
+    statsbomb_competitions: list[dict[str, Any]] | None = None,
+    do_statsbomb: bool = False,
+    do_fixtures: bool = False,
     require_tier_completeness: bool = False,
 ) -> RefreshReport:
     """Run the full weekly refresh for a season.
