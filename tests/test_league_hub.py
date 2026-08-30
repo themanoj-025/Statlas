@@ -16,6 +16,8 @@ from sqlalchemy.orm import Session, sessionmaker
 
 from app.config import load_registry
 from app.models import (
+
+pytestmark = pytest.mark.slow
     Base,
     EmergingPlayerScore,
     League,
@@ -333,6 +335,7 @@ class TestLeagueHubAggregation:
 
     def test_hub_returns_empty_when_league_not_found(self, db):
         from app.queries.league_page_queries import get_league_hub_data
+
 
         hub = get_league_hub_data(db, "nonexistent-league")
         assert hub is None

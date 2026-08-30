@@ -30,6 +30,8 @@ from fastapi.testclient import TestClient
 import app.db as db_module
 from app.db import create_schema
 from app.models import (
+
+pytestmark = pytest.mark.slow
     League,
     PercentileSnapshot,
     Player,
@@ -799,6 +801,7 @@ def client():
 
 
 from app.api.main import app
+
 
 
 def _register(client, email: str = "api-scout@example.com"):

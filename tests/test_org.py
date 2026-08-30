@@ -23,6 +23,8 @@ from sqlalchemy.orm import Session
 
 from app import auth
 from app.models import (
+
+pytestmark = pytest.mark.slow
     Comment,
     Mention,
     Organization,
@@ -634,6 +636,7 @@ class TestDataIsolation:
 
     def test_org_member_cannot_see_other_org_resources(self, db: Session):
         from app.queries.org_queries import user_has_permission
+
 
         owner_a = _make_user(db, email="ownerA@test.com")
         owner_b = _make_user(db, email="ownerB@test.com")

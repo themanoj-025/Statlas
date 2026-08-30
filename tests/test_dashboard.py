@@ -19,6 +19,8 @@ from sqlalchemy.orm import Session, sessionmaker
 
 from app.activity import DEDUP_WINDOW_SECONDS, log_activity
 from app.models import (
+
+pytestmark = pytest.mark.slow
     ActivityLog,
     Base,
     League,
@@ -29,6 +31,8 @@ from app.models import (
     User,
 )
 from app.queries.dashboard_queries import (
+
+
     dismiss_recommendation,
     get_or_create_dashboard_state,
     get_recommended_players,

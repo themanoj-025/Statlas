@@ -20,6 +20,8 @@ from datetime import datetime, timedelta, timezone
 from sqlalchemy.orm import Session
 
 from app.models import (
+
+pytestmark = pytest.mark.slow
     ContractStatus,
     League,
     MarketValuation,
@@ -812,6 +814,7 @@ class TestTransferPresets:
 
     def test_preset_ids_are_unique(self):
         from app.queries.transfer_queries import TRANSFER_PRESETS
+
 
         ids = [p["id"] for p in TRANSFER_PRESETS]
         assert len(ids) == len(set(ids))

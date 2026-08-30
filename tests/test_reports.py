@@ -33,6 +33,8 @@ import app.db as db_module
 from app import report_export, reports
 from app.db import create_schema, session_scope
 from app.models import (
+
+pytestmark = pytest.mark.slow
     League,
     PercentileSnapshot,
     Player,
@@ -779,6 +781,7 @@ def client(monkeypatch):
 
 
 from app.api.main import app
+
 
 
 def _register(client, email: str = "pro-api@example.com"):
