@@ -19,14 +19,14 @@ from sqlalchemy.orm import Session, sessionmaker
 
 from app import auth
 from app.models import (
-
-pytestmark = pytest.mark.slow
     Base,
     PasswordResetToken,
     Shortlist,
     User,
     Watch,
 )
+
+pytestmark = pytest.mark.slow
 
 
 @pytest.fixture()

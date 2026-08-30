@@ -33,8 +33,6 @@ import app.db as db_module
 from app import report_export, reports
 from app.db import create_schema, session_scope
 from app.models import (
-
-pytestmark = pytest.mark.slow
     League,
     PercentileSnapshot,
     Player,
@@ -44,6 +42,8 @@ pytestmark = pytest.mark.slow
     Team,
     User,
 )
+
+pytestmark = pytest.mark.slow
 from app.queries import workspace_queries as wq
 
 SNAPSHOT_DATE = datetime(2026, 8, 12, 3, 0, 0, tzinfo=timezone.utc)
@@ -781,7 +781,6 @@ def client(monkeypatch):
 
 
 from app.api.main import app
-
 
 
 def _register(client, email: str = "pro-api@example.com"):
