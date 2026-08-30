@@ -11,7 +11,6 @@ from __future__ import annotations
 
 import os
 
-
 pytestmark = pytest.mark.slow
 os.environ["STRIPE_SECRET_KEY"] = "sk_test_dummy_for_signature_tests"
 os.environ["STRIPE_WEBHOOK_SECRET"] = "whsec_test_dummy_webhook_secret"

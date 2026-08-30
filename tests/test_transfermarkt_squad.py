@@ -9,8 +9,6 @@ from bs4 import BeautifulSoup
 from app.sources.transfermarkt import TransfermarktSource
 from tests.conftest import fixtures_dir
 
-
-
 pytestmark = pytest.mark.slow
 def _fixture_html(filename: str) -> str:
     with open(fixtures_dir() / filename, encoding="utf-8") as f:
