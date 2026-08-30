@@ -19,7 +19,6 @@ import hashlib
 import hmac
 import json
 
-
 pytestmark = pytest.mark.slow
 # --- configure Stripe test keys BEFORE importing the app ----------------------
 import os

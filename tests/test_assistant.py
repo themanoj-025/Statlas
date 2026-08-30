@@ -12,7 +12,6 @@ from __future__ import annotations
 
 import os
 
-
 pytestmark = pytest.mark.slow
 os.environ["ANTHROPIC_API_KEY"] = "sk-ant-test-dummy"
 
