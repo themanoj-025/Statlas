@@ -19,6 +19,8 @@ from sqlalchemy.orm import Session, sessionmaker
 
 from app import auth
 from app.models import (
+
+pytestmark = pytest.mark.slow
     Base,
     PasswordResetToken,
     Shortlist,
@@ -167,6 +169,8 @@ class TestLoginRateLimiting:
         # Force in-memory rate limiter for deterministic testing
         import app.rate_limiting as rl
         from app.rate_limiting import InMemoryRateLimiter
+
+
         rl._limiter = InMemoryRateLimiter()
 
         for _ in range(auth.LOGIN_MAX_FAILURES):

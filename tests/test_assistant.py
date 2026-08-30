@@ -12,6 +12,8 @@ from __future__ import annotations
 
 import os
 
+
+pytestmark = pytest.mark.slow
 os.environ["ANTHROPIC_API_KEY"] = "sk-ant-test-dummy"
 
 import pytest
@@ -238,6 +240,7 @@ def test_assistant_rate_limit(seeded_client, fake_anthropic):
     def _test_rate_limit(user_id: int) -> None:
         if limiter.is_limited(test_key, max_attempts=3, window_seconds=60):
             from fastapi import HTTPException
+
 
             raise HTTPException(
                 status_code=429,
