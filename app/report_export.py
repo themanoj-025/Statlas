@@ -332,7 +332,7 @@ def export_pdf(report_doc: dict[str, Any], player_name: str | None = None) -> by
         # extractable by PDF tools and screen readers (accessibility).
         pageCompression=0,
     )
-    st = _styles()
-    sections = report_doc.get("sections", {})
+    _styles()
+    report_doc.get("sections", {})
     snapshot_label = report_doc.get("data_snapshot_date", "unknown")
     doc.data_snapshot_label = snapshot_label  # used by header_footer
