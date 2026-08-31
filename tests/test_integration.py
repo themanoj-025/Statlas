@@ -75,7 +75,7 @@ def _understat_record(name, understat_id, team, xg):
 class FakeFBrefSource:
     source_name = "fbref"
 
-    def __init__(self, records):
+    def __init__(self, records) -> None:
         self.records = records
 
     def fetch_league_stats(self, league_slug, season) -> list[object]:
@@ -92,7 +92,7 @@ class FakeFBrefSource:
 class FakeUnderstatSource:
     source_name = "understat"
 
-    def __init__(self, records):
+    def __init__(self, records) -> None:
         self.records = records
 
     def fetch_league_stats(self, league_slug, season) -> list[object]:

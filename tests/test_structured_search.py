@@ -250,7 +250,7 @@ def search_data(db) -> dict[str, object]:
     return {"free": free, "pro": pro}
 
 
-def qd(conditions, **extra):
+def qd(conditions, **extra) -> None:
     base = {"conditions": conditions, "condition_logic": "AND"}
     base.update(extra)
     return base

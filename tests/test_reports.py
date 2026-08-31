@@ -768,7 +768,7 @@ def client(monkeypatch) -> bool:
     real = config.get_settings()
 
     class _FakeSettings:
-        def __getattr__(self, name):
+        def __getattr__(self, name) -> None:
             return getattr(real, name)
 
         @property
