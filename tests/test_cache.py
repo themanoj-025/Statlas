@@ -151,7 +151,7 @@ class TestCachedDecorator:
         assert result2 == {"result": 10}
         assert call_count == 1  # not called again
 
-    def test_different_args_different_cache_keys(self):
+    def test_different_args_different_cache_keys(self) -> None:
         call_count = 0
 
         @cached(ttl=60, prefix="test")
@@ -164,7 +164,7 @@ class TestCachedDecorator:
         fn(None, 2)
         assert call_count == 2
 
-    def test_none_result_not_cached(self):
+    def test_none_result_not_cached(self) -> None:
         call_count = 0
 
         @cached(ttl=60, prefix="test")
@@ -177,7 +177,7 @@ class TestCachedDecorator:
         fn(None)
         assert call_count == 2  # None not cached, called both times
 
-    def test_ttl_expiry(self):
+    def test_ttl_expiry(self) -> None:
         call_count = 0
 
         @cached(ttl=0, prefix="test")

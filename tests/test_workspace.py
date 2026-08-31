@@ -614,7 +614,7 @@ def _register(client, email: str = "api-scout@example.com") -> None:
     assert resp.status_code == 201, resp.text
 
 
-def _seed_players_via_orm():
+def _seed_players_via_orm() -> None:
     with session_scope() as db:
         league = League(
             slug="premier-league",

@@ -52,6 +52,6 @@ def setup_tracing(service_name: str) -> bool:
         return False
 
 
-def get_tracer():
+def get_tracer() -> Any | None:
     """Get the global tracer (returns None if tracing is disabled)."""
     return _tracer
