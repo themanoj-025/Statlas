@@ -15,19 +15,17 @@ from typing import Any
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 
+# Import routers from split modules
+from app.api.api_leagues import router as leagues_router
 from app.api.api_main import (
     health,
     lifespan,
-    metrics,
     meta,
+    metrics,
     readiness,
 )
-
-# Import routers from split modules
-from app.api.api_leagues import router as leagues_router
 from app.api.api_players import router as players_router
 from app.api.api_teams import router as teams_router
-
 
 app = FastAPI(
     title="Statlas API",

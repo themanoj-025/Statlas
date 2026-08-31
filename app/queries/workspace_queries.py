@@ -8,7 +8,7 @@ Implementation split across:
 
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any
 
 
@@ -48,7 +48,7 @@ def validate_transition(from_status: str | None, to_status: str) -> str | None:
 
 
 def _now() -> datetime:
-    return datetime.now()
+    return datetime.now(timezone.utc)
 
 
 def _owned_shortlist(
@@ -80,6 +80,7 @@ def _owned_entry(db: Session, user_id: int, entry_id: int):
 
 def _entry_counts(db: Session, shortlist_ids: list[int]) -> dict[int, dict[str, Any]]:
     from sqlalchemy import func
+
     from app.models import ShortlistEntry
     rows = (
         db.query(
@@ -107,22 +108,22 @@ def _bump_shortlist(db: Session, shortlist_id: int) -> None:
 
 
 # Re-export from split modules
-from app.queries.workspace_shortlists import (  # noqa: F401, E402
-    ensure_default_shortlist,
-    list_shortlists,
-    create_shortlist,
-    delete_shortlist,
-)
-from app.queries.workspace_entries import (  # noqa: F401, E402
-    add_player_to_shortlist,
-    update_entry_status,
-    set_entry_priority,
+from app.queries.workspace_entries import (
     add_entry_note,
     add_entry_tag,
-    remove_entry_tag,
+    add_player_to_shortlist,
+    get_shortlist_detail,
+    get_shortlist_memberships,
+    get_user_tag_suggestions,
     remove_entry,
     remove_entry_by_id,
-    get_shortlist_memberships,
-    get_shortlist_detail,
-    get_user_tag_suggestions,
+    remove_entry_tag,
+    set_entry_priority,
+    update_entry_status,
+)
+from app.queries.workspace_shortlists import (
+    create_shortlist,
+    delete_shortlist,
+    ensure_default_shortlist,
+    list_shortlists,
 )

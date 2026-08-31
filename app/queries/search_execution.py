@@ -17,14 +17,13 @@ from app.models import (
     StatSnapshot,
     Team,
 )
-
 from app.queries.structured_search import (
-    InvalidQuery,
     MINUTES_METRIC,
     PERCENTILE_OPERATORS,
     RAW_OPERATORS,
     SORTABLE_BASE,
     VALID_POSITION_GROUPS,
+    InvalidQuery,
     _finite,
     validate_query_definition,
 )

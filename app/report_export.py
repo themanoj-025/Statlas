@@ -8,13 +8,12 @@ Implementation split across:
 
 from __future__ import annotations
 
-from typing import Any
-
-import json
 import csv
 import io
+import json
+from typing import Any
 
-from app.report_pdf import export_pdf  # noqa: F401
+from app.report_pdf import export_pdf
 
 
 def export_json(report_doc: dict[str, Any]) -> str:
