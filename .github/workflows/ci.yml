@@ -75,7 +75,7 @@ jobs:
       # C5 closeout — secret scanning on every push/PR; a found secret blocks
       # merge (gitleaks exit code 1 on any finding).
       - name: gitleaks secret scan
-        uses: gitleaks/gitleaks-action@v2
+        uses: gitleaks/gitleaks-action@v3
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
