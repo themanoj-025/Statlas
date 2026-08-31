@@ -7,7 +7,7 @@ from typing import Any
 from fastapi import APIRouter, Query
 from sqlalchemy.orm import Session
 
-from app.models import League, Player, Team, CoverageRecord
+from app.models import CoverageRecord, League, Player, Team
 
 # Teams
 # ---------------------------------------------------------------------------

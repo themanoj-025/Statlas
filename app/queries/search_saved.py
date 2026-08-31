@@ -7,14 +7,14 @@ from typing import Any
 
 from sqlalchemy.orm import Session
 
-from app.models import SavedSearch, SearchHistory
-from app.config import load_search_presets, plan_limits
 from app.auth import effective_plan
+from app.config import load_search_presets, plan_limits
+from app.models import SavedSearch, SearchHistory
 from app.queries.structured_search import (
     HISTORY_CAP,
     InvalidQuery,
-    SearchNotFound,
     SearchLimitExceeded,
+    SearchNotFound,
     validate_query_definition,
 )
 

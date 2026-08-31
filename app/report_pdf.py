@@ -4,12 +4,12 @@ from __future__ import annotations
 
 from typing import Any
 
+from reportlab.graphics import renderPDF
+from reportlab.graphics.shapes import Drawing, Line, Polygon, String
 from reportlab.lib import colors
 from reportlab.lib.styles import ParagraphStyle
 from reportlab.lib.units import mm
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
-from reportlab.graphics.shapes import Drawing, String, Polygon, Line
-from reportlab.graphics import renderPDF
+from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
 
 from app.report_styles import _styles
 
