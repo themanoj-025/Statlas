@@ -58,3 +58,16 @@ warn_return_any = true
 warn_unused_configs = true
 warn_redundant_casts = true
 warn_unused_ignores = true
+
+[tool.pytest.ini_options]
+addopts = "-m 'not slow' --cov --cov-fail-under=40"
+testpaths = ["tests"]
+
+markers = [
+    "slow: integration tests (database, HTTP, ML models) — excluded from default run; use pytest -m slow"
+]
+
+[tool.coverage.report]
+show_missing = true
+fail_under = 40
+skip_empty = true
