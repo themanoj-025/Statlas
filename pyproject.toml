@@ -42,6 +42,8 @@ ignore = [
     "C416",    # unnecessary list comprehension
     "PLC0206", # dict without .items()
     "F822",    # undefined name in __all__
+    # print in CLI scripts — intentional user-facing output
+    "T201",
 ]
 
 [tool.ruff.lint.per-file-ignores]
