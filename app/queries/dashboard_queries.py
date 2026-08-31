@@ -16,21 +16,21 @@ from sqlalchemy.orm import Session
 from app.models import DashboardState
 
 # Re-export from split modules
-from app.queries.dashboard_activity import (  # noqa: F401, E402
+from app.queries.dashboard_activity import (
     get_recent_activity,
     get_workspace_summary,
 )
-from app.queries.dashboard_recommendations import (  # noqa: F401, E402
-    get_trending_players,
+from app.queries.dashboard_recommendations import (
     get_recommended_players,
+    get_trending_players,
 )
-from app.queries.dashboard_state import (  # noqa: F401, E402
-    get_or_create_dashboard_state,
+from app.queries.dashboard_state import (
     dismiss_recommendation,
+    get_or_create_dashboard_state,
+    get_saved_players,
     get_top_viewed_positions,
     save_player,
     unsave_player,
-    get_saved_players,
 )
 
 
