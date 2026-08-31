@@ -69,13 +69,13 @@ def seeded_client() -> None:
 
 
 class FakeMessage:
-    def __init__(self, content, stop_reason):
+    def __init__(self, content, stop_reason) -> None:
         self.content = content
         self.stop_reason = stop_reason
 
 
 class FakeBlock:
-    def __init__(self, btype, **kw):
+    def __init__(self, btype, **kw) -> None:
         self.type = btype
         self.__dict__.update(kw)
 
@@ -85,16 +85,16 @@ class FakeAnthropic:
     the number the tool returned (never invented). Mirrors the SDK shape:
     client.messages.create(...)."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.calls = []
         self.messages = FakeMessages(self)
 
 
 class FakeMessages:
-    def __init__(self, owner):
+    def __init__(self, owner) -> None:
         self.owner = owner
 
-    def create(self, **kwargs):
+    def create(self, **kwargs) -> None:
         owner = self.owner
         owner.calls.append(kwargs)
         # First call: the model decides it needs percentile data.
@@ -117,7 +117,7 @@ class FakeMessages:
 
 
 @pytest.fixture()
-def fake_anthropic(monkeypatch):
+def fake_anthropic(monkeypatch) -> None:
     """Patch the real anthropic client factory (the package IS installed) with
     a fake whose messages.create runs the tool loop against the real query
     layer. `assistant.run_assistant_turn` does `import anthropic` lazily, so
