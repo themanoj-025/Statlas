@@ -94,7 +94,7 @@ class CircuitBreaker:
                 return result
             except CircuitBreakerOpenError:
                 raise
-            except Exception:
+            except Exception:  # noqa: BLE001 — circuit breaker must catch all call failures
                 self.record_failure()
                 raise
 
