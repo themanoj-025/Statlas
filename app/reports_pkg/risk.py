@@ -13,7 +13,7 @@ def derive_risk_factors(
     has_event_data: bool,
     age: int | None,
     position_group: str | None,
-) -> list[dict[str, str]]:
+) -> list[dict[str, str]] -> None:
     """Real-signal risk factors + the explicit out-of-scope statement.
 
     Only signals Statlas actually has data for are allowed (scouting-reports.md

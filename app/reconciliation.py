@@ -222,7 +222,7 @@ def resolve_queue_item(
     *,
     note: str | None = None,
     now: datetime | None = None,
-) -> ReconciliationQueue:
+) -> ReconciliationQueue -> None:
     """Human-confirmed resolution: link the queued source record to a player and
     write the permanent alias row so the mismatch never recurs."""
     now = now or datetime.now(timezone.utc)

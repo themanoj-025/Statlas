@@ -455,7 +455,7 @@ class _DemoPlayerGen:
 
     def understat_overlay(
         self, fbref_record: RawPlayerStatRecord, understat_id: int
-    ) -> RawPlayerStatRecord | None:
+    ) -> RawPlayerStatRecord | None -> None:
         """Understat-model values for a Tier-1 outfield player (xG model rule:
         Tier 1 uses one model — Understat — so every Tier-1 cohort member must
         have an understat snapshot or the xG percentile would mix models).
@@ -500,7 +500,7 @@ class _DemoPlayerGen:
         group: str,
         index: int,
         used_names: set[str],
-    ) -> RawPlayerStatRecord:
+    ) -> RawPlayerStatRecord -> None:
         # Globally unique names (not per-league): the reconciler's _exact_match
         # falls back to a name+DOB-year match even across teams, so duplicate
         # names would merge distinct players into one canonical player (and put

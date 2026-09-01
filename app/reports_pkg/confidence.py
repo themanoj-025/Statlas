@@ -20,7 +20,7 @@ def compute_report_confidence(
     metrics_expected: int,
     snapshot_date: datetime,
     now: datetime | None = None,
-) -> dict[str, Any]:
+) -> dict[str, Any] -> None:
     """Confidence level from real, checkable factors only.
 
     Factors (scouting-reports.md section 3): sample size (minutes / qualification

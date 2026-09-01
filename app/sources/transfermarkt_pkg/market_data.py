@@ -65,7 +65,7 @@ class TransfermarktSource(MarketDataSource):
     def fetch_valuations(
         self, player_ids: list[int], as_of: datetime,
         player_names: list[str] | None = None,
-    ) -> list[MarketValuationRecord]:
+    ) -> list[MarketValuationRecord] -> None:
         """Fetch current market valuations for specified players.
 
         Strategy:
@@ -181,7 +181,7 @@ class TransfermarktSource(MarketDataSource):
 
     def fetch_market_value_history(
         self, player_id: int
-    ) -> list[dict[str, Any]]:
+    ) -> list[dict[str, Any]] -> None:
         """Fetch market value history via Transfermarkt's CEAPI JSON endpoint.
 
         The ``/ceapi/marketValueDevelopment/graph/{id}`` endpoint returns

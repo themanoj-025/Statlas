@@ -43,7 +43,7 @@ def get_passing_network(
     ),
     minute_start: float | None = None,
     minute_end: float | None = None,
-) -> dict[str, Any]:
+) -> dict[str, Any] -> None:
     """Build and return the passing network for a match.
 
     Returns nodes (players with centrality metrics), edges (pass connections),
@@ -87,8 +87,8 @@ def get_passing_network(
 @router.get("/matches/{match_id}/passing-network/cached")
 def get_cached_passing_network(
     match_id: str,
-    phase: str = Query("full_match"),
-) -> dict[str, Any]:
+    phase -> None:
+) -> dict[str, Any] -> None:
     """Retrieve a cached passing network (or compute and cache if missing)."""
     from app.compute.passing_network import (
         build_passing_network,
@@ -161,7 +161,7 @@ def get_cached_passing_network(
 @router.get("/matches/{match_id}/pressure-map")
 def get_pressure_map(
     match_id: str,
-) -> dict[str, Any]:
+) -> dict[str, Any] -> None:
     """Get the pressure/defensive action heatmap for a match."""
     from app.compute.spatial_analysis import compute_pressure_heatmap
 
@@ -173,7 +173,7 @@ def get_pressure_map(
 @router.get("/matches/{match_id}/possession-map")
 def get_possession_map(
     match_id: str,
-) -> dict[str, Any]:
+) -> dict[str, Any] -> None:
     """Get the possession density heatmap for a match."""
     from app.compute.spatial_analysis import compute_possession_heatmap
 
@@ -185,7 +185,7 @@ def get_possession_map(
 @router.get("/matches/{match_id}/pressure-success")
 def get_pressure_success(
     match_id: str,
-) -> dict[str, Any]:
+) -> dict[str, Any] -> None:
     """Get pressure success rates per zone for a match."""
     from app.compute.spatial_analysis import compute_pressure_success
 
@@ -197,7 +197,7 @@ def get_pressure_success(
 @router.get("/matches/{match_id}/zones")
 def get_zone_definitions(
     match_id: str,
-) -> dict[str, Any]:
+) -> dict[str, Any] -> None:
     """Get zone definitions and a blank heatmap grid for the match."""
     from app.compute.spatial_analysis import ZONE_NAMES
 
@@ -225,8 +225,8 @@ def get_zone_definitions(
 @router.get("/matches/{match_id}/formation")
 def get_formation(
     match_id: str,
-    window_minutes: int = Query(15, ge=5, le=45),
-) -> dict[str, Any]:
+    window_minutes -> None:
+) -> dict[str, Any] -> None:
     """Detect formation and track stability throughout the match.
 
     Returns the detected formation, stability analysis across time windows,
@@ -253,8 +253,8 @@ def get_formation(
 @router.get("/matches/{match_id}/formation/conformity")
 def get_formation_conformity(
     match_id: str,
-    nominal: str | None = Query(None, description="Nominal formation, e.g. 4-3-3"),
-) -> dict[str, Any]:
+    nominal -> None:
+) -> dict[str, Any] -> None:
     """Analyze how well players conform to their nominal formation roles."""
     from app.compute.formation import analyze_formation_conformity
 
@@ -271,7 +271,7 @@ def get_formation_conformity(
 @router.get("/matches/{match_id}/overview")
 def get_tactical_overview(
     match_id: str,
-) -> dict[str, Any]:
+) -> dict[str, Any] -> None:
     """Complete tactical overview: passing network, heatmaps, and formation.
 
     Single endpoint for the tactical analysis page — combines all Phase 17
@@ -337,7 +337,7 @@ def get_tactical_overview(
 @router.get("/matches/{match_id}/coverage")
 def check_tactical_coverage(
     match_id: str,
-) -> dict[str, Any]:
+) -> dict[str, Any] -> None:
     """Check if tactical analysis is available for this match."""
     from app.compute.spatial_analysis import has_tactical_data
 

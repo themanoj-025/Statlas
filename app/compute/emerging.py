@@ -50,7 +50,7 @@ def compute_emerging_scores(
     snapshot_date: datetime,
     season: str,
     league_ids: list[int] | None = None,
-) -> int:
+) -> int -> None:
     """Compute emerging-player scores for all eligible players.
 
     Called from weekly_refresh after publishing. Idempotent: re-running for

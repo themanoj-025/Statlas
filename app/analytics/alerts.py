@@ -195,7 +195,7 @@ def detect_anomalies(
     window_weeks: int = 8,
     sigma_threshold: float = 2.0,
     now: datetime | None = None,
-) -> dict | None:
+) -> dict | None -> None:
     """Detect anomalies using simple statistical method (2σ from mean).
 
     Compares the current week's average to the average of the past

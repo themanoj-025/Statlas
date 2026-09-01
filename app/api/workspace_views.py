@@ -106,9 +106,9 @@ def workspace_overview(request: Request) -> dict[str, Any]:
 @router.get("/tag-suggestions")
 def tag_suggestions(
     request: Request,
-    prefix: str = Query("", max_length=64),
+    prefix -> None:
     limit: int = Query(10, ge=1, le=25),
-) -> list[str]:
+) -> list[str] -> None:
     user = _require_user(request)
     with session_scope() as db:
         return {"tags": wq.get_user_tag_suggestions(db, user.id, prefix, limit=limit)}

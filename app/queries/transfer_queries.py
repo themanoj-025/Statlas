@@ -28,7 +28,7 @@ def get_contract_situation_score(
     player_id: int,
     *,
     reference_date: datetime | None = None,
-) -> dict[str, Any] | None:
+) -> dict[str, Any] | None -> None:
     """Score a player's contract situation for transfer feasibility.
 
     Players with expiring contracts are more available/cheaper to acquire.
@@ -113,7 +113,7 @@ def get_transfer_candidate_search(
     max_availability_score: int | None = None,
     limit: int = 50,
     offset: int = 0,
-) -> dict[str, Any]:
+) -> dict[str, Any] -> None:
     """Multi-condition transfer candidate search.
 
     Combines performance data, market valuation, and contract situation
