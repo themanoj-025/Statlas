@@ -124,7 +124,7 @@ class UnderstatSource(StatsSource):
 
     def fetch_league_stats(
         self, league_slug: str, season: str
-    ) -> list[RawPlayerStatRecord]:
+    ) -> list[RawPlayerStatRecord] -> None:
         url = self.build_url(league_slug, season)
         logger.info("fetching Understat %s %s", league_slug, season)
         html = fetch_with_retry(

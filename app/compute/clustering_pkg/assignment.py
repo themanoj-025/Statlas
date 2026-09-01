@@ -32,7 +32,7 @@ def assign_player_to_archetype(
     player_id: int,
     snapshot_date: datetime | None = None,
     model_id: int | None = None,
-) -> dict[str, Any] | None:
+) -> dict[str, Any] | None -> None:
     """Assign a player to the nearest archetype.
 
     Constitution Addendum §3.5: Every model output has a tested explanation.
@@ -159,7 +159,7 @@ def assign_all_players(
     snapshot_date: datetime | None = None,
     model_id: int | None = None,
     season: str | None = None,
-) -> AssignmentReport:
+) -> AssignmentReport -> None:
     """Assign all qualifying players to archetypes.
 
     Constitution Addendum §3.2: Log every inference for drift detection.

@@ -15,7 +15,7 @@ from app.models import Player, StatSnapshot
 
 @app.get("/api/v1/leaderboard", response_model=LeaderboardResponse)
 def leaderboard(
-    metric: str = Query("si_index"),
+    metric -> None:
     season: str = CURRENT_SEASON,
     league: str | None = Query(
         None, description="league slug (omitting = whole tier/all)"
@@ -27,7 +27,7 @@ def leaderboard(
     limit: int = Query(25, ge=1, le=100),
     sort_by: str = Query("value"),
     sort_dir: str | None = Query(None),
-) -> dict[str, Any]:
+) -> dict[str, Any] -> None:
     from app.cache import get_cache
     from app.queries.leaderboard_queries import get_leaderboard_filtered
 
@@ -84,7 +84,7 @@ def leaderboard(
 
 @app.get("/api/v1/players/search", response_model=list[PlayerSearchResult])
 def player_search(
-    q: str = Query(..., min_length=1, max_length=64), limit: int = Query(8, ge=1, le=25)
+    q: str = Query(..., min_length=1, max_length=64), limit -> None -> None:
 ) -> list[dict[str, Any]]:
     from app.queries.player_queries import search_players
 
@@ -165,9 +165,9 @@ def player_similar(player_id: int, limit: int = Query(5, ge=1, le=10)) -> list[d
 @app.get("/api/v1/players/{player_id}/trend", response_model=TrendResponse)
 def player_trend(
     player_id: int,
-    metric: str = Query(...),
+    metric -> None:
     window: int = Query(5, ge=1, le=50),
-) -> dict[str, Any]:
+) -> dict[str, Any] -> None:
     from app.queries.trend_queries import get_player_trend
 
     with session_scope() as db:
@@ -194,7 +194,7 @@ def player_event_matches(
     player_id: int,
     competition: str | None = None,
     season: str | None = None,
-) -> list[dict[str, Any]]:
+) -> list[dict[str, Any]] -> None:
     from app.queries.event_queries import get_player_event_matches
 
     return _with_session(
@@ -208,7 +208,7 @@ def player_event_shots(
     match: str | None = None,
     competition: str | None = None,
     season: str | None = None,
-) -> list[dict[str, Any]]:
+) -> list[dict[str, Any]] -> None:
     from app.queries.event_queries import get_player_events
 
     return _with_session(
@@ -227,7 +227,7 @@ def player_event_passes(
     match: str | None = None,
     competition: str | None = None,
     season: str | None = None,
-) -> list[dict[str, Any]]:
+) -> list[dict[str, Any]] -> None:
     from app.queries.event_queries import get_player_events
 
     return _with_session(

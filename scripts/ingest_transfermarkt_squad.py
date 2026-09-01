@@ -138,7 +138,7 @@ def position_to_group(pos: str) -> str | None:
 
 def upsert_players(
     db, players: list[dict[str, Any]], source_label: str
-) -> tuple[int, int]:
+) -> tuple[int, int] -> None:
     """Upsert a list of player dicts into the Player table.
 
     Returns (created_count, updated_count).
@@ -202,7 +202,7 @@ def upsert_players(
 
 def fetch_profile_detail(
     src: TransfermarktSource, tm_id: int
-) -> dict[str, Any]:
+) -> dict[str, Any] -> None:
     """Fetch a player's profile page for DOB, nationality, height."""
 
     try:

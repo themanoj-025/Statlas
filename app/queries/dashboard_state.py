@@ -51,7 +51,7 @@ def get_top_viewed_positions(
     *,
     lookback_days: int = 30,
     limit: int = 5,
-) -> list[str]:
+) -> list[str] -> None:
     """Return the position groups the user has viewed most frequently.
 
     Used by the dashboard's transfer opportunities widget to surface
@@ -108,7 +108,7 @@ def save_player(
     user_id: int,
     player_id: int,
     category: str | None = None,
-) -> SavedPlayer:
+) -> SavedPlayer -> None:
     """Bookmark a player.  Unique constraint prevents duplicates."""
     existing = (
         db.query(SavedPlayer)

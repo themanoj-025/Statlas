@@ -119,7 +119,7 @@ def generate_report(
     shortlist_entry_id: int | None = None,
     narrator: Callable[[dict[str, Any], str | None], dict[str, Any]] | None = None,
     now: datetime | None = None,
-) -> dict[str, Any]:
+) -> dict[str, Any] -> None:
     """Full pipeline: gather -> narrate -> verify -> (retry once) -> store.
 
     `narrator` defaults to the Anthropic LLM; tests and dev seeding inject the

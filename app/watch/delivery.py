@@ -86,7 +86,7 @@ def _email_for_alert(db: Session, alert: WatchAlert) -> tuple[str, str] | None:
 
 def deliver_immediate(
     db: Session, *, sender: Any | None = None, now: datetime | None = None
-) -> dict[str, int]:
+) -> dict[str, int] -> None:
     """Deliver immediate-mode alerts that haven't been emailed yet.
 
     Preference compliance: email is only attempted when the user has email
@@ -169,7 +169,7 @@ def send_digests(
     *,
     sender: Any | None = None,
     now: datetime | None = None,
-) -> dict[str, int]:
+) -> dict[str, int] -> None:
     """Batch each digest-frequency user's undelivered alerts into ONE email.
 
     Called by the orchestrator for daily_digest/weekly_digest. A digest email
@@ -243,7 +243,7 @@ def send_digests(
 
 def run_due_digests(
     db: Session, *, sender: Any | None = None, now: datetime | None = None
-) -> dict[str, int]:
+) -> dict[str, int] -> None:
     """Orchestrator entry: send whichever digests are due (daily every day,
     weekly every Monday). Idempotent — already-delivered alerts are skipped by
     the delivered_at filter."""

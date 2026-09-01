@@ -40,11 +40,11 @@ def valuation_comparison(player_id: int) -> dict[str, Any]:
 
 @router.get("/undervalued")
 def undervalued_players(
-    league_id: int | None = Query(None),
+    league_id -> None:
     position_group: str | None = Query(None),
     threshold: float = Query(0.2, ge=0.0, le=1.0),
     limit: int = Query(20, ge=1, le=100),
-) -> dict[str, Any]:
+) -> dict[str, Any] -> None:
     """Find players where stat-based value exceeds market valuation by threshold.
 
     Returns ranked list with explanations of why each player may be undervalued.
@@ -63,11 +63,11 @@ def undervalued_players(
 
 @router.get("/overvalued")
 def overvalued_players(
-    league_id: int | None = Query(None),
+    league_id -> None:
     position_group: str | None = Query(None),
     threshold: float = Query(0.2, ge=0.0, le=1.0),
     limit: int = Query(20, ge=1, le=100),
-) -> dict[str, Any]:
+) -> dict[str, Any] -> None:
     """Find players where market valuation exceeds stat-based value by threshold.
 
     Overvaluation can be legitimate (young potential, scarcity premium, celebrity factor).
@@ -91,7 +91,7 @@ def overvalued_players(
 
 @router.get("/candidates")
 def transfer_candidates(
-    position_group: str | None = Query(None),
+    position_group -> None:
     min_age: int | None = Query(None, ge=14, le=40),
     max_age: int | None = Query(None, ge=14, le=40),
     league_id: int | None = Query(None),
@@ -100,7 +100,7 @@ def transfer_candidates(
     contract_expiring: bool | None = Query(None),
     min_minutes: float = Query(900, ge=0),
     limit: int = Query(20, ge=1, le=100),
-) -> dict[str, Any]:
+) -> dict[str, Any] -> None:
     """Multi-condition transfer candidate search combining market and performance data.
 
     Combines Phase 8's filtering with market data (valuations, contract status)
@@ -136,13 +136,13 @@ def candidate_templates() -> list[dict[str, Any]]:
 
 @router.get("/profile-match")
 def profile_match(
-    position_group: str = Query(...),
+    position_group -> None:
     attributes: str = Query(
         ...,
         description="Comma-separated key attributes (e.g., progressive_passing,pressing)",
     ),
     limit: int = Query(20, ge=1, le=100),
-) -> dict[str, Any]:
+) -> dict[str, Any] -> None:
     """Find players matching a tactical/statistical profile.
 
     Use archetypes and stat percentiles to find players who fit
@@ -173,10 +173,10 @@ def profile_match(
 
 @router.get("/opportunities/hidden-gems")
 def hidden_gems(
-    min_stat_percentile: float = Query(75, ge=50, le=99),
+    min_stat_percentile -> None:
     max_market_value: float = Query(30_000_000, ge=0),
     limit: int = Query(20, ge=1, le=100),
-) -> list[dict[str, Any]]:
+) -> list[dict[str, Any]] -> None:
     """Find high-performing players not yet captured by major market valuations.
 
     Hidden gems: strong statistical profile + low market value + recent improvement.
@@ -196,10 +196,10 @@ def hidden_gems(
 
 @router.get("/opportunities/age-opportunity")
 def age_opportunities(
-    max_age: int = Query(24, ge=16, le=30),
+    max_age -> None:
     min_stat_percentile: float = Query(75, ge=50, le=99),
     limit: int = Query(20, ge=1, le=100),
-) -> list[dict[str, Any]]:
+) -> list[dict[str, Any]] -> None:
     """Find young players performing above their market valuation.
 
     High-ceiling, uncertain opportunities — limited track record means
@@ -220,9 +220,9 @@ def age_opportunities(
 
 @router.get("/opportunities/position-scarcity")
 def position_scarcity(
-    min_stat_percentile: float = Query(70, ge=50, le=99),
+    min_stat_percentile -> None:
     limit: int = Query(20, ge=1, le=100),
-) -> list[dict[str, Any]]:
+) -> list[dict[str, Any]] -> None:
     """Find players in scarce position profiles who are undervalued.
 
     Some positions command premium prices — this identifies high performers
@@ -248,9 +248,9 @@ def position_scarcity(
 @router.get("/risk/{player_id}")
 def transfer_risk(
     player_id: int,
-    target_league_tier: str | None = Query(None),
+    target_league_tier -> None:
     target_position_group: str | None = Query(None),
-) -> dict[str, Any]:
+) -> dict[str, Any] -> None:
     """Assess the risk of transferring a player to a new context.
 
     Factors in league tier transition, position change, sample size,

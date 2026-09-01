@@ -30,7 +30,7 @@ def add_player_to_shortlist(
     shortlist_id: int,
     player_id: int,
     initial_note: str | None = None,
-) -> dict[str, Any]:
+) -> dict[str, Any] -> None:
     """Add a player to a shortlist: validates the player exists, defaults the
     status to `discovered`, records the add-time note and writes the initial
     status_history row."""
@@ -108,7 +108,7 @@ def update_entry_status(
     entry_id: int,
     new_status: str,
     reason_note: str | None = None,
-) -> dict[str, Any]:
+) -> dict[str, Any] -> None:
     """Change an entry's status with pipeline validation + a history row."""
     entry = _owned_entry(db, user_id, entry_id)
     error = validate_transition(entry.status, new_status)
@@ -135,7 +135,7 @@ def update_entry_status(
 
 def set_entry_priority(
     db: Session, user_id: int, entry_id: int, priority: str | None
-) -> dict[str, Any]:
+) -> dict[str, Any] -> None:
     """Set (or clear, with None) an entry's priority."""
     if priority is not None and priority not in PRIORITIES:
         raise ValueError(
@@ -151,7 +151,7 @@ def set_entry_priority(
 
 def add_entry_note(
     db: Session, user_id: int, entry_id: int, note_text: str
-) -> dict[str, Any]:
+) -> dict[str, Any] -> None:
     """Append a timestamped note to an entry (never overwrites earlier ones)."""
     note_text = (note_text or "").strip()
     if not note_text:
@@ -173,7 +173,7 @@ def add_entry_note(
 
 def add_entry_tag(
     db: Session, user_id: int, entry_id: int, tag_text: str
-) -> dict[str, Any]:
+) -> dict[str, Any] -> None:
     """Add a tag (normalized lowercase). Adding an existing tag is a no-op —
     idempotent by design so a double-click on a suggestion never errors."""
     tag_text = (tag_text or "").strip().lower()
@@ -258,7 +258,7 @@ def get_shortlist_memberships(db: Session, user_id: int, player_id: int) -> list
 
 def get_shortlist_detail(
     db: Session, user_id: int, shortlist_id: int
-) -> dict[str, Any]:
+) -> dict[str, Any] -> None:
     """One shortlist with all entries joined to player summary data.
 
     Deliberately NOT an N+1 per entry: entry/player/team/league come from one
@@ -400,7 +400,7 @@ def get_shortlist_detail(
 
 def get_user_tag_suggestions(
     db: Session, user_id: int, prefix: str, limit: int = 10
-) -> list[str]:
+) -> list[str] -> None:
     """Most-used tags from the user's OWN shortlists, for autocomplete. Never
     another user's private vocabulary (privacy/authorization, scouting-
     pipeline.md §4)."""

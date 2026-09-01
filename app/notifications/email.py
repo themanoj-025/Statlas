@@ -317,7 +317,7 @@ def digest_email_content(
     user_name: str | None,
     alerts: list[tuple[str, dict[str, Any]]],
     frequency: str,
-) -> tuple[str, str]:
+) -> tuple[str, str] -> None:
     """(subject, html-body) for a digest batching multiple alerts (D1: one
     email per digest period, never one per alert)."""
     count = len(alerts)

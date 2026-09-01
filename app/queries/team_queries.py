@@ -34,7 +34,7 @@ def get_team_profile(
     league_slug: str,
     team_slug: str,
     season: str | None = None,
-) -> dict[str, Any] | None:
+) -> dict[str, Any] | None -> None:
     """Full team-profile payload, or None when league/team is unknown."""
     league = db.query(League).filter_by(slug=league_slug).first()
     if league is None:

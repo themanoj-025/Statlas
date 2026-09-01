@@ -87,7 +87,7 @@ def compute_stat_value_proxy(
     player_id: int,
     *,
     snapshot_date: datetime | None = None,
-) -> dict[str, Any] | None:
+) -> dict[str, Any] | None -> None:
     """Compute a stat-based value proxy for a player.
 
     Uses published percentile scores, the Statlas Index, and age adjustment
@@ -187,7 +187,7 @@ def get_latest_valuation(
     player_id: int,
     *,
     source: str | None = None,
-) -> dict[str, Any] | None:
+) -> dict[str, Any] | None -> None:
     """Get the latest market valuation for a player."""
     query = db.query(MarketValuation).filter(MarketValuation.player_id == player_id)
     if source:
@@ -216,7 +216,7 @@ def get_latest_valuation(
 def get_valuation_comparison(
     db: Session,
     player_id: int,
-) -> dict[str, Any] | None:
+) -> dict[str, Any] | None -> None:
     """Compare a player's stat-based value against their market valuation.
 
     This is the core of the valuation comparison framework: a transparent,
@@ -313,7 +313,7 @@ def get_undervalued_players(
     position_group: str | None = None,
     threshold: float = 0.2,
     limit: int = 50,
-) -> list[dict[str, Any]]:
+) -> list[dict[str, Any]] -> None:
     """Find players where stat-based value exceeds market value by threshold.
 
     Args:
@@ -413,7 +413,7 @@ def get_overvalued_players(
     position_group: str | None = None,
     threshold: float = 0.2,
     limit: int = 50,
-) -> list[dict[str, Any]]:
+) -> list[dict[str, Any]] -> None:
     """Find players where market value exceeds stat-based value by threshold.
 
     Overvaluation can be legitimate (young potential, scarcity premium).

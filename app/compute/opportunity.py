@@ -37,7 +37,7 @@ def detect_hidden_gems(
     max_market_value: float = 30_000_000,
     min_minutes: float = 900,
     limit: int = 20,
-) -> list[dict[str, Any]]:
+) -> list[dict[str, Any]] -> None:
     """Find players performing at high levels but not yet captured by market.
 
     A "hidden gem" is defined as:
@@ -172,7 +172,7 @@ def detect_age_opportunities(
     min_stat_percentile: float = 75,
     min_minutes: float = 900,
     limit: int = 20,
-) -> list[dict[str, Any]]:
+) -> list[dict[str, Any]] -> None:
     """Find young players performing at high levels but valued conservatively.
 
     These represent "high-ceiling, uncertain" opportunities — the player
@@ -294,7 +294,7 @@ def detect_position_scarcity_opportunities(
     min_stat_percentile: float = 70,
     min_minutes: float = 900,
     limit: int = 20,
-) -> list[dict[str, Any]]:
+) -> list[dict[str, Any]] -> None:
     """Find players with scarce position profiles who are undervalued.
 
     Some positions/profiles command premium prices. This function identifies

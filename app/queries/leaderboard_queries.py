@@ -24,7 +24,7 @@ def get_leaderboard(
     metric: str,
     season: str | None = None,
     limit: int = 50,
-) -> list[dict[str, Any]]:
+) -> list[dict[str, Any]] -> None:
     registry = load_registry()
     metric_spec = registry["metrics"].get(metric)
     invert = bool(metric_spec and metric_spec["direction"] == "lower_is_better")
@@ -107,7 +107,7 @@ def get_leaderboard_filtered(
     offset: int = 0,
     sort_by: str = "value",
     sort_dir: str | None = None,
-) -> dict[str, Any]:
+) -> dict[str, Any] -> None:
     """Paginated leaderboard across one or more leagues / a tier.
 
     Same published-only, latest-snapshot-per-player, direction-aware rules as
@@ -230,7 +230,7 @@ def get_qualifying_counts(
     *,
     metric: str,
     season: str,
-) -> dict[str, dict[str, int]]:
+) -> dict[str, dict[str, int]] -> None:
     """Batch count qualifying players per (position_group, tier).
 
     Returns {position_group: {tier_1: N, tier_2: N, tier_3: N}}.

@@ -21,7 +21,7 @@ def get_emerging_players(
     league_id: int,
     season: str,
     limit: int = 8,
-) -> list[dict[str, Any]]:
+) -> list[dict[str, Any]] -> None:
     """Top emerging players in a league from the latest computed scores.
 
     Returns players sorted by score descending, with identity and trend

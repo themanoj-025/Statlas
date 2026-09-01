@@ -42,7 +42,7 @@ def get_player_percentiles(
     *,
     snapshot_date: datetime | None = None,
     only_published: bool = True,
-) -> dict[str, Any] | None:
+) -> dict[str, Any] | None -> None:
     """Latest published percentile + index snapshot for a player.
 
     Returns {"snapshot_date", "computed_date", "percentiles": {metric: value},
@@ -157,7 +157,7 @@ def get_player_slug(
     player_id: int,
     *,
     slug_map: list[dict[str, Any]] | None = None,
-) -> str | None:
+) -> str | None -> None:
     """Canonical slug for one player (None when the player does not exist).
 
     `slug_map` lets callers reuse one `player_slug_map(db)` build across many
@@ -219,7 +219,7 @@ def search_players(
     *,
     limit: int = 8,
     include_unqualified: bool = True,
-) -> list[dict[str, Any]]:
+) -> list[dict[str, Any]] -> None:
     """Search-as-you-type against canonical names AND aliases (reconciliation's
     spelling store), so alternate spellings still resolve (Phase 2 B3).
 

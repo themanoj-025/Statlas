@@ -85,7 +85,7 @@ def resolve_metric_value(
     tier: str,
     snapshots_by_player_source: dict[tuple[int, str], StatSnapshot],
     registry: dict[str, Any],
-) -> tuple[float | None, StatSnapshot | None]:
+) -> tuple[float | None, StatSnapshot | None] -> None:
     """Resolve the value + winning snapshot for (player, metric) using the
     registry's per-metric source precedence.
 
@@ -129,7 +129,7 @@ def fractional_rank(value: float, all_values: list[float], invert: bool) -> floa
 
 def compute_index_score(
     percentiles: dict[str, float], group: str, registry: dict[str, Any]
-) -> float | None:
+) -> float | None -> None:
     """Weighted mean of the player's metric percentiles for their position group.
 
     Weights come from the registry (derived from methodology.md §4). When a
@@ -159,7 +159,7 @@ def tier_completeness(
     *,
     season: str | None = None,
     tier: str | None = None,
-) -> list[str]:
+) -> list[str] -> None:
     """Leagues of each tier that are NOT fully ingested for the season.
 
     percentile-rules.md §1.4: a tier's percentiles are only computed when the
@@ -201,7 +201,7 @@ def compute_percentiles(
     blocked_player_ids: set[int] | None = None,
     now: datetime | None = None,
     require_tier_completeness: bool = False,
-) -> PercentileReport:
+) -> PercentileReport -> None:
     """Compute percentiles + index scores for all qualifying players.
 
     - snapshot_date: the scrape date whose data forms the pools (default: latest).

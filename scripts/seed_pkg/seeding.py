@@ -61,7 +61,7 @@ _CLAMPER = _BoundClamper()
 
 def drift_record(
     record: RawPlayerStatRecord, rng: random.Random, progress: float
-) -> RawPlayerStatRecord:
+) -> RawPlayerStatRecord -> None:
     """Deterministic per-player, per-metric drift for one snapshot date.
 
     progress = (date_index / (n_dates - 1)) in [0, 1]. Each metric gets a fixed
@@ -199,7 +199,7 @@ def seed_statsbomb_demo_events(db, fbref_records: list[RawPlayerStatRecord]) -> 
 
 def synthetic_leagues(
     per_league: int,
-) -> tuple[list[RawPlayerStatRecord], list[RawPlayerStatRecord]]:
+) -> tuple[list[RawPlayerStatRecord], list[RawPlayerStatRecord]] -> None:
     """Returns (fbref_records, understat_records).
 
     Covers every league in tiers.json. Premier League gets a full 20-club
@@ -252,7 +252,7 @@ class _FakeSource:
 
     def fetch_league_stats(
         self, league_slug: str, season: str
-    ) -> list[RawPlayerStatRecord]:
+    ) -> list[RawPlayerStatRecord] -> None:
         return [
             r
             for r in self.records

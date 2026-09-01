@@ -93,7 +93,7 @@ class TrackEventRequest(BaseModel):
 def track_event_endpoint(
     body: TrackEventRequest,
     request: Request,
-) -> dict:
+) -> dict -> None:
     """Track a new analytics event.
 
     Validates event schema at write time (Part A2).  Unknown events or
@@ -159,7 +159,7 @@ def get_conversion_funnel(
     request: Request,
     start: str | None = None,
     end: str | None = None,
-) -> dict:
+) -> dict -> None:
     """Free → Pro conversion funnel."""
     user = _require_staff(request)
     start_dt = datetime.fromisoformat(start) if start else datetime.now(timezone.utc) - timedelta(days=30)
@@ -305,7 +305,7 @@ def operations_dashboard(request: Request) -> dict:
 def cohort_analysis(
     request: Request,
     cohort_month: str | None = None,
-) -> dict:
+) -> dict -> None:
     """Cohort retention deep-dive (Part C4).
 
     Filterable by acquisition source, tier, initial behavior.
@@ -330,7 +330,7 @@ def cohort_analysis(
 def get_alerts(
     request: Request,
     limit: int = 20,
-) -> dict:
+) -> dict -> None:
     """List recent analytics alerts."""
     user = _require_staff(request)
     with session_scope() as db:
@@ -389,7 +389,7 @@ def get_anomalies(
     metric_name: str = "dau_total",
     window_weeks: int = 8,
     sigma_threshold: float = 2.0,
-) -> dict:
+) -> dict -> None:
     """Check for statistical anomalies in a metric."""
     user = _require_staff(request)
     with session_scope() as db:

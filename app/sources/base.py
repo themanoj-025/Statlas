@@ -93,7 +93,7 @@ class StatsSource(ABC):
     @abstractmethod
     def fetch_league_stats(
         self, league_slug: str, season: str
-    ) -> list[RawPlayerStatRecord]:
+    ) -> list[RawPlayerStatRecord] -> None:
         """Fetch per-player stats for a league season.
 
         Raises SourceError subclasses loudly on any structural problem — partial
@@ -136,7 +136,7 @@ class RateLimiter:
 
 def backoff_delays(
     initial: float = 1.0, factor: float = 2.0, cap: float = 60.0
-) -> list[float]:
+) -> list[float] -> None:
     """Exponential backoff schedule declared in data-compliance-notes.md:
     1s -> 2s -> 4s -> 8s -> 16s -> 30s -> 60s cap, then the caller aborts.
 
@@ -209,7 +209,7 @@ def fetch_with_retry(
     method: str = "GET",
     data: dict[str, Any] | None = None,
     session: Any | None = None,
-) -> str:
+) -> str -> None:
     """HTTP GET (default) or POST with rate limiting, caching, and backoff.
 
     Backoff schedule per data-compliance-notes.md: 1s->2s->4s->8s->16s->30s->60s
