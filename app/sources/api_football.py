@@ -135,7 +135,7 @@ class APIFootballSource:
     @staticmethod
     def parse_fixtures(
         payload: dict[str, Any], league_slug: str, season: str
-    ) -> list[FixtureRecord] -> None:
+    ) -> list[FixtureRecord]:
         records: list[FixtureRecord] = []
         for item in payload.get("response", []):
             teams = item.get("teams", {})

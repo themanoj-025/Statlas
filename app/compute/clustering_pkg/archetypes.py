@@ -21,7 +21,7 @@ def compute_cluster_centers(
     feature_names: list[str],
     player_ids: list[int],
     n_clusters: int,
-) -> list[dict] -> None:
+) -> list[dict]:
     """Compute cluster centers and identifying characteristics.
 
     For each cluster, returns:
@@ -89,7 +89,7 @@ def generate_archetype_definitions(
     model_id: int,
     cluster_info: list[dict],
     feature_names: list[str],
-) -> list[dict] -> None:
+) -> list[dict]:
     """Generate human-authored archetype definitions from cluster statistics.
 
     Constitution Addendum §1.3: Every archetype must be explainable.

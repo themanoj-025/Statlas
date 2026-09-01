@@ -88,7 +88,7 @@ def compute_pressure_heatmap(
     db: Session,
     match_id: str,
     team_player_ids: list[int] | None = None,
-) -> dict[str, Any] -> None:
+) -> dict[str, Any]:
     """Compute defensive/pressure action density per zone.
 
     Defensive actions: Tackle, Interception, Pressure, Block, Foul Committed.
@@ -152,7 +152,7 @@ def compute_possession_heatmap(
     db: Session,
     match_id: str,
     team_player_ids: list[int] | None = None,
-) -> dict[str, Any] -> None:
+) -> dict[str, Any]:
     """Compute possession/pass density per zone.
 
     Possession events: completed Pass and Ball Receipt events.
@@ -215,7 +215,7 @@ def compute_pressure_success(
     db: Session,
     match_id: str,
     team_player_ids: list[int] | None = None,
-) -> dict[str, Any] -> None:
+) -> dict[str, Any]:
     """Compute pressure success rate per zone.
 
     "Pressure success" is defined as: a defensive action (pressure/tackle/
@@ -303,7 +303,7 @@ def has_tactical_data(
     match_id: str,
     *,
     min_events: int = 100,
-) -> dict[str, Any] -> None:
+) -> dict[str, Any]:
     """Check if a match has sufficient event data for tactical analysis.
 
     Returns:

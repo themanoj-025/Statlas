@@ -33,7 +33,7 @@ logger = logging.getLogger(__name__)
 
 def compute_index(
     percentiles: dict[str, float], group: str, registry: dict[str, Any] | None = None
-) -> float | None -> None:
+) -> float | None:
     """Pure function: index from a dict of metric -> percentile.
 
     Returns None when the group has no weights or too few metrics are present
@@ -45,7 +45,7 @@ def compute_index(
 
 def verify_index_consistency(
     db: Session, *, computed_date: datetime | None = None
-) -> list[dict[str, Any]] -> None:
+) -> list[dict[str, Any]]:
     """Re-derive every stored index row from its metric rows and report
     discrepancies. Returns a list of {percentile_snapshot_id, stored, derived}.
 

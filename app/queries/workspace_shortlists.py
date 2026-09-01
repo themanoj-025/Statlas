@@ -72,7 +72,7 @@ def list_shortlists(db: Session, user_id: int) -> list[dict[str, Any]]:
 
 def create_shortlist(
     db: Session, user_id: int, name: str, description: str | None = None
-) -> dict[str, Any] -> None:
+) -> dict[str, Any]:
     """Create a shortlist, enforcing the plan's shortlist cap."""
     name = (name or "").strip()
     if not name:

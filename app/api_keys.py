@@ -84,7 +84,7 @@ def revoke_api_key(db: Session, user_id: int, key_id: int) -> bool:
 
 def rotate_api_key(
     db: Session, user: User, key_id: int, new_name: str | None = None
-) -> dict | None -> None:
+) -> dict | None:
     """Rotate: revoke the old key, mint a new one. Returns None if the old key
     was not owned by the user. The new raw key is returned exactly once."""
     old = (

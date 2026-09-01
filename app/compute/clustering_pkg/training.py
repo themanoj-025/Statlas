@@ -29,7 +29,7 @@ logger = logging.getLogger(__name__)
 def find_optimal_k(
     X: np.ndarray,
     k_range: list[int] | None = None,
-) -> tuple[int, dict[int, float]] -> None:
+) -> tuple[int, dict[int, float]]:
     """Find optimal k using silhouette analysis.
 
     Returns the k with the highest silhouette score, and a dict of
@@ -65,7 +65,7 @@ def train_clustering_model(
     model_name: str = "player_clustering_v1",
     version: str = "1.0",
     random_seed: int = 42,
-) -> ClusteringReport -> None:
+) -> ClusteringReport:
     """Train a k-means clustering model.
 
     Steps:

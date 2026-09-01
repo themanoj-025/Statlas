@@ -115,7 +115,7 @@ def follow_entity(
     entity_type: str,
     entity_id: int,
     followed_metrics: list[str] | None = None,
-) -> dict[str, Any] -> None:
+) -> dict[str, Any]:
     """Follow a player or team. Following an already-followed entity is a
     no-op returning the existing watch (idempotent by the unique constraint).
 
@@ -276,7 +276,7 @@ def list_alerts(
     include_read: bool = False,
     include_dismissed: bool = False,
     limit: int = 50,
-) -> list[dict[str, Any]] -> None:
+) -> list[dict[str, Any]]:
     """The user's alerts, newest first, scoped through watch ownership.
 
     `include_read`/`include_dismissed` default to the notification-center view
@@ -402,7 +402,7 @@ def update_preferences(
     email_enabled: bool | None = None,
     alert_type_preferences: dict[str, bool] | None = None,
     digest_frequency: str | None = None,
-) -> dict[str, Any] -> None:
+) -> dict[str, Any]:
     """Update the user's notification preferences. Unknown alert types or a
     bad digest frequency are rejected with a specific error (never silently
     accepted)."""

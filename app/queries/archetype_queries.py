@@ -51,7 +51,7 @@ def get_active_model(db: Session) -> dict[str, Any] | None:
 
 def get_archetype_definitions(
     db: Session, model_id: int | None = None
-) -> list[dict[str, Any]] -> None:
+) -> list[dict[str, Any]]:
     """Get all archetype definitions for the active (or specified) model."""
     if model_id is None:
         model = (
@@ -90,7 +90,7 @@ def get_player_archetype(
     player_id: int,
     *,
     model_id: int | None = None,
-) -> dict[str, Any] | None -> None:
+) -> dict[str, Any] | None:
     """Get the archetype assignment for a specific player.
 
     Returns archetype name, description, distance-to-center (typicality),
@@ -164,7 +164,7 @@ def get_archetype_players(
     *,
     limit: int = 50,
     offset: int = 0,
-) -> dict[str, Any] -> None:
+) -> dict[str, Any]:
     """Get players in a specific archetype, sorted by distance to center (most typical first)."""
     # Get archetype definition
     definition = (

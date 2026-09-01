@@ -167,7 +167,7 @@ class TransfermarktSource(MarketDataSource):
     def fetch_contracts(
         self, player_ids: list[int], as_of: datetime,
         player_names: list[str] | None = None,
-    ) -> list[ContractRecord] -> None:
+    ) -> list[ContractRecord]:
         """Fetch contract status for specified players.
 
         Scrapes individual player profile pages for contract end dates

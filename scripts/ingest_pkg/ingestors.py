@@ -8,7 +8,7 @@ def run_backfill(
     *,
     do_statsbomb: bool = False,
     require_tier_completeness: bool = False,
-) -> int -> None:
+) -> int:
     """Run ingestion across multiple seasons with progress tracking.
 
     Each league-season combination is tracked independently. If the script

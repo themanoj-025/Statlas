@@ -158,7 +158,7 @@ def gather_report_context(
     player_id: int,
     shortlist_entry_id: int | None = None,
     user_id: int | None = None,
-) -> dict[str, Any] -> None:
+) -> dict[str, Any]:
     """Assemble ALL real data the report may reference (never fabricated).
 
     Every value here comes from the existing query layer — the same functions
