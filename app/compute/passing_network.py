@@ -38,7 +38,7 @@ def build_passing_network(
     phase: str = "full_match",
     minute_start: float | None = None,
     minute_end: float | None = None,
-) -> dict[str, Any] -> None:
+) -> dict[str, Any]:
     """Build a directed passing graph for a match/team from event data.
 
     Nodes = players (by player_id).
@@ -350,7 +350,7 @@ def _compute_clustering(
 
 def detect_tactical_style(
     network: dict[str, Any], metrics: dict[str, Any]
-) -> dict[str, Any] -> None:
+) -> dict[str, Any]:
     """Detect the team's tactical style from passing network data.
 
     Styles (documented thresholds):
@@ -479,7 +479,7 @@ def _estimate_width_concentration(nodes: list[dict]) -> float:
 def detect_network_anomalies(
     network: dict[str, Any],
     metrics: dict[str, Any],
-) -> list[dict[str, Any]] -> None:
+) -> list[dict[str, Any]]:
     """Flag unusual patterns in the passing network.
 
     Anomalies:

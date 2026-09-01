@@ -35,7 +35,7 @@ def ingest_source_records(
     snapshot_date: datetime,
     reconciler: Reconciler,
     report: RefreshReport,
-) -> None -> None:
+) -> None:
     """Insert stat_snapshots idempotently; unresolved records go to the queue."""
     for record in records:
         league = db.query(League).filter_by(slug=record.league_slug).first()
@@ -86,7 +86,7 @@ def ingest_source_records(
 
 def update_coverage(
     db: Session, *, source: str, identifier: str, season: str, now: datetime
-) -> None -> None:
+) -> None:
     """Upsert a data_coverage row for a scraped source.
 
     For league-scoped sources (fbref/understat/api_football) the identifier is
@@ -180,7 +180,7 @@ def run_weekly_refresh(
     do_statsbomb: bool = False,
     do_fixtures: bool = False,
     require_tier_completeness: bool = False,
-) -> RefreshReport -> None:
+) -> RefreshReport:
     """Run the full weekly refresh for a season.
 
     Sources are injectable (tests pass fixture-backed fakes; production passes

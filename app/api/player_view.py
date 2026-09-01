@@ -66,7 +66,7 @@ def build_radar_axes(
     percentiles: dict[str, float],
     raw_stats: dict[str, float],
     minutes: float,
-) -> list[dict[str, Any]] -> None:
+) -> list[dict[str, Any]]:
     registry = load_registry()
     profile = get_player_profile(db, player_id)
     group = profile["position_group"] if profile else None
@@ -110,7 +110,7 @@ def build_player_payload(
     player_id: int,
     *,
     similar_limit: int = 5,
-) -> dict[str, Any] | None -> None:
+) -> dict[str, Any] | None:
     profile = get_player_profile(db, player_id)
     if profile is None:
         return None

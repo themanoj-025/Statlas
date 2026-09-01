@@ -27,7 +27,7 @@ from app.models import (
 def compute_valuation_confidence(
     db: Session,
     player_id: int,
-) -> dict[str, Any] -> None:
+) -> dict[str, Any]:
     """Score how confident we can be in a player's market valuation.
 
     Factors:
@@ -144,7 +144,7 @@ def compute_transfer_risk(
     *,
     target_league_tier: str | None = None,
     target_position_group: str | None = None,
-) -> dict[str, Any] -> None:
+) -> dict[str, Any]:
     """Assess the risk of transferring a player to a new context.
 
     Risk tiers:

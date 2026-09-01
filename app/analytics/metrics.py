@@ -179,7 +179,7 @@ FEATURE_DEFINITIONS = {
 def compute_feature_usage(
     db: Session,
     date: datetime | None = None,
-) -> list[dict] -> None:
+) -> list[dict]:
     """Compute adoption and engagement for all tracked features.
 
     Adoption = unique users who used feature / active users that day.
@@ -251,7 +251,7 @@ def compute_conversion_funnel(
     db: Session,
     start_date: datetime | None = None,
     end_date: datetime | None = None,
-) -> dict -> None:
+) -> dict:
     """Compute the Free → Pro conversion funnel.
 
     Steps:
@@ -329,7 +329,7 @@ def compute_conversion_funnel(
 def compute_retention_cohort(
     db: Session,
     cohort_month: datetime | None = None,
-) -> list[dict] -> None:
+) -> list[dict]:
     """Compute retention for a signup cohort.
 
     For each user who signed up in the given month, check if they were
@@ -405,7 +405,7 @@ def compute_retention_cohort(
 def compute_churn_rate(
     db: Session,
     date: datetime | None = None,
-) -> dict -> None:
+) -> dict:
     """Compute monthly churn rate for Pro subscribers.
 
     Churn rate = (users who unsubscribed this month) / (users subscribed

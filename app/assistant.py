@@ -101,7 +101,7 @@ def tool_get_leaderboard(
     league: str | None = None,
     position: str | None = None,
     limit: int = 10,
-) -> dict[str, Any] -> None:
+) -> dict[str, Any]:
     """Top players for a metric, optionally filtered by league/position."""
     registry = load_registry()
     if metric not in registry.get("metrics", {}):
@@ -142,7 +142,7 @@ def tool_get_similar_players(db: Session, name: str, limit: int = 5) -> dict[str
 
 def tool_get_player_trend(
     db: Session, name: str, metric: str, window: int = 5
-) -> dict[str, Any] -> None:
+) -> dict[str, Any]:
     """Snapshot-history trend for one player + metric (weekly-snapshot
     granularity, not per-match — the response states that explicitly)."""
     player_id = _resolve_player_id(db, name)
@@ -318,7 +318,7 @@ def assistant_configured() -> bool:
 
 def run_assistant_turn(
     db: Session, user: User, messages: list[dict[str, Any]]
-) -> dict[str, Any] -> None:
+) -> dict[str, Any]:
     """One assistant turn: model <-> tools loop, quota consumed, every tool
     call recorded in `tool_calls` for the show-your-work UI."""
     quota = consume_quota(db, user)

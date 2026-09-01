@@ -55,10 +55,10 @@ def list_comments(
     resource_type: str,
     resource_id: int,
     request: Request,
-    org_id -> None:
+    org_id: int = Query(...),
     limit: int = Query(50, ge=1, le=200),
     offset: int = Query(0, ge=0),
-) -> list[dict[str, Any]] -> None:
+) -> list[dict[str, Any]]:
     """List comments on a resource. Must be an org member with resource access."""
     user = _require_user(request)
     with session_scope() as db:
@@ -100,8 +100,8 @@ def add_comment(
     resource_id: int,
     body: AddCommentBody,
     request: Request,
-    org_id -> None:
-) -> dict[str, Any] -> None:
+    org_id: int = Query(...),
+) -> dict[str, Any]:
     """Add a comment to a resource. Parses @mentions for notifications."""
     user = _require_user(request)
     with session_scope() as db:
@@ -225,9 +225,9 @@ def activity_feed(
     resource_type: str,
     resource_id: int,
     request: Request,
-    org_id -> None:
+    org_id: int = Query(...),
     limit: int = Query(50, ge=1, le=200),
-) -> list[dict[str, Any]] -> None:
+) -> list[dict[str, Any]]:
     """Get activity feed for a resource (comments + status changes)."""
     user = _require_user(request)
     with session_scope() as db:

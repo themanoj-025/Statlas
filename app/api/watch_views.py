@@ -112,10 +112,10 @@ def unfollow(watch_id: int, request: Request) -> dict[str, str]:
 @router.get("/alerts")
 def alerts(
     request: Request,
-    include_read -> None:
+    include_read: bool = Query(False),
     include_dismissed: bool = Query(False),
     limit: int = Query(50, ge=1, le=200),
-) -> list[dict[str, Any]] -> None:
+) -> list[dict[str, Any]]:
     user = _require_user(request)
     with session_scope() as db:
         return {
@@ -213,9 +213,9 @@ def _check_sig(user_id: int, token: str, sig: str) -> bool:
 @router.get("/unsubscribe")
 def unsubscribe(
     user: int,
-    token -> None:
+    token: str = Query(..., max_length=64),
     sig: str = Query(..., max_length=64),
-) -> dict[str, str] -> None:
+) -> dict[str, str]:
     """One-click unsubscribe from email. Invalid/expired signatures are
     rejected with an honest message rather than silently doing nothing."""
     if not _check_sig(user, token, sig):

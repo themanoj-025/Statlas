@@ -26,7 +26,7 @@ def get_trending_players(
     user_id: int,
     *,
     limit: int = TRENDING_LIMIT,
-) -> list[dict] -> None:
+) -> list[dict]:
     """Players with sustained upward percentile movement in the past week.
 
     Trending = players whose average percentile gain across metrics that moved
@@ -176,7 +176,7 @@ def get_recommended_players(
     user_id: int,
     *,
     limit: int = RECOMMENDATION_LIMIT,
-) -> list[dict] -> None:
+) -> list[dict]:
     """Personalized recommendations based on the user's viewing patterns.
 
     Logic (documented in docs/product/dashboard-recommendations-logic.md):

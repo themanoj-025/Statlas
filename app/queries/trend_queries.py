@@ -56,7 +56,7 @@ def get_player_trend(
     metric: str,
     *,
     window: int = DEFAULT_WINDOW,
-) -> dict[str, Any] | None -> None:
+) -> dict[str, Any] | None:
     """Rolling snapshot-history trend for one player + one metric.
 
     Returns the last `window` scrape dates (oldest to newest) with per-date

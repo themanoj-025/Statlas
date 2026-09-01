@@ -107,7 +107,7 @@ def get_league_stats_table(
     metric: str,
     season: str | None = None,
     limit: int = 300,
-) -> list[dict[str, Any]] -> None:
+) -> list[dict[str, Any]]:
     """Per-90 raw stats table for a league, sorted by a registry metric.
 
     Latest snapshot per player; players with unresolved anomalies are excluded

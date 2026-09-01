@@ -36,7 +36,7 @@ def get_audit_log(
     *,
     limit: int = 50,
     offset: int = 0,
-) -> list[dict[str, Any]] -> None:
+) -> list[dict[str, Any]]:
     """Get audit log entries for an organization. Owner/manager only."""
     entries = (
         db.query(AuditLog, User)
@@ -88,7 +88,7 @@ def update_org_settings(
     org_id: int,
     user_id: int,
     **kwargs: Any,
-) -> dict[str, Any] -> None:
+) -> dict[str, Any]:
     """Update organization settings. Owner/manager only."""
     if not user_has_permission(db, user_id, org_id, "org_settings_edit"):
         raise PermissionError("You do not have permission to edit org settings")
@@ -118,7 +118,7 @@ def get_user_shortlists(
     user_id: int,
     *,
     org_id: int | None = None,
-) -> list[dict[str, Any]] -> None:
+) -> list[dict[str, Any]]:
     """Get shortlists accessible to the user, including personal + org-shared.
 
     If org_id is provided, returns shortlists in that org context.
