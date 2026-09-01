@@ -197,7 +197,7 @@ def build_similarity_explanation(
     group: str,
     registry: dict[str, Any],
     min_shared_metrics: int = MIN_SHARED_METRICS,
-) -> dict[str, Any] -> None:
+) -> dict[str, Any]:
     """Pure explanation builder (unit-testable without a database).
 
     Every number is a real value from the two percentile vectors; metric names
@@ -222,7 +222,7 @@ def get_similar_players(
     *,
     limit: int = 5,
     min_shared_metrics: int = MIN_SHARED_METRICS,
-) -> list[dict[str, Any]] -> None:
+) -> list[dict[str, Any]]:
     """Nearest neighbours for a player, same position group and league tier.
 
     Returns [] when the player has no published percentile vector (unqualified

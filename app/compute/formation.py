@@ -44,7 +44,7 @@ def detect_formation(
     *,
     minute_start: float = 0,
     minute_end: float = 120,
-) -> dict[str, Any] -> None:
+) -> dict[str, Any]:
     """Detect the team's formation from player positioning during a match.
 
     Uses event data positions (pass origins, defensive actions, etc.) to
@@ -156,7 +156,7 @@ def analyze_formation_stability(
     team_player_ids: list[int] | None = None,
     *,
     window_minutes: int = 15,
-) -> dict[str, Any] -> None:
+) -> dict[str, Any]:
     """Track formation changes through the match in time windows.
 
     Parameters:
@@ -244,7 +244,7 @@ def compute_formation_effectiveness(
     db: Session,
     match_ids: list[str],
     team_player_ids: list[int] | None = None,
-) -> dict[str, Any] -> None:
+) -> dict[str, Any]:
     """Analyze which formations correlate with better performance.
 
     For each match, detect the dominant formation and compare with match outcome
@@ -327,7 +327,7 @@ def analyze_formation_conformity(
     match_id: str,
     team_player_ids: list[int] | None = None,
     nominal_formation: str | None = None,
-) -> dict[str, Any] -> None:
+) -> dict[str, Any]:
     """Analyze how well players conform to their nominal formation roles.
 
     Compares detected positions against expected positions for a given formation.

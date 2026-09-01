@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 
 def deterministic_narrator(
     context: dict[str, Any], correction: str | None = None
-) -> dict[str, Any] -> None:
+) -> dict[str, Any]:
     """A narrator that can ONLY emit context values — used by tests and dev
     seeding. It writes real, grounded prose from the context object; every
     number is pulled from the corpus by construction, so the verification gate

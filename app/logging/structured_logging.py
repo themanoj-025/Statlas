@@ -78,7 +78,7 @@ def setup_logger(
     log_dir: str | None = None,
     level: int = logging.INFO,
     context: dict[str, Any] | None = None,
-) -> logging.Logger -> None:
+) -> logging.Logger:
     """Get or create a logger with JSON file and console handlers.
 
     Parameters

@@ -116,7 +116,7 @@ class TransfermarktSource(MarketDataSource):
 
     def fetch_squad_players(
         self, league_slug: str, season: str | None = None
-    ) -> list[dict[str, Any]] -> None:
+    ) -> list[dict[str, Any]]:
         """Scrape every player in a league from Transfermarkt squad pages.
 
         Workflow:

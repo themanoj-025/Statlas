@@ -116,7 +116,7 @@ def get_or_create_team(db: Session, name: str, league_id: int) -> Team:
 
 def resolve_player_for_record(
     db: Session, reconciler: Reconciler, record: Any, team: Team
-) -> tuple[Player, bool] -> None:
+) -> tuple[Player, bool]:
     """Resolve a record to its canonical player; create one when nothing matches.
 
     Matching is never fuzzy (reconciliation.py): external id -> alias -> exact

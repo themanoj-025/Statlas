@@ -21,7 +21,7 @@ def build_feature_matrix(
     season: str | None = None,
     position_group: str | None = None,
     min_minutes: float = CLUSTERING_MIN_MINUTES,
-) -> tuple[list[int], list[str], np.ndarray, list[dict]] -> None:
+) -> tuple[list[int], list[str], np.ndarray, list[dict]]:
     """Build the feature matrix for clustering.
 
     Returns:

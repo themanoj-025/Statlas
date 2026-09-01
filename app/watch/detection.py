@@ -502,7 +502,7 @@ def detect_watch_triggers(
     now: datetime | None = None,
     threshold: float | None = None,
     qualifying_minutes: float | None = None,
-) -> WatchDetectionReport -> None:
+) -> WatchDetectionReport:
     """Evaluate every active watch against the freshly-published snapshot.
 
     Called by run_weekly_refresh AFTER publish. Idempotent: re-running for an

@@ -110,7 +110,7 @@ def cross_source_spot_check(
     snapshot_date: datetime | None = None,
     sample_size: int | None = None,
     seed: int = 42,
-) -> int -> None:
+) -> int:
     """Compare FBref vs Understat values for overlapping metrics on a sample of
     Tier-1 players. Returns the number of divergence flags written."""
     registry = load_registry()
@@ -208,7 +208,7 @@ def resolve_anomaly(
     *,
     note: str,
     resolved_by: str = "manual",
-) -> IngestionAnomaly -> None:
+) -> IngestionAnomaly:
     """Explicit human override — the only way a flagged value reaches
     publication. 'Never silently published' is implemented as 'must be reviewed'."""
     anomaly = db.get(IngestionAnomaly, anomaly_id)

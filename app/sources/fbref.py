@@ -136,7 +136,7 @@ def _expand_colspans(tr: Any) -> list[str]:
 
 def parse_fbref_table(
     soup: BeautifulSoup, table_id: str
-) -> list[dict[str, Any]] | None -> None:
+) -> list[dict[str, Any]] | None:
     """Parse one FBref table into a list of row dicts with combined header names.
 
     Combined names are "<group> <column>" so duplicates across sections are
@@ -260,7 +260,7 @@ class FBrefSource(StatsSource):
     # -- Main interface ---------------------------------------------------
     def fetch_league_stats(
         self, league_slug: str, season: str
-    ) -> list[RawPlayerStatRecord] -> None:
+    ) -> list[RawPlayerStatRecord]:
         url = self.build_url(league_slug, season)
         logger.info("fetching FBref %s %s", league_slug, season)
         html = fetch_with_retry(

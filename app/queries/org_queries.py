@@ -84,7 +84,7 @@ def user_has_permission(
     user_id: int,
     org_id: int,
     permission: str,
-) -> bool -> None:
+) -> bool:
     """Check if a user has a specific permission within an organization.
 
     This is THE single permission-check function used across the backend.
@@ -148,7 +148,7 @@ def create_organization(
     slug: str | None = None,
     country: str | None = None,
     primary_contact_email: str | None = None,
-) -> dict[str, Any] -> None:
+) -> dict[str, Any]:
     """Create a new organization. The creator becomes the owner.
 
     Non-destructive: existing solo data stays personal.
@@ -273,7 +273,7 @@ def invite_member(
     invited_by_user_id: int,
     email: str,
     role: str = "scout",
-) -> dict[str, Any] -> None:
+) -> dict[str, Any]:
     """Invite a user to an organization by email.
 
     Generates a time-limited invite token. The invite can be accepted by
@@ -429,7 +429,7 @@ def remove_member(
     org_id: int,
     removed_by_user_id: int,
     target_user_id: int,
-) -> dict[str, Any] -> None:
+) -> dict[str, Any]:
     """Remove a member from an organization.
 
     Data cleanup rules (Addendum §4.3):
@@ -479,7 +479,7 @@ def change_member_role(
     changed_by_user_id: int,
     target_user_id: int,
     new_role: str,
-) -> dict[str, Any] -> None:
+) -> dict[str, Any]:
     """Change a member's role within an organization."""
     if new_role not in ROLE_PERMISSIONS:
         raise ValueError(f"Invalid role: {new_role}")

@@ -153,7 +153,7 @@ def list_members(org_id: int, request: Request) -> list[dict[str, Any]]:
 @router.post("/{org_id}/members/{target_user_id}/role")
 def change_member_role(
     org_id: int, target_user_id: int, body: ChangeRoleBody, request: Request
-) -> dict[str, str] -> None:
+) -> dict[str, str]:
     """Change a member's role. Owner/manager only."""
     user = _require_user(request)
     with session_scope() as db:
@@ -219,9 +219,9 @@ def update_settings(org_id: int, body: UpdateSettingsBody, request: Request) -> 
 def get_audit_log(
     org_id: int,
     request: Request,
-    limit -> None:
+    limit: int = Query(50, ge=1, le=200),
     offset: int = Query(0, ge=0),
-) -> list[dict[str, Any]] -> None:
+) -> list[dict[str, Any]]:
     """Get audit log entries. Owner/manager only."""
     user = _require_user(request)
     with session_scope() as db:

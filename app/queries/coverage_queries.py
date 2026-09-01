@@ -16,7 +16,7 @@ from app.models import DataCoverage
 
 def get_data_coverage(
     db: Session, league_id: int | None = None
-) -> list[dict[str, Any]] -> None:
+) -> list[dict[str, Any]]:
     """Coverage rows, optionally filtered by league. Each row states source,
     identifier, seasons, last successful scrape, and status."""
     query = db.query(DataCoverage).order_by(
@@ -44,7 +44,7 @@ def has_source_coverage(
     source_identifier: str,
     season: str | None = None,
     require_active: bool = True,
-) -> bool -> None:
+) -> bool:
     """True only when the coverage matrix actually contains the claim —
     the single check the shot-map/event-data UI must pass before rendering."""
     row = (

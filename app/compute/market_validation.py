@@ -176,7 +176,7 @@ def validate_batch(
     *,
     valuations: list[MarketValuation] | None = None,
     transfers: list[Any] | None = None,
-) -> ValidationReport -> None:
+) -> ValidationReport:
     """Validate a batch of market data records.
 
     Returns a ValidationReport with counts of valid/flagged records

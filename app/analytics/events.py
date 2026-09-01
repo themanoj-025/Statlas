@@ -61,7 +61,7 @@ def track_event(
     properties: dict,
     user_id: int | None = None,
     session_id: str | None = None,
-) -> AnalyticsEvent -> None:
+) -> AnalyticsEvent:
     """Record a validated analytics event.
 
     Raises ValueError if the event is unknown or missing required properties.
