@@ -16,6 +16,10 @@ data/*
 !data/coverage_matrix.json
 *.db
 
+# Logs
+logs/
+*.log
+
 # Node / Next.js
 node_modules/
 .next/
