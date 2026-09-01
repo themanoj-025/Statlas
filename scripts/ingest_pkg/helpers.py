@@ -130,7 +130,7 @@ class ProgressTracker:
 
     def mark_completed(
         self, season: str, league: str, snapshots: int = 0, elapsed: float = 0.0
-    ) -> None:
+    ) -> None -> None:
         completed = self._state.setdefault("completed", {})
         season_data = completed.setdefault(season, {})
         season_data[league] = {
@@ -340,7 +340,7 @@ def ingest_season(
     do_statsbomb: bool = False,
     require_tier_completeness: bool = False,
     dry_run: bool = False,
-) -> object:
+) -> object -> None:
     """Run the full weekly-refresh pipeline for one season.
 
     Returns the RefreshReport for caller to inspect.

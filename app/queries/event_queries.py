@@ -161,7 +161,7 @@ def get_player_event_matches(
     *,
     competition_id: str | None = None,
     season: str | None = None,
-) -> list[dict[str, Any]]:
+) -> list[dict[str, Any]] -> None:
     """Distinct matches with events for this player (the match filter options)."""
     query = db.query(
         MatchEvent.match_id, MatchEvent.source_competition_id, MatchEvent.season
@@ -191,7 +191,7 @@ def get_player_events(
     match_id: str | None = None,
     competition_id: str | None = None,
     season: str | None = None,
-) -> list[dict[str, Any]]:
+) -> list[dict[str, Any]] -> None:
     """Shot or pass events for a player, bounded to confirmed coverage.
 
     Filters are bounded strictly to what data_coverage confirms: if the

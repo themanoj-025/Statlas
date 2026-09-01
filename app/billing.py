@@ -72,7 +72,7 @@ def billing_configured() -> bool:
 
 def create_checkout_session(
     db: Session, user: User, *, success_url: str, cancel_url: str
-) -> dict[str, Any]:
+) -> dict[str, Any] -> None:
     """Create a hosted Checkout session for the Pro plan. Requires the Stripe
     price id from pricing.json/setup (docs/billing/pricing-config.md)."""
     settings = get_settings()
@@ -118,7 +118,7 @@ def create_checkout_session(
 
 def create_billing_portal_session(
     db: Session, user: User, *, return_url: str
-) -> dict[str, Any]:
+) -> dict[str, Any] -> None:
     """Stripe hosted Billing Portal (A5) — manage card, invoices, cancellation."""
     if not get_settings().billing_portal_enabled:
         raise BillingNotConfiguredError(

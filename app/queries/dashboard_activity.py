@@ -53,7 +53,7 @@ def get_recent_activity(
     *,
     limit: int = RECENT_ACTIVITY_LIMIT,
     lookback_days: int = RECENT_ACTIVITY_LOOKBACK_DAYS,
-) -> list[dict]:
+) -> list[dict] -> None:
     """Return recently-viewed players/teams for the dashboard's "Recently
     Viewed" widget.  Deduplication is handled at write time (activity.py);
     this query just orders and limits.

@@ -112,7 +112,7 @@ class StatsBombOpenDataSource:
         season_filter: list[int] | None = None,
         max_matches: int | None = None,
         now: datetime | None = None,
-    ) -> dict[str, int]:
+    ) -> dict[str, int] -> None:
         """Sync one competition (optionally only specific seasons)."""
         competition_id = int(competition["competition_id"])
         competition_name = competition["competition_name"]
@@ -175,7 +175,7 @@ class StatsBombOpenDataSource:
         match_id: int,
         competition_id: int,
         season: str | None,
-    ) -> list[dict[str, Any]]:
+    ) -> list[dict[str, Any]] -> None:
         rows: list[dict[str, Any]] = []
         for ev in events:
             loc = ev.get("location") or []

@@ -26,7 +26,7 @@ def log_activity(
     entity_id: int,
     action_type: str,
     metadata: dict | None = None,
-) -> bool:
+) -> bool -> None:
     """Log a user activity event.
 
     Returns True if the event was logged, False if deduplicated.

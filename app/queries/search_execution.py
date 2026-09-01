@@ -76,7 +76,7 @@ def execute_structured_query(
     sort_by: str = "index",
     sort_dir: str | None = None,
     season: str | None = None,
-) -> dict[str, Any]:
+) -> dict[str, Any] -> None:
     """Execute a structured query against the published population.
 
     Returns a paginated result set where every entry carries the actual values

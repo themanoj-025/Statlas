@@ -55,7 +55,7 @@ def get_league_hub_data(
     league_slug: str,
     *,
     season: str | None = None,
-) -> dict[str, Any] | None:
+) -> dict[str, Any] | None -> None:
     """Full league hub payload: header, categories, emerging, teams, coverage.
 
     Returns None when the league is not found.

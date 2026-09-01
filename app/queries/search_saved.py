@@ -56,7 +56,7 @@ def save_search(
     name: str,
     query_definition: dict[str, Any],
     description: str | None = None,
-) -> dict[str, Any]:
+) -> dict[str, Any] -> None:
     """Save a validated query. Free tier is capped at `saved_searches_max`."""
     name = (name or "").strip()
     if not name:
@@ -103,7 +103,7 @@ def run_saved_search(
     user_id: int,
     search_id: int,
     **exec_kwargs: Any,
-) -> dict[str, Any]:
+) -> dict[str, Any] -> None:
     """Re-execute a saved search against CURRENT data (results may differ from
     when it was saved — the weekly refresh is explicit, never silently stale)."""
     search = _owned_saved_search(db, user_id, search_id)
@@ -140,7 +140,7 @@ def _owned_history(db: Session, user_id: int, history_id: int) -> SearchHistory:
 
 def get_search_history(
     db: Session, user_id: int, limit: int = 20
-) -> list[dict[str, Any]]:
+) -> list[dict[str, Any]] -> None:
     rows = (
         db.query(SearchHistory)
         .filter(SearchHistory.user_id == user_id)
@@ -165,7 +165,7 @@ def rerun_history_entry(
     user_id: int,
     history_id: int,
     **exec_kwargs: Any,
-) -> dict[str, Any]:
+) -> dict[str, Any] -> None:
     """Re-execute a past query; the new run is logged as a NEW history entry."""
     row = _owned_history(db, user_id, history_id)
     results = execute_structured_query(

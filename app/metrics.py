@@ -41,7 +41,7 @@ class MetricsCollector:
         path: str,
         status_code: int,
         duration_seconds: float,
-    ) -> None:
+    ) -> None -> None:
         """Record a completed HTTP request."""
         key = f"{method}:{path}"
         self._request_count[key] = self._request_count.get(key, 0) + 1
