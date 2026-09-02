@@ -21,8 +21,6 @@ import json
 
 import pytest
 
-import pytest
-
 pytestmark = pytest.mark.integration
 pytestmark = pytest.mark.slow
 # --- configure Stripe test keys BEFORE importing the app ----------------------
