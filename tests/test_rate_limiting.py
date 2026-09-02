@@ -1,3 +1,6 @@
+
+from __future__ import annotations
+
 import pytest
 
 pytestmark = pytest.mark.integration
@@ -7,7 +10,6 @@ pytestmark = pytest.mark.integration
 The Redis-backed limiter is tested via a mock; the in-memory limiter is tested
 directly for correctness of the sliding-window algorithm.
 """
-from __future__ import annotations
 
 import time
 from unittest.mock import MagicMock, patch

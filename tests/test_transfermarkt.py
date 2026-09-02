@@ -1,3 +1,6 @@
+
+from __future__ import annotations
+
 import pytest
 
 pytestmark = pytest.mark.integration
@@ -7,7 +10,6 @@ pytestmark = pytest.mark.integration
 Uses fixture HTML to test parsing logic without network requests.
 """
 
-from __future__ import annotations
 
 from datetime import datetime, timezone
 from pathlib import Path
