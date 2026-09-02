@@ -53,7 +53,7 @@ def _now() -> datetime:
 
 def _owned_shortlist(
     db: Session, user_id: int, shortlist_id: int
-):
+) -> Shortlist:
     from app.models import Shortlist
     sl = db.query(Shortlist).filter(
         Shortlist.id == shortlist_id, Shortlist.user_id == user_id
@@ -63,7 +63,7 @@ def _owned_shortlist(
     return sl
 
 
-def _owned_entry(db: Session, user_id: int, entry_id: int):
+def _owned_entry(db: Session, user_id: int, entry_id: int) -> ShortlistEntry:
     from app.models import ShortlistEntry
     entry = db.query(ShortlistEntry).filter(
         ShortlistEntry.id == entry_id,
