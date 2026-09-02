@@ -6,6 +6,9 @@ from unittest.mock import MagicMock
 
 import pytest
 
+pytestmark = pytest.mark.unit
+
+
 
 class TestPlayerModel:
     """Tests for Player model."""

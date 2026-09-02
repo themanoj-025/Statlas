@@ -23,6 +23,8 @@ from fastapi.testclient import TestClient
 import app.db as db_module
 from app.db import create_schema, session_scope
 from app.models import (
+
+pytestmark = pytest.mark.slow
     EntryNote,
     EntryTag,
     League,
@@ -37,7 +39,6 @@ from app.models import (
     User,
 )
 
-pytestmark = pytest.mark.slow
 from app.queries import workspace_queries as wq
 
 # ---------------------------------------------------------------------------

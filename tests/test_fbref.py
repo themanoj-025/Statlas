@@ -11,6 +11,9 @@ from app.sources.base import RawPlayerStatRecord
 from app.sources.fbref import FBrefSchemaChangedError, FBrefSource, parse_fbref_table
 from tests.conftest import fixtures_dir
 
+pytestmark = pytest.mark.integration
+
+
 FIXTURE = fixtures_dir() / "fbref_league.html"
 
 

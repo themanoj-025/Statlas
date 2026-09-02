@@ -6,6 +6,9 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
+pytestmark = pytest.mark.unit
+
+
 
 class TestBaseSource:
     """Tests for base data source."""
