@@ -25,7 +25,7 @@ from tests.test_percentiles import _seed_player  # reuse the proven seeder
 SEASON = "2025-26"
 
 
-def _seed_team(db, league, name):
+def _seed_team(db, league, name: str) -> Team:
     team = Team(name=name, league_id=league.id)
     db.add(team)
     db.commit()

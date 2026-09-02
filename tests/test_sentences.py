@@ -7,6 +7,8 @@ ordinal helper (1st/2nd/3rd/11th/21st...).
 
 from __future__ import annotations
 
+from typing import Any
+
 from app.models import Player, StatSnapshot, Team
 from app.queries.sentences import build_profile_sentence, ordinal
 from tests.conftest import SNAPSHOT_DATE, compute_and_publish
@@ -14,7 +16,7 @@ from tests.conftest import SNAPSHOT_DATE, compute_and_publish
 SEASON = "2025-26"
 
 
-def _seed(db, league, name, group, gls, minutes=1000, **extra):
+def _seed(db, league, name: str, group: str, gls: float, minutes: float = 1000, **extra: Any) -> Player:
     team = db.query(Team).filter_by(name="City", league_id=league.id).first()
     if team is None:
         team = Team(name="City", league_id=league.id)

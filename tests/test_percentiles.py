@@ -19,15 +19,15 @@ from tests.conftest import SNAPSHOT_DATE
 def _seed_player(
     db,
     league,
-    name,
-    group,
-    gls,
-    dis=0.5,
-    minutes=1000,
+    name: str,
+    group: str,
+    gls: float,
+    dis: float = 0.5,
+    minutes: float = 1000,
     xg=None,
-    source="fbref",
-    team_name="City",
-):
+    source: str = "fbref",
+    team_name: str = "City",
+) -> Player:
     team = db.query(Team).filter_by(
         name=team_name, league_id=league.id
     ).first() or Team(name=team_name, league_id=league.id)
