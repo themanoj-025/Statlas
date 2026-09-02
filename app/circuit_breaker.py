@@ -6,7 +6,7 @@ Usage:
     breaker = CircuitBreaker(failure_threshold=5, recovery_timeout=60)
 
     @breaker
-    async def call_external_api():
+    async def call_external_api() -> None:
         ...
 
 State transitions:
