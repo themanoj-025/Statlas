@@ -13,7 +13,7 @@ from app.models import IngestionAnomaly, Player, StatSnapshot, Team
 from tests.conftest import SNAPSHOT_DATE
 
 
-def _snapshot(db, name, raw, source="fbref", minutes=1000, league=None):
+def _snapshot(db, name: str, raw: dict, source: str = "fbref", minutes: float = 1000, league=None) -> StatSnapshot:
     from app.models import League
 
     league = league or db.query(League).first()

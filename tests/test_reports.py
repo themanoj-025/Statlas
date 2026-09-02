@@ -216,7 +216,7 @@ def report_data(db) -> dict[str, object]:
     return {"free": free, "pro": pro, "anchor": anchor, "league": league, "team": team}
 
 
-def _context(db, player_id, entry_id=None):
+def _context(db, player_id: int, entry_id=None) -> dict:
     return reports.gather_report_context(db, player_id, entry_id)
 
 
@@ -702,7 +702,7 @@ def test_delete_report_own(db, report_data) -> None:
 # ---------------------------------------------------------------------------
 
 
-def _make_stored(db, report_data):
+def _make_stored(db, report_data: dict) -> dict:
     pro = report_data["pro"]
     return reports.generate_report(
         db,

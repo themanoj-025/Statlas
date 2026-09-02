@@ -161,7 +161,7 @@ class TestCachedDecorator:
         call_count = 0
 
         @cached(ttl=60, prefix="test")
-        def fn(_db, x):
+        def fn(_db, x: int) -> int:
             nonlocal call_count
             call_count += 1
             return x
@@ -174,7 +174,7 @@ class TestCachedDecorator:
         call_count = 0
 
         @cached(ttl=60, prefix="test")
-        def fn(_db):
+        def fn(_db) -> None:
             nonlocal call_count
             call_count += 1
             return None
@@ -187,7 +187,7 @@ class TestCachedDecorator:
         call_count = 0
 
         @cached(ttl=0, prefix="test")
-        def fn(_db, x):
+        def fn(_db, x: int) -> int:
             nonlocal call_count
             call_count += 1
             return x

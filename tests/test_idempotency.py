@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+from typing import Any
+
 """Idempotency proof (Constitution: re-running a job does not duplicate rows).
 
 Runs the full weekly refresh twice for the same snapshot date and asserts the
@@ -5,8 +9,6 @@ database is byte-identical in row counts: stat_snapshots are skipped by their
 natural key, percentile rows by (stat_snapshot_id, metric_name), fixtures by
 api_fixture_id, and coverage rows upsert.
 """
-
-from __future__ import annotations
 
 from app.models import DataCoverage, League, PercentileSnapshot, Player, StatSnapshot
 from app.orchestration.weekly_refresh import run_weekly_refresh
@@ -16,7 +18,8 @@ from tests.test_integration import FakeFBrefSource, FakeUnderstatSource, _fixtur
 SEASON = "2025-26"
 
 
-def _run(db, **kw):
+
+def _run(db, **kw: Any) -> dict:
     fbref, understat = _fixtures()
     return run_weekly_refresh(
         db,
