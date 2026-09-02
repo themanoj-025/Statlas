@@ -19,8 +19,9 @@ class TestLogActivity:
     """log_activity function signature and return type."""
 
     def test_function_exists(self) -> None:
-        from app.activity import log_activity
         import inspect
+
+        from app.activity import log_activity
         sig = inspect.signature(log_activity)
         params = list(sig.parameters.keys())
         assert "db" in params
@@ -31,13 +32,15 @@ class TestLogActivity:
         assert "metadata" in params
 
     def test_has_metadata_param(self) -> None:
-        from app.activity import log_activity
         import inspect
+
+        from app.activity import log_activity
         sig = inspect.signature(log_activity)
         assert sig.parameters["metadata"].default is None
 
     def test_return_annotation(self) -> None:
-        from app.activity import log_activity
         import inspect
+
+        from app.activity import log_activity
         sig = inspect.signature(log_activity)
         assert sig.return_annotation is not inspect.Parameter.empty

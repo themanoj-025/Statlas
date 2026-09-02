@@ -22,8 +22,10 @@ class TestErrorSchemas:
         assert r.error.code == "err"
 
     def test_error_detail_forbids_extra(self) -> None:
+        from pydantic import ValidationError
+
         from app.api.schemas import ErrorDetail
-        with pytest.raises(Exception):
+        with pytest.raises(ValidationError):
             ErrorDetail(code="e", message="m", extra_field="bad")  # type: ignore[arg-type]
 
 
@@ -31,8 +33,9 @@ class TestLeaderboardSchemas:
     """LeaderboardEntry and LeaderboardResponse models."""
 
     def test_leaderboard_entry(self) -> None:
-        from app.api.schemas import LeaderboardEntry
         from datetime import datetime, timezone
+
+        from app.api.schemas import LeaderboardEntry
         e = LeaderboardEntry(
             player_id=1,
             name="Test Player",
@@ -45,8 +48,9 @@ class TestLeaderboardSchemas:
         assert e.name == "Test Player"
 
     def test_leaderboard_response(self) -> None:
-        from app.api.schemas import LeaderboardResponse, LeaderboardEntry
         from datetime import datetime, timezone
+
+        from app.api.schemas import LeaderboardEntry, LeaderboardResponse
         e = LeaderboardEntry(
             player_id=1, name="P", position_group="MID", minutes=100, value=50.0
         )
