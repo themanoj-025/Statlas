@@ -71,8 +71,9 @@ class TestReconcilerInit:
     """Reconciler class can be instantiated with a mock db."""
 
     def test_class_exists(self) -> None:
-        from app.reconciliation import Reconciler
         import inspect
+
+        from app.reconciliation import Reconciler
         assert inspect.isclass(Reconciler)
 
     def test_has_resolve_method(self) -> None:
