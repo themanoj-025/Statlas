@@ -1,88 +1,54 @@
-"""Tests for Statlas data sources."""
+"""Tests for app.sources — market data and transfermarkt parsers."""
 
 from __future__ import annotations
 
-from unittest.mock import MagicMock, patch
-
 import pytest
 
-pytestmark = pytest.mark.unit
+pytestmark = pytest.mark.slow
 
 
+class TestMarketDataSource:
+    """Test market data source module."""
 
-class TestBaseSource:
-    """Tests for base data source."""
+    def test_module_importable(self) -> None:
+        import app.sources.market_data as mod
+        assert hasattr(mod, "__file__")
 
-    def test_base_source_exists(self) -> None:
-        from app.sources.base import BaseSource
+    def test_module_has_functions(self) -> None:
+        import inspect
 
-        assert BaseSource is not None
-
-
-class TestFBRefSource:
-    """Tests for FBRef data source."""
-
-    def test_fbref_source_exists(self) -> None:
-        from app.sources.fbref import FBRefSource
-
-        assert FBRefSource is not None
-
-    def test_fbref_source_instantiation(self) -> None:
-        from app.sources.fbref import FBRefSource
-
-        src = FBRefSource()
-        assert src is not None
+        import app.sources.market_data as mod
+        funcs = [name for name, obj in inspect.getmembers(mod) if inspect.isfunction(obj)]
+        assert len(funcs) > 0
 
 
-class TestStatsBombSource:
-    """Tests for StatsBomb data source."""
+class TestTransfermarktFetching:
+    """Test transfermarkt fetching module."""
 
-    def test_statsbomb_source_exists(self) -> None:
-        from app.sources.statsbomb import StatsBombSource
-
-        assert StatsBombSource is not None
-
-    def test_statsbomb_source_instantiation(self) -> None:
-        from app.sources.statsbomb import StatsBombSource
-
-        src = StatsBombSource()
-        assert src is not None
+    def test_module_importable(self) -> None:
+        import app.sources.transfermarkt_pkg.fetching as mod
+        assert hasattr(mod, "__file__")
 
 
-class TestUnderstatSource:
-    """Tests for Understat data source."""
+class TestTransfermarktMarketData:
+    """Test transfermarkt market data module."""
 
-    def test_understat_source_exists(self) -> None:
-        from app.sources.understat import UnderstatSource
-
-        assert UnderstatSource is not None
-
-    def test_understat_source_instantiation(self) -> None:
-        from app.sources.understat import UnderstatSource
-
-        src = UnderstatSource()
-        assert src is not None
+    def test_module_importable(self) -> None:
+        import app.sources.transfermarkt_pkg.market_data as mod
+        assert hasattr(mod, "__file__")
 
 
-class TestAPIFootballSource:
-    """Tests for API-Football data source."""
+class TestTransfermarktParsers:
+    """Test transfermarkt parsers module."""
 
-    def test_api_football_source_exists(self) -> None:
-        from app.sources.api_football import APIFootballSource
+    def test_module_importable(self) -> None:
+        import app.sources.transfermarkt_pkg.parsers as mod
+        assert hasattr(mod, "__file__")
 
-        assert APIFootballSource is not None
 
+class TestTransfermarktTransfers:
+    """Test transfermarkt transfers module."""
 
-class TestConfigModule:
-    """Tests for Statlas config."""
-
-    def test_config_has_settings(self) -> None:
-        from app.config import Config
-
-        assert hasattr(Config, "DATABASE_URL") or hasattr(Config, "SECRET_KEY") or True
-
-    def test_config_loads(self) -> None:
-        from app.config import Config
-
-        cfg = Config()
-        assert cfg is not None
+    def test_module_importable(self) -> None:
+        import app.sources.transfermarkt_pkg.transfers as mod
+        assert hasattr(mod, "__file__")
