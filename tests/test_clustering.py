@@ -24,7 +24,6 @@ from sqlalchemy.orm import Session
 
 from app.compute.clustering import (
 
-pytestmark = pytest.mark.unit
 
     CLUSTERING_FEATURES,
     SILHOUETTE_THRESHOLD,
@@ -831,6 +830,8 @@ class TestClusterCenters:
         from sklearn.cluster import KMeans
         from sklearn.pipeline import Pipeline
         from sklearn.preprocessing import StandardScaler
+
+pytestmark = pytest.mark.unit
 
 
         pipeline = Pipeline(

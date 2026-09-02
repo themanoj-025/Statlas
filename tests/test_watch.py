@@ -30,7 +30,6 @@ from app.config import get_settings
 from app.db import create_schema
 from app.models import (
 
-pytestmark = pytest.mark.slow
     DataCoverage,
     IngestionAnomaly,
     League,
@@ -973,6 +972,8 @@ def test_api_unsubscribe_sessionless(client, db) -> str:
     # Find the user id from the DB.
     with db_module.session_scope() as session:
         from app.models import User as UserModel
+
+pytestmark = pytest.mark.slow
 
 
         uid = session.query(UserModel).first().id
