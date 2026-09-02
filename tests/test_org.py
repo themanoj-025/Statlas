@@ -23,6 +23,8 @@ from sqlalchemy.orm import Session
 
 from app import auth
 from app.models import (
+
+pytestmark = pytest.mark.slow
     Comment,
     Mention,
     Organization,
@@ -33,7 +35,6 @@ from app.models import (
     User,
 )
 
-pytestmark = pytest.mark.slow
 
 # ---------------------------------------------------------------------------
 # Helpers

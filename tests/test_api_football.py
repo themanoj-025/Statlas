@@ -12,6 +12,9 @@ from app.sources.api_football import APIFootballSource, FileBackedBudget
 from app.sources.base import BudgetExhaustedError
 from tests.conftest import fixtures_dir
 
+pytestmark = pytest.mark.integration
+
+
 FIXTURES = fixtures_dir()
 
 

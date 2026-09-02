@@ -6,6 +6,9 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
+pytestmark = pytest.mark.unit
+
+
 
 class TestMainAPI:
     """Tests for main API setup."""
