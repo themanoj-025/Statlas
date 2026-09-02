@@ -15,9 +15,9 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import Session, sessionmaker
 
 from app.config import load_registry
-from app.models import (
 
 pytestmark = pytest.mark.slow
+from app.models import (
     Base,
     EmergingPlayerScore,
     League,
@@ -26,7 +26,6 @@ pytestmark = pytest.mark.slow
     StatSnapshot,
     Team,
 )
-
 
 # ---------------------------------------------------------------------------
 # Fixtures

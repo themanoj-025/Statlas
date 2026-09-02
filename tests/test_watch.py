@@ -18,7 +18,10 @@ honest upsell, alert read/dismiss, one-click unsubscribe (signed link),
 new-season and coverage-change triggers, and API-level checks.
 """
 
+
 from __future__ import annotations
+
+pytestmark = pytest.mark.slow
 
 from datetime import datetime, timezone
 
@@ -29,7 +32,6 @@ import app.db as db_module
 from app.config import get_settings
 from app.db import create_schema
 from app.models import (
-
     DataCoverage,
     IngestionAnomaly,
     League,
@@ -43,7 +45,6 @@ from app.models import (
     Watch,
     WatchAlert,
 )
-
 from app.queries import watch_queries as wq
 from app.watch import delivery
 from app.watch.detection import (
@@ -972,9 +973,6 @@ def test_api_unsubscribe_sessionless(client, db) -> str:
     # Find the user id from the DB.
     with db_module.session_scope() as session:
         from app.models import User as UserModel
-
-pytestmark = pytest.mark.slow
-
 
         uid = session.query(UserModel).first().id
 

@@ -13,9 +13,9 @@ from sqlalchemy.orm import Session
 
 from app.analytics.alerts import detect_anomalies
 from app.analytics.events import REQUIRED_PROPERTIES, track_event
-from app.analytics.metrics import (
 
 pytestmark = pytest.mark.slow
+from app.analytics.metrics import (
     compute_arpu,
     compute_churn_rate,
     compute_conversion_funnel,
@@ -24,7 +24,6 @@ pytestmark = pytest.mark.slow
     compute_mau,
     compute_retention_cohort,
 )
-
 from app.models import (
     AnalyticsAlert,
     AnalyticsEvent,
