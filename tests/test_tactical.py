@@ -22,6 +22,8 @@ import math
 from sqlalchemy.orm import Session
 
 from app.models import (
+
+pytestmark = pytest.mark.slow
     DataCoverage,
     League,
     MatchEvent,
@@ -29,7 +31,7 @@ from app.models import (
     Team,
 )
 
-pytestmark = pytest.mark.slow
+import pytest
 
 # ---------------------------------------------------------------------------
 # Helpers

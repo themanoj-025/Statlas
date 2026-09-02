@@ -23,6 +23,9 @@ import pytest
 from sqlalchemy.orm import Session
 
 from app.compute.clustering import (
+
+pytestmark = pytest.mark.unit
+
     CLUSTERING_FEATURES,
     SILHOUETTE_THRESHOLD,
     _generate_archetype_description,

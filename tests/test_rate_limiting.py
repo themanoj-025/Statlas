@@ -1,3 +1,7 @@
+import pytest
+
+pytestmark = pytest.mark.integration
+
 """Tests for app.rate_limiting — InMemoryRateLimiter and singleton fallback.
 
 The Redis-backed limiter is tested via a mock; the in-memory limiter is tested

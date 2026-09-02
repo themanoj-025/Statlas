@@ -1,3 +1,7 @@
+import pytest
+
+pytestmark = pytest.mark.unit
+
 """Tests for app.csrf — token generation, verification, and edge cases."""
 from __future__ import annotations
 

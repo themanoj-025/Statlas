@@ -1,3 +1,7 @@
+import pytest
+
+pytestmark = pytest.mark.integration
+
 """Tests for app.cache — InMemoryCacheBackend, @cached decorator, and fallback.
 
 RedisCacheBackend is tested via mocks; InMemoryCacheBackend is tested directly.

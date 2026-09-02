@@ -19,6 +19,9 @@ from app.orchestration.weekly_refresh import run_weekly_refresh
 from tests.conftest import SNAPSHOT_DATE
 from tests.test_integration import FakeFBrefSource, FakeUnderstatSource, _fixtures
 
+pytestmark = pytest.mark.integration
+
+
 pytestmark = pytest.mark.slow
 SEASON = "2025-26"
 

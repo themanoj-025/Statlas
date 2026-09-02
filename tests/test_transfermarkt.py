@@ -1,3 +1,7 @@
+import pytest
+
+pytestmark = pytest.mark.integration
+
 """Tests for the Transfermarkt source parser.
 
 Uses fixture HTML to test parsing logic without network requests.
