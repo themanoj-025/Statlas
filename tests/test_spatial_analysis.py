@@ -85,5 +85,5 @@ class TestPitchConstants:
         assert PITCH_WIDTH == 80.0
 
     def test_zone_names_complete(self) -> None:
-        from app.compute.spatial_analysis import ZONE_NAMES, ZONE_ROWS, ZONE_COLS
+        from app.compute.spatial_analysis import ZONE_COLS, ZONE_NAMES, ZONE_ROWS
         assert len(ZONE_NAMES) == ZONE_ROWS * ZONE_COLS
