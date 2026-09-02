@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+from collections.abc import Callable
+
 """Phase 10 — Watchlist & alerts test suite.
 
 The two non-negotiable quality bars (docs/product/alert-trigger-definitions.md):
@@ -17,9 +21,6 @@ Plus: watch CRUD with ownership (404 pattern, never 403), free-tier cap with
 honest upsell, alert read/dismiss, one-click unsubscribe (signed link),
 new-season and coverage-change triggers, and API-level checks.
 """
-
-
-from __future__ import annotations
 
 pytestmark = pytest.mark.slow
 
@@ -632,7 +633,7 @@ def test_preferences_reject_unknown_values(db, watch_data) -> None:
 # ---------------------------------------------------------------------------
 
 
-def _fake_sender(sent: list):
+def _fake_sender(sent: list) -> Callable[[EmailMessage], None]:
     from app.notifications.email import EmailMessage
 
     def send(message: EmailMessage) -> None:

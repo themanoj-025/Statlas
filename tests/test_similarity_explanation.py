@@ -70,7 +70,7 @@ CANDIDATE = {
 }
 
 
-def _seed_vector(db, league, name, values, *, team_name="City"):
+def _seed_vector(db, league, name: str, values: dict, *, team_name: str = "City") -> Player:
     """Seed a player with a hand-set published percentile vector."""
     team = db.query(Team).filter_by(
         name=team_name, league_id=league.id
@@ -112,7 +112,7 @@ def _seed_vector(db, league, name, values, *, team_name="City"):
     return player
 
 
-def _explain(anchor, candidate, group="ST"):
+def _explain(anchor, candidate, group: str = "ST") -> dict:
     return build_similarity_explanation(
         anchor, candidate, group=group, registry=load_registry()
     )

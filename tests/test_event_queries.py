@@ -14,7 +14,7 @@ COMP = "12"
 SEASON = "2025/2026"
 
 
-def _player(db, name="Player A"):
+def _player(db, name: str = "Player A") -> Player:
     league = __import__("app.models", fromlist=["League"]).League(
         slug="premier-league", name="Premier League", country="England", tier="tier_1"
     )

@@ -217,7 +217,7 @@ def test_re_add_after_remove_restores_entry(db, workspace_data) -> None:
 # ---------------------------------------------------------------------------
 
 
-def _entry(db, workspace_data, user=None):
+def _entry(db, workspace_data: dict, user=None) -> int:
     user = user or workspace_data["free"]
     haaland = workspace_data["haaland"]
     sl_id = wq.list_shortlists(db, user.id)[0]["shortlist_id"]
