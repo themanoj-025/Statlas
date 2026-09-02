@@ -296,3 +296,19 @@ jobs:
           uvicorn app.api.main:app --host 0.0.0.0 --port 8000 &
           sleep 3
           st run --checks all /tmp/openapi.json --base-url http://localhost:8000 -w 5 --hypothesis-suppress-health-check=too_slow 2>&1 | tail -20 || true
+
+  docker-cache:
+    name: Docker image build + layer cache
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: docker/setup-buildx-action@v3
+      - name: Build image (cached)
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: Dockerfile
+          load: true
+          tags: statlas:ci
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
