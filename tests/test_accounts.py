@@ -18,16 +18,15 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import Session, sessionmaker
 
 from app import auth
-from app.models import (
 
 pytestmark = pytest.mark.slow
+from app.models import (
     Base,
     PasswordResetToken,
     Shortlist,
     User,
     Watch,
 )
-
 
 
 @pytest.fixture()

@@ -14,7 +14,10 @@ Constitution §4: Every function has unit tests.
 Multi-Tenant Addendum §3.4: Every role/permission boundary tested.
 """
 
+
 from __future__ import annotations
+
+pytestmark = pytest.mark.slow
 
 from datetime import datetime, timedelta, timezone
 
@@ -23,7 +26,6 @@ from sqlalchemy.orm import Session
 
 from app import auth
 from app.models import (
-
     Comment,
     Mention,
     Organization,
@@ -33,7 +35,6 @@ from app.models import (
     Shortlist,
     User,
 )
-
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -636,9 +637,6 @@ class TestDataIsolation:
 
     def test_org_member_cannot_see_other_org_resources(self, db: Session) -> None:
         from app.queries.org_queries import user_has_permission
-
-pytestmark = pytest.mark.slow
-
 
         owner_a = _make_user(db, email="ownerA@test.com")
         owner_b = _make_user(db, email="ownerB@test.com")

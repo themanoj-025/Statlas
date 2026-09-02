@@ -13,14 +13,17 @@ Constitution §4: Every data-parsing function has a unit test.
 Constitution §7: Testing minimum bar — critical UI paths tested.
 """
 
+
 from __future__ import annotations
+
+pytestmark = pytest.mark.slow
 
 from datetime import datetime, timedelta, timezone
 
+import pytest
 from sqlalchemy.orm import Session
 
 from app.models import (
-
     ContractStatus,
     League,
     MarketValuation,
@@ -29,8 +32,6 @@ from app.models import (
     StatSnapshot,
     Team,
 )
-
-import pytest
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -815,9 +816,6 @@ class TestTransferPresets:
 
     def test_preset_ids_are_unique(self) -> None:
         from app.queries.transfer_queries import TRANSFER_PRESETS
-
-pytestmark = pytest.mark.slow
-
 
         ids = [p["id"] for p in TRANSFER_PRESETS]
         assert len(ids) == len(set(ids))
