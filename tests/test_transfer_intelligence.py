@@ -21,7 +21,6 @@ from sqlalchemy.orm import Session
 
 from app.models import (
 
-pytestmark = pytest.mark.slow
     ContractStatus,
     League,
     MarketValuation,
@@ -816,6 +815,8 @@ class TestTransferPresets:
 
     def test_preset_ids_are_unique(self) -> None:
         from app.queries.transfer_queries import TRANSFER_PRESETS
+
+pytestmark = pytest.mark.slow
 
 
         ids = [p["id"] for p in TRANSFER_PRESETS]

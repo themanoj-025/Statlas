@@ -30,8 +30,6 @@ from fastapi.testclient import TestClient
 import app.db as db_module
 from app.db import create_schema
 from app.models import (
-
-pytestmark = pytest.mark.slow
     League,
     PercentileSnapshot,
     Player,
@@ -41,7 +39,6 @@ pytestmark = pytest.mark.slow
     Team,
     User,
 )
-
 from app.queries import structured_search as ss
 
 SNAPSHOT_DATE = datetime(2026, 8, 12, 3, 0, 0, tzinfo=timezone.utc)
@@ -802,6 +799,8 @@ def client() -> None:
 
 
 from app.api.main import app
+
+pytestmark = pytest.mark.slow
 
 
 def _register(client, email: str = "api-scout@example.com") -> None:

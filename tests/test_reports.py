@@ -33,9 +33,6 @@ import app.db as db_module
 from app import report_export, reports
 from app.db import create_schema, session_scope
 from app.models import (
-
-pytestmark = pytest.mark.unit
-
     League,
     PercentileSnapshot,
     Player,
@@ -784,6 +781,8 @@ def client(monkeypatch) -> bool:
 
 
 from app.api.main import app
+
+pytestmark = pytest.mark.unit
 
 
 def _register(client, email: str = "pro-api@example.com") -> None:
