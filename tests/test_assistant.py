@@ -14,8 +14,6 @@ import os
 
 import pytest
 
-import pytest
-
 pytestmark = pytest.mark.integration
 pytestmark = pytest.mark.slow
 os.environ["ANTHROPIC_API_KEY"] = "sk-ant-test-dummy"
