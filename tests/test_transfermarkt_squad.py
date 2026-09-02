@@ -1,10 +1,12 @@
+
+from __future__ import annotations
+
 import pytest
 
 pytestmark = pytest.mark.integration
 
 """Tests for Transfermarkt squad page parsing and bulk ingestion."""
 
-from __future__ import annotations
 
 from unittest.mock import MagicMock
 

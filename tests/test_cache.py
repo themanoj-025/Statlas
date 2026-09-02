@@ -1,3 +1,6 @@
+
+from __future__ import annotations
+
 import pytest
 
 pytestmark = pytest.mark.integration
@@ -6,7 +9,6 @@ pytestmark = pytest.mark.integration
 
 RedisCacheBackend is tested via mocks; InMemoryCacheBackend is tested directly.
 """
-from __future__ import annotations
 
 import time
 from unittest.mock import MagicMock, patch
