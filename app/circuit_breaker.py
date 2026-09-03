@@ -94,7 +94,12 @@ class CircuitBreaker:
                 return result
             except CircuitBreakerOpenError:
                 raise
+            except (ConnectionError, TimeoutError, OSError, ValueError,
+                    KeyError, TypeError):
+                self.record_failure()
+                raise
             except Exception:
+                # Catch-all for unexpected errors
                 self.record_failure()
                 raise
 
