@@ -62,7 +62,7 @@ warn_redundant_casts = true
 warn_unused_ignores = true
 
 [tool.pytest.ini_options]
-addopts = "-m 'not slow' --cov --cov-fail-under=40"
+addopts = "-m 'not slow' --cov --cov-fail-under=70"
 testpaths = ["tests"]
 
 markers = [
@@ -73,5 +73,5 @@ markers = [
 
 [tool.coverage.report]
 show_missing = true
-fail_under = 40
+fail_under = 70
 skip_empty = true
