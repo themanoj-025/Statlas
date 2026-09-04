@@ -19,10 +19,10 @@ from __future__ import annotations
 
 import math
 
+import pytest
 from sqlalchemy.orm import Session
 
 pytestmark = pytest.mark.slow
-import pytest
 
 from app.models import (
     DataCoverage,
@@ -36,7 +36,6 @@ from app.models import (
 # Helpers
 # ---------------------------------------------------------------------------
 
-
 def _make_league(db: Session) -> League:
     league = League(
         slug="champions-league",
@@ -49,20 +48,17 @@ def _make_league(db: Session) -> League:
     db.flush()
     return league
 
-
 def _make_team(db: Session, league: League, name: str = "Team A") -> Team:
     team = Team(name=name, league_id=league.id, external_ids={})
     db.add(team)
     db.flush()
     return team
 
-
 def _make_player(db: Session, team: Team, name: str = "Player A") -> Player:
     player = Player(canonical_name=name, current_team_id=team.id, position_group="CM")
     db.add(player)
     db.flush()
     return player
-
 
 def _make_coverage(
     db: Session, competition_id: str = "2", season: str = "2023/2024"
@@ -76,9 +72,7 @@ def _make_coverage(
     db.add(cov)
     db.flush()
 
-
 _pass_counter = 0
-
 
 def _make_pass_event(
     db: Session,
@@ -120,9 +114,7 @@ def _make_pass_event(
     db.add(ev)
     return ev
 
-
 _def_counter = 0
-
 
 def _make_defensive_event(
     db: Session,
@@ -152,11 +144,9 @@ def _make_defensive_event(
     db.add(ev)
     return ev
 
-
 # ---------------------------------------------------------------------------
 # Zone assignment tests
 # ---------------------------------------------------------------------------
-
 
 class TestZoneAssignment:
     """C1 — Pitch zone definitions."""
@@ -210,11 +200,9 @@ class TestZoneAssignment:
         # Should have most of the 12 zones
         assert len(found_zones) >= 10
 
-
 # ---------------------------------------------------------------------------
 # Passing network tests
 # ---------------------------------------------------------------------------
-
 
 class TestPassingNetwork:
     """B1-B2 — Network construction and metrics."""
@@ -334,9 +322,6 @@ class TestPassingNetwork:
         # Only the complete pass should count
         assert result["total_passes"] == 1
 
-
 # ---------------------------------------------------------------------------
 # Tactical style detection tests
 # ---------------------------------------------------------------------------
-
-
