@@ -45,7 +45,6 @@ from __future__ import annotations
 import json
 import logging
 import os
-import sys
 import time
 from datetime import datetime, timezone
 from pathlib import Path
@@ -58,8 +57,6 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent
 os.environ.setdefault(
     "DATABASE_URL", f"sqlite+pysqlite:///{PROJECT_ROOT / 'data' / 'dev.db'}"
 )
-
-sys.path.insert(0, str(PROJECT_ROOT))
 
 from app.config import load_tiers
 

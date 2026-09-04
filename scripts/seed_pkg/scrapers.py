@@ -26,12 +26,10 @@ from __future__ import annotations
 import logging
 import os
 import random
-import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
-sys.path.insert(0, str(PROJECT_ROOT))
 
 # The dev database is a file-based SQLite so the API server (separate process)
 # reads exactly what the seed wrote. Override with DATABASE_URL for Postgres.

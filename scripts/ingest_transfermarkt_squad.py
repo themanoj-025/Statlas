@@ -43,9 +43,6 @@ from typing import Any
 
 import requests
 
-# Ensure project root is on sys.path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
-
 from app.config import load_tiers
 from app.sources.transfermarkt import (
     LEAGUE_URL_SLUGS,

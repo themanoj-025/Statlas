@@ -28,7 +28,6 @@ Usage:
 from __future__ import annotations
 
 import os
-import sys
 from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
@@ -36,8 +35,6 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent
 os.environ.setdefault(
     "DATABASE_URL", f"sqlite+pysqlite:///{PROJECT_ROOT / 'data' / 'dev.db'}"
 )
-
-sys.path.insert(0, str(PROJECT_ROOT))
 
 from app.config import load_registry
 from app.db import session_scope
