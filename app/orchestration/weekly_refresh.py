@@ -9,13 +9,10 @@ from typing import Any
 from sqlalchemy.orm import Session
 
 from app.models import (
-    CoverageRecord,
+    DataCoverage,
     League,
     Player,
-    Season,
-    SourceRecord,
     Team,
-    WeeklyRun,
 )
 from app.orchestration.refresh_helpers import (
     RefreshReport,

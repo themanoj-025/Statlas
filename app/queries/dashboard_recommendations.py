@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Any
 
 from sqlalchemy import func
@@ -14,8 +14,8 @@ from app.models import (
     ShortlistEntry,
     StatSnapshot,
     Team,
-    ViewEvent,
 )
+from app.queries.dashboard_activity import RECOMMENDATION_LIMIT, TRENDING_LIMIT
 
 # C3 — Trending players (grounded in real data, not vibes)
 # ---------------------------------------------------------------------------
