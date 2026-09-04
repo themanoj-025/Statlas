@@ -103,6 +103,7 @@ class CircuitBreaker:
                 self.record_failure()
                 raise
             except Exception:
+                logger.exception("Circuit breaker %s: unexpected error", self.name)
                 # Catch-all for unexpected errors
                 self.record_failure()
                 raise
