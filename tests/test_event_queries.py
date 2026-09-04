@@ -8,14 +8,14 @@ no map data, no entry point.
 
 from __future__ import annotations
 
-from app.models import DataCoverage, MatchEvent, Player, Team
+from app.models import DataCoverage, League, MatchEvent, Player, Team
 
 COMP = "12"
 SEASON = "2025/2026"
 
 
 def _player(db, name: str = "Player A") -> Player:
-    league = __import__("app.models", fromlist=["League"]).League(
+    league = League(
         slug="premier-league", name="Premier League", country="England", tier="tier_1"
     )
     db.add(league)

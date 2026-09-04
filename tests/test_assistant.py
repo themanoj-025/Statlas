@@ -10,6 +10,7 @@ show-your-work UI.
 
 from __future__ import annotations
 
+from datetime import datetime, timezone
 import os
 
 import pytest
@@ -162,15 +163,14 @@ def test_assistant_quota_hard_cap(seeded_client, fake_anthropic) -> None:
             period_start=(
                 db.query(AssistantQuota).first().period_start
                 if db.query(AssistantQuota).first()
-                else __import__("datetime")
-                .datetime.now(__import__("datetime").timezone.utc)
+                else datetime.now(timezone.utc)
                 .replace(day=1, hour=0, minute=0, second=0, microsecond=0)
             ),
             period_end=(
                 db.query(AssistantQuota).first().period_end
                 if db.query(AssistantQuota).first()
-                else __import__("datetime").datetime(
-                    2099, 1, 1, tzinfo=__import__("datetime").timezone.utc
+                else datetime(
+                    2099, 1, 1, tzinfo=timezone.utc
                 )
             ),
             queries_used=10,
