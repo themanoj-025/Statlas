@@ -26,7 +26,7 @@ class TestErrorSchemas:
 
         from app.api.schemas import ErrorDetail
         with pytest.raises(ValidationError):
-            ErrorDetail(code="e", message="m", extra_field="bad")  # type: ignore[arg-type]
+            ErrorDetail(code="e", message="m", extra_field="bad")  # intentionally passing extra field
 
 
 class TestLeaderboardSchemas:
