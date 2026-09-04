@@ -14,14 +14,14 @@ Constitution §4: Every function has unit tests.
 Multi-Tenant Addendum §3.4: Every role/permission boundary tested.
 """
 
-
 from __future__ import annotations
+
+import pytest
 
 pytestmark = pytest.mark.slow
 
 from datetime import datetime, timedelta, timezone
 
-import pytest
 from sqlalchemy.orm import Session
 
 from app import auth
@@ -40,7 +40,6 @@ from app.models import (
 # Helpers
 # ---------------------------------------------------------------------------
 
-
 def _make_user(
     db: Session, *, email: str = "test@example.com", name: str = "Test User"
 ) -> User:
@@ -52,7 +51,6 @@ def _make_user(
     db.add(user)
     db.flush()
     return user
-
 
 def _make_org(
     db: Session, owner: User, *, name: str = "Test FC Scouting"
@@ -78,7 +76,6 @@ def _make_org(
     db.flush()
     return org
 
-
 def _add_member(
     db: Session,
     org: Organization,
@@ -96,11 +93,9 @@ def _add_member(
     db.flush()
     return membership
 
-
 # ---------------------------------------------------------------------------
 # Organization CRUD tests
 # ---------------------------------------------------------------------------
-
 
 class TestOrganizationCRUD:
     """Organization creation and retrieval."""
@@ -192,11 +187,9 @@ class TestOrganizationCRUD:
         assert "Org One" in org_names
         assert "Org Two" in org_names
 
-
 # ---------------------------------------------------------------------------
 # RBAC tests
 # ---------------------------------------------------------------------------
-
 
 class TestRBAC:
     """RBAC permission enforcement — every role boundary tested."""
@@ -262,11 +255,9 @@ class TestRBAC:
         assert not user_has_permission(db, outsider.id, org.id, "resource_view")
         assert not user_has_permission(db, outsider.id, org.id, "resource_create")
 
-
 # ---------------------------------------------------------------------------
 # Member management tests
 # ---------------------------------------------------------------------------
-
 
 class TestMemberManagement:
     """Member invite, accept, remove, and role change."""
@@ -404,11 +395,9 @@ class TestMemberManagement:
         updated_org = db.get(Organization, org.id)
         assert updated_org.owner_user_id == successor.id
 
-
 # ---------------------------------------------------------------------------
 # Audit logging tests
 # ---------------------------------------------------------------------------
-
 
 class TestAuditLogging:
     """Audit trail for team changes."""
@@ -439,11 +428,9 @@ class TestAuditLogging:
         log = get_audit_log(db, org.id)
         assert isinstance(log, list)  # Query returns data; view enforces permission
 
-
 # ---------------------------------------------------------------------------
 # Comments tests
 # ---------------------------------------------------------------------------
-
 
 class TestComments:
     """Comment system with threading and mentions."""
@@ -540,11 +527,9 @@ class TestComments:
         assert mention.mentioned_user_id == mentioned.id
         assert mention.status == "pending"
 
-
 # ---------------------------------------------------------------------------
 # Resource ownership tests
 # ---------------------------------------------------------------------------
-
 
 class TestResourceOwnership:
     """Personal vs org-shared resource access."""
@@ -574,11 +559,9 @@ class TestResourceOwnership:
         assert sl.owner_org_id == org.id
         assert sl.visibility == "org_members"
 
-
 # ---------------------------------------------------------------------------
 # Settings tests
 # ---------------------------------------------------------------------------
-
 
 class TestOrgSettings:
     """Organization settings management."""
@@ -614,11 +597,9 @@ class TestOrgSettings:
         with pytest.raises(PermissionError):
             update_org_settings(db, org.id, viewer.id, data_retention_days=30)
 
-
 # ---------------------------------------------------------------------------
 # Data isolation tests (Addendum Part 3.4)
 # ---------------------------------------------------------------------------
-
 
 class TestDataIsolation:
     """Cross-org access rejection — the most critical multi-tenant test."""
