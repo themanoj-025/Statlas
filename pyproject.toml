@@ -5,7 +5,7 @@
 # and locally. The enforced set is deliberately smaller than ruff's defaults:
 # the deferred rules are documented in docs/engineering/migration_summary.md §7.
 [build-system]
-requires = ["setuptools>=68"]
+requires = ["setuptools>=84.0.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
