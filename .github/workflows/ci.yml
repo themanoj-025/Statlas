@@ -133,7 +133,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: 24 # Next.js 16 requires Node >= 20.9; node --test with
           # type stripping needs >= 22.6 (stable 23.6+, LTS 24)
@@ -190,7 +190,7 @@ jobs:
         run: pip install -r requirements.txt
         working-directory: .
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: 24
           cache: npm
@@ -231,7 +231,7 @@ jobs:
         run: pip install -r requirements.txt
         working-directory: .
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: 24
           cache: npm
