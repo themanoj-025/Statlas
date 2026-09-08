@@ -44,6 +44,7 @@ from app.sources.base import (
     SchemaChangedError,
     StatsSource,
     fetch_with_retry,
+    set_allowed_fetch_hosts,
 )
 
 logger = logging.getLogger(__name__)
@@ -222,6 +223,9 @@ class FBrefSource(StatsSource):
         limiter: RateLimiter | None = None,
     ) -> None:
         settings = get_settings()
+        # SSRF defense-in-depth: activate the fetch host allowlist once, at
+        # source initialization (never in request paths).
+        set_allowed_fetch_hosts()
         if session is not None:
             self.session = session
         else:
