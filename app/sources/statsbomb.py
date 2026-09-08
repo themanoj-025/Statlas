@@ -35,7 +35,12 @@ import requests
 from sqlalchemy.orm import Session
 
 from app.config import get_settings
-from app.sources.base import HttpCache, SourceError, fetch_with_retry
+from app.sources.base import (
+    HttpCache,
+    SourceError,
+    fetch_with_retry,
+    set_allowed_fetch_hosts,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -86,6 +91,9 @@ class StatsBombOpenDataSource:
     ) -> None:
         self.session = session or requests.Session()
         self.cache = cache or HttpCache()
+        # SSRF defense-in-depth: activate the fetch host allowlist once, at
+        # source initialization (never in request paths).
+        set_allowed_fetch_hosts()
         # Injecting a fetcher makes the sync testable without network; the
         # default is the shared retry/cache fetch (statsbomb is a public GitHub
         # repo, no rate-limit declaration required beyond basic politeness).

@@ -127,8 +127,11 @@ def get_cache() -> CacheBackend:
         client.ping()
         _backend = RedisCacheBackend(client)
         logger.info("Using Redis cache backend")
-    except (OSError, ConnectionError):
-        logger.warning("Redis unavailable — using in-memory cache (dev/test only)")
+    except Exception as exc:
+        # redis.exceptions.ConnectionError subclasses RedisError, NOT builtin
+        # OSError/ConnectionError — a narrow tuple here silently disabled the
+        # documented fallback on every Redis-less machine.
+        logger.warning("Redis unavailable (%s) — using in-memory cache (dev/test only)", exc)
         _backend = InMemoryCacheBackend()
 
     return _backend
