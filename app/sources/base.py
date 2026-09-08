@@ -196,6 +196,69 @@ class HttpCache:
             logger.warning("cache write failed for %s", url)
 
 
+_ALLOWED_FETCH_HOSTS: set[str] | None = None
+
+
+def set_allowed_fetch_hosts(*, allow_all: bool = False, extra: set[str] | None = None) -> None:
+    """Configure the host allowlist checked by ``fetch_with_retry``.
+
+    Called once at source initialization (never in request paths). In dev/CI the
+    scraper fixtures override ``fetch_with_retry`` entirely, so this is relevant
+    only for live-scrape runs.
+
+    By default only the hosts the built-in sources actually use are permitted.
+    Pass ``extra`` to add hosts for new sources (the allowlist is the same
+    enum-gated discipline the structured-search surface already enforces).
+    """
+    global _ALLOWED_FETCH_HOSTS
+    if allow_all:
+        _ALLOWED_FETCH_HOSTS = None
+        return
+    base: set[str] = {
+        "fbref.com",
+        "understat.com",
+        "v3.football.api-sports.io",
+        "raw.githubusercontent.com",
+    }
+    if extra:
+        base |= extra
+    _ALLOWED_FETCH_HOSTS = base
+
+
+def _check_fetch_url(url: str) -> None:
+    """Fail fast when ``url`` targets a host not covered by the allowlist.
+
+    This is the SSRF defense-in-depth boundary: before any network request is
+    made, the target host must be on the allowlist configured via
+    ``set_allowed_fetch_hosts``. A non-whitelisted host raises immediately so a
+    future change that passes a user-derived URL cannot silently open SSRF.
+    """
+    if _ALLOWED_FETCH_HOSTS is None:
+        return
+    parsed = _parse_url_host(url)
+    if parsed is None or parsed not in _ALLOWED_FETCH_HOSTS:
+        raise SourceError(
+            f"fetch to host {parsed or url!r} is not permitted by the fetch allowlist"
+        )
+
+
+def _parse_url_host(url: str) -> str | None:
+    """Best-effort host extraction without pulling in ``urllib.parse``.
+
+    Good enough for the hardcoded URLs the sources build today; not a full
+    RFC parser. Scheme and host are matched case-insensitively (RFC 3986),
+    so a user-derived URL cannot dodge the allowlist via ``HTTPS://``.
+    """
+    s = url.strip().lower()
+    for prefix in ("https://", "http://"):
+        if s.startswith(prefix):
+            rest = s[len(prefix):]
+            host = rest.split("/", 1)[0].split("&", 1)[0].split("?", 1)[0]
+            host = host.split("#")[0].strip()
+            return host.lower() if host else None
+    return None
+
+
 def fetch_with_retry(
     url: str,
     *,
@@ -218,7 +281,14 @@ def fetch_with_retry(
 
     POST requests bypass the cache (a form payload is stateful; serving a
     cached response for a POST could silently serve stale data).
+
+    Before any request is made, the target host is checked against the allowlist
+    configured by ``set_allowed_fetch_hosts``. A non-whitelisted host raises
+    ``SourceError`` immediately — this is the SSRF defense-in-depth boundary so
+    that a future change passing a user-derived URL cannot silently open SSRF.
     """
+    _check_fetch_url(url)
+
     if cache is not None and use_cache and method == "GET":
         cached = cache.get(url)
         if cached is not None:

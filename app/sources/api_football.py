@@ -27,6 +27,8 @@ from app.sources.base import (
     HttpCache,
     RateLimiter,
     SourceError,
+    _check_fetch_url,
+    set_allowed_fetch_hosts,
 )
 
 logger = logging.getLogger(__name__)
@@ -109,6 +111,9 @@ class APIFootballSource:
         session: requests.Session | None = None,
     ) -> None:
         settings = get_settings()
+        # SSRF defense-in-depth: activate the fetch host allowlist once, at
+        # source initialization (never in request paths).
+        set_allowed_fetch_hosts()
         self.key = key or settings.api_football_key
         if not self.key:
             logger.warning(
@@ -168,6 +173,10 @@ class APIFootballSource:
 
         # Budget is checked here, at the moment of the request — the hard stop.
         self.budget.acquire()
+        # SSRF defense-in-depth: this source issues requests through its own
+        # session rather than the shared fetch_with_retry, so the allowlist
+        # guard is applied explicitly before the request.
+        _check_fetch_url(url)
         self.limiter.wait()
         try:
             resp = self.session.get(url, headers=headers, timeout=30)
