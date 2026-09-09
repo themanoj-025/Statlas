@@ -11,24 +11,18 @@ from datetime import datetime, timedelta, timezone
 import pytest
 from sqlalchemy.orm import Session
 
-from app.analytics.alerts import detect_anomalies
 from app.analytics.events import REQUIRED_PROPERTIES, track_event
 
 pytestmark = pytest.mark.slow
 from app.analytics.metrics import (
-    compute_arpu,
-    compute_churn_rate,
     compute_conversion_funnel,
     compute_dau,
     compute_feature_usage,
     compute_mau,
-    compute_retention_cohort,
 )
 from app.models import (
-    AnalyticsAlert,
     AnalyticsEvent,
     AnalyticsSession,
-    DailyMetric,
     User,
 )
 
@@ -121,7 +115,9 @@ class TestEventSchema:
         """Every event in REQUIRED_PROPERTIES has at least one property."""
         for name, props in REQUIRED_PROPERTIES.items():
             assert isinstance(props, list), f"Event {name} properties must be a list"
-            assert len(props) > 0, f"Event {name} must have at least one required property"
+            assert (
+                len(props) > 0
+            ), f"Event {name} must have at least one required property"
 
     def test_event_properties_stored(self, db: Session, staff_user: User) -> None:
         """Event properties are stored as JSON."""
@@ -142,7 +138,9 @@ class TestEventSchema:
 class TestSessionTracking:
     """Tests for session creation and management."""
 
-    def test_session_created_on_first_event(self, db: Session, staff_user: User) -> None:
+    def test_session_created_on_first_event(
+        self, db: Session, staff_user: User
+    ) -> None:
         """A new session is created when the first event arrives."""
         session_id = "test-session-001"
         track_event(
@@ -154,16 +152,14 @@ class TestSessionTracking:
         )
         db.commit()
 
-        session = (
-            db.query(AnalyticsSession)
-            .filter_by(session_id=session_id)
-            .first()
-        )
+        session = db.query(AnalyticsSession).filter_by(session_id=session_id).first()
         assert session is not None
         assert session.user_id == staff_user.id
         assert session.event_count == 1
 
-    def test_session_extended_on_subsequent_events(self, db: Session, staff_user: User) -> None:
+    def test_session_extended_on_subsequent_events(
+        self, db: Session, staff_user: User
+    ) -> None:
         """Subsequent events extend the session."""
         session_id = "test-session-002"
 
@@ -183,11 +179,7 @@ class TestSessionTracking:
         )
         db.commit()
 
-        session = (
-            db.query(AnalyticsSession)
-            .filter_by(session_id=session_id)
-            .first()
-        )
+        session = db.query(AnalyticsSession).filter_by(session_id=session_id).first()
         assert session.event_count == 2
 
     def test_anonymous_events_accepted(self, db: Session) -> None:
@@ -212,7 +204,9 @@ class TestActiveUsers:
         result = compute_dau(db, datetime(2025, 1, 1, tzinfo=timezone.utc))
         assert result["dau_total"] == 0
 
-    def test_dau_counts_unique_users(self, db: Session, staff_user: User, free_user: User) -> None:
+    def test_dau_counts_unique_users(
+        self, db: Session, staff_user: User, free_user: User
+    ) -> None:
         """DAU counts unique active users, not events."""
         now = datetime.now(timezone.utc)
 
@@ -332,9 +326,9 @@ class TestConversionFunnel:
         db.commit()
 
         result = compute_conversion_funnel(db, start, now)
-        assert result["step_1_signups"] >= 4  # may be off by 1 due to timezone boundaries
+        assert (
+            result["step_1_signups"] >= 4
+        )  # may be off by 1 due to timezone boundaries
 
 
 # ── Retention Tests (Part B4) ─────────────────────────────────────────
-
-

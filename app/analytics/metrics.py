@@ -36,14 +36,11 @@ def compute_dau(db: Session, date: datetime | None = None) -> dict[str, int]:
     # Passive events that do NOT count as "active"
     passive_events = {"alert_triggered", "notification_sent"}
 
-    base = (
-        db.query(distinct(AnalyticsEvent.user_id))
-        .filter(
-            AnalyticsEvent.user_id.isnot(None),
-            AnalyticsEvent.created_at >= day_start,
-            AnalyticsEvent.created_at < day_end,
-            ~AnalyticsEvent.event_name.in_(passive_events),
-        )
+    base = db.query(distinct(AnalyticsEvent.user_id)).filter(
+        AnalyticsEvent.user_id.isnot(None),
+        AnalyticsEvent.created_at >= day_start,
+        AnalyticsEvent.created_at < day_end,
+        ~AnalyticsEvent.event_name.in_(passive_events),
     )
 
     total = base.count()
@@ -85,14 +82,11 @@ def compute_mau(db: Session, date: datetime | None = None) -> dict[str, int]:
 
     passive_events = {"alert_triggered", "notification_sent"}
 
-    base = (
-        db.query(distinct(AnalyticsEvent.user_id))
-        .filter(
-            AnalyticsEvent.user_id.isnot(None),
-            AnalyticsEvent.created_at >= month_start,
-            AnalyticsEvent.created_at < month_end,
-            ~AnalyticsEvent.event_name.in_(passive_events),
-        )
+    base = db.query(distinct(AnalyticsEvent.user_id)).filter(
+        AnalyticsEvent.user_id.isnot(None),
+        AnalyticsEvent.created_at >= month_start,
+        AnalyticsEvent.created_at < month_end,
+        ~AnalyticsEvent.event_name.in_(passive_events),
     )
 
     total = base.count()
@@ -150,7 +144,11 @@ FEATURE_DEFINITIONS = {
         "create_filter": lambda p: True,
     },
     "transfer_intelligence": {
-        "view_events": ["valuation_compared", "transfer_candidate_viewed", "opportunity_viewed"],
+        "view_events": [
+            "valuation_compared",
+            "transfer_candidate_viewed",
+            "opportunity_viewed",
+        ],
         "view_filter": lambda p: True,
         "create_events": [],
         "create_filter": lambda p: False,
@@ -221,25 +219,28 @@ def compute_feature_usage(
         )
 
         # Filter by the feature-specific filter
-        relevant = [e for e in events if view_filter(e.event_properties) or create_filter(e.event_properties)]
+        relevant = [
+            e
+            for e in events
+            if view_filter(e.event_properties) or create_filter(e.event_properties)
+        ]
         unique_users = len({e.user_id for e in relevant if e.user_id})
 
         adoption_pct = (unique_users / active_users * 100) if active_users > 0 else 0.0
 
         # Count creation actions
-        creation_count = sum(
-            1 for e in events
-            if create_filter(e.event_properties)
-        )
+        creation_count = sum(1 for e in events if create_filter(e.event_properties))
 
-        results.append({
-            "date": day_start.isoformat(),
-            "feature_name": feature_name,
-            "adoption_count": unique_users,
-            "adoption_pct": round(adoption_pct, 2),
-            "actions_count": creation_count,
-            "avg_engagement_minutes": 0.0,  # computed from sessions, not events
-        })
+        results.append(
+            {
+                "date": day_start.isoformat(),
+                "feature_name": feature_name,
+                "adoption_count": unique_users,
+                "adoption_pct": round(adoption_pct, 2),
+                "actions_count": creation_count,
+                "avg_engagement_minutes": 0.0,  # computed from sessions, not events
+            }
+        )
 
     return results
 
@@ -339,7 +340,11 @@ def compute_retention_cohort(
         now = datetime.now(timezone.utc)
         cohort_month = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
 
-    month_end = cohort_month.replace(month=cohort_month.month % 12 + 1) if cohort_month.month < 12 else cohort_month.replace(year=cohort_month.year + 1, month=1)
+    month_end = (
+        cohort_month.replace(month=cohort_month.month % 12 + 1)
+        if cohort_month.month < 12
+        else cohort_month.replace(year=cohort_month.year + 1, month=1)
+    )
 
     # Users who signed up in this month
     cohort_users = (
@@ -388,13 +393,15 @@ def compute_retention_cohort(
 
         retention_pct = (active_count / cohort_size * 100) if cohort_size else 0
 
-        results.append({
-            "cohort_month": cohort_month.strftime("%Y-%m"),
-            "months_since_signup": months_after,
-            "cohort_size": cohort_size,
-            "retained_count": active_count,
-            "retention_pct": round(retention_pct, 2),
-        })
+        results.append(
+            {
+                "cohort_month": cohort_month.strftime("%Y-%m"),
+                "months_since_signup": months_after,
+                "cohort_size": cohort_size,
+                "retained_count": active_count,
+                "retention_pct": round(retention_pct, 2),
+            }
+        )
 
     return results
 
@@ -509,8 +516,11 @@ def compute_arpu(db: Session, date: datetime | None = None) -> dict:
     # Pro price from config (single source of truth).
     try:
         from app.config import load_pricing
+
         pricing = load_pricing()
-        PRO_PRICE_EUR = float(pricing.get("plans", {}).get("pro", {}).get("price_monthly_eur", 49.0))
+        PRO_PRICE_EUR = float(
+            pricing.get("plans", {}).get("pro", {}).get("price_monthly_eur", 49.0)
+        )
     except (OSError, ValueError, KeyError):
         PRO_PRICE_EUR = 49.0  # fallback if pricing.json unreadable
 

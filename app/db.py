@@ -78,7 +78,9 @@ class _SessionContext:
     def __enter__(self) -> Session:
         return self._session
 
-    def __exit__(self, exc_type: type | None, exc_val: BaseException | None, exc_tb: Any) -> None:
+    def __exit__(
+        self, exc_type: type | None, exc_val: BaseException | None, exc_tb: Any
+    ) -> None:
         if exc_type is not None:
             self._session.rollback()
         else:

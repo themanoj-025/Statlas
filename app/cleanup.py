@@ -4,6 +4,7 @@ Run periodically (e.g., daily cron or as part of weekly_refresh) to prevent
 unbounded table growth in session_tokens, password_reset_tokens,
 email_verification_tokens, and analytics_events (90-day retention).
 """
+
 from __future__ import annotations
 
 import logging
@@ -35,9 +36,7 @@ def cleanup_expired_tokens(db: Session) -> dict[str, int]:
     # rows into memory (matches the pattern in cleanup_old_analytics).
     stats["session_tokens"] = (
         db.query(SessionToken)
-        .filter(
-            (SessionToken.expires_at < now) | (SessionToken.revoked_at.isnot(None))
-        )
+        .filter((SessionToken.expires_at < now) | (SessionToken.revoked_at.isnot(None)))
         .delete(synchronize_session=False)
     )
 
@@ -82,5 +81,9 @@ def cleanup_old_analytics(db: Session, retention_days: int = 90) -> dict[str, in
     )
     db.commit()
     if old_events > 0:
-        logger.info("Analytics cleanup: removed %d events older than %d days", old_events, retention_days)
+        logger.info(
+            "Analytics cleanup: removed %d events older than %d days",
+            old_events,
+            retention_days,
+        )
     return {"analytics_events": old_events}

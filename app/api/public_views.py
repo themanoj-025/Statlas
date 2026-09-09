@@ -108,7 +108,9 @@ def _check_rate_limit(key_hash: str, plan: str) -> dict:
             detail="The public API is not included in your current plan. Upgrade to the API Business tier to use it.",
         )
     limiter = get_rate_limiter()
-    if limiter.is_limited(f"apikey:{key_hash}", max_attempts=rpm, window_seconds=_WINDOW):
+    if limiter.is_limited(
+        f"apikey:{key_hash}", max_attempts=rpm, window_seconds=_WINDOW
+    ):
         raise HTTPException(
             status_code=429,
             detail=f"Rate limit exceeded — {rpm} requests/minute allowed on your plan. Retry shortly.",
@@ -158,10 +160,12 @@ def public_search(
     return {"results": results}
 
 
-@router.get("/public/players/{player_id}/percentiles")
+@router.get("/public/players/{player_id}/percentiles", response_model=None)
 def public_percentiles(
-    request: Request, player_id: int, _: tuple = Depends(api_key_dependency),
-    response: Response | None = None,
+    request: Request,
+    player_id: int,
+    _: tuple = Depends(api_key_dependency),
+    response: Response = None,  # type: ignore[assignment]
 ) -> dict[str, Any]:
     data = _run(player_queries.get_player_percentiles, player_id)
     if data is None:
@@ -174,7 +178,7 @@ def public_percentiles(
     return {"player": profile, "percentiles": data}
 
 
-@router.get("/public/leaderboard")
+@router.get("/public/leaderboard", response_model=None)
 def public_leaderboard(
     request: Request,
     metric: str = Query(..., min_length=1, max_length=64),
@@ -182,7 +186,7 @@ def public_leaderboard(
     position: str | None = None,
     limit: int = Query(25, ge=1, le=100),
     _: tuple = Depends(api_key_dependency),
-    response: Response | None = None,
+    response: Response = None,  # type: ignore[assignment]
 ) -> dict[str, Any]:
     if not league:
         raise HTTPException(

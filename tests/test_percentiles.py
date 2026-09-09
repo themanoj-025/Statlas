@@ -89,7 +89,9 @@ def test_fractional_rank_inverted_for_lower_is_better() -> None:
     )  # tied pair shares midpoint
 
 
-def test_percentiles_match_hand_calculated_values(db, premier_league, small_pool) -> None:
+def test_percentiles_match_hand_calculated_values(
+    db, premier_league, small_pool
+) -> None:
     for name, gls in [("A", 0.2), ("B", 0.4), ("C", 0.6), ("D", 0.8), ("E", 0.8)]:
         _seed_player(db, premier_league, name, "ST", gls)
 

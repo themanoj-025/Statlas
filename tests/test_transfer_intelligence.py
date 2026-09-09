@@ -37,6 +37,7 @@ from app.models import (
 # Helpers
 # ---------------------------------------------------------------------------
 
+
 def _make_player(
     db: Session,
     *,
@@ -55,6 +56,7 @@ def _make_player(
     db.flush()
     return player
 
+
 def _make_league(
     db: Session, *, slug: str = "premier-league", tier: str = "tier_1"
 ) -> League:
@@ -64,6 +66,7 @@ def _make_league(
     db.add(league)
     db.flush()
     return league
+
 
 def _make_snapshot(
     db: Session,
@@ -98,6 +101,7 @@ def _make_snapshot(
     db.flush()
     return snap
 
+
 def _make_percentile(
     db: Session,
     snap: StatSnapshot,
@@ -122,6 +126,7 @@ def _make_percentile(
     db.flush()
     return pct
 
+
 def _make_valuation(
     db: Session,
     player: Player,
@@ -144,9 +149,11 @@ def _make_valuation(
     db.flush()
     return val
 
+
 # ---------------------------------------------------------------------------
 # Market queries tests
 # ---------------------------------------------------------------------------
+
 
 class TestAgeAdjustment:
     """Age-adjustment factor computation."""
@@ -190,6 +197,7 @@ class TestAgeAdjustment:
         result = compute_age_adjustment(16, "CM")
         assert result >= 0.5  # Floor
 
+
 class TestComputeAgeAtDate:
     """Age computation at a specific date."""
 
@@ -211,6 +219,7 @@ class TestComputeAgeAtDate:
         from app.queries.market_queries import compute_age_at_date
 
         assert compute_age_at_date(None, datetime.now(timezone.utc)) is None
+
 
 class TestStatValueProxy:
     """Stat-based value proxy computation."""
@@ -244,6 +253,7 @@ class TestStatValueProxy:
         assert "stat_value_score" in result
         assert "age_adjustment" in result
         assert 0 <= result["stat_value_score"] <= 100
+
 
 class TestValuationComparison:
     """Valuation comparison framework."""
@@ -300,6 +310,7 @@ class TestValuationComparison:
         assert result["label"] == "potentially overvalued"
         assert result["valuation_gap_eur"] < 0
 
+
 class TestUndervaluedPlayers:
     """Undervaluation detection across all players."""
 
@@ -333,9 +344,11 @@ class TestUndervaluedPlayers:
         assert result[0]["player_id"] == player.id
         assert result[0]["valuation_gap_pct"] > 0
 
+
 # ---------------------------------------------------------------------------
 # Transfer queries tests
 # ---------------------------------------------------------------------------
+
 
 class TestContractScoring:
     """Contract situation scoring."""
@@ -385,6 +398,7 @@ class TestContractScoring:
         result = get_contract_situation_score(db, player.id)
         assert result["availability_score"] <= 40
 
+
 class TestTransferCandidateSearch:
     """Multi-condition transfer candidate search."""
 
@@ -426,9 +440,11 @@ class TestTransferCandidateSearch:
         assert len(result["candidates"]) == 1
         assert result["candidates"][0]["name"] == "Striker"
 
+
 # ---------------------------------------------------------------------------
 # Opportunity finder tests
 # ---------------------------------------------------------------------------
+
 
 class TestHiddenGems:
     """Hidden gem detection."""
@@ -478,6 +494,7 @@ class TestHiddenGems:
         )
         assert len(result) == 0
 
+
 class TestAgeOpportunities:
     """Age opportunity detection."""
 
@@ -502,6 +519,7 @@ class TestAgeOpportunities:
         assert result[0]["opportunity_type"] == "age_opportunity"
         assert result[0]["age"] is not None
         assert result[0]["age"] <= 24
+
 
 class TestPositionScarcity:
     """Position scarcity opportunity detection."""
@@ -542,9 +560,11 @@ class TestPositionScarcity:
         result = detect_position_scarcity_opportunities(db, min_stat_percentile=70)
         assert len(result) == 0
 
+
 # ---------------------------------------------------------------------------
 # Risk module tests
 # ---------------------------------------------------------------------------
+
 
 class TestValuationConfidence:
     """Valuation confidence scoring."""
@@ -593,6 +613,7 @@ class TestValuationConfidence:
         assert result["confidence_level"] in ("medium", "high")
         assert result["confidence_score"] >= 45
 
+
 class TestTransferRisk:
     """Transfer risk assessment."""
 
@@ -634,9 +655,11 @@ class TestTransferRisk:
         assert result["risk_score"] > 0
         assert any("tier" in f.lower() for f in result["risk_factors"])
 
+
 # ---------------------------------------------------------------------------
 # Market validation tests
 # ---------------------------------------------------------------------------
+
 
 class TestMarketValidation:
     """Market data validation rules."""
@@ -723,9 +746,11 @@ class TestMarketValidation:
         assert not result.is_valid
         assert any("future" in i for i in result.issues)
 
+
 # ---------------------------------------------------------------------------
 # Market data source tests
 # ---------------------------------------------------------------------------
+
 
 class TestFixtureMarketDataSource:
     """Fixture market data source implementation."""
@@ -770,9 +795,11 @@ class TestFixtureMarketDataSource:
 
         assert records1[0].valuation_amount_eur == records2[0].valuation_amount_eur
 
+
 # ---------------------------------------------------------------------------
 # Transfer search presets tests
 # ---------------------------------------------------------------------------
+
 
 class TestTransferPresets:
     """Transfer search presets."""

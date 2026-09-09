@@ -73,7 +73,9 @@ class MarketDataSource(ABC):
 
     @abstractmethod
     def fetch_valuations(
-        self, player_ids: list[int], as_of: datetime,
+        self,
+        player_ids: list[int],
+        as_of: datetime,
         player_names: list[str] | None = None,
     ) -> list[MarketValuationRecord]:
         """Fetch current market valuations for specified players.
@@ -95,7 +97,9 @@ class MarketDataSource(ABC):
 
     @abstractmethod
     def fetch_contracts(
-        self, player_ids: list[int], as_of: datetime,
+        self,
+        player_ids: list[int],
+        as_of: datetime,
         player_names: list[str] | None = None,
     ) -> list[ContractRecord]:
         """Fetch contract status for specified players."""
@@ -113,7 +117,9 @@ class FixtureMarketDataSource(MarketDataSource):
         self._rng = random.Random(seed)
 
     def fetch_valuations(
-        self, player_ids: list[int], as_of: datetime,
+        self,
+        player_ids: list[int],
+        as_of: datetime,
         player_names: list[str] | None = None,
     ) -> list[MarketValuationRecord]:
         """Generate synthetic valuations based on player attributes."""
@@ -143,7 +149,9 @@ class FixtureMarketDataSource(MarketDataSource):
         return []
 
     def fetch_contracts(
-        self, player_ids: list[int], as_of: datetime,
+        self,
+        player_ids: list[int],
+        as_of: datetime,
         player_names: list[str] | None = None,
     ) -> list[ContractRecord]:
         """Generate synthetic contract statuses."""

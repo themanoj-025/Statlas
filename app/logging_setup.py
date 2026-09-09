@@ -5,6 +5,7 @@ Provides:
 - Per-request correlation ID via ContextVar
 - A filter that injects request_id into every log record
 """
+
 from __future__ import annotations
 
 import logging
@@ -44,8 +45,7 @@ def setup_logging(level: str = "INFO") -> None:
     except ImportError:
         # Fallback to plain formatting if python-json-logger not installed
         formatter = logging.Formatter(
-            fmt="%(asctime)s %(levelname)s [%(name)s] %(message)s "
-                "[req=%(request_id)s]",
+            fmt="%(asctime)s %(levelname)s [%(name)s] %(message)s [req=%(request_id)s]",
         )
 
     handler = logging.StreamHandler()

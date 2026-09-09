@@ -473,19 +473,23 @@ def _evaluate_team(
         curr_covered = (
             league_id in coverage_seasons and curr_season in coverage_seasons[league_id]
         )
-        if not prev_covered and curr_covered and _try_insert_alert(
-            db,
-            watch,
-            ALERT_TYPE_COVERAGE,
-            dedupe_key=f"coverage:{league_id}:{curr_season}",
-            detail={
-                "signal": "coverage_gained",
-                "league": _league_name(db, league_id),
-                "season": curr_season,
-                "coverage_source": "statsbomb",
-                "entity_type": "team",
-                "entity_name": team.name,
-            },
+        if (
+            not prev_covered
+            and curr_covered
+            and _try_insert_alert(
+                db,
+                watch,
+                ALERT_TYPE_COVERAGE,
+                dedupe_key=f"coverage:{league_id}:{curr_season}",
+                detail={
+                    "signal": "coverage_gained",
+                    "league": _league_name(db, league_id),
+                    "season": curr_season,
+                    "coverage_source": "statsbomb",
+                    "entity_type": "team",
+                    "entity_name": team.name,
+                },
+            )
         ):
             report.add_alert(ALERT_TYPE_COVERAGE)
 

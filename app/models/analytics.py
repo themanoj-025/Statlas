@@ -1,4 +1,5 @@
 """Analytics domain models — events, sessions, metrics, cohorts, alerts."""
+
 from __future__ import annotations
 
 from datetime import datetime
@@ -45,8 +46,12 @@ class AnalyticsSession(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     session_id: Mapped[str] = mapped_column(String(64), nullable=False, unique=True)
     user_id: Mapped[int | None] = mapped_column(ForeignKey("users.id"), nullable=True)
-    started_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
-    ended_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    started_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False
+    )
+    ended_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
     duration_seconds: Mapped[int | None] = mapped_column(Integer, nullable=True)
     event_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     events_json: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
@@ -61,7 +66,9 @@ class DailyMetric(Base):
     __tablename__ = "daily_metrics"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    metric_date: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    metric_date: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False
+    )
     metric_name: Mapped[str] = mapped_column(String(64), nullable=False)
     tier: Mapped[str | None] = mapped_column(String(32), nullable=True)
     value: Mapped[float] = mapped_column(Float, nullable=False)
@@ -79,11 +86,15 @@ class FeatureUsage(Base):
     __tablename__ = "feature_usage"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    usage_date: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    usage_date: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False
+    )
     feature_name: Mapped[str] = mapped_column(String(64), nullable=False)
     adoption_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     adoption_pct: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
-    avg_engagement_minutes: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
+    avg_engagement_minutes: Mapped[float] = mapped_column(
+        Float, nullable=False, default=0.0
+    )
     actions_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     computed_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=func.now()
@@ -99,7 +110,9 @@ class CohortRetention(Base):
     __tablename__ = "cohort_retention"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    cohort_month: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    cohort_month: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False
+    )
     months_since_signup: Mapped[int] = mapped_column(Integer, nullable=False)
     cohort_size: Mapped[int] = mapped_column(Integer, nullable=False)
     retained_count: Mapped[int] = mapped_column(Integer, nullable=False)
@@ -109,7 +122,9 @@ class CohortRetention(Base):
     )
 
     __table_args__ = (
-        UniqueConstraint("cohort_month", "months_since_signup", name="uq_cohort_retention"),
+        UniqueConstraint(
+            "cohort_month", "months_since_signup", name="uq_cohort_retention"
+        ),
         Index("ix_cohort_retention_month", "cohort_month"),
     )
 
@@ -127,7 +142,9 @@ class AnalyticsAlert(Base):
     fired_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=func.now()
     )
-    acknowledged_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    acknowledged_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
 
     __table_args__ = (
         Index("ix_alert_fired", "fired_at"),

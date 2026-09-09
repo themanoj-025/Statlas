@@ -1,3 +1,5 @@
+import type { MetricMeta } from "./billing";
+import type { Plan } from "./billing";
 export type DatasetInfo = {
   mode: string;
   note: string;
@@ -39,4 +41,3 @@ export type ChatResponse = {
 };
 
 // --- Phase 7: scouting workspace --------------------------------------------
-

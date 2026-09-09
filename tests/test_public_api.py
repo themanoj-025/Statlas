@@ -196,7 +196,6 @@ def test_rate_limit_429_after_cap(seeded_client) -> None:
         # We can't easily reset per-key, so reset the entire in-memory limiter
         import app.rate_limiting as rl
 
-
         rl._limiter = None  # Force re-creation
         try:
             for _ in range(3):

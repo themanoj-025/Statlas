@@ -11,8 +11,6 @@ from sqlalchemy.orm import Session
 from app.models import (
     DataCoverage,
     League,
-    Player,
-    Team,
 )
 from app.orchestration.refresh_helpers import (
     RefreshReport,
@@ -141,6 +139,7 @@ def publish_run(db: Session, computed_date: datetime) -> int:
     # Invalidate caches so leaderboard/search pages reflect new data
     try:
         from app.cache import get_cache
+
         cache = get_cache()
         # Legacy key patterns
         cache.delete_pattern("leaderboard:*")
@@ -372,7 +371,8 @@ def run_weekly_refresh(
                 market_source = FixtureMarketDataSource(seed=42)
                 logger.info("Transfermarkt unavailable, using fixture market data")
             valuation_records = market_source.fetch_valuations(
-                qualifying_player_ids, as_of=snapshot_date,
+                qualifying_player_ids,
+                as_of=snapshot_date,
                 player_names=qualifying_player_names,
             )
             from app.compute.market_validation import validate_valuation
@@ -418,7 +418,8 @@ def run_weekly_refresh(
 
             # Fetch and store contract statuses
             contract_records = market_source.fetch_contracts(
-                qualifying_player_ids, as_of=snapshot_date,
+                qualifying_player_ids,
+                as_of=snapshot_date,
                 player_names=qualifying_player_names,
             )
             contracts_inserted = 0

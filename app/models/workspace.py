@@ -1,4 +1,5 @@
 """Workspace domain models — shortlists, entries, notes, tags, status history."""
+
 from __future__ import annotations
 
 from datetime import datetime
@@ -37,7 +38,9 @@ class Shortlist(Base):
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=func.now()
     )
-    deleted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    deleted_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
     owner_org_id: Mapped[int | None] = mapped_column(
         ForeignKey("organizations.id"), nullable=True
     )
@@ -56,9 +59,13 @@ class ShortlistEntry(Base):
     __tablename__ = "shortlist_entries"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    shortlist_id: Mapped[int] = mapped_column(ForeignKey("shortlists.id"), nullable=False)
+    shortlist_id: Mapped[int] = mapped_column(
+        ForeignKey("shortlists.id"), nullable=False
+    )
     player_id: Mapped[int] = mapped_column(ForeignKey("players.id"), nullable=False)
-    status: Mapped[str] = mapped_column(ENTRY_STATUS_ENUM, nullable=False, default="discovered")
+    status: Mapped[str] = mapped_column(
+        ENTRY_STATUS_ENUM, nullable=False, default="discovered"
+    )
     priority: Mapped[str | None] = mapped_column(ENTRY_PRIORITY_ENUM, nullable=True)
     added_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=func.now()
@@ -67,7 +74,9 @@ class ShortlistEntry(Base):
         DateTime(timezone=True), nullable=False, server_default=func.now()
     )
     added_by_note: Mapped[str | None] = mapped_column(Text, nullable=True)
-    removed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    removed_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
 
     __table_args__ = (
         UniqueConstraint("shortlist_id", "player_id", name="uq_shortlist_entry_player"),
@@ -120,7 +129,9 @@ class StatusHistory(Base):
     )
     from_status: Mapped[str | None] = mapped_column(ENTRY_STATUS_ENUM, nullable=True)
     to_status: Mapped[str] = mapped_column(ENTRY_STATUS_ENUM, nullable=False)
-    changed_by_user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), nullable=False)
+    changed_by_user_id: Mapped[int] = mapped_column(
+        ForeignKey("users.id"), nullable=False
+    )
     changed_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=func.now()
     )

@@ -1,3 +1,9 @@
+import type { DashboardActivityItem } from "./other_alert";
+import type { DashboardRecommendedPlayer } from "./player";
+import type { DashboardSavedPlayer } from "./player";
+import type { DashboardTrendingPlayer } from "./player";
+import type { OpportunityCard } from "./other_transfer";
+import type { Plan } from "./billing";
 export type EntryStatus =
   | "discovered"
   | "monitoring"
@@ -74,13 +80,6 @@ export type ShortlistDetail = WorkspaceOverview & {
 };
 
 export type TagSuggestions = { tags: string[] };
-    shortlist_status: EntryStatus;
-    priority: EntryPriority;
-    tags: string[];
-    recent_notes: { note_text: string; created_at: string }[];
-    label: string;
-  } | null;
-};
 
 export type DashboardWorkspace = {
   shortlist_count: number;

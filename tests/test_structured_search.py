@@ -385,7 +385,9 @@ def test_age_max_with_missing_dob_excluded(db, search_data) -> None:
     assert names(result) == ["Player A"]
 
 
-def test_empty_result_diagnostics_identify_restrictive_condition(db, search_data) -> None:
+def test_empty_result_diagnostics_identify_restrictive_condition(
+    db, search_data
+) -> None:
     """prgp >= 90 returns 0 (C qualifies but is below the floor) — the response
     must include per-condition pass counts and the most-restrictive condition
     so the UI can give actionable guidance instead of a bare 'no results'."""

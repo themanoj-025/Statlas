@@ -1,4 +1,3 @@
-
 #!/usr/bin/env python3
 """Statlas real-data ingestion -- downloads live data from free sources and
 seeds the database through the full pipeline.
@@ -71,6 +70,7 @@ ALL_SEASONS = [f"{y}-{str(y + 1)[-2:]}" for y in range(2017, 2027)]
 # ---------------------------------------------------------------------------
 # Progress tracking
 # ---------------------------------------------------------------------------
+
 
 class ProgressTracker:
     """Persistent progress state for multi-season ingestion.
@@ -184,7 +184,9 @@ class ProgressTracker:
         print(f"  Started:     {self._state.get('started_at', 'never')}")
         print(f"  Last update: {self._state.get('last_updated', 'never')}")
         print(f"  Elapsed:     {summary['elapsed_seconds'] / 60:.1f} min")
-        print(f"  Seasons:     {len(all_seasons)} ({all_seasons[0]} to {all_seasons[-1]})")
+        print(
+            f"  Seasons:     {len(all_seasons)} ({all_seasons[0]} to {all_seasons[-1]})"
+        )
         print(f"  Leagues:     {len(all_leagues)}")
         print(f"  Total tasks: {total_tasks} (season x league)")
         print(f"  Completed:   {done}")
@@ -204,7 +206,11 @@ class ProgressTracker:
             season_data = completed.get(season, {})
             ok = sum(1 for v in season_data.values() if v.get("status") == "ok")
             fl = sum(1 for v in season_data.values() if v.get("status") != "ok")
-            snaps = sum(v.get("snapshots", 0) for v in season_data.values() if v.get("status") == "ok")
+            snaps = sum(
+                v.get("snapshots", 0)
+                for v in season_data.values()
+                if v.get("status") == "ok"
+            )
             marker = " *" if ok == len(all_leagues) else ""
             print(f"  {season:<12s} {ok:>5d} {fl:>5d} {snaps:>7d}{marker}")
 
@@ -225,6 +231,7 @@ class ProgressTracker:
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
+
 
 def _estimate_time(n_tasks: int, avg_seconds: float = 12.0) -> str:
     """Human-readable ETA."""
@@ -329,6 +336,7 @@ def _progress_line(
 # Core ingestion
 # ---------------------------------------------------------------------------
 
+
 def ingest_season(
     db,
     season: str,
@@ -372,7 +380,9 @@ def ingest_season(
                 records = fbref.fetch_league_stats(slug, season)
                 print(f"\n  {slug} (FBRef): {len(records)} players")
                 for r in records[:3]:
-                    print(f"    {r.player_name:30s} {r.team_name:20s} {r.minutes_played:6.0f} min")
+                    print(
+                        f"    {r.player_name:30s} {r.team_name:20s} {r.minutes_played:6.0f} min"
+                    )
                 if len(records) > 3:
                     print(f"    ... and {len(records) - 3} more")
             except (requests.RequestException, ValueError, KeyError, OSError) as exc:
@@ -382,7 +392,12 @@ def ingest_season(
                 try:
                     u_records = understat.fetch_league_stats(slug, season)
                     print(f"  {slug} (Understat): {len(u_records)} players")
-                except (requests.RequestException, ValueError, KeyError, OSError) as exc:
+                except (
+                    requests.RequestException,
+                    ValueError,
+                    KeyError,
+                    OSError,
+                ) as exc:
                     print(f"  {slug} (Understat): FAILED -- {exc}")
         return None
 
@@ -408,6 +423,7 @@ def ingest_season(
 # ---------------------------------------------------------------------------
 # StatsBomb event sync
 # ---------------------------------------------------------------------------
+
 
 def sync_statsbomb_events(db, max_competitions: int | None = None) -> dict:
     """Sync StatsBomb open-data events (shot/pass coordinates)."""
@@ -447,11 +463,11 @@ def sync_statsbomb_events(db, max_competitions: int | None = None) -> dict:
             total["matches"] += result.get("matches", 0)
             total["events"] += result.get("events", 0)
             count += 1
-            print(f"  OK {cname}: {result.get('matches', 0)} matches, {result.get('events', 0)} events")
+            print(
+                f"  OK {cname}: {result.get('matches', 0)} matches, {result.get('events', 0)} events"
+            )
         except (requests.RequestException, ValueError, KeyError, OSError) as exc:
             print(f"  FAIL {cname}: {exc}")
 
     print(f"\n  Total: {total['matches']} matches, {total['events']} events")
     return total
-
-

@@ -106,9 +106,7 @@ def add_comment(
     user = _require_user(request)
     with session_scope() as db:
         if not oq.user_has_permission(db, user.id, org_id, "resource_comment"):
-            raise HTTPException(
-                status_code=404, detail="Resource not found"
-            )
+            raise HTTPException(status_code=404, detail="Resource not found")
 
         comment = Comment(
             resource_type=resource_type,
@@ -166,7 +164,9 @@ def add_comment(
 
 
 @router.put("/{comment_id}")
-def edit_comment(comment_id: int, body: EditCommentBody, request: Request) -> dict[str, Any]:
+def edit_comment(
+    comment_id: int, body: EditCommentBody, request: Request
+) -> dict[str, Any]:
     """Edit a comment. Only the author can edit. Org membership verified."""
     user = _require_user(request)
     with session_scope() as db:
@@ -183,6 +183,7 @@ def edit_comment(comment_id: int, body: EditCommentBody, request: Request) -> di
 
         comment.text = body.text
         from datetime import datetime, timezone
+
         comment.edited_at = datetime.now(timezone.utc)
         db.commit()
         return {"ok": True}

@@ -52,7 +52,9 @@ def active_model() -> dict[str, Any]:
 
 
 @router.get("/{cluster_id}")
-def archetype_detail(cluster_id: int, limit: int = Query(50, ge=1, le=200)) -> dict[str, Any]:
+def archetype_detail(
+    cluster_id: int, limit: int = Query(50, ge=1, le=200)
+) -> dict[str, Any]:
     """Get players in a specific archetype, sorted by typicality.
 
     Returns the archetype definition and a paginated list of players

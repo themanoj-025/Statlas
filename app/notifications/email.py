@@ -80,9 +80,7 @@ def unsubscribe_url(user_id: int, token: str) -> str:
     payload = f"{user_id}:{token}"
     sig = _sign(payload)
     base = settings.public_base_url.rstrip("/")
-    return (
-        f"{base}/notifications/unsubscribe?" f"user={user_id}&token={token}&sig={sig}"
-    )
+    return f"{base}/notifications/unsubscribe?user={user_id}&token={token}&sig={sig}"
 
 
 def _email_for(

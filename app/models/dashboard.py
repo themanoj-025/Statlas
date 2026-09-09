@@ -1,4 +1,5 @@
 """Dashboard domain models — activity log, dashboard state, saved players."""
+
 from __future__ import annotations
 
 from datetime import datetime
@@ -33,7 +34,9 @@ class ActivityLog(Base):
 
     __table_args__ = (
         Index("ix_activity_user_time", "user_id", "performed_at"),
-        Index("ix_activity_entity", "user_id", "entity_type", "entity_id", "performed_at"),
+        Index(
+            "ix_activity_entity", "user_id", "entity_type", "entity_id", "performed_at"
+        ),
     )
 
 
@@ -43,7 +46,9 @@ class DashboardState(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), nullable=False)
     widget_config: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
-    dismissed_recommendations: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    dismissed_recommendations: Mapped[list] = mapped_column(
+        JSON, nullable=False, default=list
+    )
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=func.now()
     )

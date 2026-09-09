@@ -33,30 +33,31 @@ def _parse_args() -> argparse.Namespace:
     )
     ingest_mode = ingest.add_mutually_exclusive_group()
     ingest_mode.add_argument(
-        "--resume", action="store_true",
+        "--resume",
+        action="store_true",
         help="resume an interrupted backfill",
     )
     ingest_mode.add_argument(
-        "--status", action="store_true",
+        "--status",
+        action="store_true",
         help="show ingestion progress and exit",
     )
     ingest_mode.add_argument(
-        "--reset-progress", action="store_true",
+        "--reset-progress",
+        action="store_true",
         help="delete progress file and start fresh",
     )
-    ingest.add_argument(
-        "--season", default=None, help="single season (e.g. 2025-26)"
-    )
+    ingest.add_argument("--season", default=None, help="single season (e.g. 2025-26)")
     ingest.add_argument(
         "--seasons", default=None, help="comma-separated seasons (e.g. 2023-24,2024-25)"
     )
     ingest.add_argument(
-        "--start-from", default=None, metavar="SEASON",
+        "--start-from",
+        default=None,
+        metavar="SEASON",
         help="backfill from this season through current (e.g. --start-from 2017-18)",
     )
-    ingest.add_argument(
-        "--leagues", default=None, help="comma-separated league slugs"
-    )
+    ingest.add_argument("--leagues", default=None, help="comma-separated league slugs")
     ingest.add_argument(
         "--statsbomb", action="store_true", help="also sync StatsBomb events"
     )
@@ -69,9 +70,7 @@ def _parse_args() -> argparse.Namespace:
         default=None,
         help="override dataset mode (set 'production' after first real scrape)",
     )
-    ingest.add_argument(
-        "-v", "--verbose", action="store_true", help="debug logging"
-    )
+    ingest.add_argument("-v", "--verbose", action="store_true", help="debug logging")
 
     weekly = sub.add_parser("weekly-refresh", help="run the full weekly refresh")
     weekly.add_argument("--season", required=True)

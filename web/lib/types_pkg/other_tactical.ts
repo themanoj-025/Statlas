@@ -1,3 +1,5 @@
+import type { PassEdge } from "./event";
+import type { PassNode } from "./event";
 export type TacticalStyle = {
   style: string;
   confidence: number;

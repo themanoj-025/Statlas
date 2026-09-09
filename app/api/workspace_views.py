@@ -129,7 +129,14 @@ def create_shortlist(body: CreateShortlistBody, request: Request) -> dict[str, A
             return wq.create_shortlist(
                 db, user.id, body.name, description=body.description
             )
-        except (wq.ShortlistNotFound, wq.PlayerNotFound, wq.InvalidStatusTransition, wq.DuplicateEntry, wq.WorkspaceLimitExceeded, ValueError) as exc:
+        except (
+            wq.ShortlistNotFound,
+            wq.PlayerNotFound,
+            wq.InvalidStatusTransition,
+            wq.DuplicateEntry,
+            wq.WorkspaceLimitExceeded,
+            ValueError,
+        ) as exc:
             raise _map_error(exc)
 
 
@@ -140,7 +147,14 @@ def remove_shortlist(shortlist_id: int, request: Request) -> dict[str, str]:
         try:
             wq.delete_shortlist(db, user.id, shortlist_id)
             return {"ok": True}
-        except (wq.ShortlistNotFound, wq.PlayerNotFound, wq.InvalidStatusTransition, wq.DuplicateEntry, wq.WorkspaceLimitExceeded, ValueError) as exc:
+        except (
+            wq.ShortlistNotFound,
+            wq.PlayerNotFound,
+            wq.InvalidStatusTransition,
+            wq.DuplicateEntry,
+            wq.WorkspaceLimitExceeded,
+            ValueError,
+        ) as exc:
             raise _map_error(exc)
 
 
@@ -151,12 +165,21 @@ def shortlist_detail(shortlist_id: int, request: Request) -> dict[str, Any]:
         try:
             detail = wq.get_shortlist_detail(db, user.id, shortlist_id)
             return {**detail, **_plan_context(db, user.id)}
-        except (wq.ShortlistNotFound, wq.PlayerNotFound, wq.InvalidStatusTransition, wq.DuplicateEntry, wq.WorkspaceLimitExceeded, ValueError) as exc:
+        except (
+            wq.ShortlistNotFound,
+            wq.PlayerNotFound,
+            wq.InvalidStatusTransition,
+            wq.DuplicateEntry,
+            wq.WorkspaceLimitExceeded,
+            ValueError,
+        ) as exc:
             raise _map_error(exc)
 
 
 @router.post("/{shortlist_id}/entries", status_code=201)
-def add_entry(shortlist_id: int, body: AddEntryBody, request: Request) -> dict[str, Any]:
+def add_entry(
+    shortlist_id: int, body: AddEntryBody, request: Request
+) -> dict[str, Any]:
     user = _require_user(request)
     with session_scope() as db:
         try:
@@ -167,7 +190,14 @@ def add_entry(shortlist_id: int, body: AddEntryBody, request: Request) -> dict[s
                 body.player_id,
                 initial_note=body.initial_note,
             )
-        except (wq.ShortlistNotFound, wq.PlayerNotFound, wq.InvalidStatusTransition, wq.DuplicateEntry, wq.WorkspaceLimitExceeded, ValueError) as exc:
+        except (
+            wq.ShortlistNotFound,
+            wq.PlayerNotFound,
+            wq.InvalidStatusTransition,
+            wq.DuplicateEntry,
+            wq.WorkspaceLimitExceeded,
+            ValueError,
+        ) as exc:
             raise _map_error(exc)
 
 
@@ -179,17 +209,33 @@ def change_status(entry_id: int, body: StatusBody, request: Request) -> dict[str
             return wq.update_entry_status(
                 db, user.id, entry_id, body.status, reason_note=body.reason_note
             )
-        except (wq.ShortlistNotFound, wq.PlayerNotFound, wq.InvalidStatusTransition, wq.DuplicateEntry, wq.WorkspaceLimitExceeded, ValueError) as exc:
+        except (
+            wq.ShortlistNotFound,
+            wq.PlayerNotFound,
+            wq.InvalidStatusTransition,
+            wq.DuplicateEntry,
+            wq.WorkspaceLimitExceeded,
+            ValueError,
+        ) as exc:
             raise _map_error(exc)
 
 
 @router.post("/entries/{entry_id}/priority")
-def change_priority(entry_id: int, body: PriorityBody, request: Request) -> dict[str, Any]:
+def change_priority(
+    entry_id: int, body: PriorityBody, request: Request
+) -> dict[str, Any]:
     user = _require_user(request)
     with session_scope() as db:
         try:
             return wq.set_entry_priority(db, user.id, entry_id, body.priority)
-        except (wq.ShortlistNotFound, wq.PlayerNotFound, wq.InvalidStatusTransition, wq.DuplicateEntry, wq.WorkspaceLimitExceeded, ValueError) as exc:
+        except (
+            wq.ShortlistNotFound,
+            wq.PlayerNotFound,
+            wq.InvalidStatusTransition,
+            wq.DuplicateEntry,
+            wq.WorkspaceLimitExceeded,
+            ValueError,
+        ) as exc:
             raise _map_error(exc)
 
 
@@ -199,7 +245,14 @@ def add_note(entry_id: int, body: NoteBody, request: Request) -> dict[str, Any]:
     with session_scope() as db:
         try:
             return wq.add_entry_note(db, user.id, entry_id, body.note_text)
-        except (wq.ShortlistNotFound, wq.PlayerNotFound, wq.InvalidStatusTransition, wq.DuplicateEntry, wq.WorkspaceLimitExceeded, ValueError) as exc:
+        except (
+            wq.ShortlistNotFound,
+            wq.PlayerNotFound,
+            wq.InvalidStatusTransition,
+            wq.DuplicateEntry,
+            wq.WorkspaceLimitExceeded,
+            ValueError,
+        ) as exc:
             raise _map_error(exc)
 
 
@@ -209,7 +262,14 @@ def add_tag(entry_id: int, body: TagBody, request: Request) -> dict[str, Any]:
     with session_scope() as db:
         try:
             return wq.add_entry_tag(db, user.id, entry_id, body.tag_text)
-        except (wq.ShortlistNotFound, wq.PlayerNotFound, wq.InvalidStatusTransition, wq.DuplicateEntry, wq.WorkspaceLimitExceeded, ValueError) as exc:
+        except (
+            wq.ShortlistNotFound,
+            wq.PlayerNotFound,
+            wq.InvalidStatusTransition,
+            wq.DuplicateEntry,
+            wq.WorkspaceLimitExceeded,
+            ValueError,
+        ) as exc:
             raise _map_error(exc)
 
 
@@ -220,7 +280,14 @@ def remove_tag(entry_id: int, body: TagBody, request: Request) -> dict[str, str]
         try:
             wq.remove_entry_tag(db, user.id, entry_id, body.tag_text)
             return {"ok": True}
-        except (wq.ShortlistNotFound, wq.PlayerNotFound, wq.InvalidStatusTransition, wq.DuplicateEntry, wq.WorkspaceLimitExceeded, ValueError) as exc:
+        except (
+            wq.ShortlistNotFound,
+            wq.PlayerNotFound,
+            wq.InvalidStatusTransition,
+            wq.DuplicateEntry,
+            wq.WorkspaceLimitExceeded,
+            ValueError,
+        ) as exc:
             raise _map_error(exc)
 
 
@@ -231,5 +298,12 @@ def remove_entry(entry_id: int, request: Request) -> dict[str, str]:
         try:
             wq.remove_entry_by_id(db, user.id, entry_id)
             return {"ok": True}
-        except (wq.ShortlistNotFound, wq.PlayerNotFound, wq.InvalidStatusTransition, wq.DuplicateEntry, wq.WorkspaceLimitExceeded, ValueError) as exc:
+        except (
+            wq.ShortlistNotFound,
+            wq.PlayerNotFound,
+            wq.InvalidStatusTransition,
+            wq.DuplicateEntry,
+            wq.WorkspaceLimitExceeded,
+            ValueError,
+        ) as exc:
             raise _map_error(exc)

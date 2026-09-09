@@ -18,20 +18,22 @@ logger = logging.getLogger(__name__)
 _settings = get_settings()
 
 # CSRF-protected routes (state-changing requests from browser)
-CSRF_EXEMPT_PATHS = frozenset({
-    "/api/v1/health",
-    "/api/v1/readiness",
-    "/api/v1/meta",
-    "/api/v1/leagues",
-    "/api/v1/coverage",
-    "/api/v1/positions",
-    "/api/v1/methodology",
-    "/api/v1/billing/webhook",  # Stripe signature verification
-    "/api/v1/billing/checkout",  # Redirects to Stripe
-    "/api/v1/billing/portal",   # Redirects to Stripe
-    "/api/v1/e2e",             # Test-only endpoints
-    "/metrics",                # Prometheus scrape endpoint (read-only GET)
-})
+CSRF_EXEMPT_PATHS = frozenset(
+    {
+        "/api/v1/health",
+        "/api/v1/readiness",
+        "/api/v1/meta",
+        "/api/v1/leagues",
+        "/api/v1/coverage",
+        "/api/v1/positions",
+        "/api/v1/methodology",
+        "/api/v1/billing/webhook",  # Stripe signature verification
+        "/api/v1/billing/checkout",  # Redirects to Stripe
+        "/api/v1/billing/portal",  # Redirects to Stripe
+        "/api/v1/e2e",  # Test-only endpoints
+        "/metrics",  # Prometheus scrape endpoint (read-only GET)
+    }
+)
 
 
 MAX_REQUEST_BODY_BYTES = 1 * 1024 * 1024  # 1 MB
@@ -50,7 +52,12 @@ async def body_size_limit_middleware(request: Request, call_next: Any) -> Any:
     if content_length and int(content_length) > MAX_REQUEST_BODY_BYTES:
         return JSONResponse(
             status_code=413,
-            content={"error": {"code": "payload_too_large", "message": "Request body exceeds 1MB limit."}},
+            content={
+                "error": {
+                    "code": "payload_too_large",
+                    "message": "Request body exceeds 1MB limit.",
+                }
+            },
         )
     # For chunked transfers (no Content-Length), read body and check size.
     if not content_length:
@@ -58,7 +65,12 @@ async def body_size_limit_middleware(request: Request, call_next: Any) -> Any:
         if len(body) > MAX_REQUEST_BODY_BYTES:
             return JSONResponse(
                 status_code=413,
-                content={"error": {"code": "payload_too_large", "message": "Request body exceeds 1MB limit."}},
+                content={
+                    "error": {
+                        "code": "payload_too_large",
+                        "message": "Request body exceeds 1MB limit.",
+                    }
+                },
             )
     return await call_next(request)
 
@@ -97,9 +109,11 @@ async def csrf_middleware(request: Request, call_next: Any) -> Any:
             content={
                 "error": {
                     "code": "csrf_error",
-                    "message": "Invalid or missing CSRF token."
-                    if token
-                    else "CSRF token missing. Include the X-CSRF-Token header.",
+                    "message": (
+                        "Invalid or missing CSRF token."
+                        if token
+                        else "CSRF token missing. Include the X-CSRF-Token header."
+                    ),
                 }
             },
         )
@@ -126,7 +140,11 @@ async def security_and_rate_limit_middleware(request: Request, call_next: Any) -
         from app.api.public_views import apply_rate_limit_headers
 
         apply_rate_limit_headers(response, request)
-    except (AttributeError, KeyError, TypeError):  # header decoration must never break a response
+    except (
+        AttributeError,
+        KeyError,
+        TypeError,
+    ):  # header decoration must never break a response
         pass
 
     # --- Security headers ---
@@ -135,9 +153,7 @@ async def security_and_rate_limit_middleware(request: Request, call_next: Any) -
     response.headers["X-Frame-Options"] = "DENY"
     response.headers["X-XSS-Protection"] = "1; mode=block"
     response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
-    response.headers["Permissions-Policy"] = (
-        "geolocation=(), microphone=(), camera=()"
-    )
+    response.headers["Permissions-Policy"] = "geolocation=(), microphone=(), camera=()"
     # HSTS: tell browsers to only use HTTPS (1 year, include subdomains)
     if request.url.scheme == "https":
         response.headers["Strict-Transport-Security"] = (
@@ -182,7 +198,11 @@ async def security_and_rate_limit_middleware(request: Request, call_next: Any) -
             status_code=response.status_code,
             duration_seconds=duration_ms / 1000,
         )
-    except (OSError, ConnectionError, ValueError):  # metrics must never break a response
+    except (
+        OSError,
+        ConnectionError,
+        ValueError,
+    ):  # metrics must never break a response
         pass
 
     return response

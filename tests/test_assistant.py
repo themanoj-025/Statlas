@@ -163,15 +163,14 @@ def test_assistant_quota_hard_cap(seeded_client, fake_anthropic) -> None:
             period_start=(
                 db.query(AssistantQuota).first().period_start
                 if db.query(AssistantQuota).first()
-                else datetime.now(timezone.utc)
-                .replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+                else datetime.now(timezone.utc).replace(
+                    day=1, hour=0, minute=0, second=0, microsecond=0
+                )
             ),
             period_end=(
                 db.query(AssistantQuota).first().period_end
                 if db.query(AssistantQuota).first()
-                else datetime(
-                    2099, 1, 1, tzinfo=timezone.utc
-                )
+                else datetime(2099, 1, 1, tzinfo=timezone.utc)
             ),
             queries_used=10,
             queries_limit=10,
@@ -242,7 +241,6 @@ def test_assistant_rate_limit(seeded_client, fake_anthropic) -> None:
     def _test_rate_limit(user_id: int) -> None:
         if limiter.is_limited(test_key, max_attempts=3, window_seconds=60):
             from fastapi import HTTPException
-
 
             raise HTTPException(
                 status_code=429,

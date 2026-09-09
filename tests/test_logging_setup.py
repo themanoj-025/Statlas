@@ -1,4 +1,5 @@
 """Tests for app.logging_setup — request IDs, filter, and setup_logging."""
+
 from __future__ import annotations
 
 import logging
@@ -15,8 +16,13 @@ class TestRequestIdFilter:
     def test_injects_request_id_into_record(self) -> None:
         filt = RequestIdFilter()
         record = logging.LogRecord(
-            name="test", level=logging.INFO, pathname="", lineno=0,
-            msg="test message", args=(), exc_info=None,
+            name="test",
+            level=logging.INFO,
+            pathname="",
+            lineno=0,
+            msg="test message",
+            args=(),
+            exc_info=None,
         )
         request_id_var.set("abc-123")
         assert filt.filter(record) is True
@@ -27,8 +33,13 @@ class TestRequestIdFilter:
         filt = RequestIdFilter()
         request_id_var.set("-")
         record = logging.LogRecord(
-            name="test", level=logging.INFO, pathname="", lineno=0,
-            msg="test", args=(), exc_info=None,
+            name="test",
+            level=logging.INFO,
+            pathname="",
+            lineno=0,
+            msg="test",
+            args=(),
+            exc_info=None,
         )
         assert filt.filter(record) is True
         assert record.request_id == "-"
@@ -36,8 +47,13 @@ class TestRequestIdFilter:
     def test_filter_always_returns_true(self) -> None:
         filt = RequestIdFilter()
         record = logging.LogRecord(
-            name="test", level=logging.WARNING, pathname="", lineno=0,
-            msg="warning", args=(), exc_info=None,
+            name="test",
+            level=logging.WARNING,
+            pathname="",
+            lineno=0,
+            msg="warning",
+            args=(),
+            exc_info=None,
         )
         assert filt.filter(record) is True
 

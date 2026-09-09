@@ -1,5 +1,8 @@
+import type { PossessionMap } from "../../../../lib/types_pkg/other_tactical";
+import type { PressureMap } from "../../../../lib/types_pkg/other_tactical";
+import type { TacticalOverview } from "../../../../lib/types_pkg/other_tactical";
 /** Tactical page tab components. */
-function OverviewTab({ overview }: { overview: TacticalOverview }) {
+export function OverviewTab({ overview }: { overview: TacticalOverview }) {
   const { style, formation, formation_stability, pressure_map, possession_map } = overview;
   const nodes = overview.passing_network.nodes;
 
@@ -96,7 +99,7 @@ function OverviewTab({ overview }: { overview: TacticalOverview }) {
 // Passing Network Tab
 // ---------------------------------------------------------------------------
 
-function NetworkTab({ data }: { data: TacticalOverview }) {
+export function NetworkTab({ data }: { data: TacticalOverview }) {
   const { nodes, edges, total_passes } = data.passing_network;
   const sortedNodes = [...nodes].sort(
     (a, b) => b.betweenness_centrality - a.betweenness_centrality
@@ -181,7 +184,7 @@ function NetworkTab({ data }: { data: TacticalOverview }) {
 // Heatmap Tab
 // ---------------------------------------------------------------------------
 
-function HeatmapTab({
+export function HeatmapTab({
   data,
   title,
 }: {
@@ -266,7 +269,7 @@ function HeatmapTab({
 // Formation Tab
 // ---------------------------------------------------------------------------
 
-function FormationTab({ data }: { data: TacticalOverview }) {
+export function FormationTab({ data }: { data: TacticalOverview }) {
   const { formation, formation_stability } = data;
 
   return (

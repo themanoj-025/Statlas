@@ -48,9 +48,7 @@ class GrantProBody(BaseModel):
 
 
 @router.post("/grant-pro")
-def grant_pro(
-    body: GrantProBody, _request: Request
-) -> dict[str, str]:
+def grant_pro(body: GrantProBody, _request: Request) -> dict[str, str]:
     """Give a registered account active Pro access (an e2e fixture)."""
     _require_e2e()
     with session_scope() as db:
@@ -170,6 +168,7 @@ def seed_alert(body: SeedAlertBody) -> dict[str, str]:
                     status_code=500, detail="no league/team seeded — seed data first"
                 )
             from app.config import CURRENT_SEASON
+
             team_id, league_id, season = team.id, league.id, CURRENT_SEASON
 
         # The fixture pair must BE the two most recent published snapshots for

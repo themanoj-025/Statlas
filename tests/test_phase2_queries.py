@@ -177,7 +177,9 @@ def test_similar_players_real_nearest_neighbour(db, premier_league, small_pool) 
     assert get_similar_players(db, gk.id) == []
 
 
-def test_leaderboard_filtered_pagination_and_sort(db, premier_league, small_pool) -> None:
+def test_leaderboard_filtered_pagination_and_sort(
+    db, premier_league, small_pool
+) -> None:
     for name, gls in [("A", 0.2), ("B", 0.4), ("C", 0.6), ("D", 0.8), ("E", 0.9)]:
         _seed_player(db, premier_league, name, "ST", gls)
     compute_and_publish(db, snapshot_date=SNAPSHOT_DATE, season=SEASON)

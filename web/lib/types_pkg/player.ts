@@ -1,3 +1,10 @@
+import type { Axis } from "./other_chat";
+import type { ConditionOperator } from "./other_query";
+import type { ConditionValueShown } from "./other_query";
+import type { EventCompetition } from "./event";
+import type { MetricMeta } from "./billing";
+import type { QueryDefinition } from "./other_query";
+import type { StatsBombCompetition } from "./event";
 export type SimilarityExplanation = {
   matched_strengths: {
     metric: string;
@@ -369,4 +376,3 @@ export type ValuationGapPlayer = {
   signal_strength: string;
   note?: string;
 };
-

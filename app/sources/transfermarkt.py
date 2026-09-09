@@ -2,6 +2,7 @@
 
 All logic has been moved to app.sources.transfermarkt_pkg.
 """
+
 from __future__ import annotations
 
 from app.sources.transfermarkt_pkg import (

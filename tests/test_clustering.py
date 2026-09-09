@@ -25,8 +25,6 @@ from sqlalchemy.orm import Session
 from app.compute.clustering import (
     CLUSTERING_FEATURES,
     SILHOUETTE_THRESHOLD,
-    _generate_archetype_description,
-    _generate_archetype_name,
     assign_all_players,
     assign_player_to_archetype,
     build_feature_matrix,
@@ -36,6 +34,10 @@ from app.compute.clustering import (
     find_optimal_k,
     rollback_model,
     train_clustering_model,
+)
+from app.compute.clustering_pkg.archetypes import (
+    _generate_archetype_description,
+    _generate_archetype_name,
 )
 
 pytestmark = pytest.mark.slow
@@ -371,7 +373,9 @@ class TestClusteringTraining:
         assert model.training_data_size == 30
         assert model.training_date is not None
 
-    def test_train_model_insufficient_data(self, db: Session, premier_league: League) -> None:
+    def test_train_model_insufficient_data(
+        self, db: Session, premier_league: League
+    ) -> None:
         """Training with insufficient data should fail gracefully."""
         for i in range(5):
             _make_player(db, f"Player {i}", "CM", league=premier_league)
@@ -387,7 +391,9 @@ class TestClusteringTraining:
         assert len(report.errors) > 0
         assert "Insufficient" in report.errors[0]
 
-    def test_train_model_saves_pipeline(self, db: Session, premier_league: League) -> None:
+    def test_train_model_saves_pipeline(
+        self, db: Session, premier_league: League
+    ) -> None:
         """Trained model should save a pipeline file."""
         for i in range(30):
             _make_player(db, f"Player {i}", "CM", league=premier_league)
@@ -405,7 +411,9 @@ class TestClusteringTraining:
         # Clean up
         model_path.unlink()
 
-    def test_train_model_with_explicit_k(self, db: Session, premier_league: League) -> None:
+    def test_train_model_with_explicit_k(
+        self, db: Session, premier_league: League
+    ) -> None:
         """Training with explicit k should use that value."""
         for i in range(30):
             _make_player(db, f"Player {i}", "CM", league=premier_league)
@@ -531,7 +539,9 @@ class TestArchetypeNaming:
 class TestPlayerAssignment:
     """Tests for player archetype assignment."""
 
-    def test_assign_player_to_archetype(self, db: Session, premier_league: League) -> None:
+    def test_assign_player_to_archetype(
+        self, db: Session, premier_league: League
+    ) -> None:
         """Player assignment should return valid archetype data."""
         # Train a model first
         players = []
@@ -569,7 +579,9 @@ class TestPlayerAssignment:
         result = assign_player_to_archetype(db, 1)
         assert result is None
 
-    def test_assign_player_below_minutes(self, db: Session, premier_league: League) -> None:
+    def test_assign_player_below_minutes(
+        self, db: Session, premier_league: League
+    ) -> None:
         """Players below minutes threshold should not be assigned."""
         player = _make_player(
             db, "Short Player", "CM", minutes=500, league=premier_league
@@ -649,7 +661,9 @@ class TestModelDeployment:
 
         Path("data/models/test_deploy_1.0.joblib").unlink(missing_ok=True)
 
-    def test_deploy_archives_previous(self, db: Session, premier_league: League) -> None:
+    def test_deploy_archives_previous(
+        self, db: Session, premier_league: League
+    ) -> None:
         """Deploying a new model should archive the old one."""
         for i in range(30):
             _make_player(db, f"Archive Player {i}", "CM", league=premier_league)
@@ -721,7 +735,9 @@ class TestModelDeployment:
         Path("data/models/test_rollback_1.0.joblib").unlink(missing_ok=True)
         Path("data/models/test_rollback_2.0.joblib").unlink(missing_ok=True)
 
-    def test_deploy_rejects_low_silhouette(self, db: Session, premier_league: League) -> None:
+    def test_deploy_rejects_low_silhouette(
+        self, db: Session, premier_league: League
+    ) -> None:
         """Deploying should reject models with silhouette below threshold."""
         for i in range(30):
             _make_player(db, f"Low Score Player {i}", "CM", league=premier_league)
@@ -755,7 +771,9 @@ class TestModelDeployment:
 class TestMonitoring:
     """Tests for model monitoring."""
 
-    def test_check_staleness_fresh_model(self, db: Session, premier_league: League) -> None:
+    def test_check_staleness_fresh_model(
+        self, db: Session, premier_league: League
+    ) -> None:
         """Fresh model should not be stale."""
         for i in range(30):
             _make_player(db, f"Fresh Player {i}", "CM", league=premier_league)
@@ -778,7 +796,9 @@ class TestMonitoring:
 
         Path("data/models/test_staleness_1.0.joblib").unlink(missing_ok=True)
 
-    def test_check_staleness_old_model(self, db: Session, premier_league: League) -> None:
+    def test_check_staleness_old_model(
+        self, db: Session, premier_league: League
+    ) -> None:
         """Model with old training date should be stale."""
         for i in range(30):
             _make_player(db, f"Old Player {i}", "CM", league=premier_league)
@@ -880,7 +900,9 @@ class TestGovernanceCheckpoints:
 
         Path("data/models/test_card_1.0.joblib").unlink(missing_ok=True)
 
-    def test_training_data_reproducible(self, db: Session, premier_league: League) -> None:
+    def test_training_data_reproducible(
+        self, db: Session, premier_league: League
+    ) -> None:
         """Same query should produce same data."""
         for i in range(20):
             _make_player(db, f"Repro Player {i}", "CM", league=premier_league)
@@ -946,7 +968,9 @@ class TestGovernanceCheckpoints:
 
         Path("data/models/test_rollback_plan_1.0.joblib").unlink(missing_ok=True)
 
-    def test_explainability_mechanism(self, db: Session, premier_league: League) -> None:
+    def test_explainability_mechanism(
+        self, db: Session, premier_league: League
+    ) -> None:
         """Every archetype assignment must include distinguishing features."""
         for i in range(30):
             _make_player(db, f"Explain Player {i}", "CM", league=premier_league)

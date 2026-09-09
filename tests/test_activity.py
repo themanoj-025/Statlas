@@ -12,6 +12,7 @@ class TestActivityConstants:
 
     def test_dedup_window(self) -> None:
         from app.activity import DEDUP_WINDOW_SECONDS
+
         assert DEDUP_WINDOW_SECONDS == 60
 
 
@@ -22,6 +23,7 @@ class TestLogActivity:
         import inspect
 
         from app.activity import log_activity
+
         sig = inspect.signature(log_activity)
         params = list(sig.parameters.keys())
         assert "db" in params
@@ -35,6 +37,7 @@ class TestLogActivity:
         import inspect
 
         from app.activity import log_activity
+
         sig = inspect.signature(log_activity)
         assert sig.parameters["metadata"].default is None
 
@@ -42,5 +45,6 @@ class TestLogActivity:
         import inspect
 
         from app.activity import log_activity
+
         sig = inspect.signature(log_activity)
         assert sig.return_annotation is not inspect.Parameter.empty

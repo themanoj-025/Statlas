@@ -42,13 +42,20 @@ finally:
 
 # ── _parse_url_host ────────────────────────────────────────────────────────────
 
+
 @pytest.mark.parametrize(
     "url,expected",
     [
         ("https://fbref.com/en/comps/9/schedule/", "fbref.com"),
         ("http://understat.com/main/getPlayersStats/", "understat.com"),
-        ("https://raw.githubusercontent.com/hudl/open-data/master/data/", "raw.githubusercontent.com"),
-        ("https://transfermarkt.com/england/premier-league/startseite/verein/21/", "transfermarkt.com"),
+        (
+            "https://raw.githubusercontent.com/hudl/open-data/master/data/",
+            "raw.githubusercontent.com",
+        ),
+        (
+            "https://transfermarkt.com/england/premier-league/startseite/verein/21/",
+            "transfermarkt.com",
+        ),
         ("https://example.com/foo", "example.com"),
         ("HTTPS://FBREF.COM/comps/9", "fbref.com"),
     ],
@@ -73,6 +80,7 @@ def test_parse_url_host_returns_none_for_non_http(url: str) -> None:
 
 
 # ── allowlist behavior ─────────────────────────────────────────────────────────
+
 
 def test_allowed_host_succeeds() -> None:
     set_allowed_fetch_hosts(allow_all=False)
@@ -102,9 +110,7 @@ def test_host_matching_is_case_insensitive() -> None:
 
 def test_query_fragment_and_params_are_stripped_from_host() -> None:
     set_allowed_fetch_hosts(allow_all=False)
-    _check_fetch_url(
-        "https://fbref.com/en/comps/9/schedule/?league=9#section"
-    )
+    _check_fetch_url("https://fbref.com/en/comps/9/schedule/?league=9#section")
 
 
 def test_fetch_with_retry_raises_on_disallowed_host_no_request() -> None:

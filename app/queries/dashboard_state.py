@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Any
 
 from sqlalchemy.orm import Session
 
@@ -11,7 +10,6 @@ from app.models import (
     DashboardState,
     Player,
     SavedPlayer,
-    StatSnapshot,
 )
 
 # B1 — Dashboard state management
@@ -168,9 +166,15 @@ def get_saved_players(db: Session, user_id: int) -> list[dict]:
 
     # Batch-load all players and teams (eliminates N+1)
     player_ids = [e.player_id for e in entries]
-    players_map = {p.id: p for p in db.query(Player).filter(Player.id.in_(player_ids)).all()}
+    players_map = {
+        p.id: p for p in db.query(Player).filter(Player.id.in_(player_ids)).all()
+    }
     team_ids = {p.current_team_id for p in players_map.values() if p.current_team_id}
-    teams_map = {t.id: t for t in db.query(Team).filter(Team.id.in_(team_ids)).all()} if team_ids else {}
+    teams_map = (
+        {t.id: t for t in db.query(Team).filter(Team.id.in_(team_ids)).all()}
+        if team_ids
+        else {}
+    )
 
     results: list[dict] = []
     for entry in entries:
