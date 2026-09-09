@@ -117,7 +117,9 @@ def get_organization(org_id: int, request: Request) -> dict[str, Any]:
 
 
 @router.post("/{org_id}/invite", status_code=201)
-def invite_member(org_id: int, body: InviteMemberBody, request: Request) -> dict[str, str]:
+def invite_member(
+    org_id: int, body: InviteMemberBody, request: Request
+) -> dict[str, str]:
     """Invite a member to the organization."""
     user = _require_user(request)
     with session_scope() as db:
@@ -130,7 +132,9 @@ def invite_member(org_id: int, body: InviteMemberBody, request: Request) -> dict
 
 
 @router.post("/{org_id}/accept-invite")
-def accept_invite(org_id: int, body: AcceptInviteBody, request: Request) -> dict[str, str]:
+def accept_invite(
+    org_id: int, body: AcceptInviteBody, request: Request
+) -> dict[str, str]:
     """Accept an org invitation using the invite token."""
     user = _require_user(request)
     with session_scope() as db:
@@ -197,7 +201,9 @@ def get_settings(org_id: int, request: Request) -> dict[str, Any]:
 
 
 @router.put("/{org_id}/settings")
-def update_settings(org_id: int, body: UpdateSettingsBody, request: Request) -> dict[str, Any]:
+def update_settings(
+    org_id: int, body: UpdateSettingsBody, request: Request
+) -> dict[str, Any]:
     """Update organization settings. Owner/manager only."""
     user = _require_user(request)
     with session_scope() as db:

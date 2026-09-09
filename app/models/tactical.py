@@ -1,4 +1,5 @@
 """Tactical domain models — passing networks, spatial analysis, formations."""
+
 from __future__ import annotations
 
 from datetime import datetime
@@ -55,7 +56,10 @@ class MatchSpatialAnalysis(Base):
 
     __table_args__ = (
         UniqueConstraint(
-            "match_id", "team_id", "analysis_type", name="uq_spatial_analysis_match_team_type"
+            "match_id",
+            "team_id",
+            "analysis_type",
+            name="uq_spatial_analysis_match_team_type",
         ),
         Index("ix_spatial_analysis_match", "match_id"),
     )

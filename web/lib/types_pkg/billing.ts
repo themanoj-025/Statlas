@@ -1,3 +1,8 @@
+import type { DatasetInfo } from "./other_chat";
+import type { ReportConfidence } from "./other_report";
+import type { ReportEvidenceItem } from "./other_report";
+import type { ReportSection } from "./other_report";
+import type { ToolCall } from "./other_chat";
 export type Meta = {
   qualifying_minutes: number;
   display_floor_minutes: number;
@@ -105,4 +110,3 @@ export type Comment = {
 // ---------------------------------------------------------------------------
 // Phase 17 — Tactical Intelligence
 // ---------------------------------------------------------------------------
-

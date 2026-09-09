@@ -4,10 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from fastapi import APIRouter, Query, Request
-from sqlalchemy.orm import Session
-
-from app.models import Player, StatSnapshot
+from fastapi import Query, Request
 
 # Leaderboards
 # ---------------------------------------------------------------------------
@@ -40,7 +37,10 @@ def leaderboard(
     if sort_by not in {"value", "minutes", "name", "club"}:
         raise HTTPException(status_code=400, detail=f"unknown sort_by '{sort_by}'")
     if sort_dir is not None and sort_dir.lower() not in {"asc", "desc"}:
-        raise HTTPException(status_code=400, detail=f"sort_dir must be 'asc' or 'desc', got '{sort_dir}'")
+        raise HTTPException(
+            status_code=400,
+            detail=f"sort_dir must be 'asc' or 'desc', got '{sort_dir}'",
+        )
 
     # Cache key: includes all query params that affect the result.
     # TTL 300s (5 min) — data refreshes weekly, short TTL keeps responses
@@ -132,7 +132,9 @@ def player_by_slug(slug: str, request: Request) -> dict[str, Any]:
 
 
 @app.get("/api/v1/players/{player_id}/similar", response_model=list[SimilarPlayerEntry])
-def player_similar(player_id: int, limit: int = Query(5, ge=1, le=10)) -> list[dict[str, Any]]:
+def player_similar(
+    player_id: int, limit: int = Query(5, ge=1, le=10)
+) -> list[dict[str, Any]]:
     from app.cache import get_cache
     from app.queries.player_queries import get_player_profile
     from app.queries.similar_players import get_similar_players

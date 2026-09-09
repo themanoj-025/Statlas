@@ -182,7 +182,9 @@ def test_checkout_requires_signin(client) -> None:
     assert resp.status_code == 401
 
 
-def test_checkout_creates_session_and_grants_on_webhook(client, monkeypatch) -> dict[str, object]:
+def test_checkout_creates_session_and_grants_on_webhook(
+    client, monkeypatch
+) -> dict[str, object]:
     register_user(client)
     created = {}
 
@@ -338,4 +340,3 @@ def test_payment_failed_enters_grace_period_and_recovery(client) -> None:
         sub = db.query(Subscription).first()
         assert sub.status == "active"
         assert sub.current_period_end is not None
-

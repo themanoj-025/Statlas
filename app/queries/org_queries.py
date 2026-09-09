@@ -1,4 +1,3 @@
-
 """Organization queries — RBAC enforcement, membership management, and resource access.
 
 Constitution §4: Every read/write checks membership + role before returning data.
@@ -17,17 +16,14 @@ import logging
 from datetime import datetime, timedelta, timezone
 from typing import Any
 
-from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
 from app import auth
 from app.models import (
-    AuditLog,
     Organization,
     OrgInvite,
     OrgMembership,
     OrgSettings,
-    Shortlist,
     User,
 )
 
@@ -167,10 +163,26 @@ def create_organization(
         )
     # Reserved slugs that conflict with API routes
     reserved = {
-        "api", "auth", "billing", "admin", "dashboard",
-        "workspace", "search", "reports", "watch", "settings",
-        "profile", "public", "health", "meta", "leagues",
-        "players", "clubs", "transfers", "archetypes", "tactical",
+        "api",
+        "auth",
+        "billing",
+        "admin",
+        "dashboard",
+        "workspace",
+        "search",
+        "reports",
+        "watch",
+        "settings",
+        "profile",
+        "public",
+        "health",
+        "meta",
+        "leagues",
+        "players",
+        "clubs",
+        "transfers",
+        "archetypes",
+        "tactical",
     }
     if slug in reserved:
         raise ValueError(f"'{slug}' is a reserved slug — choose another name")
@@ -554,5 +566,3 @@ def list_members(db: Session, org_id: int) -> list[dict[str, Any]]:
         }
         for m, user in memberships
     ]
-
-

@@ -65,6 +65,7 @@ def get_league_hub_data(
         return None
 
     from app.config import CURRENT_SEASON
+
     season = season or CURRENT_SEASON
     registry = load_registry()
 

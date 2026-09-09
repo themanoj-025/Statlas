@@ -4,10 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from fastapi import APIRouter, Query
-from sqlalchemy.orm import Session
-
-from app.models import League
+from fastapi import Query
 
 # Leagues
 # ---------------------------------------------------------------------------

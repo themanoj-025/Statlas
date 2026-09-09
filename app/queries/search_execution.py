@@ -2,14 +2,13 @@
 
 from __future__ import annotations
 
-from datetime import date, datetime, timezone
+from datetime import date, datetime
 from typing import Any
 
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 
-from app.auth import effective_plan
-from app.config import load_registry, plan_limits
+from app.config import load_registry
 from app.models import (
     League,
     PercentileSnapshot,
@@ -17,15 +16,11 @@ from app.models import (
     StatSnapshot,
     Team,
 )
+from app.queries.search_validation import validate_query_definition
 from app.queries.structured_search import (
     MINUTES_METRIC,
     PERCENTILE_OPERATORS,
-    RAW_OPERATORS,
-    SORTABLE_BASE,
-    VALID_POSITION_GROUPS,
     InvalidQuery,
-    _finite,
-    validate_query_definition,
 )
 
 # ---------------------------------------------------------------------------
@@ -353,4 +348,3 @@ def _log_history(
             SearchHistory.id.in_([row[0] for row in stale])
         ).delete(synchronize_session=False)
     db.commit()
-

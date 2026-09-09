@@ -81,8 +81,7 @@ def main() -> int:
     if args.json:
         print(json.dumps({"presets": rows, "failures": failures}, indent=2))
     print(
-        f"\n{len(rows) - failures}/{len(rows)} presets validated "
-        f"({failures} failing)"
+        f"\n{len(rows) - failures}/{len(rows)} presets validated ({failures} failing)"
     )
     return 1 if failures else 0
 

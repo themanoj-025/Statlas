@@ -1,4 +1,14 @@
-const PRICING_TIERS = [
+import type { LucideIcon } from "lucide-react";
+
+import { Bell } from "lucide-react";
+import { Map } from "lucide-react";
+import { Code } from "lucide-react";
+import { FileText } from "lucide-react";
+import { FolderOpen } from "lucide-react";
+import { Radar } from "lucide-react";
+import { Search } from "lucide-react";
+import { TrendingUp } from "lucide-react";
+export const PRICING_TIERS = [
   {
     name: "Free",
     price: "\u20ac0",
@@ -56,7 +66,7 @@ const PRICING_TIERS = [
   },
 ];
 
-const USE_CASES = [
+export const USE_CASES = [
   { title: "For Scouts", quote: "Statlas cuts my research time in half. I trust every number.", href: "/use-cases/scout" },
   { title: "For Agents", quote: "I use Statlas to negotiate better contracts with data-backed valuations.", href: "/use-cases/agent" },
   { title: "For Analysts", quote: "Finally, stats with the methods published. I can audit everything.", href: "/use-cases/analyst" },
@@ -64,7 +74,7 @@ const USE_CASES = [
   { title: "For Fans", quote: "I finally understand what percentiles mean. This is how stats should be presented.", href: "/use-cases/fan" },
 ];
 
-const FEATURES = [
+export const FEATURES: { icon: LucideIcon; title: string; desc: string; href: string }[] = [
   { icon: Radar, title: "Player Comparison", desc: "Compare up to 4 players side-by-side on radar charts. See strengths and weaknesses instantly.", href: "/compare" },
   { icon: TrendingUp, title: "Trend Analysis", desc: "Weekly snapshots show real improvement. Filled gaps are honest, never interpolated.", href: "/trend" },
   { icon: Map, title: "Shot & Pass Maps", desc: "Every shot, pass, and progressive action mapped. Understand where the magic happens.", href: "/data-coverage" },

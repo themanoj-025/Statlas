@@ -3,6 +3,7 @@
 Reads the database URL from app.config.get_settings() so migrations
 work with whatever DATABASE_URL is set in the environment.
 """
+
 from logging.config import fileConfig
 
 from sqlalchemy import engine_from_config, pool

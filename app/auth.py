@@ -373,8 +373,8 @@ LOGIN_WINDOW_SECONDS = 10 * 60  # 10 minutes
 LOGIN_LOCKOUT_SECONDS = 15 * 60  # 15 minutes
 # Progressive lockout: after N lockouts in 24h, extend the lockout duration
 LOCKOUT_ESCALATION = {
-    3: 30 * 60,   # 3 lockouts in 24h → 30 min lockout
-    5: 60 * 60,   # 5 lockouts in 24h → 1 hour lockout
+    3: 30 * 60,  # 3 lockouts in 24h → 30 min lockout
+    5: 60 * 60,  # 5 lockouts in 24h → 1 hour lockout
     10: 24 * 60 * 60,  # 10 lockouts in 24h → 24 hour lockout
 }
 LOCKOUT_ESCALATION_WINDOW = 24 * 60 * 60  # 24 hours
@@ -404,7 +404,9 @@ def _record_lockout(email: str) -> None:
     limiter = get_rate_limiter()
     key = f"lockout_count:{email}"
     with contextlib.suppress(Exception):
-        limiter.is_limited(key, max_attempts=999, window_seconds=LOCKOUT_ESCALATION_WINDOW)
+        limiter.is_limited(
+            key, max_attempts=999, window_seconds=LOCKOUT_ESCALATION_WINDOW
+        )
 
 
 def _escalated_lockout_seconds(email: str) -> int:

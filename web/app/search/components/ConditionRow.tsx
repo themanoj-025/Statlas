@@ -1,5 +1,22 @@
 "use client";
 
+import { X } from "lucide-react";
+// Operator options per condition type (grammar: query-builder-scope.md §2).
+// Restored from SearchClient.tsx history (ead9f75^) after the file split
+// dropped the const block.
+const PERCENTILE_OPERATORS: { value: ConditionOperator; label: string }[] = [
+  { value: "percentile_gte", label: "at least (≥)" },
+  { value: "percentile_lte", label: "at most (≤)" },
+  { value: "percentile_between", label: "between" },
+];
+
+const RAW_OPERATORS: { value: ConditionOperator; label: string }[] = [
+  { value: "gte", label: "at least (≥)" },
+  { value: "lte", label: "at most (≤)" },
+  { value: "between", label: "between" },
+  { value: "eq", label: "exactly (=)" },
+];
+
 import type { Meta, SearchResultEntry, SearchCondition, ConditionOperator, QueryDefinition } from "@/lib/types";
 import { api } from "@/lib/api";
 import { formatNumber } from "@/lib/format";

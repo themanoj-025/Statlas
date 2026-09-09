@@ -19,23 +19,9 @@ docs/product/query-builder-scope.md and enforced here:
 
 from __future__ import annotations
 
-from datetime import date, datetime, timezone
 from typing import Any
 
-from sqlalchemy import func
-from sqlalchemy.orm import Session
-
-from app.auth import effective_plan
-from app.config import load_registry, load_search_presets, plan_limits
-from app.models import (
-    League,
-    PercentileSnapshot,
-    Player,
-    SavedSearch,
-    SearchHistory,
-    StatSnapshot,
-    Team,
-)
+from app.config import load_registry
 
 MAX_CONDITIONS = 8
 HISTORY_CAP = 50
@@ -194,4 +180,3 @@ def _finite(value: Any) -> bool:
         return value == value and abs(value) != float("inf")
     except TypeError:
         return False
-

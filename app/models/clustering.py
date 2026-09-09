@@ -1,4 +1,5 @@
 """Clustering domain models — ML model registry, archetypes, monitoring."""
+
 from __future__ import annotations
 
 from datetime import datetime
@@ -33,16 +34,26 @@ class ClusteringModel(Base):
     n_clusters: Mapped[int] = mapped_column(Integer, nullable=False)
     training_data_source: Mapped[str] = mapped_column(String(256), nullable=False)
     training_data_size: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
-    training_data_features: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    training_data_features: Mapped[list] = mapped_column(
+        JSON, nullable=False, default=list
+    )
     silhouette_score: Mapped[float | None] = mapped_column(Float, nullable=True)
     davies_bouldin_index: Mapped[float | None] = mapped_column(Float, nullable=True)
-    per_subgroup_scores: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    per_subgroup_scores: Mapped[dict] = mapped_column(
+        JSON, nullable=False, default=dict
+    )
     bias_audit_results: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
     training_code_commit: Mapped[str | None] = mapped_column(String(64), nullable=True)
-    training_date: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    training_date: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
     staleness_months: Mapped[int] = mapped_column(Integer, nullable=False, default=6)
-    status: Mapped[str] = mapped_column(CLUSTERING_STATUS_ENUM, nullable=False, default="candidate")
-    deployed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    status: Mapped[str] = mapped_column(
+        CLUSTERING_STATUS_ENUM, nullable=False, default="candidate"
+    )
+    deployed_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
     owner: Mapped[str | None] = mapped_column(String(128), nullable=True)
     known_limitations: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
     rollback_plan: Mapped[str | None] = mapped_column(Text, nullable=True)
@@ -51,7 +62,9 @@ class ClusteringModel(Base):
     )
 
     __table_args__ = (
-        UniqueConstraint("model_name", "version", name="uq_clustering_model_name_version"),
+        UniqueConstraint(
+            "model_name", "version", name="uq_clustering_model_name_version"
+        ),
         Index("ix_clustering_model_status", "status"),
     )
 
@@ -60,12 +73,16 @@ class ArchetypeDefinition(Base):
     __tablename__ = "archetype_definitions"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    model_id: Mapped[int] = mapped_column(ForeignKey("clustering_models.id"), nullable=False)
+    model_id: Mapped[int] = mapped_column(
+        ForeignKey("clustering_models.id"), nullable=False
+    )
     cluster_id: Mapped[int] = mapped_column(Integer, nullable=False)
     name: Mapped[str] = mapped_column(String(128), nullable=False)
     description: Mapped[str] = mapped_column(Text, nullable=False)
     cluster_center: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
-    distinguishing_features: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    distinguishing_features: Mapped[list] = mapped_column(
+        JSON, nullable=False, default=list
+    )
     example_players: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
     player_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     created_at: Mapped[datetime] = mapped_column(
@@ -85,14 +102,20 @@ class ArchetypeAssignment(Base):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     player_id: Mapped[int] = mapped_column(ForeignKey("players.id"), nullable=False)
-    model_id: Mapped[int] = mapped_column(ForeignKey("clustering_models.id"), nullable=False)
+    model_id: Mapped[int] = mapped_column(
+        ForeignKey("clustering_models.id"), nullable=False
+    )
     cluster_id: Mapped[int] = mapped_column(Integer, nullable=False)
     distance_to_center: Mapped[float] = mapped_column(Float, nullable=False)
-    top_distinguishing_features: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    top_distinguishing_features: Mapped[list] = mapped_column(
+        JSON, nullable=False, default=list
+    )
     computed_date: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=func.now()
     )
-    snapshot_date: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    snapshot_date: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False
+    )
     is_outlier: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
 
     player = relationship("Player")
@@ -100,7 +123,9 @@ class ArchetypeAssignment(Base):
 
     __table_args__ = (
         UniqueConstraint(
-            "player_id", "model_id", "snapshot_date",
+            "player_id",
+            "model_id",
+            "snapshot_date",
             name="uq_archetype_assignment_player_model_date",
         ),
         Index("ix_archetype_assignment_player", "player_id"),
@@ -112,7 +137,9 @@ class ClusteringMonitoringLog(Base):
     __tablename__ = "clustering_monitoring_log"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    model_id: Mapped[int] = mapped_column(ForeignKey("clustering_models.id"), nullable=False)
+    model_id: Mapped[int] = mapped_column(
+        ForeignKey("clustering_models.id"), nullable=False
+    )
     logged_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=func.now()
     )
@@ -121,7 +148,9 @@ class ClusteringMonitoringLog(Base):
     metric_name: Mapped[str | None] = mapped_column(String(64), nullable=True)
     metric_value: Mapped[float | None] = mapped_column(Float, nullable=True)
     threshold: Mapped[float | None] = mapped_column(Float, nullable=True)
-    alert_triggered: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    alert_triggered: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, default=False
+    )
 
     model: Mapped[ClusteringModel] = relationship()
 

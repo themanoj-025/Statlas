@@ -89,17 +89,21 @@ class CircuitBreaker:
         @functools.wraps(fn)
         async def wrapper(*args: Any, **kwargs: Any) -> Any:
             if self.is_open():
-                raise CircuitBreakerOpenError(
-                    f"Circuit breaker {self.name} is OPEN"
-                )
+                raise CircuitBreakerOpenError(f"Circuit breaker {self.name} is OPEN")
             try:
                 result = await fn(*args, **kwargs)
                 self.record_success()
                 return result
             except CircuitBreakerOpenError:
                 raise
-            except (ConnectionError, TimeoutError, OSError, ValueError,
-                    KeyError, TypeError):
+            except (
+                ConnectionError,
+                TimeoutError,
+                OSError,
+                ValueError,
+                KeyError,
+                TypeError,
+            ):
                 self.record_failure()
                 raise
             except Exception:

@@ -12,6 +12,7 @@ class TestAnalyticsViews:
 
     def test_module_has_router(self) -> None:
         from app.api.analytics_views import router
+
         assert router is not None
 
 
@@ -20,6 +21,7 @@ class TestBillingViews:
 
     def test_module_has_router(self) -> None:
         from app.api.billing_views import router
+
         assert router is not None
 
 
@@ -28,6 +30,7 @@ class TestDashboardViews:
 
     def test_module_has_router(self) -> None:
         from app.api.dashboard_views import router
+
         assert router is not None
 
 
@@ -36,6 +39,7 @@ class TestSearchViews:
 
     def test_module_has_router(self) -> None:
         from app.api.search_views import router
+
         assert router is not None
 
 
@@ -44,6 +48,7 @@ class TestTacticalViews:
 
     def test_module_has_router(self) -> None:
         from app.api.tactical_views import router
+
         assert router is not None
 
 
@@ -52,6 +57,7 @@ class TestTransferViews:
 
     def test_module_has_router(self) -> None:
         from app.api.transfer_views import router
+
         assert router is not None
 
 
@@ -60,6 +66,7 @@ class TestWatchViews:
 
     def test_module_has_router(self) -> None:
         from app.api.watch_views import router
+
         assert router is not None
 
 
@@ -68,6 +75,7 @@ class TestWorkspaceViews:
 
     def test_module_has_router(self) -> None:
         from app.api.workspace_views import router
+
         assert router is not None
 
 
@@ -76,6 +84,7 @@ class TestCommentViews:
 
     def test_module_has_router(self) -> None:
         from app.api.comment_views import router
+
         assert router is not None
 
 
@@ -84,6 +93,7 @@ class TestOrgViews:
 
     def test_module_has_router(self) -> None:
         from app.api.org_views import router
+
         assert router is not None
 
 
@@ -92,6 +102,7 @@ class TestPublicViews:
 
     def test_module_has_router(self) -> None:
         from app.api.public_views import router
+
         assert router is not None
 
 
@@ -100,6 +111,7 @@ class TestRegistryView:
 
     def test_module_has_router(self) -> None:
         from app.api.registry_view import router
+
         assert router is not None
 
 
@@ -108,6 +120,7 @@ class TestReportViews:
 
     def test_module_has_router(self) -> None:
         from app.api.report_views import router
+
         assert router is not None
 
 
@@ -116,6 +129,7 @@ class TestArchetypeViews:
 
     def test_module_has_router(self) -> None:
         from app.api.archetype_views import router
+
         assert router is not None
 
 
@@ -124,6 +138,7 @@ class TestAssistantViews:
 
     def test_module_has_router(self) -> None:
         from app.api.assistant_views import router
+
         assert router is not None
 
 
@@ -132,6 +147,7 @@ class TestE2EViews:
 
     def test_module_has_router(self) -> None:
         from app.api.e2e_views import router
+
         assert router is not None
 
 
@@ -140,6 +156,7 @@ class TestPlayerView:
 
     def test_module_has_router(self) -> None:
         from app.api.player_view import router
+
         assert router is not None
 
 
@@ -148,6 +165,7 @@ class TestAPIPlayers:
 
     def test_module_has_router(self) -> None:
         from app.api.api_players import router
+
         assert router is not None
 
 
@@ -156,6 +174,7 @@ class TestAPITeams:
 
     def test_module_has_router(self) -> None:
         from app.api.api_teams import router
+
         assert router is not None
 
 
@@ -164,6 +183,7 @@ class TestAPILeagues:
 
     def test_module_has_router(self) -> None:
         from app.api.api_leagues import router
+
         assert router is not None
 
 
@@ -172,6 +192,7 @@ class TestMiddleware:
 
     def test_middleware_importable(self) -> None:
         import app.api.middleware
+
         assert hasattr(app.api.middleware, "__file__")
 
 
@@ -180,4 +201,5 @@ class TestAPIMain:
 
     def test_api_main_importable(self) -> None:
         import app.api.api_main
+
         assert hasattr(app.api.api_main, "__file__")

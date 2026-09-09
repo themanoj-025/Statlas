@@ -541,5 +541,3 @@ class _DemoPlayerGen:
             external_ids={"fbref": f"d{index:06d}"},
             nation=self.rng.choice(NATIONS),
         )
-
-

@@ -25,12 +25,12 @@ EXPECTED_POSITION_GROUPS = {"GK", "CB", "FB", "DM", "CM", "AM", "W", "ST"}
 
 
 @pytest.fixture(scope="module")
-def registry() -> None:
+def registry() -> dict:
     return json.loads(REGISTRY_PATH.read_text(encoding="utf-8"))
 
 
 @pytest.fixture(scope="module")
-def tiers() -> None:
+def tiers() -> dict:
     return json.loads(TIERS_PATH.read_text(encoding="utf-8"))
 
 

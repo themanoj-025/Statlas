@@ -233,7 +233,11 @@ class FBrefSource(StatsSource):
                 import cloudscraper
 
                 self.session = cloudscraper.create_scraper(
-                    browser={"browser": "chrome", "platform": "windows", "mobile": False}
+                    browser={
+                        "browser": "chrome",
+                        "platform": "windows",
+                        "mobile": False,
+                    }
                 )
             except ImportError:
                 self.session = requests.Session()

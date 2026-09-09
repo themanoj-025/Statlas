@@ -9,6 +9,7 @@ Exposes a /metrics endpoint (Prometheus text format) with:
 
 Constitution §4 (Observability): every action traced, every metric measured.
 """
+
 from __future__ import annotations
 
 import time
@@ -57,9 +58,7 @@ class MetricsCollector:
         self._request_duration_sum[key] = (
             self._request_duration_sum.get(key, 0.0) + duration_seconds
         )
-        self._request_duration_count[key] = (
-            self._request_duration_count.get(key, 0) + 1
-        )
+        self._request_duration_count[key] = self._request_duration_count.get(key, 0) + 1
 
         if status_code >= 400:
             err_key = f"{status_code}"

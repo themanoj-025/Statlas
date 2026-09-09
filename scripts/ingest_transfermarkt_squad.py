@@ -1,4 +1,3 @@
-
 #!/usr/bin/env python3
 """Bulk ingestion: scrape all players from a Transfermarkt league squad page.
 
@@ -36,7 +35,6 @@ from __future__ import annotations
 
 import argparse
 import logging
-import os
 import sys
 from datetime import datetime
 from typing import Any
@@ -60,16 +58,19 @@ def parse_args() -> argparse.Namespace:
         description="Bulk scrape Transfermarkt squad pages into the database."
     )
     p.add_argument(
-        "--league", "-l",
+        "--league",
+        "-l",
         help="Comma-separated league slugs (e.g. premier-league,la-liga)",
     )
     p.add_argument(
-        "--all", "-a",
+        "--all",
+        "-a",
         action="store_true",
         help="Scrape all 19 leagues in tiers.json",
     )
     p.add_argument(
-        "--season", "-s",
+        "--season",
+        "-s",
         help="Season in YYYY-YY format (default: current)",
     )
     p.add_argument(
@@ -102,10 +103,16 @@ def position_to_group(pos: str) -> str | None:
     if any(x in pos_lower for x in ("centre-back", "center-back")):
         return "CB"
     # Full-back (left/right back, wing-back)
-    if any(x in pos_lower for x in (
-        "left-back", "right-back", "full-back", "wing-back",
-        "aussenverteidiger",
-    )):
+    if any(
+        x in pos_lower
+        for x in (
+            "left-back",
+            "right-back",
+            "full-back",
+            "wing-back",
+            "aussenverteidiger",
+        )
+    ):
         return "FB"
     # Defensive midfield
     if "defensive mid" in pos_lower or "defensives mittelfeld" in pos_lower:
@@ -114,21 +121,40 @@ def position_to_group(pos: str) -> str | None:
     if any(x in pos_lower for x in ("central mid", "zentrales mittelfeld")):
         return "CM"
     # Attacking midfield
-    if any(x in pos_lower for x in (
-        "attacking mid", "offensives mittelfeld", "playmaker",
-    )):
+    if any(
+        x in pos_lower
+        for x in (
+            "attacking mid",
+            "offensives mittelfeld",
+            "playmaker",
+        )
+    ):
         return "AM"
     # Winger
-    if any(x in pos_lower for x in (
-        "left wing", "right wing", "winger",
-        "links", "rechts", "ausen",
-    )):
+    if any(
+        x in pos_lower
+        for x in (
+            "left wing",
+            "right wing",
+            "winger",
+            "links",
+            "rechts",
+            "ausen",
+        )
+    ):
         return "W"
     # Striker / forward
-    if any(x in pos_lower for x in (
-        "centre-forward", "center-forward", "striker",
-        "forward", "attack", "mittelstuermer",
-    )):
+    if any(
+        x in pos_lower
+        for x in (
+            "centre-forward",
+            "center-forward",
+            "striker",
+            "forward",
+            "attack",
+            "mittelstuermer",
+        )
+    ):
         return "ST"
     return None
 
@@ -197,9 +223,7 @@ def upsert_players(
     return created, updated
 
 
-def fetch_profile_detail(
-    src: TransfermarktSource, tm_id: int
-) -> dict[str, Any]:
+def fetch_profile_detail(src: TransfermarktSource, tm_id: int) -> dict[str, Any]:
     """Fetch a player's profile page for DOB, nationality, height."""
 
     try:
@@ -218,6 +242,7 @@ def fetch_profile_detail(
         if dob_text:
             # Format: "Jul 21, 2000 (26)" or "20/12/1998 (27)"
             import re as _re
+
             m = _re.search(r"(\d{1,2}[/-]\d{1,2}[/-]\d{4})", dob_text)
             if m:
                 for fmt in ("%d/%m/%Y", "%m/%d/%Y", "%Y-%m-%d"):
@@ -265,7 +290,9 @@ def run(args: argparse.Namespace) -> None:
     season = args.season
     logger.info(
         "Transfermarkt squad ingestion: %d leagues, season=%s, profiles=%s",
-        len(leagues), season or "current", args.profiles,
+        len(leagues),
+        season or "current",
+        args.profiles,
     )
 
     all_players: list[dict[str, Any]] = []
@@ -300,6 +327,7 @@ def run(args: argparse.Namespace) -> None:
     if args.dry_run:
         # Use replace to handle Windows console encoding issues
         import io
+
         out = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8", errors="replace")
         out.write(f"\n{'=' * 70}\n")
         out.write(f"DRY RUN: {len(all_players)} players scraped\n")

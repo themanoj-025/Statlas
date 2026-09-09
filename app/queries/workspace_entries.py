@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from datetime import datetime
 from typing import Any
 
 from sqlalchemy.orm import Session
@@ -313,7 +312,11 @@ def get_shortlist_detail(
         for pid, p in entry_player_map.items()
         if p and p.current_team_id
     }
-    slugs = _compact_slug_map(db, player_ids, entry_player_map, entry_teams) if player_ids else {}
+    slugs = (
+        _compact_slug_map(db, player_ids, entry_player_map, entry_teams)
+        if player_ids
+        else {}
+    )
 
     entry_ids = [entry.id for entry, *_ in rows]
     notes_by_entry: dict[int, list[dict[str, Any]]] = {}

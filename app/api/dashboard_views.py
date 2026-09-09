@@ -170,7 +170,9 @@ class DismissRequest(BaseModel):
 
 
 @router.post("/dismiss-recommendation")
-def dismiss_recommendation_endpoint(request: Request, body: DismissRequest) -> dict[str, str]:
+def dismiss_recommendation_endpoint(
+    request: Request, body: DismissRequest
+) -> dict[str, str]:
     """Dismiss a recommended player (won't reappear for 30 days)."""
     user = _require_user(request)
     with session_scope() as db:

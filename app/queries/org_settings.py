@@ -27,7 +27,9 @@ def _log_audit(
         )
         db.add(log_entry)
     except (SQLAlchemyError, ValueError) as exc:
-        logger.warning("Audit log write failed for %s/%s: %s", resource_type, resource_id, exc)
+        logger.warning(
+            "Audit log write failed for %s/%s: %s", resource_type, resource_id, exc
+        )
 
 
 def get_audit_log(

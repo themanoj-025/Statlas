@@ -17,7 +17,9 @@ SEASON = "2025-26"
 T0 = datetime(2026, 7, 1, 3, 0, 0, tzinfo=timezone.utc)
 
 
-def _snap(db, player, team, date, raw: dict, minutes: float = 1000, status: str = "ingested") -> StatSnapshot:
+def _snap(
+    db, player, team, date, raw: dict, minutes: float = 1000, status: str = "ingested"
+) -> StatSnapshot:
     snap = StatSnapshot(
         player_id=player.id,
         team_id=team.id,

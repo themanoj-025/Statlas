@@ -29,7 +29,9 @@ def test_strip_suffixes() -> None:
     assert strip_suffixes("Frenkie de Jong") == "frenkie de jong"
 
 
-def _record(name: str, team: str, source: str = "fbref", ext=None, dob=None, **kw: Any) -> RawPlayerStatRecord:
+def _record(
+    name: str, team: str, source: str = "fbref", ext=None, dob=None, **kw: Any
+) -> RawPlayerStatRecord:
     return RawPlayerStatRecord(
         source=source,
         season="2025-26",

@@ -1,4 +1,9 @@
-function ReportViewer({ report }: { report: ReportSummary }) {
+import { ChevronDown } from "lucide-react";
+import Link from "next/link";
+import type { ReportSummary } from "../../lib/types_pkg/other_report";
+import { useState } from "react";
+import { formatDate } from "../../lib/format";
+export function ReportViewer({ report }: { report: ReportSummary }) {
   const doc = report.report;
   const s = doc.sections;
   const [appendixOpen, setAppendixOpen] = useState(false);

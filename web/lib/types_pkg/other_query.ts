@@ -1,3 +1,4 @@
+import type { SearchCondition } from "./player";
 export type ConditionOperator =
   | "percentile_gte"
   | "percentile_lte"
@@ -24,4 +25,3 @@ export type ConditionValueShown = {
   actual: number | null;
   condition_type: "percentile" | "raw";
 };
-

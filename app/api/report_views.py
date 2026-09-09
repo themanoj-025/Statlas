@@ -89,9 +89,7 @@ def generate(body: GenerateBody, request: Request) -> dict[str, Any]:
 
     user = _require_user(request)
     limiter = get_rate_limiter()
-    if limiter.is_limited(
-        f"report:{user.id}", max_attempts=10, window_seconds=3600
-    ):
+    if limiter.is_limited(f"report:{user.id}", max_attempts=10, window_seconds=3600):
         raise HTTPException(
             status_code=429,
             detail="Too many report requests. Please try again later.",
@@ -106,7 +104,13 @@ def generate(body: GenerateBody, request: Request) -> dict[str, Any]:
                 shortlist_entry_id=body.shortlist_entry_id,
                 narrator=_narrator(),
             )
-        except (reports.ReportNotFound, reports.ReportLimitExceeded, reports.ReportNotConfigured, reports.PlayerHasNoData, ValueError) as exc:
+        except (
+            reports.ReportNotFound,
+            reports.ReportLimitExceeded,
+            reports.ReportNotConfigured,
+            reports.PlayerHasNoData,
+            ValueError,
+        ) as exc:
             raise _map_error(exc)
 
 
@@ -116,7 +120,13 @@ def get_report(report_id: int, request: Request) -> dict[str, Any]:
     with session_scope() as db:
         try:
             return reports.get_report(db, user.id, report_id)
-        except (reports.ReportNotFound, reports.ReportLimitExceeded, reports.ReportNotConfigured, reports.PlayerHasNoData, ValueError) as exc:
+        except (
+            reports.ReportNotFound,
+            reports.ReportLimitExceeded,
+            reports.ReportNotConfigured,
+            reports.PlayerHasNoData,
+            ValueError,
+        ) as exc:
             raise _map_error(exc)
 
 
@@ -130,9 +140,7 @@ def regenerate(report_id: int, request: Request) -> dict[str, Any]:
 
     user = _require_user(request)
     limiter = get_rate_limiter()
-    if limiter.is_limited(
-        f"report:{user.id}", max_attempts=10, window_seconds=3600
-    ):
+    if limiter.is_limited(f"report:{user.id}", max_attempts=10, window_seconds=3600):
         raise HTTPException(
             status_code=429,
             detail="Too many report requests. Please try again later.",
@@ -143,7 +151,13 @@ def regenerate(report_id: int, request: Request) -> dict[str, Any]:
             stored = reports.get_report(db, user.id, report_id)
             player_id = stored["report"]["player_id"]
             entry_id = stored["report"].get("shortlist_entry_id")
-        except (reports.ReportNotFound, reports.ReportLimitExceeded, reports.ReportNotConfigured, reports.PlayerHasNoData, ValueError) as exc:
+        except (
+            reports.ReportNotFound,
+            reports.ReportLimitExceeded,
+            reports.ReportNotConfigured,
+            reports.PlayerHasNoData,
+            ValueError,
+        ) as exc:
             raise _map_error(exc)
         try:
             return reports.generate_report(
@@ -153,17 +167,29 @@ def regenerate(report_id: int, request: Request) -> dict[str, Any]:
                 shortlist_entry_id=entry_id,
                 narrator=_narrator(),
             )
-        except (reports.ReportNotFound, reports.ReportLimitExceeded, reports.ReportNotConfigured, reports.PlayerHasNoData, ValueError) as exc:
+        except (
+            reports.ReportNotFound,
+            reports.ReportLimitExceeded,
+            reports.ReportNotConfigured,
+            reports.PlayerHasNoData,
+            ValueError,
+        ) as exc:
             raise _map_error(exc)
 
 
 @router.delete("/{report_id}", status_code=204)
-def delete_report(report_id: int, request: Request) -> dict[str, str]:
+def delete_report(report_id: int, request: Request) -> Response:
     user = _require_user(request)
     with session_scope() as db:
         try:
             reports.delete_report(db, user.id, report_id)
-        except (reports.ReportNotFound, reports.ReportLimitExceeded, reports.ReportNotConfigured, reports.PlayerHasNoData, ValueError) as exc:
+        except (
+            reports.ReportNotFound,
+            reports.ReportLimitExceeded,
+            reports.ReportNotConfigured,
+            reports.PlayerHasNoData,
+            ValueError,
+        ) as exc:
             raise _map_error(exc)
     return Response(status_code=204)
 
@@ -189,7 +215,13 @@ def export_json(report_id: int, request: Request) -> dict[str, Any]:
     with session_scope() as db:
         try:
             payload = _load_verified(db, user.id, report_id)
-        except (reports.ReportNotFound, reports.ReportLimitExceeded, reports.ReportNotConfigured, reports.PlayerHasNoData, ValueError) as exc:
+        except (
+            reports.ReportNotFound,
+            reports.ReportLimitExceeded,
+            reports.ReportNotConfigured,
+            reports.PlayerHasNoData,
+            ValueError,
+        ) as exc:
             raise _map_error(exc)
         content = report_export.export_json(payload["report"])
         return Response(
@@ -207,7 +239,13 @@ def export_pdf(report_id: int, request: Request) -> Any:
     with session_scope() as db:
         try:
             payload = _load_verified(db, user.id, report_id)
-        except (reports.ReportNotFound, reports.ReportLimitExceeded, reports.ReportNotConfigured, reports.PlayerHasNoData, ValueError) as exc:
+        except (
+            reports.ReportNotFound,
+            reports.ReportLimitExceeded,
+            reports.ReportNotConfigured,
+            reports.PlayerHasNoData,
+            ValueError,
+        ) as exc:
             raise _map_error(exc)
         pdf = report_export.export_pdf(
             payload["report"], player_name=payload.get("player_name")
@@ -227,7 +265,13 @@ def export_csv(report_id: int, request: Request) -> Any:
     with session_scope() as db:
         try:
             payload = _load_verified(db, user.id, report_id)
-        except (reports.ReportNotFound, reports.ReportLimitExceeded, reports.ReportNotConfigured, reports.PlayerHasNoData, ValueError) as exc:
+        except (
+            reports.ReportNotFound,
+            reports.ReportLimitExceeded,
+            reports.ReportNotConfigured,
+            reports.PlayerHasNoData,
+            ValueError,
+        ) as exc:
             raise _map_error(exc)
         csv_text = report_export.export_csv(
             payload["report"], player_name=payload.get("player_name")

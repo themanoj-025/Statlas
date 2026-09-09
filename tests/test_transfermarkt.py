@@ -1,4 +1,3 @@
-
 from __future__ import annotations
 
 import pytest
@@ -77,9 +76,7 @@ class TestParseMarketValue:
 
     def test_fixture_value(self) -> None:
         soup = _fixture_soup("transfermarkt_player.html")
-        mv_el = soup.select_one(
-            "div.data-header__market-value-wrapper"
-        )
+        mv_el = soup.select_one("div.data-header__market-value-wrapper")
         assert mv_el is not None
         value = _parse_market_value(mv_el.get_text(strip=True))
         assert value == 180_000_000.0
@@ -176,16 +173,30 @@ class TestTransfermarktSourceMocked:
         """Verify fetch_valuations uses the CEAPI JSON endpoint."""
         import json as _json
 
-        ceapi_response = _json.dumps({
-            "list": [
-                {"x": 1672531200000, "y": 170000000, "mw": "\u20ac170.00m",
-                 "datum_mw": "01/01/2023", "verein": "Manchester City", "age": "22"},
-                {"x": 1704067200000, "y": 180000000, "mw": "\u20ac180.00m",
-                 "datum_mw": "01/01/2024", "verein": "Manchester City", "age": "23"},
-            ],
-            "current": {"y": 180000000},
-            "highest": {"y": 180000000},
-        })
+        ceapi_response = _json.dumps(
+            {
+                "list": [
+                    {
+                        "x": 1672531200000,
+                        "y": 170000000,
+                        "mw": "\u20ac170.00m",
+                        "datum_mw": "01/01/2023",
+                        "verein": "Manchester City",
+                        "age": "22",
+                    },
+                    {
+                        "x": 1704067200000,
+                        "y": 180000000,
+                        "mw": "\u20ac180.00m",
+                        "datum_mw": "01/01/2024",
+                        "verein": "Manchester City",
+                        "age": "23",
+                    },
+                ],
+                "current": {"y": 180000000},
+                "highest": {"y": 180000000},
+            }
+        )
         source = TransfermarktSource.__new__(TransfermarktSource)
         source.session = MagicMock()
         source.cache = MagicMock()
@@ -193,7 +204,9 @@ class TestTransfermarktSourceMocked:
         source.limiter = MagicMock()
         source.tiers = {"leagues": {}}
 
-        records = source.fetch_valuations([418560], datetime(2026, 8, 22, tzinfo=timezone.utc))
+        records = source.fetch_valuations(
+            [418560], datetime(2026, 8, 22, tzinfo=timezone.utc)
+        )
         assert len(records) == 1
         assert records[0].source == "transfermarkt"
         assert records[0].valuation_amount_eur == 180_000_000.0

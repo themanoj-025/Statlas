@@ -1,3 +1,8 @@
+import type { EntryPriority } from "./other_dashboard";
+import type { EntryStatus } from "./other_dashboard";
+import type { Plan } from "./billing";
+import type { ReportDocument } from "./billing";
+import type { SimilarityExplanation } from "./player";
 export type ReportConfidence = {
   level: "high" | "medium" | "low";
   rationale: string;
@@ -45,6 +50,14 @@ export type ReportSection = {
     confidence_rationale: string;
   };
   workspace_context: {
+    shortlist_status: EntryStatus;
+    priority: EntryPriority;
+    tags: string[];
+    recent_notes: { note_text: string; created_at: string }[];
+    label: string;
+  } | null;
+};
+
 export type ReportEvidenceItem = {
   claim: string;
   source_call: string;
@@ -81,4 +94,3 @@ export type ReportQuotaPayload = {
 // Every alert `detail` holds real snapshot values — checkable, never
 // fabricated. Delivery respects preferences absolutely (docs/product/
 // notification-delivery.md).
-

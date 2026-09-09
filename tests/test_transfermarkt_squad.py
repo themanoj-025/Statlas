@@ -1,4 +1,3 @@
-
 from __future__ import annotations
 
 import pytest
@@ -16,6 +15,8 @@ from app.sources.transfermarkt import TransfermarktSource
 from tests.conftest import fixtures_dir
 
 pytestmark = pytest.mark.slow
+
+
 def _fixture_html(filename: str) -> str:
     with open(fixtures_dir() / filename, encoding="utf-8") as f:
         return f.read()
@@ -102,6 +103,7 @@ class TestExtractClubsFromOverview:
         source.cache = MagicMock()
         # Use the real overview page HTML (fetched once and cached)
         import requests as _requests
+
         url = "https://www.transfermarkt.com/premier-league/startseite/wettbewerb/GB1"
         r = _requests.get(url, headers={"User-Agent": "Mozilla/5.0"}, timeout=15)
         soup = BeautifulSoup(r.text, "html.parser")
@@ -121,6 +123,7 @@ class TestIngestScriptHelpers:
 
     def test_position_to_group(self) -> None:
         from scripts.ingest_transfermarkt_squad import position_to_group
+
         assert position_to_group("Goalkeeper") == "GK"
         assert position_to_group("Centre-Back") == "CB"
         assert position_to_group("Right-Back") == "FB"
@@ -160,7 +163,6 @@ class TestIngestScriptHelpers:
     def test_upsert_updates_existing_players(self, db) -> None:
         from app.models.player import Player
         from scripts.ingest_transfermarkt_squad import upsert_players
-
 
         # Create an existing player
         existing = Player(

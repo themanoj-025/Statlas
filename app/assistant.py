@@ -106,7 +106,7 @@ def tool_get_leaderboard(
     registry = load_registry()
     if metric not in registry.get("metrics", {}):
         return {
-            "error": f"Unknown metric \"{metric}\". Known metrics: {sorted(registry.get('metrics', {}).keys())}"
+            "error": f'Unknown metric "{metric}". Known metrics: {sorted(registry.get("metrics", {}).keys())}'
         }
     # get_leaderboard requires league_slug; when no league is given,
     # fall back to the filtered leaderboard which accepts None league.
@@ -406,7 +406,11 @@ def _execute_tool(
         return {"error": f"Unknown tool {name}."}
     try:
         return spec["call"](db, **tool_input)
-    except (ValueError, KeyError, RuntimeError) as exc:  # tool failures surface in the result, not the API
+    except (
+        ValueError,
+        KeyError,
+        RuntimeError,
+    ) as exc:  # tool failures surface in the result, not the API
         logger.exception("assistant tool %s failed", name)
         return {"error": f"Tool {name} failed: {exc}"}
 

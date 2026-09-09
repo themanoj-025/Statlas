@@ -12,12 +12,14 @@ class TestErrorSchemas:
 
     def test_error_detail(self) -> None:
         from app.api.schemas import ErrorDetail
+
         e = ErrorDetail(code="not_found", message="Player not found")
         assert e.code == "not_found"
         assert e.message == "Player not found"
 
     def test_error_response(self) -> None:
         from app.api.schemas import ErrorDetail, ErrorResponse
+
         r = ErrorResponse(error=ErrorDetail(code="err", message="msg"))
         assert r.error.code == "err"
 
@@ -25,8 +27,11 @@ class TestErrorSchemas:
         from pydantic import ValidationError
 
         from app.api.schemas import ErrorDetail
+
         with pytest.raises(ValidationError):
-            ErrorDetail(code="e", message="m", extra_field="bad")  # intentionally passing extra field
+            ErrorDetail(
+                code="e", message="m", extra_field="bad"
+            )  # intentionally passing extra field
 
 
 class TestLeaderboardSchemas:
@@ -36,6 +41,7 @@ class TestLeaderboardSchemas:
         from datetime import datetime, timezone
 
         from app.api.schemas import LeaderboardEntry
+
         e = LeaderboardEntry(
             player_id=1,
             name="Test Player",
@@ -48,13 +54,15 @@ class TestLeaderboardSchemas:
         assert e.name == "Test Player"
 
     def test_leaderboard_response(self) -> None:
-        from datetime import datetime, timezone
 
         from app.api.schemas import LeaderboardEntry, LeaderboardResponse
+
         e = LeaderboardEntry(
             player_id=1, name="P", position_group="MID", minutes=100, value=50.0
         )
-        r = LeaderboardResponse(entries=[e], total=1, limit=10, offset=0, has_more=False)
+        r = LeaderboardResponse(
+            entries=[e], total=1, limit=10, offset=0, has_more=False
+        )
         assert r.total == 1
         assert len(r.entries) == 1
         assert r.has_more is False
@@ -65,6 +73,7 @@ class TestPlayerProfileSchema:
 
     def test_player_profile(self) -> None:
         from app.api.schemas import PlayerProfile
+
         p = PlayerProfile(player_id=1, name="Test", extra_field="allowed")
         assert p.player_id == 1
         assert p.extra_field == "allowed"

@@ -17,11 +17,10 @@ from __future__ import annotations
 
 import json as _json
 import logging
-from contextlib import asynccontextmanager, suppress
-from datetime import datetime, timezone
+from contextlib import asynccontextmanager
 from typing import Any
 
-from fastapi import FastAPI, HTTPException, Query, Request
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
@@ -32,7 +31,6 @@ from app.api.billing_views import router as billing_router
 from app.api.comment_views import router as comment_router
 from app.api.dashboard_views import router as dashboard_router
 from app.api.e2e_views import router as e2e_router
-from app.api.helpers import _log_player_view, _with_session
 from app.api.middleware import (
     body_size_limit_middleware,
     csrf_middleware,
@@ -43,26 +41,19 @@ from app.api.public_views import router as public_api_router
 from app.api.registry_view import public_meta
 from app.api.report_views import router as report_router
 from app.api.schemas import (
-    CoverageResponse,
     HealthResponse,
-    LeaderboardResponse,
-    LeagueEntry,
     MetaResponse,
-    PlayerProfileResponse,
-    PlayerSearchResult,
-    PositionEntry,
-    SimilarPlayerEntry,
-    TrendResponse,
 )
 from app.api.search_views import router as search_router
 from app.api.tactical_views import router as tactical_router
 from app.api.transfer_views import router as transfer_router
 from app.api.watch_views import router as watch_router
 from app.api.workspace_views import router as workspace_router
-from app.config import CURRENT_SEASON, get_settings, load_registry
+from app.config import get_settings, load_registry
 from app.db import session_scope
 
 logger = logging.getLogger(__name__)
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> Any:
@@ -120,9 +111,11 @@ app = FastAPI(
 # --- OpenTelemetry distributed tracing (OTEL_ENABLED=true) ---
 try:
     from app.tracing import setup_tracing
+
     _otel_ok = setup_tracing("statlas-api")
     if _otel_ok:
         from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
+
         FastAPIInstrumentor.instrument_app(app)
 except ImportError:
     pass
@@ -210,12 +203,14 @@ def health() -> dict[str, Any]:
         from app.cache import get_cache
 
         cache = get_cache()
-        if hasattr(cache, 'redis'):
+        if hasattr(cache, "redis"):
             cache.redis.ping()
     except (OSError, ConnectionError) as exc:
         redis_status = f"unhealthy: {exc}"
 
-    overall = "ok" if db_status == "healthy" and redis_status == "healthy" else "degraded"
+    overall = (
+        "ok" if db_status == "healthy" and redis_status == "healthy" else "degraded"
+    )
     return {
         "status": overall,
         "database": db_status,

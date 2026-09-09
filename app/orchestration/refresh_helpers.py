@@ -27,23 +27,15 @@ documented single-league integration contract keeps working in tests/fixtures.
 from __future__ import annotations
 
 import logging
-from collections.abc import Sequence
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
+from datetime import datetime
 from typing import Any
 
 from sqlalchemy.orm import Session
 
-from app.compute.anomaly_check import (
-    blocked_player_ids,
-    check_snapshot_bounds,
-    cross_source_spot_check,
-)
 from app.config import load_tiers
-from app.models import DataCoverage, League, Player, StatSnapshot, Team
+from app.models import League, Player, Team
 from app.reconciliation import Reconciler
-from app.sources.market_data import FixtureMarketDataSource
-from app.sources.transfermarkt import TransfermarktSource
 
 logger = logging.getLogger(__name__)
 
@@ -169,4 +161,3 @@ def resolve_player_for_record(
         if tm_id:
             player.transfermarkt_id = int(tm_id)
     return player, created
-

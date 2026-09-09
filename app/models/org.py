@@ -1,4 +1,5 @@
 """Organization domain models — multi-tenant RBAC, audit, comments."""
+
 from __future__ import annotations
 
 from datetime import datetime
@@ -39,11 +40,20 @@ class Organization(Base):
         DateTime(timezone=True), nullable=False, server_default=func.now()
     )
     updated_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), nullable=False, server_default=func.now(), onupdate=func.now()
+        DateTime(timezone=True),
+        nullable=False,
+        server_default=func.now(),
+        onupdate=func.now(),
     )
-    plan_expires_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
-    primary_contact_email: Mapped[str | None] = mapped_column(String(320), nullable=True)
-    billing_contact_email: Mapped[str | None] = mapped_column(String(320), nullable=True)
+    plan_expires_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    primary_contact_email: Mapped[str | None] = mapped_column(
+        String(320), nullable=True
+    )
+    billing_contact_email: Mapped[str | None] = mapped_column(
+        String(320), nullable=True
+    )
     country: Mapped[str | None] = mapped_column(String(64), nullable=True)
 
     __table_args__ = (
@@ -62,7 +72,9 @@ class OrgMembership(Base):
     joined_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=func.now()
     )
-    invited_by_user_id: Mapped[int | None] = mapped_column(ForeignKey("users.id"), nullable=True)
+    invited_by_user_id: Mapped[int | None] = mapped_column(
+        ForeignKey("users.id"), nullable=True
+    )
     permissions_override: Mapped[dict | None] = mapped_column(JSON, nullable=True)
 
     __table_args__ = (
@@ -76,17 +88,28 @@ class OrgSettings(Base):
     __tablename__ = "org_settings"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    org_id: Mapped[int] = mapped_column(ForeignKey("organizations.id"), unique=True, nullable=False)
-    data_retention_days: Mapped[int] = mapped_column(Integer, nullable=False, default=90)
+    org_id: Mapped[int] = mapped_column(
+        ForeignKey("organizations.id"), unique=True, nullable=False
+    )
+    data_retention_days: Mapped[int] = mapped_column(
+        Integer, nullable=False, default=90
+    )
     workspace_name: Mapped[str | None] = mapped_column(String(128), nullable=True)
-    enable_audit_logging: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
-    allow_public_reporting: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    enable_audit_logging: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, default=True
+    )
+    allow_public_reporting: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, default=False
+    )
     require_2fa: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=func.now()
     )
     updated_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), nullable=False, server_default=func.now(), onupdate=func.now()
+        DateTime(timezone=True),
+        nullable=False,
+        server_default=func.now(),
+        onupdate=func.now(),
     )
 
     __table_args__ = (Index("ix_org_settings_org", "org_id"),)
@@ -100,13 +123,21 @@ class OrgInvite(Base):
     email: Mapped[str] = mapped_column(String(320), nullable=False)
     role: Mapped[str] = mapped_column(ORG_ROLE_ENUM, nullable=False)
     token_hash: Mapped[str] = mapped_column(String(64), nullable=False)
-    invited_by_user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), nullable=False)
-    status: Mapped[str] = mapped_column(ORG_INVITE_STATUS_ENUM, nullable=False, default="pending")
+    invited_by_user_id: Mapped[int] = mapped_column(
+        ForeignKey("users.id"), nullable=False
+    )
+    status: Mapped[str] = mapped_column(
+        ORG_INVITE_STATUS_ENUM, nullable=False, default="pending"
+    )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=func.now()
     )
-    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
-    accepted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    expires_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False
+    )
+    accepted_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
 
     __table_args__ = (
         Index("ix_org_invites_org", "org_id"),
@@ -120,8 +151,12 @@ class AuditLog(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     org_id: Mapped[int] = mapped_column(ForeignKey("organizations.id"), nullable=False)
     action: Mapped[str] = mapped_column(AUDIT_ACTION_ENUM, nullable=False)
-    performed_by_user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), nullable=False)
-    target_user_id: Mapped[int | None] = mapped_column(ForeignKey("users.id"), nullable=True)
+    performed_by_user_id: Mapped[int] = mapped_column(
+        ForeignKey("users.id"), nullable=False
+    )
+    target_user_id: Mapped[int | None] = mapped_column(
+        ForeignKey("users.id"), nullable=True
+    )
     resource_type: Mapped[str | None] = mapped_column(String(32), nullable=True)
     resource_id: Mapped[int | None] = mapped_column(Integer, nullable=True)
     detail: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
@@ -143,13 +178,19 @@ class Comment(Base):
     resource_id: Mapped[int] = mapped_column(Integer, nullable=False)
     org_id: Mapped[int] = mapped_column(ForeignKey("organizations.id"), nullable=False)
     author_user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), nullable=False)
-    parent_id: Mapped[int | None] = mapped_column(ForeignKey("comments.id"), nullable=True)
+    parent_id: Mapped[int | None] = mapped_column(
+        ForeignKey("comments.id"), nullable=True
+    )
     text: Mapped[str] = mapped_column(Text, nullable=False)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=func.now()
     )
-    edited_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
-    deleted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    edited_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    deleted_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
 
     __table_args__ = (
         Index("ix_comments_resource", "resource_type", "resource_id"),
@@ -163,9 +204,13 @@ class Mention(Base):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     comment_id: Mapped[int] = mapped_column(ForeignKey("comments.id"), nullable=False)
-    mentioned_user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), nullable=False)
+    mentioned_user_id: Mapped[int] = mapped_column(
+        ForeignKey("users.id"), nullable=False
+    )
     org_id: Mapped[int] = mapped_column(ForeignKey("organizations.id"), nullable=False)
-    status: Mapped[str] = mapped_column(MENTION_STATUS_ENUM, nullable=False, default="pending")
+    status: Mapped[str] = mapped_column(
+        MENTION_STATUS_ENUM, nullable=False, default="pending"
+    )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=func.now()
     )
