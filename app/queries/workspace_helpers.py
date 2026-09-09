@@ -26,21 +26,10 @@ from typing import Any
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 
-from app.auth import effective_plan
-from app.config import load_registry, plan_limits
 from app.models import (
-    EntryNote,
-    EntryTag,
-    League,
-    PercentileSnapshot,
-    Player,
     Shortlist,
     ShortlistEntry,
-    StatSnapshot,
-    StatusHistory,
-    Team,
 )
-from app.queries.player_queries import _compact_slug_map
 
 # ---------------------------------------------------------------------------
 # Pipeline definition (docs/product/scouting-pipeline.md §1)
@@ -177,4 +166,3 @@ def _bump_shortlist(db: Session, shortlist_id: int) -> None:
     shortlist = db.get(Shortlist, shortlist_id)
     if shortlist is not None:
         shortlist.updated_at = _now()
-

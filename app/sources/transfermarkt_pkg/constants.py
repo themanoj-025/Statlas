@@ -27,4 +27,3 @@ LEAGUE_URL_SLUGS = {
     "2-bundesliga": "2-bundesliga",
     "ligue-2": "ligue-2",
 }
-

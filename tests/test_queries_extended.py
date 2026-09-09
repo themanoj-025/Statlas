@@ -9,7 +9,6 @@ import pytest
 pytestmark = pytest.mark.unit
 
 
-
 class TestPlayerQueries:
     """Tests for player query functions."""
 
