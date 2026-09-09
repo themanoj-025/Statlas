@@ -4,6 +4,10 @@ on:
     branches: [main]
   schedule:
     - cron: '0 6 * * 1'
+permissions:
+  contents: read
+  security-events: write
+
 jobs:
   audit:
     runs-on: ubuntu-latest
