@@ -13,8 +13,6 @@ import io
 import json
 from typing import Any
 
-from app.report_pdf import export_pdf
-
 
 def export_json(report_doc: dict[str, Any]) -> str:
     """Serialize a report document to JSON."""

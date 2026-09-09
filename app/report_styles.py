@@ -17,26 +17,11 @@ independently generated (scouting-reports.md §5).
 
 from __future__ import annotations
 
-import csv
-import io
-import json
-from typing import Any
-
-from reportlab.graphics.shapes import Drawing, Line, Polygon, String
 from reportlab.lib import colors
 from reportlab.lib.enums import TA_LEFT
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.styles import ParagraphStyle
 from reportlab.lib.units import mm
-from reportlab.platypus import (
-    HRFlowable,
-    PageBreak,
-    Paragraph,
-    SimpleDocTemplate,
-    Spacer,
-    Table,
-    TableStyle,
-)
 
 # --- Design tokens (mirror of web/styles/tokens.css, adapted for print) ----
 PITCH_600 = colors.HexColor("#1A5F3E")  # primary headings / wordmark
@@ -147,4 +132,3 @@ def _styles() -> dict[str, ParagraphStyle]:
             textColor=colors.white,
         ),
     }
-
