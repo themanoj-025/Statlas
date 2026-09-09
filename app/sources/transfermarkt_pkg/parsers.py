@@ -63,4 +63,3 @@ def _parse_date(text: str) -> datetime | None:
         except ValueError:
             continue
     return None
-

@@ -16,17 +16,7 @@ Constitution §7: Testing minimum bar — critical UI paths tested. — Part 2."
 
 from __future__ import annotations
 
-import math
-
 from sqlalchemy.orm import Session
-
-from app.models import (
-    DataCoverage,
-    League,
-    MatchEvent,
-    Player,
-    Team,
-)
 
 
 class TestTacticalStyle:
@@ -334,6 +324,5 @@ class TestAPIEndpoints:
 
     def test_main_includes_tactical(self) -> None:
         from app.api.tactical_views import router as t
-
 
         assert t.prefix == "/api/v1/tactical"
