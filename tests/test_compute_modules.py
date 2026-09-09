@@ -12,6 +12,7 @@ class TestFormationConstants:
 
     def test_position_thresholds_cover_all_zones(self) -> None:
         from app.compute.formation import POSITION_THRESHOLDS
+
         assert "GK" in POSITION_THRESHOLDS
         assert "DEF" in POSITION_THRESHOLDS
         assert "MID" in POSITION_THRESHOLDS
@@ -19,12 +20,14 @@ class TestFormationConstants:
 
     def test_gk_range(self) -> None:
         from app.compute.formation import POSITION_THRESHOLDS
+
         lo, hi = POSITION_THRESHOLDS["GK"]
         assert lo == 0
         assert hi == 12
 
     def test_fwd_range(self) -> None:
         from app.compute.formation import POSITION_THRESHOLDS
+
         lo, hi = POSITION_THRESHOLDS["FWD"]
         assert lo == 75
         assert hi == 120
@@ -37,6 +40,7 @@ class TestFormationFunctions:
         import inspect
 
         from app.compute.formation import detect_formation
+
         sig = inspect.signature(detect_formation)
         assert "db" in sig.parameters
         assert "match_id" in sig.parameters
@@ -47,6 +51,7 @@ class TestFormationFunctions:
         import inspect
 
         from app.compute.formation import detect_formation
+
         sig = inspect.signature(detect_formation)
         assert sig.return_annotation is not inspect.Parameter.empty
 
@@ -58,6 +63,7 @@ class TestRiskFunctions:
         import inspect
 
         from app.compute.risk import compute_valuation_confidence
+
         sig = inspect.signature(compute_valuation_confidence)
         assert "db" in sig.parameters
         assert "player_id" in sig.parameters
@@ -66,6 +72,7 @@ class TestRiskFunctions:
         import inspect
 
         from app.compute.risk import compute_valuation_confidence
+
         sig = inspect.signature(compute_valuation_confidence)
         assert sig.return_annotation is not inspect.Parameter.empty
 
@@ -77,6 +84,7 @@ class TestOpportunityFunctions:
         import inspect
 
         from app.compute.opportunity import detect_hidden_gems
+
         sig = inspect.signature(detect_hidden_gems)
         assert "db" in sig.parameters
         assert "min_stat_percentile" in sig.parameters
@@ -86,6 +94,7 @@ class TestOpportunityFunctions:
         import inspect
 
         from app.compute.opportunity import detect_hidden_gems
+
         sig = inspect.signature(detect_hidden_gems)
         assert sig.return_annotation is not inspect.Parameter.empty
 
@@ -97,6 +106,7 @@ class TestAnomalyCheck:
         import inspect
 
         from app.compute.anomaly_check import check_snapshot_bounds
+
         sig = inspect.signature(check_snapshot_bounds)
         assert "db" in sig.parameters
         assert "snapshot_date" in sig.parameters
@@ -105,11 +115,13 @@ class TestAnomalyCheck:
         import inspect
 
         from app.compute.anomaly_check import check_snapshot_bounds
+
         sig = inspect.signature(check_snapshot_bounds)
         assert sig.return_annotation is not inspect.Parameter.empty
 
     def test_anomaly_constants(self) -> None:
         from app.compute.anomaly_check import _AUX_KEYS_PREFIX
+
         assert _AUX_KEYS_PREFIX == "_"
 
 
@@ -120,7 +132,10 @@ class TestPassingNetwork:
         import inspect
 
         import app.compute.passing_network as mod
-        funcs = [name for name, obj in inspect.getmembers(mod) if inspect.isfunction(obj)]
+
+        funcs = [
+            name for name, obj in inspect.getmembers(mod) if inspect.isfunction(obj)
+        ]
         assert len(funcs) > 0
 
 
@@ -128,9 +143,9 @@ class TestClusteringPkg:
     """Test clustering package constants and data functions."""
 
     def test_constants_module(self) -> None:
-        import inspect
 
         import app.compute.clustering_pkg.constants as mod
+
         attrs = [name for name in dir(mod) if not name.startswith("_")]
         assert len(attrs) > 0
 
@@ -138,6 +153,7 @@ class TestClusteringPkg:
         import inspect
 
         from app.compute.clustering_pkg.data import load_player_data
+
         sig = inspect.signature(load_player_data)
         assert "db" in sig.parameters
 
@@ -149,5 +165,8 @@ class TestEmerging:
         import inspect
 
         import app.compute.emerging as mod
-        funcs = [name for name, obj in inspect.getmembers(mod) if inspect.isfunction(obj)]
+
+        funcs = [
+            name for name, obj in inspect.getmembers(mod) if inspect.isfunction(obj)
+        ]
         assert len(funcs) > 0

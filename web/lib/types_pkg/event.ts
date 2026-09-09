@@ -1,3 +1,5 @@
+import type { TacticalAnomaly } from "./other_tactical";
+import type { TacticalStyle } from "./other_tactical";
 export type StatsBombCompetition = {
   competition_id: string;
   season_id: string;
@@ -86,4 +88,3 @@ export type PassingNetworkResult = {
   style: TacticalStyle;
   anomalies: TacticalAnomaly[];
 };
-

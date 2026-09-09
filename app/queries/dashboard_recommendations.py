@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from datetime import datetime, timedelta, timezone
-from typing import Any
 
 from sqlalchemy import func
 from sqlalchemy.orm import Session
@@ -11,7 +10,6 @@ from sqlalchemy.orm import Session
 from app.models import (
     DashboardState,
     Player,
-    ShortlistEntry,
     StatSnapshot,
     Team,
 )
@@ -273,10 +271,22 @@ def get_recommended_players(
     )
 
     # Batch-load all candidates' players and teams (eliminates N+1)
-    candidate_pids = [row.player_id for row in candidates if row.player_id not in all_seen and row.player_id not in dismissed]
-    players_map = {p.id: p for p in db.query(Player).filter(Player.id.in_(candidate_pids)).all()} if candidate_pids else {}
+    candidate_pids = [
+        row.player_id
+        for row in candidates
+        if row.player_id not in all_seen and row.player_id not in dismissed
+    ]
+    players_map = (
+        {p.id: p for p in db.query(Player).filter(Player.id.in_(candidate_pids)).all()}
+        if candidate_pids
+        else {}
+    )
     team_ids = {p.current_team_id for p in players_map.values() if p.current_team_id}
-    teams_map = {t.id: t for t in db.query(Team).filter(Team.id.in_(team_ids)).all()} if team_ids else {}
+    teams_map = (
+        {t.id: t for t in db.query(Team).filter(Team.id.in_(team_ids)).all()}
+        if team_ids
+        else {}
+    )
 
     results: list[dict] = []
     for row in candidates:
@@ -311,4 +321,3 @@ def get_recommended_players(
             break
 
     return results
-

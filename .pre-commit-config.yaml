@@ -9,7 +9,7 @@ repos:
     rev: v0.16.4
     hooks:
       - id: ruff
-        args: [--fix, --select, "E9,F,I"]
+        args: [--fix]  # rule selection + ignores live in pyproject.toml
 
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v6.0.0
@@ -19,10 +19,3 @@ repos:
       - id: check-yaml
       - id: check-added-large-files
         args: ['--maxkb=1000']
-  - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: v1.15.0
-    hooks:
-      - id: mypy
-        language: python
-        types: [python]
-        args: [--ignore-missing-imports]

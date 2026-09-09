@@ -238,9 +238,11 @@ def search_players(
     escaped = q.replace("%", f"{escape_char}%").replace("_", f"{escape_char}_")
     pattern = f"%{escaped}%"
 
-    player_rows = db.query(Player).filter(
-        Player.canonical_name.ilike(pattern, escape=escape_char)
-    ).all()
+    player_rows = (
+        db.query(Player)
+        .filter(Player.canonical_name.ilike(pattern, escape=escape_char))
+        .all()
+    )
     alias_rows = (
         db.query(PlayerNameAlias)
         .filter(PlayerNameAlias.source_name_string.ilike(pattern, escape=escape_char))

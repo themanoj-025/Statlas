@@ -12,13 +12,17 @@ class TestWeeklyRefresh:
 
     def test_module_importable(self) -> None:
         import app.orchestration.weekly_refresh as mod
+
         assert hasattr(mod, "__file__")
 
     def test_module_has_functions(self) -> None:
         import inspect
 
         import app.orchestration.weekly_refresh as mod
-        funcs = [name for name, obj in inspect.getmembers(mod) if inspect.isfunction(obj)]
+
+        funcs = [
+            name for name, obj in inspect.getmembers(mod) if inspect.isfunction(obj)
+        ]
         assert len(funcs) > 0
 
 
@@ -27,13 +31,17 @@ class TestEventLink:
 
     def test_module_importable(self) -> None:
         import app.orchestration.event_link as mod
+
         assert hasattr(mod, "__file__")
 
     def test_module_has_functions(self) -> None:
         import inspect
 
         import app.orchestration.event_link as mod
-        funcs = [name for name, obj in inspect.getmembers(mod) if inspect.isfunction(obj)]
+
+        funcs = [
+            name for name, obj in inspect.getmembers(mod) if inspect.isfunction(obj)
+        ]
         assert len(funcs) > 0
 
 
@@ -42,11 +50,15 @@ class TestRefreshHelpers:
 
     def test_module_importable(self) -> None:
         import app.orchestration.refresh_helpers as mod
+
         assert hasattr(mod, "__file__")
 
     def test_module_has_functions(self) -> None:
         import inspect
 
         import app.orchestration.refresh_helpers as mod
-        funcs = [name for name, obj in inspect.getmembers(mod) if inspect.isfunction(obj)]
+
+        funcs = [
+            name for name, obj in inspect.getmembers(mod) if inspect.isfunction(obj)
+        ]
         assert len(funcs) > 0

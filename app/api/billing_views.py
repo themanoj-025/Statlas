@@ -85,15 +85,15 @@ _require_user = require_user
 
 
 @router.post("/auth/register", status_code=201)
-def register(body: RegisterBody, response: Response, request: Request) -> dict[str, Any]:
+def register(
+    body: RegisterBody, response: Response, request: Request
+) -> dict[str, Any]:
     # Rate limit: 5 registrations per IP per 10 minutes
     from app.rate_limiting import get_rate_limiter
 
     limiter = get_rate_limiter()
     client_ip = request.client.host if request.client else "unknown"
-    if limiter.is_limited(
-        f"register:{client_ip}", max_attempts=5, window_seconds=600
-    ):
+    if limiter.is_limited(f"register:{client_ip}", max_attempts=5, window_seconds=600):
         raise HTTPException(
             status_code=429,
             detail="Too many registration attempts. Please try again later.",
@@ -176,7 +176,9 @@ class PasswordResetConfirmBody(BaseModel):
 
 
 @router.post("/auth/password-reset/request")
-def password_reset_request(request: Request, body: PasswordResetRequestBody) -> dict[str, str]:
+def password_reset_request(
+    request: Request, body: PasswordResetRequestBody
+) -> dict[str, str]:
     """Request a password reset. Always returns the same response to prevent
     account enumeration. Rate-limited to 3/hour per email AND 10/hour per IP."""
     from app.rate_limiting import get_rate_limiter
@@ -222,7 +224,9 @@ def password_reset_request(request: Request, body: PasswordResetRequestBody) -> 
 
 
 @router.post("/auth/password-reset/confirm")
-def password_reset_confirm(request: Request, body: PasswordResetConfirmBody) -> dict[str, str]:
+def password_reset_confirm(
+    request: Request, body: PasswordResetConfirmBody
+) -> dict[str, str]:
     """Confirm a password reset with the token. Revokes all existing sessions.
     Rate-limited to 10 attempts per hour per IP to prevent token brute-force."""
     from app.rate_limiting import get_rate_limiter
@@ -253,7 +257,9 @@ def password_reset_confirm(request: Request, body: PasswordResetConfirmBody) -> 
         # Security: invalidate ALL sessions so any compromised token is dead
         auth.revoke_all_user_sessions(db, user_id)
         db.commit()
-    return {"detail": "Password has been reset. All sessions invalidated. You can now log in."}
+    return {
+        "detail": "Password has been reset. All sessions invalidated. You can now log in."
+    }
 
 
 # ---------------------------------------------------------------------------
@@ -270,7 +276,9 @@ class VerifyEmailConfirmBody(BaseModel):
 
 
 @router.post("/auth/verify-email/request")
-def verify_email_request(request: Request, body: VerifyEmailRequestBody | None = None) -> dict[str, str]:
+def verify_email_request(
+    request: Request, body: VerifyEmailRequestBody | None = None
+) -> dict[str, str]:
     """Request email verification for the signed-in user.
     Rate-limited to 5 per user per hour to prevent email spam."""
     from app.rate_limiting import get_rate_limiter
@@ -349,7 +357,9 @@ def update_profile(request: Request, body: ProfileUpdateBody) -> dict[str, Any]:
 
 
 @router.post("/auth/change-password")
-def change_password(request: Request, body: ChangePasswordBody, response: Response) -> dict[str, str]:
+def change_password(
+    request: Request, body: ChangePasswordBody, response: Response
+) -> dict[str, str]:
     """Change password for the signed-in user. Revokes all other sessions.
     Rate-limited to 5 attempts per 10 minutes to prevent brute force."""
     from app.rate_limiting import get_rate_limiter
@@ -459,7 +469,9 @@ def checkout(body: CheckoutBody, request: Request) -> dict[str, Any]:
 
 
 @router.post("/billing/portal")
-def billing_portal(request: Request, body: dict[str, str] | None = None) -> dict[str, Any]:
+def billing_portal(
+    request: Request, body: dict[str, str] | None = None
+) -> dict[str, Any]:
     user = _require_user(request)
     return_url = _validate_redirect_url((body or {}).get("return_url") or "/account")
     try:

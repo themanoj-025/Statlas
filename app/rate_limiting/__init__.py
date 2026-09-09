@@ -2,6 +2,7 @@
 
 Gracefully degrades to in-memory when Redis is unavailable (dev/test).
 """
+
 from __future__ import annotations
 
 import logging
@@ -28,7 +29,9 @@ __all__ = [
 class RedisRateLimiter:
     """Sliding-window rate limiter backed by Redis INCR + EXPIRE."""
 
-    def __init__(self, redis_client: redis_lib.Redis, prefix: str = "ratelimit:") -> Any:
+    def __init__(
+        self, redis_client: redis_lib.Redis, prefix: str = "ratelimit:"
+    ) -> Any:
         self.redis = redis_client
         self.prefix = prefix
 
@@ -88,7 +91,9 @@ class InMemoryRateLimiter:
         self._hits[key] = window
         return False
 
-    def get_remaining(self, key: str, max_attempts: int, window_seconds: int = 60) -> int:
+    def get_remaining(
+        self, key: str, max_attempts: int, window_seconds: int = 60
+    ) -> int:
         now = time.monotonic()
         window = [t for t in self._hits.get(key, []) if now - t < window_seconds]
         return max(0, max_attempts - len(window))

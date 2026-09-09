@@ -1,4 +1,3 @@
-
 from __future__ import annotations
 
 import pytest
@@ -160,7 +159,6 @@ class TestGetRateLimiter:
     def teardown_method(self) -> None:
         """Reset the module singleton after each test."""
         import app.rate_limiting as rl
-
 
         rl._limiter = None
 

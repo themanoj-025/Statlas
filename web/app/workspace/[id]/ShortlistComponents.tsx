@@ -1,9 +1,26 @@
+'use client'
+import { ApiError } from "../../../lib/api_pkg/api_core";
+import type { EntryPriority } from "../../../lib/types_pkg/other_dashboard";
+import type { EntryStatus } from "../../../lib/types_pkg/other_dashboard";
+import { GenerateReport } from "../../../components/GenerateReport";
+import Link from "next/link";
+import { Plus } from "lucide-react";
+import { STATUS_CHIP_CLASS } from "../../../lib/workspace";
+import { STATUS_LABELS } from "../../../lib/workspace";
+import { STATUS_ORDER } from "../../../lib/workspace";
+import type { ShortlistEntryDetail } from "../../../lib/types_pkg/other_dashboard";
+import { Trash2 } from "lucide-react";
+import { X } from "lucide-react";
+import { api } from "../../../lib/api_pkg/api_methods";
+import { formatNumber } from "../../../lib/format";
+import { positionGroupLabel } from "../../../lib/format";
+import { relativeAndAbsolute } from "../../../lib/format";
+import { useState } from "react";
 /** Shortlist sub-components: EntryRow, StatusControl, PriorityControl, TagControl, NoteControl. */
 
-'use client'
 
 
-function EntryRow({
+export function EntryRow({
   entry,
   onMutated,
   onError,
@@ -83,7 +100,7 @@ function EntryRow({
 // and an OPTIONAL reason note (captured in status_history.reason_note).
 // ---------------------------------------------------------------------------
 
-function StatusControl({
+export function StatusControl({
   entry,
   onMutated,
   onError,
@@ -171,7 +188,7 @@ function StatusControl({
 // Priority — low-stakes, applies immediately on select.
 // ---------------------------------------------------------------------------
 
-function PriorityControl({
+export function PriorityControl({
   entry,
   onMutated,
   onError,
@@ -214,7 +231,7 @@ function PriorityControl({
 // Tags — chips with removal + add with the user's OWN autocomplete suggestions.
 // ---------------------------------------------------------------------------
 
-function TagControl({
+export function TagControl({
   entry,
   onMutated,
   onError,
@@ -333,7 +350,7 @@ function TagControl({
 // (Phase 7 D1), and inline add.
 // ---------------------------------------------------------------------------
 
-function NoteControl({
+export function NoteControl({
   entry,
   onMutated,
   onError,

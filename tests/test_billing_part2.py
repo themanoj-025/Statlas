@@ -14,20 +14,10 @@ Covers the mandatory Part A6 scenarios:
 
 from __future__ import annotations
 
-import hashlib
-import hmac
-import json
-import os
-import time
 from datetime import datetime, timedelta, timezone
 
-import pytest
-from fastapi.testclient import TestClient
-
-import app.db as db_module
-from app.api.main import app
-from app.db import create_schema, session_scope
-from app.models import Subscription, User, WebhookEvent
+from app.db import session_scope
+from app.models import Subscription, User
 
 
 def test_payment_failed_then_cancellation_revokes(client) -> None:
@@ -302,7 +292,6 @@ def test_checkout_allows_relative_redirect(client, monkeypatch) -> dict[str, obj
     register_user(client)
     # Mock Stripe to avoid real API calls
     import app.billing as _billing
-
 
     created = {}
 

@@ -64,6 +64,7 @@ def chat(body: ChatBody, request: Request) -> dict[str, Any]:
     with session_scope() as db:
         # Re-fetch user in this session scope for detached-object safety.
         from app.models import User as UserModel
+
         db_user = db.get(UserModel, user.id)
         if db_user is None:
             raise HTTPException(status_code=401, detail="Sign in to use the assistant.")
@@ -85,6 +86,7 @@ def assistant_quota(request: Request) -> dict[str, Any]:
     user = require_user(request)
     with session_scope() as db:
         from app.models import User as UserModel
+
         db_user = db.get(UserModel, user.id)
         if db_user is None:
             raise HTTPException(status_code=401, detail="Sign in to use the assistant.")

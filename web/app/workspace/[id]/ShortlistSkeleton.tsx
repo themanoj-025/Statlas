@@ -4,7 +4,7 @@
 
 import React from 'react'
 
-function ShortlistSkeleton() {
+export function ShortlistSkeleton() {
   return (
     <div role="status" aria-label="Loading this shortlist" style={{ display: "grid", gap: "var(--space-3)", marginTop: "var(--space-3)" }}>
       <span className="skeleton" style={{ display: "block", width: 180, height: 26 }} />

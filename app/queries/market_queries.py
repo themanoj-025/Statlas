@@ -265,10 +265,10 @@ def get_valuation_comparison(
         explanation = (
             f"{player.canonical_name} ranks {stat['stat_percentile']:.0f}th percentile "
             f"statistically (Index: {stat['index_score']:.1f}), "
-            f"but market estimates €{market_val/1e6:.1f}M "
+            f"but market estimates €{market_val / 1e6:.1f}M "
             f"(source: {market['source']}). "
-            f"Stat-based estimate: €{stat_eur/1e6:.1f}M — "
-            f"potential undervaluation of €{abs(gap)/1e6:.1f}M "
+            f"Stat-based estimate: €{stat_eur / 1e6:.1f}M — "
+            f"potential undervaluation of €{abs(gap) / 1e6:.1f}M "
             f"({abs(gap_pct):.0f}%)"
         )
     else:
@@ -276,10 +276,10 @@ def get_valuation_comparison(
         explanation = (
             f"{player.canonical_name} ranks {stat['stat_percentile']:.0f}th percentile "
             f"statistically (Index: {stat['index_score']:.1f}), "
-            f"but market estimates €{market_val/1e6:.1f}M "
+            f"but market estimates €{market_val / 1e6:.1f}M "
             f"(source: {market['source']}). "
-            f"Stat-based estimate: €{stat_eur/1e6:.1f}M — "
-            f"potential overvaluation of €{abs(gap)/1e6:.1f}M "
+            f"Stat-based estimate: €{stat_eur / 1e6:.1f}M — "
+            f"potential overvaluation of €{abs(gap) / 1e6:.1f}M "
             f"({abs(gap_pct):.0f}%)"
         )
 
@@ -347,11 +347,23 @@ def get_undervalued_players(
 
     # Batch-load players and teams (eliminates N+1).
     player_ids = [val.player_id for val in valuations]
-    players_map = {p.id: p for p in db.query(Player).filter(Player.id.in_(player_ids)).all()} if player_ids else {}
+    players_map = (
+        {p.id: p for p in db.query(Player).filter(Player.id.in_(player_ids)).all()}
+        if player_ids
+        else {}
+    )
     team_ids = {p.current_team_id for p in players_map.values() if p.current_team_id}
-    teams_map = {t.id: t for t in db.query(Team).filter(Team.id.in_(team_ids)).all()} if team_ids else {}
+    teams_map = (
+        {t.id: t for t in db.query(Team).filter(Team.id.in_(team_ids)).all()}
+        if team_ids
+        else {}
+    )
     league_ids = {t.league_id for t in teams_map.values() if t.league_id}
-    leagues_map = {lg.id: lg for lg in db.query(League).filter(League.id.in_(league_ids)).all()} if league_ids else {}
+    leagues_map = (
+        {lg.id: lg for lg in db.query(League).filter(League.id.in_(league_ids)).all()}
+        if league_ids
+        else {}
+    )
 
     results = []
     for val in valuations:
@@ -365,7 +377,11 @@ def get_undervalued_players(
 
         # Apply filters
         if league_id:
-            team = teams_map.get(player.current_team_id) if player.current_team_id else None
+            team = (
+                teams_map.get(player.current_team_id)
+                if player.current_team_id
+                else None
+            )
             if team is None or team.league_id != league_id:
                 continue
         if position_group and player.position_group != position_group:
@@ -443,11 +459,23 @@ def get_overvalued_players(
 
     # Batch-load players and teams (eliminates N+1).
     player_ids = [val.player_id for val in valuations]
-    players_map = {p.id: p for p in db.query(Player).filter(Player.id.in_(player_ids)).all()} if player_ids else {}
+    players_map = (
+        {p.id: p for p in db.query(Player).filter(Player.id.in_(player_ids)).all()}
+        if player_ids
+        else {}
+    )
     team_ids = {p.current_team_id for p in players_map.values() if p.current_team_id}
-    teams_map = {t.id: t for t in db.query(Team).filter(Team.id.in_(team_ids)).all()} if team_ids else {}
+    teams_map = (
+        {t.id: t for t in db.query(Team).filter(Team.id.in_(team_ids)).all()}
+        if team_ids
+        else {}
+    )
     league_ids = {t.league_id for t in teams_map.values() if t.league_id}
-    leagues_map = {lg.id: lg for lg in db.query(League).filter(League.id.in_(league_ids)).all()} if league_ids else {}
+    leagues_map = (
+        {lg.id: lg for lg in db.query(League).filter(League.id.in_(league_ids)).all()}
+        if league_ids
+        else {}
+    )
 
     results = []
     for val in valuations:
@@ -460,7 +488,11 @@ def get_overvalued_players(
             continue
 
         if league_id:
-            team = teams_map.get(player.current_team_id) if player.current_team_id else None
+            team = (
+                teams_map.get(player.current_team_id)
+                if player.current_team_id
+                else None
+            )
             if team is None or team.league_id != league_id:
                 continue
         if position_group and player.position_group != position_group:

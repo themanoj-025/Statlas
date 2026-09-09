@@ -14,11 +14,15 @@ class TestDashboardActivity:
         import inspect
 
         import app.queries.dashboard_activity as mod
-        funcs = [name for name, obj in inspect.getmembers(mod) if inspect.isfunction(obj)]
+
+        funcs = [
+            name for name, obj in inspect.getmembers(mod) if inspect.isfunction(obj)
+        ]
         assert len(funcs) > 0
 
     def test_module_importable(self) -> None:
         import app.queries.dashboard_activity
+
         assert hasattr(app.queries.dashboard_activity, "__file__")
 
 
@@ -29,7 +33,10 @@ class TestDashboardRecommendations:
         import inspect
 
         import app.queries.dashboard_recommendations as mod
-        funcs = [name for name, obj in inspect.getmembers(mod) if inspect.isfunction(obj)]
+
+        funcs = [
+            name for name, obj in inspect.getmembers(mod) if inspect.isfunction(obj)
+        ]
         assert len(funcs) > 0
 
 
@@ -40,7 +47,10 @@ class TestDashboardState:
         import inspect
 
         import app.queries.dashboard_state as mod
-        funcs = [name for name, obj in inspect.getmembers(mod) if inspect.isfunction(obj)]
+
+        funcs = [
+            name for name, obj in inspect.getmembers(mod) if inspect.isfunction(obj)
+        ]
         assert len(funcs) > 0
 
 
@@ -51,7 +61,10 @@ class TestLeaderboardQueries:
         import inspect
 
         import app.queries.leaderboard_queries as mod
-        funcs = [name for name, obj in inspect.getmembers(mod) if inspect.isfunction(obj)]
+
+        funcs = [
+            name for name, obj in inspect.getmembers(mod) if inspect.isfunction(obj)
+        ]
         assert len(funcs) > 0
 
 
@@ -62,7 +75,10 @@ class TestLeagueQueries:
         import inspect
 
         import app.queries.league_queries as mod
-        funcs = [name for name, obj in inspect.getmembers(mod) if inspect.isfunction(obj)]
+
+        funcs = [
+            name for name, obj in inspect.getmembers(mod) if inspect.isfunction(obj)
+        ]
         assert len(funcs) > 0
 
 
@@ -73,7 +89,10 @@ class TestLeaguePageQueries:
         import inspect
 
         import app.queries.league_page_queries as mod
-        funcs = [name for name, obj in inspect.getmembers(mod) if inspect.isfunction(obj)]
+
+        funcs = [
+            name for name, obj in inspect.getmembers(mod) if inspect.isfunction(obj)
+        ]
         assert len(funcs) > 0
 
 
@@ -84,7 +103,10 @@ class TestMarketQueries:
         import inspect
 
         import app.queries.market_queries as mod
-        funcs = [name for name, obj in inspect.getmembers(mod) if inspect.isfunction(obj)]
+
+        funcs = [
+            name for name, obj in inspect.getmembers(mod) if inspect.isfunction(obj)
+        ]
         assert len(funcs) > 0
 
 
@@ -95,7 +117,10 @@ class TestOrgQueries:
         import inspect
 
         import app.queries.org_queries as mod
-        funcs = [name for name, obj in inspect.getmembers(mod) if inspect.isfunction(obj)]
+
+        funcs = [
+            name for name, obj in inspect.getmembers(mod) if inspect.isfunction(obj)
+        ]
         assert len(funcs) > 0
 
 
@@ -106,7 +131,10 @@ class TestPlayerQueries:
         import inspect
 
         import app.queries.player_queries as mod
-        funcs = [name for name, obj in inspect.getmembers(mod) if inspect.isfunction(obj)]
+
+        funcs = [
+            name for name, obj in inspect.getmembers(mod) if inspect.isfunction(obj)
+        ]
         assert len(funcs) > 0
 
 
@@ -117,7 +145,10 @@ class TestSearchExecution:
         import inspect
 
         import app.queries.search_execution as mod
-        funcs = [name for name, obj in inspect.getmembers(mod) if inspect.isfunction(obj)]
+
+        funcs = [
+            name for name, obj in inspect.getmembers(mod) if inspect.isfunction(obj)
+        ]
         assert len(funcs) > 0
 
 
@@ -128,7 +159,10 @@ class TestSearchSaved:
         import inspect
 
         import app.queries.search_saved as mod
-        funcs = [name for name, obj in inspect.getmembers(mod) if inspect.isfunction(obj)]
+
+        funcs = [
+            name for name, obj in inspect.getmembers(mod) if inspect.isfunction(obj)
+        ]
         assert len(funcs) > 0
 
 
@@ -139,7 +173,10 @@ class TestSearchValidation:
         import inspect
 
         import app.queries.search_validation as mod
-        funcs = [name for name, obj in inspect.getmembers(mod) if inspect.isfunction(obj)]
+
+        funcs = [
+            name for name, obj in inspect.getmembers(mod) if inspect.isfunction(obj)
+        ]
         assert len(funcs) > 0
 
 
@@ -150,7 +187,10 @@ class TestSimilarPlayers:
         import inspect
 
         import app.queries.similar_players as mod
-        funcs = [name for name, obj in inspect.getmembers(mod) if inspect.isfunction(obj)]
+
+        funcs = [
+            name for name, obj in inspect.getmembers(mod) if inspect.isfunction(obj)
+        ]
         assert len(funcs) > 0
 
 
@@ -161,7 +201,10 @@ class TestTeamQueries:
         import inspect
 
         import app.queries.team_queries as mod
-        funcs = [name for name, obj in inspect.getmembers(mod) if inspect.isfunction(obj)]
+
+        funcs = [
+            name for name, obj in inspect.getmembers(mod) if inspect.isfunction(obj)
+        ]
         assert len(funcs) > 0
 
 
@@ -172,7 +215,10 @@ class TestTransferQueries:
         import inspect
 
         import app.queries.transfer_queries as mod
-        funcs = [name for name, obj in inspect.getmembers(mod) if inspect.isfunction(obj)]
+
+        funcs = [
+            name for name, obj in inspect.getmembers(mod) if inspect.isfunction(obj)
+        ]
         assert len(funcs) > 0
 
 
@@ -183,7 +229,10 @@ class TestTrendQueries:
         import inspect
 
         import app.queries.trend_queries as mod
-        funcs = [name for name, obj in inspect.getmembers(mod) if inspect.isfunction(obj)]
+
+        funcs = [
+            name for name, obj in inspect.getmembers(mod) if inspect.isfunction(obj)
+        ]
         assert len(funcs) > 0
 
 
@@ -194,7 +243,10 @@ class TestWatchQueries:
         import inspect
 
         import app.queries.watch_queries as mod
-        funcs = [name for name, obj in inspect.getmembers(mod) if inspect.isfunction(obj)]
+
+        funcs = [
+            name for name, obj in inspect.getmembers(mod) if inspect.isfunction(obj)
+        ]
         assert len(funcs) > 0
 
 
@@ -205,17 +257,23 @@ class TestWorkspaceQueries:
         import inspect
 
         import app.queries.workspace_queries as mod
-        funcs = [name for name, obj in inspect.getmembers(mod) if inspect.isfunction(obj)]
+
+        funcs = [
+            name for name, obj in inspect.getmembers(mod) if inspect.isfunction(obj)
+        ]
         assert len(funcs) > 0
 
     def test_workspace_helpers_importable(self) -> None:
         import app.queries.workspace_helpers
+
         assert hasattr(app.queries.workspace_helpers, "__file__")
 
     def test_workspace_entries_importable(self) -> None:
         import app.queries.workspace_entries
+
         assert hasattr(app.queries.workspace_entries, "__file__")
 
     def test_workspace_shortlists_importable(self) -> None:
         import app.queries.workspace_shortlists
+
         assert hasattr(app.queries.workspace_shortlists, "__file__")

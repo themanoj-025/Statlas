@@ -1,5 +1,8 @@
 "use client";
 
+import { ApiError } from "../../../lib/api_pkg/api_core";
+import { useState } from "react";
+import { Save } from "lucide-react";
 import type { Meta, SearchResultEntry, SearchCondition, ConditionOperator, QueryDefinition } from "@/lib/types";
 import { api } from "@/lib/api";
 import { formatNumber } from "@/lib/format";

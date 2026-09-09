@@ -121,8 +121,12 @@ def _check_month_over_month(
     this_month_start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
     last_month_start = (this_month_start - timedelta(days=1)).replace(day=1)
 
-    this_month_val = _get_metric_avg(db, alert_def["metric_name"], this_month_start, now)
-    last_month_val = _get_metric_avg(db, alert_def["metric_name"], last_month_start, this_month_start)
+    this_month_val = _get_metric_avg(
+        db, alert_def["metric_name"], this_month_start, now
+    )
+    last_month_val = _get_metric_avg(
+        db, alert_def["metric_name"], last_month_start, this_month_start
+    )
 
     if last_month_val is None or this_month_val is None or last_month_val == 0:
         return None
@@ -210,9 +214,7 @@ def detect_anomalies(
     current_week_start = now - timedelta(days=7)
 
     # Current week average
-    current_avg = _get_metric_avg(
-        db, metric_name, current_week_start, now
-    )
+    current_avg = _get_metric_avg(db, metric_name, current_week_start, now)
     if current_avg is None:
         return None
 
@@ -236,7 +238,7 @@ def detect_anomalies(
     values = [float(v[0]) for v in historical_values]
     mean = sum(values) / len(values)
     variance = sum((v - mean) ** 2 for v in values) / len(values)
-    std_dev = variance ** 0.5
+    std_dev = variance**0.5
 
     if std_dev == 0:
         return None

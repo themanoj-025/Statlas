@@ -14,6 +14,7 @@ class TestCleanupFunctions:
         import inspect
 
         from app.cleanup import cleanup_expired_tokens
+
         sig = inspect.signature(cleanup_expired_tokens)
         assert "db" in sig.parameters
 
@@ -21,6 +22,7 @@ class TestCleanupFunctions:
         import inspect
 
         from app.cleanup import cleanup_old_analytics
+
         sig = inspect.signature(cleanup_old_analytics)
         assert "db" in sig.parameters
         assert "retention_days" in sig.parameters
@@ -30,6 +32,7 @@ class TestCleanupFunctions:
         import inspect
 
         from app.cleanup import cleanup_expired_tokens
+
         sig = inspect.signature(cleanup_expired_tokens)
         assert sig.return_annotation is not inspect.Parameter.empty
 
@@ -37,5 +40,6 @@ class TestCleanupFunctions:
         import inspect
 
         from app.cleanup import cleanup_old_analytics
+
         sig = inspect.signature(cleanup_old_analytics)
         assert sig.return_annotation is not inspect.Parameter.empty

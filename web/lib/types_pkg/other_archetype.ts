@@ -1,3 +1,4 @@
+import type { ArchetypePlayer } from "./player";
 export type ArchetypeModel = {
   model_id: number;
   model_name: string;

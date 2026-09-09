@@ -51,14 +51,13 @@ def _require_staff(request: Request) -> User:
     user = require_user(request)
     settings = get_settings()
     staff_emails = {
-        e.strip().lower()
-        for e in (settings.staff_emails or "").split(",")
-        if e.strip()
+        e.strip().lower() for e in (settings.staff_emails or "").split(",") if e.strip()
     }
     if staff_emails and user.email.lower() in staff_emails:
         return user
     # Fallback: active subscription = staff in single-team deployments
     from app.db import session_scope as _scope
+
     with _scope() as db:
         if auth.has_pro_access(db, user.id):
             return user
@@ -68,7 +67,9 @@ def _require_staff(request: Request) -> User:
     )
 
 
-def _log_access(db: Session, user_id: int, dashboard: str, params: dict | None = None) -> None:
+def _log_access(
+    db: Session, user_id: int, dashboard: str, params: dict | None = None
+) -> None:
     """Log analytics dashboard access for audit trail (Part E2)."""
     db.add(
         AnalyticsAccessLog(
@@ -162,7 +163,11 @@ def get_conversion_funnel(
 ) -> dict:
     """Free → Pro conversion funnel."""
     user = _require_staff(request)
-    start_dt = datetime.fromisoformat(start) if start else datetime.now(timezone.utc) - timedelta(days=30)
+    start_dt = (
+        datetime.fromisoformat(start)
+        if start
+        else datetime.now(timezone.utc) - timedelta(days=30)
+    )
     end_dt = datetime.fromisoformat(end) if end else datetime.now(timezone.utc)
     with session_scope() as db:
         _log_access(db, user.id, "conversion", {"start": start, "end": end})
@@ -272,7 +277,9 @@ def operations_dashboard(request: Request) -> dict:
 
         total_events = (
             db.query(sqlfunc.count())
-            .filter(AnalyticsEvent.created_at >= yesterday, AnalyticsEvent.created_at < now)
+            .filter(
+                AnalyticsEvent.created_at >= yesterday, AnalyticsEvent.created_at < now
+            )
             .scalar()
         ) or 0
 
@@ -352,7 +359,9 @@ def get_alerts(
                     "actual_value": a.actual_value,
                     "message": a.message,
                     "fired_at": a.fired_at.isoformat() if a.fired_at else None,
-                    "acknowledged_at": a.acknowledged_at.isoformat() if a.acknowledged_at else None,
+                    "acknowledged_at": (
+                        a.acknowledged_at.isoformat() if a.acknowledged_at else None
+                    ),
                 }
                 for a in alerts
             ],

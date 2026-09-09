@@ -66,11 +66,13 @@ SEASON = "2025-26"
 # Fixtures / helpers
 # ---------------------------------------------------------------------------
 
+
 def make_user(db, email: str = "watcher@example.com", plan: str = "free") -> User:
     user = User(email=email, password_hash="x" * 64, plan=plan)
     db.add(user)
     db.commit()
     return user
+
 
 def make_pro_user(db, email: str = "pro-watcher@example.com") -> User:
     user = make_user(db, email, plan="pro")
@@ -81,6 +83,7 @@ def make_pro_user(db, email: str = "pro-watcher@example.com") -> User:
     )
     db.commit()
     return user
+
 
 @pytest.fixture()
 def watch_data(db) -> dict[str, object]:
@@ -119,6 +122,7 @@ def watch_data(db) -> dict[str, object]:
         "arsenal": arsenal,
         "haaland": haaland,
     }
+
 
 def seed_snapshot(
     db,
@@ -169,17 +173,20 @@ def seed_snapshot(
     db.commit()
     return snap
 
+
 def seed_watch(db, user: User, entity_type: str, entity_id: int, **kw) -> Watch:
     w = Watch(user_id=user.id, entity_type=entity_type, entity_id=entity_id, **kw)
     db.add(w)
     db.commit()
     return w
 
+
 PCT_METRIC = "si_prgp_p90"
 
 # ---------------------------------------------------------------------------
 # Detection — percentile-movement boundary behavior (Part C3)
 # ---------------------------------------------------------------------------
+
 
 def test_movement_below_threshold_does_not_alert(db, watch_data) -> None:
     """62 -> 74 = +12: below the 15-point bar -> NO alert."""
@@ -191,6 +198,7 @@ def test_movement_below_threshold_does_not_alert(db, watch_data) -> None:
     report = detect_watch_triggers(db, SNAPSHOT_2)
     assert report.alerts_created == 0
     assert db.query(WatchAlert).count() == 0
+
 
 def test_movement_above_threshold_alerts(db, watch_data) -> None:
     """62 -> 81 = +19: above the bar -> alert with real detail values."""
@@ -214,6 +222,7 @@ def test_movement_above_threshold_alerts(db, watch_data) -> None:
     assert detail["to_snapshot_date"] == SNAPSHOT_2.date().isoformat()
     assert detail["entity_name"] == "Erling Haaland"
 
+
 def test_movement_exactly_at_threshold_alerts_inclusive(db, watch_data) -> None:
     """62 -> 77 = +15: exactly at the bar -> alerts (documented INCLUSIVE)."""
     user, haaland = watch_data["pro"], watch_data["haaland"]
@@ -222,6 +231,7 @@ def test_movement_exactly_at_threshold_alerts_inclusive(db, watch_data) -> None:
     seed_snapshot(db, haaland, snapshot_date=SNAPSHOT_2, percentiles={PCT_METRIC: 77.0})
     report = detect_watch_triggers(db, SNAPSHOT_2)
     assert report.alerts_created == 1
+
 
 def test_movement_below_qualification_never_alerts(db, watch_data) -> None:
     """A movement where either snapshot is below the qualification floor does
@@ -246,6 +256,7 @@ def test_movement_below_qualification_never_alerts(db, watch_data) -> None:
     report = detect_watch_triggers(db, SNAPSHOT_2)
     assert report.alerts_created == 0
 
+
 def test_watched_metrics_refinement_limits_alerts(db, watch_data) -> None:
     """A watch with followed_metrics=[...] alerts ONLY on those metrics — a big
     move in an unwatched metric stays silent."""
@@ -267,9 +278,11 @@ def test_watched_metrics_refinement_limits_alerts(db, watch_data) -> None:
     report = detect_watch_triggers(db, SNAPSHOT_2)
     assert report.alerts_created == 0
 
+
 # ---------------------------------------------------------------------------
 # Idempotency (Part C1/C3)
 # ---------------------------------------------------------------------------
+
 
 def test_detection_is_idempotent_no_duplicate_alerts(db, watch_data) -> None:
     user, haaland = watch_data["pro"], watch_data["haaland"]
@@ -283,9 +296,11 @@ def test_detection_is_idempotent_no_duplicate_alerts(db, watch_data) -> None:
     assert second.alerts_created == 0  # re-run creates nothing
     assert db.query(WatchAlert).count() == 1
 
+
 # ---------------------------------------------------------------------------
 # Club change fires once (Part A2/C3)
 # ---------------------------------------------------------------------------
+
 
 def test_club_change_alerts_and_fires_once(db, watch_data) -> None:
     """3 consecutive snapshots with ONE transfer: exactly one club-change
@@ -329,9 +344,11 @@ def test_club_change_alerts_and_fires_once(db, watch_data) -> None:
     assert detail["snapshot_date"] == SNAPSHOT_2.date().isoformat()
     assert detail["entity_name"] == "Erling Haaland"
 
+
 # ---------------------------------------------------------------------------
 # New-season + coverage triggers (Part A2/C2)
 # ---------------------------------------------------------------------------
+
 
 def test_new_season_data_alerts_once(db, watch_data) -> None:
     user, haaland = watch_data["pro"], watch_data["haaland"]
@@ -360,6 +377,7 @@ def test_new_season_data_alerts_once(db, watch_data) -> None:
     assert len(season_alerts) == 1
     assert season_alerts[0].detail["new_season"] == "2025-26"
     assert season_alerts[0].detail["previous_season"] == "2024-25"
+
 
 def test_coverage_gained_alerts(db, watch_data) -> None:
     user, haaland = watch_data["pro"], watch_data["haaland"]
@@ -399,6 +417,7 @@ def test_coverage_gained_alerts(db, watch_data) -> None:
     assert coverage_alerts[0].detail["signal"] == "coverage_gained"
     assert coverage_alerts[0].detail["coverage_source"] == "statsbomb"
 
+
 def test_source_anomaly_alerts(db, watch_data) -> None:
     user, haaland = watch_data["pro"], watch_data["haaland"]
     seed_watch(db, user, "player", haaland.id)
@@ -424,9 +443,11 @@ def test_source_anomaly_alerts(db, watch_data) -> None:
         for a in alerts
     )
 
+
 # ---------------------------------------------------------------------------
 # Watch CRUD + authorization (Part B2/E)
 # ---------------------------------------------------------------------------
+
 
 def test_follow_and_list(db, watch_data) -> None:
     user, haaland = watch_data["free"], watch_data["haaland"]
@@ -439,12 +460,14 @@ def test_follow_and_list(db, watch_data) -> None:
     assert watches[0]["entity_name"] == "Erling Haaland"
     assert watches[0]["unread_alert_count"] == 0
 
+
 def test_follow_is_idempotent_unique_entity(db, watch_data) -> None:
     user, haaland = watch_data["free"], watch_data["haaland"]
     first = wq.follow_entity(db, user.id, "player", haaland.id)
     second = wq.follow_entity(db, user.id, "player", haaland.id)
     assert first["watch_id"] == second["watch_id"]
     assert db.query(Watch).count() == 1
+
 
 def test_follow_unknown_entity_rejected(db, watch_data) -> None:
     user = watch_data["free"]
@@ -453,6 +476,7 @@ def test_follow_unknown_entity_rejected(db, watch_data) -> None:
     with pytest.raises(wq.EntityNotFound):
         wq.follow_entity(db, user.id, "team", 999_999)
 
+
 def test_follow_team(db, watch_data) -> None:
     user, city = watch_data["free"], watch_data["city"]
     payload = wq.follow_entity(db, user.id, "team", city.id)
@@ -460,6 +484,7 @@ def test_follow_team(db, watch_data) -> None:
     watches = wq.list_watches(db, user.id)
     assert watches[0]["entity_type"] == "team"
     assert watches[0]["league"] == "Premier League"
+
 
 def test_unfollow_deletes_watch_keeps_alerts(db, watch_data) -> None:
     user, haaland = watch_data["pro"], watch_data["haaland"]
@@ -474,6 +499,7 @@ def test_unfollow_deletes_watch_keeps_alerts(db, watch_data) -> None:
     # Alert history retained (audit bias — never silently destroyed).
     assert db.query(WatchAlert).count() == 1
 
+
 def test_cannot_view_or_modify_another_users_watch(db, watch_data) -> None:
     free, pro = watch_data["free"], watch_data["pro"]
     haaland = watch_data["haaland"]
@@ -483,6 +509,7 @@ def test_cannot_view_or_modify_another_users_watch(db, watch_data) -> None:
     # The pro user's own watchlist is simply empty — nothing leaked.
     assert wq.list_watches(db, pro.id) == []
     assert wq.list_watches(db, free.id)[0]["watch_id"] == watch.id
+
 
 def test_free_tier_watch_cap(db, watch_data) -> None:
     user, league = watch_data["free"], watch_data["league"]
@@ -499,6 +526,7 @@ def test_free_tier_watch_cap(db, watch_data) -> None:
         wq.follow_entity(db, user.id, "team", overflow.id)
     assert "Upgrade to Pro" in str(excinfo.value)
 
+
 def test_pro_user_unlimited_watches(db, watch_data) -> None:
     user, league = watch_data["pro"], watch_data["league"]
     for i in range(12):  # above the free cap
@@ -508,9 +536,11 @@ def test_pro_user_unlimited_watches(db, watch_data) -> None:
         wq.follow_entity(db, user.id, "team", team.id)
     assert len(wq.list_watches(db, user.id)) == 12
 
+
 # ---------------------------------------------------------------------------
 # Alerts read/dismiss + ownership
 # ---------------------------------------------------------------------------
+
 
 def _make_alert(db, watch_data, user=None) -> WatchAlert:
     user = user or watch_data["pro"]
@@ -520,6 +550,7 @@ def _make_alert(db, watch_data, user=None) -> WatchAlert:
     seed_snapshot(db, haaland, snapshot_date=SNAPSHOT_2, percentiles={PCT_METRIC: 81.0})
     detect_watch_triggers(db, SNAPSHOT_2)
     return db.query(WatchAlert).one()
+
 
 def test_alert_read_and_dismiss(db, watch_data) -> None:
     user = watch_data["pro"]
@@ -544,6 +575,7 @@ def test_alert_read_and_dismiss(db, watch_data) -> None:
     assert detail["detail"]["to_percentile"] == 81.0
     assert detail["entity_name"] == "Erling Haaland"
 
+
 def test_cannot_read_another_users_alert(db, watch_data) -> None:
     free, pro = watch_data["free"], watch_data["pro"]
     alert = _make_alert(db, watch_data, pro)
@@ -554,9 +586,11 @@ def test_cannot_read_another_users_alert(db, watch_data) -> None:
     with pytest.raises(wq.WatchNotFound):
         wq.dismiss_alert(db, free.id, alert.id)
 
+
 # ---------------------------------------------------------------------------
 # Preferences (Part B2/D)
 # ---------------------------------------------------------------------------
+
 
 def test_preferences_defaults_and_update(db, watch_data) -> None:
     user = watch_data["free"]
@@ -581,6 +615,7 @@ def test_preferences_defaults_and_update(db, watch_data) -> None:
     assert again["email_enabled"] is True
     assert again["digest_frequency"] == "weekly_digest"
 
+
 def test_preferences_reject_unknown_values(db, watch_data) -> None:
     user = watch_data["free"]
     with pytest.raises(ValueError) as excinfo:
@@ -591,9 +626,11 @@ def test_preferences_reject_unknown_values(db, watch_data) -> None:
     with pytest.raises(ValueError):
         wq.update_preferences(db, user.id, digest_frequency="hourly_digest")
 
+
 # ---------------------------------------------------------------------------
 # Delivery — preference compliance (Part D4 — the critical category)
 # ---------------------------------------------------------------------------
+
 
 def _fake_sender(sent: list) -> Callable[[EmailMessage], None]:
     from app.notifications.email import EmailMessage
@@ -602,6 +639,7 @@ def _fake_sender(sent: list) -> Callable[[EmailMessage], None]:
         sent.append(message)
 
     return send
+
 
 def test_opted_out_trigger_type_produces_no_email(db, watch_data) -> None:
     """THE preference-compliance test: a user opted out of percentile-movement
@@ -618,6 +656,7 @@ def test_opted_out_trigger_type_produces_no_email(db, watch_data) -> None:
     assert stats["skipped_opt_out"] == 1
     assert sent == []  # no email — compliance is absolute
 
+
 def test_email_disabled_produces_no_email(db, watch_data) -> None:
     user = watch_data["pro"]
     wq.update_preferences(db, user.id, email_enabled=False)
@@ -629,6 +668,7 @@ def test_email_disabled_produces_no_email(db, watch_data) -> None:
     assert stats["skipped_opt_out"] == 1
     assert sent == []
 
+
 def test_digest_frequency_user_gets_no_immediate_email(db, watch_data) -> None:
     user = watch_data["pro"]
     wq.update_preferences(db, user.id, digest_frequency="daily_digest")
@@ -639,6 +679,7 @@ def test_digest_frequency_user_gets_no_immediate_email(db, watch_data) -> None:
     assert stats["delivered"] == 0
     assert stats["skipped_opt_out"] == 1
     assert sent == []
+
 
 def test_immediate_email_sent_with_real_content_and_unsubscribe(db, watch_data) -> None:
     user = watch_data["pro"]
@@ -666,6 +707,7 @@ def test_immediate_email_sent_with_real_content_and_unsubscribe(db, watch_data) 
     stats2 = delivery.deliver_immediate(db, sender=_fake_sender(sent))
     assert stats2["delivered"] == 0
     assert len(sent) == 1
+
 
 def test_digest_batches_multiple_alerts_into_one_email(db, watch_data) -> None:
     """Two alerts in the period -> ONE digest email, not two."""
@@ -702,6 +744,7 @@ def test_digest_batches_multiple_alerts_into_one_email(db, watch_data) -> None:
     assert stats2["digests_sent"] == 0
     assert len(sent) == 1
 
+
 def test_digest_respects_per_type_opt_out(db, watch_data) -> None:
     """A digest user opted out of percentile alerts: the digest skips that
     alert entirely (it is neither emailed nor marked delivered)."""
@@ -723,6 +766,7 @@ def test_digest_respects_per_type_opt_out(db, watch_data) -> None:
     assert stats["digests_sent"] == 0
     assert sent == []
 
+
 def test_weekly_digest_only_on_monday(db, watch_data) -> None:
     user, haaland = watch_data["pro"], watch_data["haaland"]
     wq.update_preferences(db, user.id, digest_frequency="weekly_digest")
@@ -743,9 +787,11 @@ def test_weekly_digest_only_on_monday(db, watch_data) -> None:
     assert results["weekly_digest"] == 1
     assert len(sent) == 1
 
+
 # ---------------------------------------------------------------------------
 # One-click unsubscribe (Part D1)
 # ---------------------------------------------------------------------------
+
 
 def test_unsubscribe_token_rotation(db, watch_data) -> None:
     user = watch_data["free"]
@@ -754,9 +800,11 @@ def test_unsubscribe_token_rotation(db, watch_data) -> None:
     second = wq.rotate_unsubscribe_token(db, user.id)["unsubscribe_token"]
     assert first != second  # old email links are invalidated
 
+
 # ---------------------------------------------------------------------------
 # API level
 # ---------------------------------------------------------------------------
+
 
 @pytest.fixture()
 def client() -> None:
@@ -766,6 +814,7 @@ def client() -> None:
     with TestClient(app) as c:
         yield c
 
+
 from app.api.main import app
 
 
@@ -774,6 +823,7 @@ def _register(client, email: str = "api-watcher@example.com") -> None:
         "/api/v1/auth/register", json={"email": email, "password": "Hunter2hunter!"}
     )
     assert resp.status_code == 201, resp.text
+
 
 def _seed_api_entity(db) -> tuple[object, ...]:
     league = League(
@@ -798,10 +848,12 @@ def _seed_api_entity(db) -> tuple[object, ...]:
     db.commit()
     return player.id, team.id
 
+
 def test_api_watch_requires_signin(client) -> None:
     assert client.get("/api/v1/watch").status_code == 401
     assert client.get("/api/v1/watch/alerts").status_code == 401
     assert client.get("/api/v1/watch/preferences").status_code == 401
+
 
 def test_api_follow_flow_alert_list_and_preferences(client, db) -> None:
     with db_module.session_scope() as session:
@@ -835,6 +887,7 @@ def test_api_follow_flow_alert_list_and_preferences(client, db) -> None:
     assert resp.status_code == 200
     assert client.get("/api/v1/watch").json()["watches"] == []
 
+
 def test_api_free_cap_honest_upsell(client, db) -> None:
     with db_module.session_scope() as session:
         _league = League(
@@ -866,6 +919,7 @@ def test_api_free_cap_honest_upsell(client, db) -> None:
     msg = body.get("detail") or body.get("error", {}).get("message", "")
     assert "Upgrade to Pro" in msg
 
+
 def test_api_cross_user_watch_404(client, db) -> None:
     with db_module.session_scope() as session:
         player_id, _ = _seed_api_entity(session)
@@ -879,6 +933,7 @@ def test_api_cross_user_watch_404(client, db) -> None:
     resp = client.post(f"/api/v1/watch/{watch_id}/unfollow")
     assert resp.status_code == 404  # never 403 — existence must not leak
 
+
 def test_e2e_seed_alert_fixture_disabled_outside_e2e(client) -> None:
     """The e2e fixture route (seed-alert) is hard-disabled when the e2e flag
     is not set — production can never create alerts through it."""
@@ -890,6 +945,7 @@ def test_e2e_seed_alert_fixture_disabled_outside_e2e(client) -> None:
     body = resp.json()
     msg = body.get("detail") or body.get("error", {}).get("message", "")
     assert "e2e fixtures are disabled" in msg
+
 
 def test_api_unsubscribe_sessionless(client, db) -> str:
     """The one-click unsubscribe link works without a session (it's clicked

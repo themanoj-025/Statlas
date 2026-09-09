@@ -170,7 +170,6 @@ class TestLoginRateLimiting:
         import app.rate_limiting as rl
         from app.rate_limiting import InMemoryRateLimiter
 
-
         rl._limiter = InMemoryRateLimiter()
 
         for _ in range(auth.LOGIN_MAX_FAILURES):

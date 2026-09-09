@@ -3,6 +3,7 @@
 Uses HMAC-signed tokens tied to a session ID, with a 1-hour expiry.
 Safe methods (GET, HEAD, OPTIONS) are exempt.
 """
+
 from __future__ import annotations
 
 import hashlib
@@ -71,6 +72,3 @@ def verify_csrf_token(token: str, session_id: str) -> bool:
         return hmac.compare_digest(signature, expected)
     except (ValueError, TypeError):
         return False
-
-
-

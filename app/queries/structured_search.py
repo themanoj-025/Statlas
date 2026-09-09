@@ -44,16 +44,13 @@ def _finite(value: Any) -> bool:
         return False
 
 
-# Re-export from split modules
+# Re-exports from the split modules (backward compatibility for
+# ``from app.queries.structured_search import X`` consumers).
+
 from app.queries.search_execution import execute_structured_query
 from app.queries.search_saved import (
-    delete_saved_search,
-    get_search_history,
     list_presets,
-    list_saved_searches,
-    rerun_history_entry,
-    run_saved_search,
-    save_search,
-    summarize_query,
 )
-from app.queries.search_validation import validate_query_definition
+from app.queries.search_validation import (
+    validate_query_definition,
+)

@@ -11,22 +11,17 @@ import pytest
 from sqlalchemy.orm import Session
 
 from app.analytics.alerts import detect_anomalies
-from app.analytics.events import REQUIRED_PROPERTIES, track_event
+from app.analytics.events import track_event
 
 pytestmark = pytest.mark.integration
 from app.analytics.metrics import (
     compute_arpu,
     compute_churn_rate,
-    compute_conversion_funnel,
-    compute_dau,
-    compute_feature_usage,
-    compute_mau,
     compute_retention_cohort,
 )
 from app.models import (
     AnalyticsAlert,
     AnalyticsEvent,
-    AnalyticsSession,
     DailyMetric,
     User,
 )
@@ -37,9 +32,7 @@ class TestRetention:
 
     def test_retention_empty_cohort(self, db: Session) -> None:
         """Empty cohort returns empty list."""
-        result = compute_retention_cohort(
-            db, datetime(2020, 1, 1, tzinfo=timezone.utc)
-        )
+        result = compute_retention_cohort(db, datetime(2020, 1, 1, tzinfo=timezone.utc))
         assert result == []
 
     def test_retention_cohort_with_users(self, db: Session) -> None:
@@ -308,9 +301,8 @@ class TestDataIntegrity:
         """
         from sqlalchemy import inspect
 
-
         mapper = inspect(DailyMetric)
         table = mapper.local_table
-        unique_constraints = [c for c in table.constraints if hasattr(c, 'columns')]
+        unique_constraints = [c for c in table.constraints if hasattr(c, "columns")]
         # Verify the unique constraint exists on the model
         assert len(unique_constraints) >= 1

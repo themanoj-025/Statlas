@@ -77,9 +77,7 @@ def track_event(
     required = REQUIRED_PROPERTIES[event_name]
     missing = [k for k in required if k not in properties]
     if missing:
-        raise ValueError(
-            f"Event '{event_name}' missing required properties: {missing}"
-        )
+        raise ValueError(f"Event '{event_name}' missing required properties: {missing}")
 
     event = AnalyticsEvent(
         user_id=user_id,
@@ -126,9 +124,8 @@ def _upsert_session(
         db.add(session)
     else:
         # Check if session has timed out.
-        if (
-            session.ended_at is not None
-            and (now - session.ended_at) > timedelta(minutes=SESSION_TIMEOUT_MINUTES)
+        if session.ended_at is not None and (now - session.ended_at) > timedelta(
+            minutes=SESSION_TIMEOUT_MINUTES
         ):
             # Start a new session with the same ID prefix.
             session.ended_at = session.ended_at
@@ -143,7 +140,9 @@ def _upsert_session(
         else:
             # Extend existing session.
             session.event_count += 1
-            events = session.events_json.get("events", []) if session.events_json else []
+            events = (
+                session.events_json.get("events", []) if session.events_json else []
+            )
             events.append(event_name)
             session.events_json = {"events": events[-100:]}  # keep last 100
             session.ended_at = now

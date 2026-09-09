@@ -55,7 +55,6 @@ def api_client() -> None:
 
     from app.api.main import app
 
-
     with TestClient(app) as client:
         yield client
 

@@ -1,6 +1,25 @@
+"""Multi-season backfill engine (import header restored after a bad split)."""
+
+from __future__ import annotations
+
+import argparse
+import time
+
+from app.config import load_tiers
+from app.db import create_schema, session_scope
+from scripts.ingest_pkg.helpers import (
+    ProgressTracker,
+    _estimate_time,
+    _print_section,
+    _progress_line,
+    ingest_season,
+    sync_statsbomb_events,
+)
+
 # ---------------------------------------------------------------------------
 # Multi-season backfill engine
 # ---------------------------------------------------------------------------
+
 
 def run_backfill(
     seasons: list[str],
@@ -23,10 +42,7 @@ def run_backfill(
 
     # Count already done
     already_done = sum(
-        1
-        for s in seasons
-        for lg in all_leagues
-        if tracker.is_completed(s, lg)
+        1 for s in seasons for lg in all_leagues if tracker.is_completed(s, lg)
     )
     remaining = total_tasks - already_done
 
@@ -55,10 +71,15 @@ def run_backfill(
 
             elapsed = time.monotonic() - run_start
             _progress_line(
-                s_idx, len(seasons),
-                l_idx, len(all_leagues),
-                season, league,
-                elapsed, tasks_completed, remaining,
+                s_idx,
+                len(seasons),
+                l_idx,
+                len(all_leagues),
+                season,
+                league,
+                elapsed,
+                tasks_completed,
+                remaining,
             )
 
             t0 = time.monotonic()
@@ -76,7 +97,9 @@ def run_backfill(
                 errs = len(report.errors) if report else 0
                 total_snapshots += snaps
                 total_errors += errs
-                tracker.mark_completed(season, league, snapshots=snaps, elapsed=league_elapsed)
+                tracker.mark_completed(
+                    season, league, snapshots=snaps, elapsed=league_elapsed
+                )
                 tasks_completed += 1
                 status = "ok" if errs == 0 else f"{errs} errors"
                 print(
@@ -88,9 +111,7 @@ def run_backfill(
                 tracker.mark_failed(season, league, str(exc))
                 tasks_completed += 1
                 total_errors += 1
-                print(
-                    f"\r  [FAIL] {season}/{league}: {str(exc)[:60]}       "
-                )
+                print(f"\r  [FAIL] {season}/{league}: {str(exc)[:60]}       ")
 
     # Final summary
     total_elapsed = time.monotonic() - run_start
@@ -115,6 +136,7 @@ def run_backfill(
 # ---------------------------------------------------------------------------
 # CLI
 # ---------------------------------------------------------------------------
+
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
@@ -180,7 +202,7 @@ Examples:
         default=None,
         metavar="SEASON",
         help="Start backfill from this season through the current season "
-             "(e.g. --start-from 2017-18 fetches 2017-18 through 2025-26).",
+        "(e.g. --start-from 2017-18 fetches 2017-18 through 2025-26).",
     )
 
     # -- League selection ---
@@ -224,7 +246,8 @@ Examples:
         help="Override STATLAS_DATASET_MODE.",
     )
     parser.add_argument(
-        "-v", "--verbose",
+        "-v",
+        "--verbose",
         action="store_true",
         help="Debug logging.",
     )
@@ -285,7 +308,12 @@ def main() -> int:
             print(f"  Deleted {PROGRESS_FILE}")
         else:
             print("  No progress file to delete.")
-        if not args.resume and not args.start_from and not args.seasons and not args.season:
+        if (
+            not args.resume
+            and not args.start_from
+            and not args.seasons
+            and not args.season
+        ):
             return 0
 
     # -- Resume mode ---
@@ -358,7 +386,9 @@ def main() -> int:
     if get_settings().dataset_mode == "fixture-demo":
         print()
         print("  WARN Dataset mode is 'fixture-demo'. After the first real scrape:")
-        print("    STATLAS_DATASET_MODE=production python scripts/ingest_real_data.py ...")
+        print(
+            "    STATLAS_DATASET_MODE=production python scripts/ingest_real_data.py ..."
+        )
 
     create_schema()
 

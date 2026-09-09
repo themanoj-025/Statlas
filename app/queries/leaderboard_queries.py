@@ -61,6 +61,7 @@ def get_leaderboard(
     team_names: dict[int, str] = {}
     if team_ids:
         from app.models import Team
+
         team_rows = db.query(Team).filter(Team.id.in_(team_ids)).all()
         team_names = {t.id: t.name for t in team_rows}
 
@@ -170,6 +171,7 @@ def get_leaderboard_filtered(
     team_names: dict[int, str] = {}
     if team_ids:
         from app.models import Team
+
         team_rows = db.query(Team).filter(Team.id.in_(team_ids)).all()
         team_names = {t.id: t.name for t in team_rows}
     for percentile, snap, player, league in best.values():

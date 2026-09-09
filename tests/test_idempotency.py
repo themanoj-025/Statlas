@@ -18,7 +18,6 @@ from tests.test_integration import FakeFBrefSource, FakeUnderstatSource, _fixtur
 SEASON = "2025-26"
 
 
-
 def _run(db, **kw: Any) -> dict:
     fbref, understat = _fixtures()
     return run_weekly_refresh(

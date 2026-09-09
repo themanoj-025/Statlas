@@ -2,20 +2,16 @@
 
 from __future__ import annotations
 
-from datetime import datetime
 from typing import Any
 
 from sqlalchemy.orm import Session
 
-from app.models import Player, Shortlist, ShortlistEntry
+from app.models import Shortlist, ShortlistEntry
 from app.queries.workspace_queries import (
-    InvalidStatusTransition,
-    ShortlistNotFound,
     WorkspaceLimitExceeded,
     _entry_counts,
     _now,
     _owned_shortlist,
-    validate_transition,
 )
 
 # Shortlists
@@ -118,4 +114,3 @@ def delete_shortlist(db: Session, user_id: int, shortlist_id: int) -> None:
         {ShortlistEntry.removed_at: now}
     )
     db.commit()
-

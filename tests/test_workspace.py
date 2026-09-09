@@ -256,7 +256,9 @@ def test_valid_transitions(db, workspace_data, path) -> None:
         (("rejected", "shortlisted"), "reconsider"),
     ],
 )
-def test_invalid_transitions_rejected(db, workspace_data, path, message_fragment) -> None:
+def test_invalid_transitions_rejected(
+    db, workspace_data, path, message_fragment
+) -> None:
     user = workspace_data["free"]
     entry_id = _entry(db, workspace_data, user)
     wq.update_entry_status(db, user.id, entry_id, path[0])

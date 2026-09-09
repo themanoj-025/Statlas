@@ -1,4 +1,5 @@
 """Stats domain models — snapshots, percentiles, events, coverage, anomalies."""
+
 from __future__ import annotations
 
 from datetime import datetime
@@ -38,7 +39,9 @@ class StatSnapshot(Base):
     team_id: Mapped[int | None] = mapped_column(ForeignKey("teams.id"), nullable=True)
     league_id: Mapped[int] = mapped_column(ForeignKey("leagues.id"), nullable=False)
     season: Mapped[str] = mapped_column(String(16), nullable=False)
-    scrape_date: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    scrape_date: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False
+    )
     source: Mapped[str] = mapped_column(SOURCE_ENUM, nullable=False)
     raw_stats: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
     minutes_played: Mapped[float] = mapped_column(Float, nullable=False)
@@ -53,10 +56,20 @@ class StatSnapshot(Base):
 
     __table_args__ = (
         UniqueConstraint(
-            "player_id", "team_id", "league_id", "season", "source", "scrape_date",
+            "player_id",
+            "team_id",
+            "league_id",
+            "season",
+            "source",
+            "scrape_date",
             name="uq_stat_snapshot_natural_key",
         ),
-        Index("ix_stat_snapshot_league_season_scrape", "league_id", "season", "scrape_date"),
+        Index(
+            "ix_stat_snapshot_league_season_scrape",
+            "league_id",
+            "season",
+            "scrape_date",
+        ),
         Index("ix_stat_snapshot_player", "player_id"),
         Index("ix_stat_snapshot_source", "source"),
     )
@@ -69,7 +82,9 @@ class PercentileSnapshot(Base):
     stat_snapshot_id: Mapped[int] = mapped_column(
         ForeignKey("stat_snapshots.id"), nullable=False
     )
-    computed_date: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    computed_date: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False
+    )
     position_group: Mapped[str] = mapped_column(POSITION_GROUP_ENUM, nullable=False)
     league_tier: Mapped[str] = mapped_column(TIER_ENUM, nullable=False)
     metric_name: Mapped[str] = mapped_column(String(64), nullable=False)
@@ -79,7 +94,9 @@ class PercentileSnapshot(Base):
 
     __table_args__ = (
         UniqueConstraint(
-            "stat_snapshot_id", "metric_name", "league_tier",
+            "stat_snapshot_id",
+            "metric_name",
+            "league_tier",
             name="uq_percentile_snapshot_metric_tier",
         ),
         Index("ix_percentile_snapshot_published", "is_published"),
@@ -93,7 +110,9 @@ class MatchEvent(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     match_id: Mapped[str] = mapped_column(String(64), nullable=False)
     event_id: Mapped[str] = mapped_column(String(64), nullable=False)
-    player_id: Mapped[int | None] = mapped_column(ForeignKey("players.id"), nullable=True)
+    player_id: Mapped[int | None] = mapped_column(
+        ForeignKey("players.id"), nullable=True
+    )
     event_type: Mapped[str] = mapped_column(String(64), nullable=False)
     x_coordinate: Mapped[float | None] = mapped_column(Float, nullable=True)
     y_coordinate: Mapped[float | None] = mapped_column(Float, nullable=True)
@@ -114,17 +133,23 @@ class DataCoverage(Base):
     __tablename__ = "data_coverage"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    league_id: Mapped[int | None] = mapped_column(ForeignKey("leagues.id"), nullable=True)
+    league_id: Mapped[int | None] = mapped_column(
+        ForeignKey("leagues.id"), nullable=True
+    )
     source: Mapped[str] = mapped_column(SOURCE_ENUM, nullable=False)
     source_identifier: Mapped[str] = mapped_column(String(128), nullable=False)
     seasons_available: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
     last_successful_scrape: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True), nullable=True
     )
-    status: Mapped[str] = mapped_column(COVERAGE_STATUS_ENUM, nullable=False, default="active")
+    status: Mapped[str] = mapped_column(
+        COVERAGE_STATUS_ENUM, nullable=False, default="active"
+    )
 
     __table_args__ = (
-        UniqueConstraint("source", "source_identifier", name="uq_coverage_source_identifier"),
+        UniqueConstraint(
+            "source", "source_identifier", name="uq_coverage_source_identifier"
+        ),
         CheckConstraint(
             "league_id IS NOT NULL OR source = 'statsbomb'",
             name="ck_coverage_league_optional",
@@ -162,13 +187,17 @@ class ReconciliationQueue(Base):
     candidate_player_id: Mapped[int | None] = mapped_column(
         ForeignKey("players.id"), nullable=True
     )
-    status: Mapped[str] = mapped_column(QUEUE_STATUS_ENUM, nullable=False, default="pending")
+    status: Mapped[str] = mapped_column(
+        QUEUE_STATUS_ENUM, nullable=False, default="pending"
+    )
     confidence: Mapped[float | None] = mapped_column(Float, nullable=True)
     notes: Mapped[str | None] = mapped_column(Text, nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now()
     )
-    resolved_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    resolved_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
 
     __table_args__ = (
         UniqueConstraint("source", "source_record_key", name="uq_queue_source_key"),

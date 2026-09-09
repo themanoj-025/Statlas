@@ -18,14 +18,10 @@ from sqlalchemy.orm import Session
 
 from app.models import (
     ActivityLog,
-    DashboardState,
-    PercentileSnapshot,
     Player,
-    SavedPlayer,
     SavedSearch,
     Shortlist,
     ShortlistEntry,
-    StatSnapshot,
     Team,
     Watch,
     WatchAlert,
@@ -98,11 +94,17 @@ def get_recent_activity(
     # Batch-load all players and teams (eliminates N+1)
     players_map: dict[int, Player] = {}
     if player_ids:
-        players_map = {p.id: p for p in db.query(Player).filter(Player.id.in_(player_ids)).all()}
-        team_ids = {p.current_team_id for p in players_map.values() if p.current_team_id}
+        players_map = {
+            p.id: p for p in db.query(Player).filter(Player.id.in_(player_ids)).all()
+        }
+        team_ids = {
+            p.current_team_id for p in players_map.values() if p.current_team_id
+        }
     teams_map: dict[int, Team] = {}
     if team_ids:
-        teams_map = {t.id: t for t in db.query(Team).filter(Team.id.in_(team_ids)).all()}
+        teams_map = {
+            t.id: t for t in db.query(Team).filter(Team.id.in_(team_ids)).all()
+        }
 
     results: list[dict] = []
     for entry in raw_entries:
@@ -111,7 +113,11 @@ def get_recent_activity(
             if player is not None:
                 entry["player_name"] = player.canonical_name
                 entry["position_group"] = player.position_group
-                team = teams_map.get(player.current_team_id) if player.current_team_id else None
+                team = (
+                    teams_map.get(player.current_team_id)
+                    if player.current_team_id
+                    else None
+                )
                 entry["team_name"] = team.name if team else None
         results.append(entry)
 
@@ -172,4 +178,3 @@ def get_workspace_summary(db: Session, user_id: int) -> dict:
         "watch_count": watch_count,
         "unread_alert_count": unread_alerts,
     }
-

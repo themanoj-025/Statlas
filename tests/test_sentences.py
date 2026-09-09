@@ -16,7 +16,9 @@ from tests.conftest import SNAPSHOT_DATE, compute_and_publish
 SEASON = "2025-26"
 
 
-def _seed(db, league, name: str, group: str, gls: float, minutes: float = 1000, **extra: Any) -> Player:
+def _seed(
+    db, league, name: str, group: str, gls: float, minutes: float = 1000, **extra: Any
+) -> Player:
     team = db.query(Team).filter_by(name="City", league_id=league.id).first()
     if team is None:
         team = Team(name="City", league_id=league.id)

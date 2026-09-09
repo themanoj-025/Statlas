@@ -8,14 +8,12 @@ Implementation split across:
 
 from __future__ import annotations
 
-from datetime import datetime
-from typing import Any
-
 from sqlalchemy.orm import Session
 
 from app.models import DashboardState
 
-# Re-export from split modules
+# Re-exports from the split modules (backward compatibility for
+# ``from app.queries.dashboard_queries import X`` consumers, live and tests).
 from app.queries.dashboard_activity import (
     get_recent_activity,
     get_workspace_summary,
@@ -28,7 +26,6 @@ from app.queries.dashboard_state import (
     dismiss_recommendation,
     get_or_create_dashboard_state,
     get_saved_players,
-    get_top_viewed_positions,
     save_player,
     unsave_player,
 )

@@ -1,10 +1,24 @@
 "use client";
 
+import { BulkAddPanel } from "./BulkAddPanel";
+import { Plus } from "lucide-react";
+import { ResultRow } from "./ResultRow";
+import type { SearchResults } from "../../../lib/types_pkg/player";
+import { useState } from "react";
 import type { Meta, SearchResultEntry, SearchCondition, ConditionOperator, QueryDefinition } from "@/lib/types";
 import { api } from "@/lib/api";
 import { formatNumber } from "@/lib/format";
 import { AddToShortlist } from "@/components/AddToShortlist";
 import { useAuth } from "@/components/AuthProvider";
+
+// Sort options for the results toolbar. Restored from SearchClient.tsx
+// history (ead9f75^) after the file split dropped the const block.
+const SORTS = [
+  { value: "index", label: "Statlas Index" },
+  { value: "minutes", label: "Minutes" },
+  { value: "age", label: "Age" },
+  { value: "name", label: "Name" },
+];
 
 export function ResultsSection({
   results,

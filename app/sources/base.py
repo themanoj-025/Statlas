@@ -199,7 +199,9 @@ class HttpCache:
 _ALLOWED_FETCH_HOSTS: set[str] | None = None
 
 
-def set_allowed_fetch_hosts(*, allow_all: bool = False, extra: set[str] | None = None) -> None:
+def set_allowed_fetch_hosts(
+    *, allow_all: bool = False, extra: set[str] | None = None
+) -> None:
     """Configure the host allowlist checked by ``fetch_with_retry``.
 
     Called once at source initialization (never in request paths). In dev/CI the
@@ -252,7 +254,7 @@ def _parse_url_host(url: str) -> str | None:
     s = url.strip().lower()
     for prefix in ("https://", "http://"):
         if s.startswith(prefix):
-            rest = s[len(prefix):]
+            rest = s[len(prefix) :]
             host = rest.split("/", 1)[0].split("&", 1)[0].split("?", 1)[0]
             host = host.split("#")[0].strip()
             return host.lower() if host else None

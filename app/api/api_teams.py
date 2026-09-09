@@ -4,17 +4,14 @@ from __future__ import annotations
 
 from typing import Any
 
-from fastapi import APIRouter, Query
-from sqlalchemy.orm import Session
-
-from app.models import League, Player, Team
-
 # Teams
 # ---------------------------------------------------------------------------
 
 
 @app.get("/api/v1/clubs/{league_slug}/{team_slug}")
-def team_profile(league_slug: str, team_slug: str, season: str | None = None) -> dict[str, Any]:
+def team_profile(
+    league_slug: str, team_slug: str, season: str | None = None
+) -> dict[str, Any]:
     from app.queries.team_queries import get_team_profile
 
     with session_scope() as db:
@@ -58,6 +55,7 @@ def coverage(league_id: int | None = None) -> dict[str, Any]:
 @app.get("/api/v1/positions", response_model=list[PositionEntry])
 def positions() -> list[dict[str, Any]]:
     from app.cache import get_cache
+
     meta = public_meta()
     from app.queries.leaderboard_queries import get_qualifying_counts
 
@@ -72,11 +70,15 @@ def positions() -> list[dict[str, Any]]:
 
     with session_scope() as db:
         counts_by_group = get_qualifying_counts(
-            db, metric=meta["index_metric_id"], season=CURRENT_SEASON,
+            db,
+            metric=meta["index_metric_id"],
+            season=CURRENT_SEASON,
         )
         out = []
         for group in meta["position_groups"]:
-            out.append({**group, "qualifying_counts": counts_by_group.get(group["code"], {})})
+            out.append(
+                {**group, "qualifying_counts": counts_by_group.get(group["code"], {})}
+            )
         result = out
     with suppress(Exception):
         cache.set(cache_key, _json.dumps(result, default=str), ttl=300)

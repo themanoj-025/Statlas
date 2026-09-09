@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useEffect, useState } from "react";
 import DOMPurify from "dompurify";
 
 interface SanitizedHTMLProps {
@@ -18,7 +18,14 @@ interface SanitizedHTMLProps {
  * Must be a client component because DOMPurify requires the DOM API.
  */
 export default function SanitizedHTML({ html, className }: SanitizedHTMLProps) {
-  const safeHtml = useMemo(() => DOMPurify.sanitize(html), [html]);
+  // DOMPurify requires a DOM: during SSR/static prerender `sanitize` is not
+  // available, so render nothing server-side and sanitize after hydration
+  // (no hydration mismatch — effects only run on the client).
+  const [safeHtml, setSafeHtml] = useState("");
+
+  useEffect(() => {
+    setSafeHtml(DOMPurify.sanitize(html));
+  }, [html]);
 
   return (
     <div

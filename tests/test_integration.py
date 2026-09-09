@@ -21,7 +21,9 @@ from tests.conftest import SNAPSHOT_DATE
 SEASON = "2025-26"
 
 
-def _st_raw(gls, xg, sh, prgp, prgc, xag, kp, tkl, int_, press, cmp, dis) -> dict[str, object]:
+def _st_raw(
+    gls, xg, sh, prgp, prgc, xag, kp, tkl, int_, press, cmp, dis
+) -> dict[str, object]:
     return {
         "si_gls_p90": gls,
         "si_xg_p90": xg,
@@ -41,7 +43,15 @@ def _st_raw(gls, xg, sh, prgp, prgc, xag, kp, tkl, int_, press, cmp, dis) -> dic
     }
 
 
-def _st_record(name: str, ext_id: str, team: str, minutes: float, gls: float, xg: float, dis: float = 0.5) -> RawPlayerStatRecord:
+def _st_record(
+    name: str,
+    ext_id: str,
+    team: str,
+    minutes: float,
+    gls: float,
+    xg: float,
+    dis: float = 0.5,
+) -> RawPlayerStatRecord:
     return RawPlayerStatRecord(
         source="fbref",
         season=SEASON,
@@ -57,7 +67,9 @@ def _st_record(name: str, ext_id: str, team: str, minutes: float, gls: float, xg
     )
 
 
-def _understat_record(name: str, understat_id: str, team: str, xg: float) -> RawPlayerStatRecord:
+def _understat_record(
+    name: str, understat_id: str, team: str, xg: float
+) -> RawPlayerStatRecord:
     return RawPlayerStatRecord(
         source="understat",
         season=SEASON,

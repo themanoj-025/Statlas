@@ -1,4 +1,5 @@
 """Search domain models — saved searches and search history."""
+
 from __future__ import annotations
 
 from datetime import datetime
@@ -23,7 +24,9 @@ class SavedSearch(Base):
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=func.now()
     )
-    last_run_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    last_run_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
     owner_org_id: Mapped[int | None] = mapped_column(
         ForeignKey("organizations.id"), nullable=True
     )

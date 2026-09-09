@@ -1,4 +1,3 @@
-
 from __future__ import annotations
 
 import pytest
@@ -231,6 +230,7 @@ class TestCachedDecorator:
 
     def test_cache_hit_returns_deserialized_json(self) -> dict[str, object]:
         """Verify cache hit returns properly deserialized JSON, not a string."""
+
         @cached(ttl=60, prefix="test")
         def fn(_db) -> dict[str, object]:
             return {"key": "value"}
@@ -254,7 +254,6 @@ class TestGetCache:
 
     def teardown_method(self) -> None:
         import app.cache as cache_mod
-
 
         cache_mod._backend = None
 

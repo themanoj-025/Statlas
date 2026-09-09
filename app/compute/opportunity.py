@@ -80,14 +80,25 @@ def detect_hidden_gems(
         return []
 
     # Batch-load all players (eliminates N+1).
-    players_map = {p.id: p for p in db.query(Player).filter(Player.id.in_(candidate_ids)).all()}
+    players_map = {
+        p.id: p for p in db.query(Player).filter(Player.id.in_(candidate_ids)).all()
+    }
     team_ids = {p.current_team_id for p in players_map.values() if p.current_team_id}
-    teams_map = {t.id: t for t in db.query(Team).filter(Team.id.in_(team_ids)).all()} if team_ids else {}
+    teams_map = (
+        {t.id: t for t in db.query(Team).filter(Team.id.in_(team_ids)).all()}
+        if team_ids
+        else {}
+    )
     league_ids = {t.league_id for t in teams_map.values() if t.league_id}
-    leagues_map = {lg.id: lg for lg in db.query(League).filter(League.id.in_(league_ids)).all()} if league_ids else {}
+    leagues_map = (
+        {lg.id: lg for lg in db.query(League).filter(League.id.in_(league_ids)).all()}
+        if league_ids
+        else {}
+    )
 
     # Batch-load latest market valuations.
     from sqlalchemy import func as sqlfunc
+
     latest_val_subq = (
         db.query(
             MarketValuation.player_id,
@@ -100,7 +111,11 @@ def detect_hidden_gems(
     valuations_map = {
         v.player_id: v
         for v in db.query(MarketValuation)
-        .join(latest_val_subq, (MarketValuation.player_id == latest_val_subq.c.player_id) & (MarketValuation.valuation_date == latest_val_subq.c.max_date))
+        .join(
+            latest_val_subq,
+            (MarketValuation.player_id == latest_val_subq.c.player_id)
+            & (MarketValuation.valuation_date == latest_val_subq.c.max_date),
+        )
         .all()
     }
 
@@ -146,8 +161,8 @@ def detect_hidden_gems(
                 "opportunity_type": "hidden_gem",
                 "opportunity_summary": (
                     f"Performing at {index_score:.0f}th percentile with market "
-                    f"valuation of €{latest_val.valuation_amount_eur/1e6:.1f}M — "
-                    f"potential upside of €{upside/1e6:.1f}M"
+                    f"valuation of €{latest_val.valuation_amount_eur / 1e6:.1f}M — "
+                    f"potential upside of €{upside / 1e6:.1f}M"
                 ),
                 "risk_factors": [
                     f"Market value based on {latest_val.confidence_level} confidence data",

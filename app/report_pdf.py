@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from typing import Any
 
-from reportlab.graphics import renderPDF
 from reportlab.graphics.shapes import Drawing, Line, Polygon, String
 from reportlab.lib import colors
 from reportlab.lib.styles import ParagraphStyle
@@ -449,4 +448,3 @@ def _bullet_list(
             if value is not None:
                 extra += f" ({_fmt_num(value)} per 90)"
         story.append(Paragraph(f"• {text}{extra}", st["body"]))
-

@@ -3,6 +3,7 @@
 Provides a simple get/set/delete interface for caching expensive queries.
 Falls back to in-memory dict when Redis is unavailable.
 """
+
 from __future__ import annotations
 
 import json
@@ -131,7 +132,9 @@ def get_cache() -> CacheBackend:
         # redis.exceptions.ConnectionError subclasses RedisError, NOT builtin
         # OSError/ConnectionError — a narrow tuple here silently disabled the
         # documented fallback on every Redis-less machine.
-        logger.warning("Redis unavailable (%s) — using in-memory cache (dev/test only)", exc)
+        logger.warning(
+            "Redis unavailable (%s) — using in-memory cache (dev/test only)", exc
+        )
         _backend = InMemoryCacheBackend()
 
     return _backend
@@ -174,6 +177,7 @@ def cached(ttl: int = 3600, prefix: str = "") -> Any:
         def get_player_profile(db, player_id) -> Any:
             ...
     """
+
     def decorator(func: Callable[..., Any]) -> Callable[..., Any]:
         def wrapper(*args: Any, **kwargs: Any) -> Any:
             cache = get_cache()

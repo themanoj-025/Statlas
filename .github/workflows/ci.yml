@@ -34,7 +34,10 @@ jobs:
     timeout-minutes: 15
     strategy:
       matrix:
-        python-version: ["3.10", "3.11", "3.12"]
+        # Single-version matrix: the dependency floor (sklearn) kept drifting
+        # past 3.10, making that leg unsatisfiable. Re-add legs deliberately,
+        # together with the floors, per the Python-floor-vs-matrix rule.
+        python-version: ["3.12"]
     steps:
       - uses: actions/checkout@v7
 

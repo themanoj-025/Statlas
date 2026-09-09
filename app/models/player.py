@@ -1,4 +1,5 @@
 """Player domain models — League, Team, Player, aliases, fixtures, emerging scores."""
+
 from __future__ import annotations
 
 from datetime import datetime
@@ -63,9 +64,13 @@ class Player(Base):
     date_of_birth: Mapped[datetime | None] = mapped_column(Date, nullable=True)
     nationality: Mapped[str | None] = mapped_column(String(64), nullable=True)
     primary_position: Mapped[str | None] = mapped_column(String(64), nullable=True)
-    position_group: Mapped[str | None] = mapped_column(POSITION_GROUP_ENUM, nullable=True)
+    position_group: Mapped[str | None] = mapped_column(
+        POSITION_GROUP_ENUM, nullable=True
+    )
     external_ids: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
-    transfermarkt_id: Mapped[int | None] = mapped_column(Integer, nullable=True, unique=True)
+    transfermarkt_id: Mapped[int | None] = mapped_column(
+        Integer, nullable=True, unique=True
+    )
     current_team_id: Mapped[int | None] = mapped_column(
         ForeignKey("teams.id"), nullable=True
     )
@@ -91,7 +96,9 @@ class PlayerNameAlias(Base):
 
     __table_args__ = (
         UniqueConstraint(
-            "player_id", "source", "source_name_string",
+            "player_id",
+            "source",
+            "source_name_string",
             name="uq_alias_player_source_name",
         ),
         Index("ix_aliases_source_name", "source", "source_name_string"),
@@ -105,11 +112,17 @@ class Fixture(Base):
     league_id: Mapped[int] = mapped_column(ForeignKey("leagues.id"), nullable=False)
     season: Mapped[str] = mapped_column(String(16), nullable=False)
     api_fixture_id: Mapped[int] = mapped_column(Integer, nullable=False)
-    home_team_id: Mapped[int | None] = mapped_column(ForeignKey("teams.id"), nullable=True)
-    away_team_id: Mapped[int | None] = mapped_column(ForeignKey("teams.id"), nullable=True)
+    home_team_id: Mapped[int | None] = mapped_column(
+        ForeignKey("teams.id"), nullable=True
+    )
+    away_team_id: Mapped[int | None] = mapped_column(
+        ForeignKey("teams.id"), nullable=True
+    )
     home_team_name: Mapped[str] = mapped_column(String(128), nullable=False)
     away_team_name: Mapped[str] = mapped_column(String(128), nullable=False)
-    kickoff_utc: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    kickoff_utc: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
     status: Mapped[str | None] = mapped_column(String(32), nullable=True)
     raw: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
 
@@ -125,16 +138,22 @@ class EmergingPlayerScore(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     player_id: Mapped[int] = mapped_column(ForeignKey("players.id"), nullable=False)
     league_id: Mapped[int] = mapped_column(ForeignKey("leagues.id"), nullable=False)
-    computed_date: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    computed_date: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False
+    )
     score: Mapped[float] = mapped_column(Float, nullable=False)
-    contributing_factors: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    contributing_factors: Mapped[dict] = mapped_column(
+        JSON, nullable=False, default=dict
+    )
 
     player: Mapped[Player] = relationship(lazy="selectin")
     league: Mapped[League] = relationship(lazy="selectin")
 
     __table_args__ = (
         UniqueConstraint(
-            "player_id", "league_id", "computed_date",
+            "player_id",
+            "league_id",
+            "computed_date",
             name="uq_emerging_player_league_date",
         ),
         Index("ix_emerging_league_date", "league_id", "computed_date"),
