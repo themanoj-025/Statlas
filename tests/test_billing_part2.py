@@ -18,6 +18,13 @@ from datetime import datetime, timedelta, timezone
 
 from app.db import session_scope
 from app.models import Subscription, User
+from tests.test_billing import (
+    _grant_pro,
+    payment_failed_event,
+    register_user,
+    signed_event,
+    subscription_updated_event,
+)
 
 
 def test_payment_failed_then_cancellation_revokes(client) -> None:

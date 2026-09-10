@@ -221,6 +221,7 @@ def set_allowed_fetch_hosts(
         "understat.com",
         "v3.football.api-sports.io",
         "raw.githubusercontent.com",
+        "www.transfermarkt.com",
     }
     if extra:
         base |= extra

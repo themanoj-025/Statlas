@@ -60,7 +60,7 @@ def create_api_key(body: KeyCreateBody, request: Request) -> Any:
 
 
 @router.get("/keys")
-def list_keys(request: Request) -> list[dict[str, Any]]:
+def list_keys(request: Request) -> dict[str, Any]:
     user = _require_user(request)
     with session_scope() as db:
         return {"keys": api_keys.list_api_keys(db, user.id)}

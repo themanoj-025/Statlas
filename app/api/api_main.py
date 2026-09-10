@@ -22,6 +22,7 @@ from typing import Any
 
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.responses import JSONResponse
 
 from app.api.analytics_views import router as analytics_router
@@ -132,7 +133,8 @@ app.add_middleware(
     allow_headers=["Content-Type", "Authorization", "X-CSRF-Token"],
     max_age=86400,  # Cache preflight for 24 hours
 )
-# GZip compression for all responses (reduces payload size ~70%)app.add_middleware(GZipMiddleware, minimum_size=500)
+# GZip compression for all responses (reduces payload size ~70%)
+app.add_middleware(GZipMiddleware, minimum_size=500)
 
 # Register extracted middleware (order matters: outermost runs first)
 app.middleware("http")(body_size_limit_middleware)

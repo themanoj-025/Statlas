@@ -123,7 +123,7 @@ def transfer_candidates(
 
 
 @router.get("/templates")
-def candidate_templates() -> list[dict[str, Any]]:
+def candidate_templates() -> dict[str, Any]:
     """Pre-built transfer search templates for common recruitment scenarios.
 
     Returns customizable templates like "Young Talent Abroad",

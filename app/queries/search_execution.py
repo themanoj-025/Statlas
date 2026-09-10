@@ -13,14 +13,16 @@ from app.models import (
     League,
     PercentileSnapshot,
     Player,
+    SearchHistory,
     StatSnapshot,
     Team,
 )
-from app.queries.search_validation import validate_query_definition
-from app.queries.structured_search import (
+from app.queries.search_validation import (
+    HISTORY_CAP,
     MINUTES_METRIC,
     PERCENTILE_OPERATORS,
     InvalidQuery,
+    validate_query_definition,
 )
 
 # ---------------------------------------------------------------------------

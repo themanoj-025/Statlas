@@ -31,7 +31,7 @@ def archetype_overview() -> dict[str, Any]:
 
 
 @router.get("/models")
-def model_list() -> list[dict[str, Any]]:
+def model_list() -> dict[str, Any]:
     """List all registered clustering models (including archived)."""
     from app.queries.archetype_queries import get_model_list
 

@@ -18,11 +18,11 @@ from pathlib import Path
 
 import pytest
 from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import Session, sessionmaker
 from sqlalchemy.pool import StaticPool
 
 from app.config import load_registry
-from app.models import Base, League
+from app.models import Base, League, User
 
 FIXTURES_DIR = Path(__file__).parent / "fixtures"
 
@@ -58,6 +58,52 @@ def premier_league(db) -> League:
     db.add(league)
     db.commit()
     return league
+
+
+@pytest.fixture()
+def staff_user(db: Session) -> User:
+    """Create a staff/pro-tier user (analytics + billing API tests)."""
+    user = User(
+        email="staff@statlas.com",
+        password_hash="dummy",
+        email_verified_at=SNAPSHOT_DATE,
+        plan="pro",
+    )
+    db.add(user)
+    db.commit()
+    db.refresh(user)
+    return user
+
+
+@pytest.fixture()
+def pro_user(db: Session) -> User:
+    """Create a pro-tier user (analytics metric tests)."""
+    user = User(
+        email="pro@statlas.com",
+        password_hash="dummy",
+        email_verified_at=SNAPSHOT_DATE,
+        plan="pro",
+    )
+    db.add(user)
+    db.commit()
+    db.refresh(user)
+    return user
+
+
+@pytest.fixture()
+def client() -> Any:
+    """A TestClient over a fresh in-memory DB (shared by API test modules)."""
+    from fastapi.testclient import TestClient
+
+    import app.db as db_module
+    from app.api.main import app
+    from app.db import create_schema
+
+    db_module._engine = None
+    db_module._session_factory = None
+    create_schema()
+    with TestClient(app) as c:
+        yield c
 
 
 @pytest.fixture()

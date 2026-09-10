@@ -71,7 +71,7 @@ class PreferencesBody(BaseModel):
 
 
 @router.get("")
-def my_watches(request: Request) -> list[dict[str, Any]]:
+def my_watches(request: Request) -> dict[str, Any]:
     user = _require_user(request)
     with session_scope() as db:
         return {"watches": wq.list_watches(db, user.id)}

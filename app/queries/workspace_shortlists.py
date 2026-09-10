@@ -6,8 +6,12 @@ from typing import Any
 
 from sqlalchemy.orm import Session
 
+from app.auth import effective_plan
+from app.config import plan_limits
 from app.models import Shortlist, ShortlistEntry
-from app.queries.workspace_queries import (
+from app.queries.workspace_helpers import (
+    DEFAULT_SHORTLIST_DESCRIPTION,
+    DEFAULT_SHORTLIST_NAME,
     WorkspaceLimitExceeded,
     _entry_counts,
     _now,

@@ -122,12 +122,12 @@ def execute(body: ExecuteBody, request: Request) -> dict[str, Any]:
 
 
 @router.get("/presets")
-def presets() -> list[dict[str, Any]]:
+def presets() -> dict[str, Any]:
     return {"presets": ss.list_presets()}
 
 
 @router.get("/saved")
-def saved_searches(request: Request) -> list[dict[str, Any]]:
+def saved_searches(request: Request) -> dict[str, Any]:
     user = _require_user(request)
     with session_scope() as db:
         return {"searches": ss.list_saved_searches(db, user.id)}
@@ -178,7 +178,7 @@ def run_saved(search_id: int, body: RunBody, request: Request) -> dict[str, Any]
 
 
 @router.delete("/saved/{search_id}")
-def delete_saved(search_id: int, request: Request) -> dict[str, str]:
+def delete_saved(search_id: int, request: Request) -> dict[str, bool]:
     user = _require_user(request)
     with session_scope() as db:
         try:
