@@ -481,7 +481,7 @@ class TransfermarktSource(MarketDataSource):
                         )
                 else:
                     logger.debug("No name for player %s, cannot build profile URL", pid)
-            except (requests.RequestException, ValueError, KeyError, OSError) as exc:
+            except (requests.RequestException, SourceError, ValueError, KeyError, OSError) as exc:
                 logger.warning("Failed to fetch valuation for player %s: %s", pid, exc)
 
         return records
@@ -562,7 +562,7 @@ class TransfermarktSource(MarketDataSource):
             import json as _json
 
             data = _json.loads(html)
-        except (requests.RequestException, ValueError, KeyError, OSError) as exc:
+        except (requests.RequestException, SourceError, ValueError, KeyError, OSError) as exc:
             logger.debug("CEAPI fetch failed for player %s: %s", player_id, exc)
             return []
 

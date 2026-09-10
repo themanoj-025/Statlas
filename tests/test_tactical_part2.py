@@ -18,6 +18,14 @@ from __future__ import annotations
 
 from sqlalchemy.orm import Session
 
+from tests.test_tactical import (
+    _make_defensive_event,
+    _make_league,
+    _make_pass_event,
+    _make_player,
+    _make_team,
+)
+
 
 class TestTacticalStyle:
     """B3 — Tactical style detection."""

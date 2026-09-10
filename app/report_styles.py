@@ -17,6 +17,9 @@ independently generated (scouting-reports.md §5).
 
 from __future__ import annotations
 
+import json
+from typing import Any
+
 from reportlab.lib import colors
 from reportlab.lib.enums import TA_LEFT
 from reportlab.lib.pagesizes import A4
@@ -132,3 +135,30 @@ def _styles() -> dict[str, ParagraphStyle]:
             textColor=colors.white,
         ),
     }
+
+
+# --- Shared value formatters ------------------------------------------------
+# Live here (the leaf module) so both report_export.py and report_pdf.py can
+# import them without creating an import cycle.
+
+
+def _fmt_num(value: Any) -> str:
+    if isinstance(value, (int, float)):
+        return f"{value:,.0f}"
+    return str(value)
+
+
+def _fmt_pct(value: Any) -> str:
+    if isinstance(value, (int, float)):
+        return f"{value:.1f}%"
+    return str(value)
+
+
+def _fmt_ts(value: Any) -> str:
+    if hasattr(value, "isoformat"):
+        return value.isoformat()
+    return str(value)
+
+
+def _json_inline(value: Any) -> str:
+    return json.dumps(value, default=str)

@@ -12,6 +12,7 @@ api_fixture_id, and coverage rows upsert.
 
 from app.models import DataCoverage, League, PercentileSnapshot, Player, StatSnapshot
 from app.orchestration.weekly_refresh import run_weekly_refresh
+from app.sources.market_data import FixtureMarketDataSource
 from tests.conftest import SNAPSHOT_DATE
 from tests.test_integration import FakeFBrefSource, FakeUnderstatSource, _fixtures
 
@@ -27,6 +28,7 @@ def _run(db, **kw: Any) -> dict:
         league_slugs=["premier-league"],
         fbref_source=FakeFBrefSource(fbref),
         understat_source=FakeUnderstatSource(understat),
+        market_source=FixtureMarketDataSource(seed=42),
         **kw,
     )
 
