@@ -16,6 +16,7 @@ from app.queries.coverage_queries import get_data_coverage
 from app.queries.leaderboard_queries import get_leaderboard
 from app.queries.player_queries import get_player_percentiles, get_player_profile
 from app.sources.base import RawPlayerStatRecord
+from app.sources.market_data import FixtureMarketDataSource
 from tests.conftest import SNAPSHOT_DATE
 
 SEASON = "2025-26"
@@ -142,6 +143,7 @@ def test_full_weekly_refresh_end_to_end(db, small_pool) -> None:
         league_slugs=["premier-league"],
         fbref_source=FakeFBrefSource(fbref),
         understat_source=FakeUnderstatSource(understat),
+        market_source=FixtureMarketDataSource(seed=42),
     )
 
     # -- orchestration report -----------------------------------------------
@@ -214,6 +216,7 @@ def test_blocked_player_is_excluded_from_pools(db, small_pool) -> None:
         league_slugs=["premier-league"],
         fbref_source=FakeFBrefSource(fbref),
         understat_source=FakeUnderstatSource(understat),
+        market_source=FixtureMarketDataSource(seed=42),
     )
 
     # simulate an unresolved anomaly on Player A's fbref snapshot
@@ -247,6 +250,7 @@ def test_blocked_player_is_excluded_from_pools(db, small_pool) -> None:
         league_slugs=["premier-league"],
         fbref_source=FakeFBrefSource(fbref),
         understat_source=FakeUnderstatSource(understat),
+        market_source=FixtureMarketDataSource(seed=42),
     )
     assert report.blocked_players == 1
     # Player A is blocked, dropping the Tier-1 ST pool to 4 players — below the

@@ -76,7 +76,7 @@ def report_quota(request: Request) -> dict[str, Any]:
 
 
 @router.get("")
-def list_reports(request: Request) -> list[dict[str, Any]]:
+def list_reports(request: Request) -> dict[str, Any]:
     user = _require_user(request)
     with session_scope() as db:
         return {"reports": reports.list_reports(db, user.id)}

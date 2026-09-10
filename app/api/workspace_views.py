@@ -115,7 +115,7 @@ def tag_suggestions(
 
 
 @router.get("/memberships")
-def memberships(request: Request, player_id: int) -> list[dict[str, Any]]:
+def memberships(request: Request, player_id: int) -> dict[str, Any]:
     user = _require_user(request)
     with session_scope() as db:
         return {"shortlist_ids": wq.get_shortlist_memberships(db, user.id, player_id)}

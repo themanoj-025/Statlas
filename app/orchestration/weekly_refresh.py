@@ -2,15 +2,24 @@
 
 from __future__ import annotations
 
+import logging
 from collections.abc import Sequence
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any
 
 from sqlalchemy.orm import Session
 
+from app.compute.anomaly_check import (
+    blocked_player_ids,
+    check_snapshot_bounds,
+    cross_source_spot_check,
+)
+from app.config import load_tiers
 from app.models import (
     DataCoverage,
     League,
+    Player,
+    StatSnapshot,
 )
 from app.orchestration.refresh_helpers import (
     RefreshReport,
@@ -18,6 +27,11 @@ from app.orchestration.refresh_helpers import (
     get_or_create_team,
     resolve_player_for_record,
 )
+from app.reconciliation import Reconciler
+from app.sources.market_data import FixtureMarketDataSource
+from app.sources.transfermarkt import TransfermarktSource
+
+logger = logging.getLogger(__name__)
 
 # Ingestion
 # --------------------------------------------------------------------------
@@ -172,6 +186,7 @@ def run_weekly_refresh(
     understat_source: Any | None = None,
     statsbomb_source: Any | None = None,
     api_football_source: Any | None = None,
+    market_source: Any | None = None,
     statsbomb_competitions: list[dict[str, Any]] | None = None,
     do_statsbomb: bool = False,
     do_fixtures: bool = False,
@@ -363,13 +378,17 @@ def run_weekly_refresh(
         qualifying_player_names = [name for (_pid, name) in qualifying_rows]
 
         if qualifying_player_ids:
-            # Fetch and store market valuations (real Transfermarkt or fixture fallback)
-            try:
-                market_source = TransfermarktSource()
-                logger.info("using real Transfermarkt source for market data")
-            except (ImportError, OSError, ValueError):
-                market_source = FixtureMarketDataSource(seed=42)
-                logger.info("Transfermarkt unavailable, using fixture market data")
+            # Fetch and store market valuations. `market_source` is injectable
+            # (tests pass FixtureMarketDataSource; production leaves None to
+            # use the real Transfermarkt source, falling back to fixtures if
+            # it cannot be constructed).
+            if market_source is None:
+                try:
+                    market_source = TransfermarktSource()
+                    logger.info("using real Transfermarkt source for market data")
+                except (ImportError, OSError, ValueError):
+                    market_source = FixtureMarketDataSource(seed=42)
+                    logger.info("Transfermarkt unavailable, using fixture market data")
             valuation_records = market_source.fetch_valuations(
                 qualifying_player_ids,
                 as_of=snapshot_date,

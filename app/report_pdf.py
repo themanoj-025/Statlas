@@ -2,26 +2,45 @@
 
 from __future__ import annotations
 
+import io
 from typing import Any
 
 from reportlab.graphics.shapes import Drawing, Line, Polygon, String
 from reportlab.lib import colors
+from reportlab.lib.pagesizes import A4
 from reportlab.lib.styles import ParagraphStyle
 from reportlab.lib.units import mm
-from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
+from reportlab.platypus import (
+    HRFlowable,
+    PageBreak,
+    Paragraph,
+    SimpleDocTemplate,
+    Spacer,
+    Table,
+    TableStyle,
+)
 
-from app.report_styles import _styles
+from app.report_styles import (
+    _MARGIN,
+    _PAGE_H,
+    _PAGE_W,
+    AMBER_700,
+    BRAND,
+    GRAY_300,
+    GRAY_600,
+    GRAY_900,
+    PITCH_400,
+    PITCH_600,
+    SURFACE,
+    _fmt_num,
+    _fmt_pct,
+    _fmt_ts,
+    _json_inline,
+    _styles,
+)
 
-# JSON — the canonical, verbatim export
+# JSON — the canonical, verbatim export lives in report_export.py (the facade).
 # ---------------------------------------------------------------------------
-
-
-def export_json(report_doc: dict[str, Any]) -> str:
-    """The full structured report object, verbatim (evidence appendix included).
-
-    This is the canonical format; PDF/CSV derive from it.
-    """
-    return json.dumps(report_doc, indent=2, default=str)
 
 
 # ---------------------------------------------------------------------------

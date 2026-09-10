@@ -264,9 +264,11 @@ class TestAnalyticsAPI:
 
     def test_routes_registered(self, client) -> None:
         """All analytics routes are registered."""
-        routes = [r.path for r in client.app.routes]
-        analytics_routes = [r for r in routes if "/analytics/" in r]
-        assert len(analytics_routes) >= 10
+        # OpenAPI schema materializes every registered path; app.routes alone
+        # can hold lazy _IncludedRouter placeholders without .path attributes.
+        paths = list(client.app.openapi()["paths"].keys())
+        analytics_paths = [p for p in paths if "/analytics/" in p]
+        assert len(analytics_paths) >= 10
 
 
 # ── Data Integrity Tests ──────────────────────────────────────────────
