@@ -14,6 +14,7 @@ import os
 os.environ.setdefault("STATLAS_ENV", "test")
 
 from datetime import datetime, timezone
+from typing import Any
 from pathlib import Path
 
 import pytest
