@@ -107,12 +107,12 @@ class TestPublicViews:
 
 
 class TestRegistryView:
-    """Test registry API view functions."""
+    """Test the public registry view helpers (metric-metadata module)."""
 
-    def test_module_has_router(self) -> None:
-        from app.api.registry_view import router
+    def test_module_exports_public_meta(self) -> None:
+        from app.api.registry_view import public_meta
 
-        assert router is not None
+        assert callable(public_meta)
 
 
 class TestReportViews:
@@ -152,39 +152,12 @@ class TestE2EViews:
 
 
 class TestPlayerView:
-    """Test player API view functions."""
+    """Test the player payload builder helpers (SSR aggregate module)."""
 
-    def test_module_has_router(self) -> None:
-        from app.api.player_view import router
+    def test_module_exports_build_player_payload(self) -> None:
+        from app.api.player_view import build_player_payload
 
-        assert router is not None
-
-
-class TestAPIPlayers:
-    """Test API players endpoints."""
-
-    def test_module_has_router(self) -> None:
-        from app.api.api_players import router
-
-        assert router is not None
-
-
-class TestAPITeams:
-    """Test API teams endpoints."""
-
-    def test_module_has_router(self) -> None:
-        from app.api.api_teams import router
-
-        assert router is not None
-
-
-class TestAPILeagues:
-    """Test API leagues endpoints."""
-
-    def test_module_has_router(self) -> None:
-        from app.api.api_leagues import router
-
-        assert router is not None
+        assert callable(build_player_payload)
 
 
 class TestMiddleware:
