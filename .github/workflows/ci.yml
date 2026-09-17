@@ -123,12 +123,12 @@ jobs:
         with:
           dockerfile: Dockerfile
           failure-threshold: warning
-          failure-threshold-ignore: DL3066
+          ignore: DL3066
       - uses: hadolint/hadolint-action@v3.5.0
         with:
           dockerfile: web/Dockerfile
           failure-threshold: warning
-          failure-threshold-ignore: DL3066
+          ignore: DL3066
 
   web:
     name: Web — typecheck + production build
