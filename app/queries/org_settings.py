@@ -1,35 +1,31 @@
+"""Organization settings, audit logging, and shortlist administration queries."""
+
+from __future__ import annotations
+
+import logging
+from typing import Any
+
+from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy.orm import Session
+
+from app.models import (
+    AuditLog,
+    OrgSettings,
+    Shortlist,
+    User,
+)
+from app.queries.org_queries import (
+    _log_audit,
+    get_user_org_ids,
+    get_user_org_role,
+    user_has_permission,
+)
+
+logger = logging.getLogger(__name__)
+
 # ---------------------------------------------------------------------------
 # Audit logging
 # ---------------------------------------------------------------------------
-
-
-def _log_audit(
-    db: Session,
-    org_id: int,
-    performed_by_user_id: int,
-    action: str,
-    *,
-    target_user_id: int | None = None,
-    resource_type: str | None = None,
-    resource_id: int | None = None,
-    detail: dict | None = None,
-) -> None:
-    """Append an audit log entry. Never raises — audit failures are logged."""
-    try:
-        log_entry = AuditLog(
-            org_id=org_id,
-            action=action,
-            performed_by_user_id=performed_by_user_id,
-            target_user_id=target_user_id,
-            resource_type=resource_type,
-            resource_id=resource_id,
-            detail=detail or {},
-        )
-        db.add(log_entry)
-    except (SQLAlchemyError, ValueError) as exc:
-        logger.warning(
-            "Audit log write failed for %s/%s: %s", resource_type, resource_id, exc
-        )
 
 
 def get_audit_log(

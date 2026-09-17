@@ -16,10 +16,12 @@ import logging
 from datetime import datetime, timedelta, timezone
 from typing import Any
 
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
 from app import auth
 from app.models import (
+    AuditLog,
     Organization,
     OrgInvite,
     OrgMembership,
@@ -28,6 +30,35 @@ from app.models import (
 )
 
 logger = logging.getLogger(__name__)
+
+
+def _log_audit(
+    db: Session,
+    org_id: int,
+    performed_by_user_id: int,
+    action: str,
+    *,
+    target_user_id: int | None = None,
+    resource_type: str | None = None,
+    resource_id: int | None = None,
+    detail: dict | None = None,
+) -> None:
+    """Append an audit log entry. Never raises — audit failures are logged."""
+    try:
+        log_entry = AuditLog(
+            org_id=org_id,
+            action=action,
+            performed_by_user_id=performed_by_user_id,
+            target_user_id=target_user_id,
+            resource_type=resource_type,
+            resource_id=resource_id,
+            detail=detail or {},
+        )
+        db.add(log_entry)
+    except (SQLAlchemyError, ValueError) as exc:
+        logger.warning(
+            "Audit log write failed for %s/%s: %s", resource_type, resource_id, exc
+        )
 
 # ---------------------------------------------------------------------------
 # RBAC Permission Matrix (Addendum Part 3.1)

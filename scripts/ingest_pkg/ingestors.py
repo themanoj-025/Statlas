@@ -3,13 +3,20 @@
 from __future__ import annotations
 
 import argparse
+import logging
+import os
+import sys
 import time
 
-from app.config import load_tiers
+import requests
+
+from app.config import CURRENT_SEASON, get_settings, load_tiers
 from app.db import create_schema, session_scope
-from scripts.ingest_pkg.helpers import (
+from ingest_pkg.helpers import (
+    PROGRESS_FILE,
     ProgressTracker,
     _estimate_time,
+    _format_eta,
     _print_section,
     _progress_line,
     ingest_season,
