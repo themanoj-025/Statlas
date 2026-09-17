@@ -1,3 +1,219 @@
+"""Phase 3: multi-date snapshot history + event-map demo data (seed pipeline)."""
+
+from __future__ import annotations
+
+import json
+import logging
+import os
+import random
+import sys
+from datetime import datetime, timezone
+from pathlib import Path
+from typing import Any
+
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(PROJECT_ROOT))
+
+# The dev database is a file-based SQLite so the API server (separate process)
+# reads exactly what the seed wrote. Override with DATABASE_URL for Postgres.
+os.environ.setdefault(
+    "DATABASE_URL", f"sqlite+pysqlite:///{PROJECT_ROOT / 'data' / 'dev.db'}"
+)
+
+from app.config import load_registry
+from app.db import create_schema, session_scope
+from app.orchestration.weekly_refresh import run_weekly_refresh
+from app.sources.base import RawPlayerStatRecord
+from seed_pkg.scrapers import (
+    PL_TEAMS,
+    POSITION_GROUPS,
+    _DemoPlayerGen,
+    scrape_premier_league_from_fixtures,
+)
+
+logging.basicConfig(level=logging.WARNING, format="%(levelname)s %(name)s: %(message)s")
+logger = logging.getLogger("seed")
+
+SEASON = "2025-26"
+SNAPSHOT_DATE = datetime(2026, 8, 12, 3, 0, 0, tzinfo=timezone.utc)
+SEED = 42
+
+DEV_DB = PROJECT_ROOT / "data" / "dev.db"
+
+# Real club names per league (same precedent as the Phase 1 fixtures: real team
+# names, fixture players, fake ids — all under the fixture-demo banner).
+TEAMS_BY_LEAGUE: dict[str, list[str]] = {
+    "la-liga": [
+        "Real Madrid",
+        "Barcelona",
+        "Atlético Madrid",
+        "Sevilla",
+        "Real Sociedad",
+        "Athletic Club",
+        "Villarreal",
+        "Real Betis",
+    ],
+    "serie-a": [
+        "Juventus",
+        "Inter",
+        "Milan",
+        "Napoli",
+        "Roma",
+        "Lazio",
+        "Atalanta",
+        "Fiorentina",
+    ],
+    "bundesliga": [
+        "Bayern Munich",
+        "Borussia Dortmund",
+        "RB Leipzig",
+        "Bayer Leverkusen",
+        "Eintracht Frankfurt",
+        "VfB Stuttgart",
+        "Wolfsburg",
+        "Freiburg",
+    ],
+    "ligue-1": [
+        "Paris Saint-Germain",
+        "Marseille",
+        "Lyon",
+        "Monaco",
+        "Lille",
+        "Nice",
+        "Rennes",
+        "Lens",
+    ],
+    "eredivisie": ["Ajax", "PSV", "Feyenoord", "AZ Alkmaar", "Twente", "Utrecht"],
+    "primeira-liga": [
+        "Benfica",
+        "Porto",
+        "Sporting CP",
+        "Braga",
+        "Vitória Guimarães",
+        "Boavista",
+    ],
+    "belgian-pro-league": [
+        "Anderlecht",
+        "Club Brugge",
+        "Genk",
+        "Gent",
+        "Antwerp",
+        "Standard Liège",
+    ],
+    "super-lig": [
+        "Galatasaray",
+        "Fenerbahçe",
+        "Beşiktaş",
+        "Trabzonspor",
+        "Başakşehir",
+        "Adana Demirspor",
+    ],
+    "scottish-premiership": [
+        "Celtic",
+        "Rangers",
+        "Aberdeen",
+        "Hearts",
+        "Hibernian",
+        "Dundee United",
+    ],
+    "austrian-bundesliga": [
+        "Red Bull Salzburg",
+        "Sturm Graz",
+        "Rapid Wien",
+        "LASK",
+        "Austria Wien",
+        "Wolfsberger AC",
+    ],
+    "swiss-super-league": [
+        "Young Boys",
+        "Servette",
+        "Basel",
+        "Zürich",
+        "Lugano",
+        "St. Gallen",
+    ],
+    "greek-super-league": [
+        "Olympiacos",
+        "PAOK",
+        "AEK Athens",
+        "Panathinaikos",
+        "Aris",
+        "Volos",
+    ],
+    "danish-superliga": [
+        "FC Copenhagen",
+        "Midtjylland",
+        "Brøndby",
+        "AGF Aarhus",
+        "Nordsjælland",
+        "Silkeborg",
+    ],
+    "championship": [
+        "Leeds United",
+        "Leicester City",
+        "Southampton",
+        "Norwich City",
+        "West Brom",
+        "Sunderland",
+        "Stoke City",
+        "Middlesbrough",
+    ],
+    "la-liga-2": [
+        "Levante",
+        "Sporting Gijón",
+        "Racing Santander",
+        "Espanyol",
+        "Eibar",
+        "Zaragoza",
+        "Almería",
+        "Oviedo",
+    ],
+    "serie-b": [
+        "Parma",
+        "Como",
+        "Palermo",
+        "Cremonese",
+        "Bari",
+        "Sampdoria",
+        "Catanzaro",
+        "Modena",
+    ],
+    "2-bundesliga": [
+        "Hamburger SV",
+        "Schalke 04",
+        "Hannover 96",
+        "Hertha Berlin",
+        "Fortuna Düsseldorf",
+        "Nürnberg",
+        "Kaiserslautern",
+        "Magdeburg",
+    ],
+    "ligue-2": [
+        "Bordeaux",
+        "Saint-Étienne",
+        "Metz",
+        "Guingamp",
+        "Caen",
+        "Amiens",
+        "Pau",
+        "Angers",
+    ],
+}
+
+TIER_1_SYNTHETIC = ["la-liga", "serie-a", "bundesliga", "ligue-1"]
+TIER_2_SYNTHETIC = [
+    "eredivisie",
+    "primeira-liga",
+    "belgian-pro-league",
+    "super-lig",
+    "scottish-premiership",
+    "austrian-bundesliga",
+    "swiss-super-league",
+    "greek-super-league",
+    "danish-superliga",
+]
+TIER_3_SYNTHETIC = ["championship", "la-liga-2", "serie-b", "2-bundesliga", "ligue-2"]
+
 # ---------------------------------------------------------------------------
 # Phase 3: multi-date snapshot history + event-map demo data
 # ---------------------------------------------------------------------------

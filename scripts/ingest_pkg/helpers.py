@@ -50,7 +50,7 @@ from pathlib import Path
 
 import requests
 
-PROJECT_ROOT = Path(__file__).resolve().parent.parent
+PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 
 # Default to SQLite dev.db for local runs; override with DATABASE_URL env var.
 os.environ.setdefault(

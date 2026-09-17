@@ -29,7 +29,7 @@ import random
 from datetime import datetime, timezone
 from pathlib import Path
 
-PROJECT_ROOT = Path(__file__).resolve().parent.parent
+PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 
 # The dev database is a file-based SQLite so the API server (separate process)
 # reads exactly what the seed wrote. Override with DATABASE_URL for Postgres.
