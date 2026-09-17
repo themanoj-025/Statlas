@@ -27,6 +27,7 @@ from pydantic import BaseModel, Field
 
 from app.api.deps import require_user
 from app.db import session_scope
+from app.models import User
 from app.queries import org_queries as oq
 
 router = APIRouter(prefix="/api/v1/orgs", tags=["organizations"])

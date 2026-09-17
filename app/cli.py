@@ -214,6 +214,8 @@ def main() -> int:
                 )
             print(f"... {len(records)} records total (dry run, nothing written)")
             return 0
+        from typing import Any
+
         from app.reconciliation import Reconciler
 
         create_schema()
