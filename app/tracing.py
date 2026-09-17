@@ -6,6 +6,7 @@ When disabled, all tracing calls are no-ops (zero overhead).
 
 import logging
 import os
+from typing import Any
 
 logger = logging.getLogger(__name__)
 

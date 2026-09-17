@@ -47,6 +47,7 @@ from app.models import (
     Watch,
     WatchAlert,
 )
+from app.notifications.email import EmailMessage
 from app.queries import watch_queries as wq
 from app.watch import delivery
 from app.watch.detection import (
@@ -633,8 +634,6 @@ def test_preferences_reject_unknown_values(db, watch_data) -> None:
 
 
 def _fake_sender(sent: list) -> Callable[[EmailMessage], None]:
-    from app.notifications.email import EmailMessage
-
     def send(message: EmailMessage) -> None:
         sent.append(message)
 
