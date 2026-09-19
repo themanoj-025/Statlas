@@ -40,11 +40,6 @@ from app.queries.workspace_helpers import (
     PlayerNotFound,
     ShortlistNotFound,
     WorkspaceLimitExceeded,
-    _bump_shortlist,
-    _entry_counts,
-    _now,
-    _owned_entry,
-    _owned_shortlist,
     validate_transition,
 )
 from app.queries.workspace_shortlists import (
