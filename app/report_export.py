@@ -16,7 +16,6 @@ from typing import Any
 # PDF export lives in report_pdf.py (reportlab); re-exported here so callers
 # can keep using a single import surface: `from app import report_export`.
 from app.report_pdf import export_pdf
-from app.report_styles import _fmt_num, _fmt_pct, _fmt_ts, _json_inline
 
 __all__ = ["export_csv", "export_json", "export_pdf"]
 
