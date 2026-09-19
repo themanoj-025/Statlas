@@ -60,6 +60,7 @@ def _log_audit(
             "Audit log write failed for %s/%s: %s", resource_type, resource_id, exc
         )
 
+
 # ---------------------------------------------------------------------------
 # RBAC Permission Matrix (Addendum Part 3.1)
 # ---------------------------------------------------------------------------
