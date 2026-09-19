@@ -39,9 +39,7 @@ class TestIndex:
 
         registry = load_registry()
         # Outfield needs >= 8 metrics; provide only 2.
-        result = compute_index(
-            {"si_gls_p90": 90.0, "si_xg_p90": 80.0}, "CM", registry
-        )
+        result = compute_index({"si_gls_p90": 90.0, "si_xg_p90": 80.0}, "CM", registry)
         assert result is None
 
     def test_compute_index_renormilizes_missing_metrics(self) -> None:

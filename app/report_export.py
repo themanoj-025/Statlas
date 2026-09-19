@@ -46,7 +46,10 @@ def export_csv(report_doc: dict[str, Any], player_name: str | None = None) -> st
     writer = csv.writer(output)
 
     writer.writerow(
-        ["Report", report_doc.get("title", "Statlas Scouting Report — Statistical Profile")]
+        [
+            "Report",
+            report_doc.get("title", "Statlas Scouting Report — Statistical Profile"),
+        ]
     )
     writer.writerow(["Player", player_name or report_doc.get("player_name", "")])
     writer.writerow([])
@@ -70,6 +73,12 @@ def export_csv(report_doc: dict[str, Any], player_name: str | None = None) -> st
         writer.writerow(["name", "similarity", "club"])
         for c in sections.get("comparable_players", []) or []:
             similarity = c.get("similarity")
-            writer.writerow([c.get("name", ""), "" if similarity is None else similarity, c.get("club") or ""])
+            writer.writerow(
+                [
+                    c.get("name", ""),
+                    "" if similarity is None else similarity,
+                    c.get("club") or "",
+                ]
+            )
 
     return output.getvalue()
