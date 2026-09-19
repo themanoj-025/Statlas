@@ -7,8 +7,6 @@ from datetime import datetime, timezone
 import pytest
 from sqlalchemy.orm import Session
 
-from tests.test_tactical import _make_league, _make_team
-
 pytestmark = pytest.mark.unit
 
 

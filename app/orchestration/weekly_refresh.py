@@ -18,7 +18,6 @@ from app.config import load_tiers
 from app.models import (
     DataCoverage,
     League,
-    Player,
     StatSnapshot,
 )
 from app.orchestration.refresh_helpers import (

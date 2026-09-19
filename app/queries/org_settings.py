@@ -5,7 +5,6 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
 from app.models import (
@@ -15,7 +14,6 @@ from app.models import (
     User,
 )
 from app.queries.org_queries import (
-    _log_audit,
     get_user_org_ids,
     get_user_org_role,
     user_has_permission,

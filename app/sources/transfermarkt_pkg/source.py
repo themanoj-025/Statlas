@@ -52,7 +52,6 @@ logger = logging.getLogger(__name__)
 
 from app.sources.transfermarkt_pkg.constants import LEAGUE_URL_SLUGS, TRANSFERMARKT_BASE
 from app.sources.transfermarkt_pkg.parsers import (
-    TransfermarktSchemaChangedError,
     _parse_date,
     _parse_market_value,
     _parse_transfer_fee,
