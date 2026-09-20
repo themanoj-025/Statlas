@@ -34,6 +34,10 @@
   <strong>Statlas</strong> is a football analytics platform that turns per-90 statistics from FBref, Understat, and API-Football — plus StatsBomb event data — into percentile radar comparisons, snapshot trend charts, shot and pass maps, embeddable widgets, and <strong>ML-discovered player archetypes</strong>. Every number carries a dated snapshot, a published methodology, and a traceable data source. No fabricated stats. No black boxes.
 </p>
 
+<p align="center">
+  <em>Open-source (AGPL-3.0) and self-hostable — runs out of the box on a fixture-demo dataset, no API keys required.</em>
+</p>
+
 ---
 
 ## 📑 Table of Contents
@@ -61,7 +65,7 @@
 
 ## 🖼 Demo
 
-> 📸 **Radar comparison** — up to 4 players overlaid, percentile / raw toggle, share panel.
+> 📸 **Radar comparison** — up to 4 players overlaid, percentile / raw toggle, share panel. See [Usage](#-usage).
 
 > 📸 **Snapshot trend** — dashed gap segments and transfer markers on the timeline.
 
@@ -248,7 +252,7 @@ The FastAPI layer serves a versioned `/api/v1` surface. It is the *only* thing t
 Statlas/
 ├── app/
 │   ├── api/                    FastAPI /api/v1 routes
-│   ├── compute/                percentiles, Statlas Index, anomaly checks, clustering
+│   ├── compute/                percentiles, composite Statlas Index (see /methodology), anomaly checks, clustering
 │   ├── orchestration/          weekly refresh (scrape → reconcile → compute → publish)
 │   ├── queries/                THE data-access layer (published-only reads)
 │   ├── sources/                scrapers — FBref, Understat, StatsBomb, API-Football
