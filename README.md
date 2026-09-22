@@ -1,5 +1,8 @@
 <p align="center">
-  <img src="assets/logo.svg" width="140" alt="Statlas logo" />
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="assets/logo-dark.svg" />
+    <img src="assets/logo.svg" width="280" alt="Statlas logo — pitch tile and wordmark" />
+  </picture>
 </p>
 
 <h1 align="center">Statlas</h1>
@@ -29,6 +32,14 @@
   <img src="https://img.shields.io/badge/Docker-2496ED?logo=docker&logoColor=white" alt="Docker" />
   <img src="https://img.shields.io/badge/PRs-welcome-brightgreen" alt="PRs welcome" />
 </p>
+
+<!--
+  Social preview (maintainer note — invisible when rendered):
+  GitHub does not use the README header logo for the repo card. Upload one manually:
+  Settings → General → Social preview → Edit → upload a 1280×640 (2:1) PNG under 1 MB.
+  Good hero candidates: the capture shown in the 🖼 Demo section below, or assets/logo.svg
+  composed onto a pitch-green card. Re-upload to replace; GitHub caches the previous image.
+-->
 
 <p align="center">
   <strong>Statlas</strong> is a football analytics platform that turns per-90 statistics from FBref, Understat, and API-Football — plus StatsBomb event data — into percentile radar comparisons, snapshot trend charts, shot and pass maps, embeddable widgets, and <strong>ML-discovered player archetypes</strong>. Every number carries a dated snapshot, a published methodology, and a traceable data source. No fabricated stats. No black boxes.
