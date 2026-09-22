@@ -74,7 +74,7 @@ Rationale: Goalkeepers peak latest of all positions. Reflexes and distribution i
 
 ## Formula
 
-```
+```text
 age_adjustment(age, position) =
     if age <= peak_age:
         max(0.5, 1.0 - (peak_age - age) * rise_rate)
@@ -93,18 +93,18 @@ The floor of 0.4 ensures very old players still have some residual value (experi
 
 The age adjustment is multiplied into the stat-based value proxy:
 
-```
+```text
 stat_value = (avg_percentile * 0.6 + index_score * 0.4) * age_adjustment
 ```
 
 This means a 21-year-old CM with 75th percentile stats gets:
-```
+```text
 age_adj = 1.0 - (27 - 21) * 0.06 = 1.0 - 0.36 = 0.64
 stat_value = 75 * 0.64 = 48.0
 ```
 
 While a 27-year-old CM with the same stats gets:
-```
+```text
 age_adj = 1.0
 stat_value = 75 * 1.0 = 75.0
 ```

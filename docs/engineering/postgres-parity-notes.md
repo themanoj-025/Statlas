@@ -20,7 +20,7 @@
 `::VARCHAR` casts) sent character strings into PostgreSQL's real enum columns.
 Postgres rejected them:
 
-```
+```text
 column "position_group" is of type position_group but expression is of type character varying
 ```
 

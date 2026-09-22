@@ -18,7 +18,7 @@ number, methodology-as-code).*
 Similarity (Phase 2 B4) is **cosine similarity over the shared published-percentile
 vector** within the same {position group, league tier} cohort:
 
-```
+```text
 similarity = Σ pᵢ·qᵢ / (‖p‖ · ‖q‖)      over the shared metric subset
 
 where p, q are the two players' percentile vectors (0–100 each metric)

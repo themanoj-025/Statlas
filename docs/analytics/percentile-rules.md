@@ -10,7 +10,7 @@
 
 Every percentile is computed within the intersection of exactly three dimensions:
 
-```
+```text
 { season } × { position group } × { league tier }
 ```
 

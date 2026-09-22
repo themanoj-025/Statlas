@@ -11,13 +11,13 @@ suggestion.
 An entry (a player saved into a shortlist) always carries exactly one status,
 chosen from these 7:
 
-```
+```text
 discovered → monitoring → scouted → shortlisted → reviewed
 ```
 
 plus two **terminal-but-reversible** states:
 
-```
+```text
 rejected    — terminal: the player is not currently a target
 signed      — terminal: the player has been signed / the deal is done
 ```
