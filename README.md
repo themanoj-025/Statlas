@@ -248,7 +248,7 @@ The FastAPI layer serves a versioned `/api/v1` surface. It is the *only* thing t
 
 ## 🗂 Project Structure
 
-```
+```text
 Statlas/
 ├── app/
 │   ├── api/                    FastAPI /api/v1 routes
