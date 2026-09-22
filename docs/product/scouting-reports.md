@@ -53,7 +53,7 @@ failure.
 
 ## 2. Generation pipeline (B1) — never one freeform LLM call
 
-```
+```text
 1. gather_report_context(db, player_id, entry_id?)   # deterministic, all real data
 2. narrate(context)                                   # LLM or injected narrator; may only
                                                       #   reorganize/narrate context values

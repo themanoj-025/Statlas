@@ -130,7 +130,7 @@ on a credentialed FBref run plus an API-Football key.
 
 ## 3. High-Level Architecture
 
-```
+```text
                     ┌─────────────────────────────────────────────────────┐
                     │                 DATA SOURCES (external)             │
                     │  FBref · Understat · StatsBomb Open Data · API-FB   │
@@ -197,7 +197,7 @@ view-model layer separate from routes). Additional patterns:
 
 ## 4. Complete Folder Structure Tree
 
-```
+```text
 Statlas/
 ├── .dockerignore
 ├── .env.example
@@ -1562,7 +1562,7 @@ docker compose down -v                           # full reset (fresh schema on n
 
 **Internal (module → imports):**
 
-```
+```text
 api/main.py ──► queries/* ──► models/*, compute/* (percentiles, anomaly_check), config.py
 api/player_view.py ──► queries/player_queries, sentences, similar_players, event_queries,
                        compute/percentiles (REGISTRY_FLOOR_KEYS), api/registry_view

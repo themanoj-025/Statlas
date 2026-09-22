@@ -68,7 +68,7 @@ Rate-limited public reads (Bearer `<key>`):
 
 ### Result log format
 
-```
+```text
 ## <date> — <test id>
 - Endpoint: GET /api/v1/public/leaderboard?metric=…&league=…
 - HTTP: 200

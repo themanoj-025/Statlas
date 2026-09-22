@@ -71,7 +71,7 @@ player ability.
 
 ## Feature Engineering Pipeline
 
-```
+```text
 stat_snapshots (per-90 raw stats)
   → filter by: season, league (top-5), minutes >= 900, position_group != GK
   → extract: feature columns from raw_stats

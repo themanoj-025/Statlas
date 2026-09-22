@@ -25,7 +25,7 @@ The valuation comparison framework is a **transparent, deterministic** tool that
 
 ### Formula
 
-```
+```text
 stat_value_score = (avg_percentile * 0.6 + index_score * 0.4) * age_adjustment
 ```
 
@@ -33,7 +33,7 @@ stat_value_score = (avg_percentile * 0.6 + index_score * 0.4) * age_adjustment
 
 To convert the 0-100 score to an approximate EUR value:
 
-```
+```text
 stat_value_eur = (stat_value_score / 100)² × €100M
 ```
 
@@ -51,7 +51,7 @@ This mapping is a documented simplification. The actual market value depends on 
 
 A player is flagged as "potentially undervalued" when:
 
-```
+```text
 (stat_value_eur - market_value_eur) / market_value_eur > threshold
 ```
 
@@ -73,7 +73,7 @@ Signal strength is displayed alongside every valuation comparison so users can c
 
 Overvaluation is flagged using the same logic inverted:
 
-```
+```text
 (market_value_eur - stat_value_eur) / stat_value_eur > threshold
 ```
 

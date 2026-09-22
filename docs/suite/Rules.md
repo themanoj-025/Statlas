@@ -36,7 +36,7 @@
 - **Data fetching:** typed `api.ts` client; never query the DB from components; consume `/api/v1/*` only.
 - **Styles:** CSS custom properties from `tokens.css` only — no ad-hoc hex values (RULE-008).
 
-```
+```text
 app/
 ├── api/        # FastAPI routes (thin) — delegates to queries
 ├── queries/    # THE data-access layer (Phase 1 contract)

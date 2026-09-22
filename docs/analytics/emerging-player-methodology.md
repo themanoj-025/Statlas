@@ -19,7 +19,7 @@ more closely.
 
 The emerging-player score is a weighted composite of three factors:
 
-```
+```text
 score = trend_magnitude × trend_consistency × age_weight × sample_weight
 ```
 
@@ -33,7 +33,7 @@ The average percentile-point improvement across the player's tracked metrics
 over the most recent **5 snapshots** (the default trend window per
 `trend_queries.py`).
 
-```
+```text
 trend_magnitude = mean(max(pct_latest - pct_oldest, 0)) / 100
 ```
 
@@ -48,7 +48,7 @@ What fraction of the tracked metrics showed a **sustained** upward trend
 (positive slope across at least 3 of the 5 snapshots, not just a
 start-to-end jump that could be a single-week spike).
 
-```
+```text
 trend_consistency = count(metrics_with_monotonic_upward / total_metrics)
 ```
 
@@ -62,7 +62,7 @@ development.
 Younger players score higher on this factor, using a sigmoid curve centred
 at age 24 (the typical peak-development window boundary):
 
-```
+```text
 age_weight = 1 / (1 + exp((age - 24) / 3))
 ```
 
@@ -83,7 +83,7 @@ dimension than an identical 21-year-old. The age is computed from
 
 Confidence based on minutes played relative to the qualification threshold:
 
-```
+```text
 sample_weight = min(minutes_played / qualifying_minutes, 1.0)
 ```
 

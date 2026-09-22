@@ -9,7 +9,7 @@ with the full project-documentation suite under [suite/](suite/).
 
 ## Structure
 
-```
+```text
 docs/
 ├── README.md                      ← this index
 ├── CONSTITUTION.md                master product constitution (data-honesty, §7 DoD)

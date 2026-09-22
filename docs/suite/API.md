@@ -469,14 +469,14 @@
 
 ## 5. Example Request/Response
 
-```
+```text
 GET /api/v1/players/search?q=salah&limit=3
 200
 [ { "id": 42, "name": "Mohamed Salah", "slug": "mohamed-salah",
     "team": "Liverpool", "league": "Premier League", "position_group": "W" } ]
 ```
 
-```
+```text
 GET /api/v1/leaderboard?league_id=1&position_group=CM&metric=si_prgp_p90&sort_by=index_score&order=desc&page=1&page_size=20
 200
 { "items": [ { "player_id", "name", "slug", "team", "index_score": 88.3,

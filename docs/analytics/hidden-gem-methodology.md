@@ -17,14 +17,14 @@ A player qualifies as a hidden gem when **all** of the following hold:
 
 ## Upside Calculation
 
-```
+```text
 upside_eur = stat_value_eur - market_value_eur
 upside_pct = (upside_eur / market_value_eur) × 100
 ```
 
 Where `stat_value_eur` is computed using the valuation comparison framework's quadratic mapping:
 
-```
+```text
 stat_value_eur = (stat_value_score / 100)² × €100M
 ```
 

@@ -418,7 +418,7 @@ Yes. Open any radar or trend configuration, open the share panel, and copy the e
 <details>
 <summary><strong>How do player archetypes work?</strong></summary>
 
-Player archetypes are statistically-defined groups of players with similar playing styles, discovered through unsupervised k-means clustering of per-90 statistics. Players are clustered separately by position group (midfielders, strikers, defenders). Each archetype is named based on its distinguishing features and includes a typicality score showing how close a player is to the archetype center. See the [archetypes page](/archetypes) and the [methodology](/methodology#archetypes) for details.
+Player archetypes are statistically-defined groups of players with similar playing styles, discovered through unsupervised k-means clustering of per-90 statistics. Players are clustered separately by position group (midfielders, strikers, defenders). Each archetype is named based on its distinguishing features and includes a typicality score showing how close a player is to the archetype center. See the `archetypes` page and the `methodology#archetypes` section of the deployed site for details.
 
 </details>
 
