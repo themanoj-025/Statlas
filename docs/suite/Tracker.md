@@ -25,7 +25,7 @@
 
 ## 3. Phase Progress Bars
 
-```
+```text
 Phase 0 Foundation        [██████████] 100%
 Phase 1 Data pipeline     [██████████] 100%
 Phase 2 Core product      [██████████] 100%

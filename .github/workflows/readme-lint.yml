@@ -1,0 +1,18 @@
+name: README Lint
+
+permissions:
+  contents: read
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  lint-readme:
+    timeout-minutes: 5
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Lint README links, anchors, heading levels, and code fences
+        run: python3 .github/scripts/lint_readme.py

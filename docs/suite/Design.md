@@ -98,7 +98,7 @@ Numeric rule: all stat values use `font-family: var(--font-data)` with `font-var
 ### 6.1 Button (`button`, `button--secondary`, `button--ghost`, `button--sm`, `button--active`, `icon-button`)
 States: default / hover / active / disabled (`[disabled]` or `[aria-disabled=true]`) / focus-visible (focus ring token).
 
-```
+```text
 ┌────────────────┐
 │  Label         │  40px min-height, --radius-md
 └────────────────┘

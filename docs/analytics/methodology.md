@@ -117,7 +117,7 @@ This is a deliberate simplification with a visible consequence: a full-back depl
 
 The Statlas Index is the weighted sum of the player's metric percentiles:
 
-```
+```text
 Statlas Index = Σ ( wᵢ × pᵢ )
 
 where:
@@ -169,7 +169,7 @@ Goalkeepers are scored on a separate four-metric model because none of the twelv
 
 For a metric value `v` of a player in a group of `N` qualifying players:
 
-```
+```text
 P = ( B + 0.5 × E ) / N × 100
 
 where:
@@ -283,7 +283,7 @@ Each weight is deliberate and documented in the changelog. We did not tune weigh
 
 A raw per-90 value is converted to a percentile within the player's position group and league tier this season:
 
-```
+```text
 P = ( B + 0.5 × E ) / N × 100
 ```
 
