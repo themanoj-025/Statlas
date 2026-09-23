@@ -15,8 +15,10 @@ Strict mode (--strict, local use):
 
 Exit codes: 0 = in sync, 1 = drift/missing, 2 = tooling error.
 """
+
 import argparse
 import re
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -29,7 +31,7 @@ try:
     from packaging.version import Version
 except ImportError:  # pragma: no cover
     print("packaging is required: pip install packaging", file=sys.stderr)
-    raise SystemExit(2)
+    raise SystemExit(2) from None
 
 LOCK = "requirements.lock"
 SRC = "requirements.txt"
@@ -46,7 +48,8 @@ def load_source_requirements(repo: Path) -> list[Requirement]:
             continue
         # strip trailing inline comments: "pkg>=1  # note"
         line = re.split(r"\s+#", line, maxsplit=1)[0].strip()
-        if not line or line.startswith("-"):  # options like -r/-e/--hash handled by compiler
+        # options like -r/-e/--hash are handled by the compiler
+        if not line or line.startswith("-"):
             continue
         reqs.append(Requirement(line))
     return reqs
@@ -87,7 +90,7 @@ def constraint_check(repo: Path) -> tuple[str, list[str]]:
     for req in load_source_requirements(repo):
         key = norm(req.name)
         if key not in pins:
-            problems.append(f"{req.name} not pinned in {LOCK} (required: {req.specifier})")
+            problems.append(f"{req.name} not pinned in {LOCK}: needs {req.specifier}")
             continue
         ver = pins[key]
         if ver not in SpecifierSet(str(req.specifier)):
@@ -104,13 +107,28 @@ def strict_check(repo: Path, py: str) -> tuple[str, list[str]]:
         return "MISSING-LOCK", [f"{LOCK} not found"]
     with tempfile.TemporaryDirectory() as td:
         out = Path(td) / "expected.lock"
+        uv = shutil.which("uv")
+        if uv is None:
+            return "COMPILE-ERROR", ["uv executable not found on PATH"]
         proc = subprocess.run(
             [
-                "uv", "pip", "compile", SRC,
-                "-o", str(out), "--quiet", "--no-header", "--strip-extras",
-                "--python-version", py, "--python-platform", PLATFORM,
+                uv,
+                "pip",
+                "compile",
+                SRC,
+                "-o",
+                str(out),
+                "--quiet",
+                "--no-header",
+                "--strip-extras",
+                "--python-version",
+                py,
+                "--python-platform",
+                PLATFORM,
             ],
-            cwd=repo, capture_output=True, text=True,
+            cwd=repo,
+            capture_output=True,
+            text=True,
         )
         if proc.returncode != 0:
             return "COMPILE-ERROR", [proc.stderr.strip()[:800]]
@@ -120,20 +138,27 @@ def strict_check(repo: Path, py: str) -> tuple[str, list[str]]:
         return "OK", []
     exp_lines = set(expected.splitlines())
     act_lines = set(actual.splitlines())
-    diffs = [f"+ {l}" for l in sorted(exp_lines - act_lines)[:6]]
-    diffs += [f"- {l}" for l in sorted(act_lines - exp_lines)[:6]]
+    diffs = [f"+ {line}" for line in sorted(exp_lines - act_lines)[:6]]
+    diffs += [f"- {line}" for line in sorted(act_lines - exp_lines)[:6]]
     return "STRICT-DRIFT", diffs
 
 
 def main() -> int:
-    ap = argparse.ArgumentParser(description=__doc__,
-                                 formatter_class=argparse.RawDescriptionHelpFormatter)
+    ap = argparse.ArgumentParser(
+        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
+    )
     ap.add_argument("repos", nargs="*", default=["."])
-    ap.add_argument("--strict", action="store_true",
-                    help="byte-compare against a fresh uv compile (local use)")
-    ap.add_argument("--python-version", default="3.11",
-                    help="python-version for --strict compile (default: %(default)s; "
-                         "use 3.12 for repos with 3.12+ floors)")
+    ap.add_argument(
+        "--strict",
+        action="store_true",
+        help="byte-compare against a fresh uv compile (local use)",
+    )
+    ap.add_argument(
+        "--python-version",
+        default="3.11",
+        help="python-version for --strict compile (default: %(default)s; "
+        "use 3.12 for repos with 3.12+ floors)",
+    )
     args = ap.parse_args()
 
     failures = 0
@@ -151,9 +176,11 @@ def main() -> int:
         for p in problems[:10]:
             print(f"  {p}")
         if status == "DRIFT":
-            print(f"  -> regenerate: uv pip compile {SRC} -o {LOCK} "
-                  f"--quiet --no-header --strip-extras "
-                  f"--python-version {args.python_version} --python-platform {PLATFORM}")
+            print(
+                f"  -> regenerate: uv pip compile {SRC} -o {LOCK} "
+                f"--quiet --no-header --strip-extras "
+                f"--python-version {args.python_version} --python-platform {PLATFORM}"
+            )
         print()
 
     if failures:
