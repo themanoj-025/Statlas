@@ -1,0 +1,41 @@
+name: Lockfile Drift
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - requirements.txt
+      - requirements.lock
+      - .github/workflows/lockfile-drift.yml
+      - .github/scripts/check_lockfile.py
+  pull_request:
+    paths:
+      - requirements.txt
+      - requirements.lock
+      - .github/workflows/lockfile-drift.yml
+      - .github/scripts/check_lockfile.py
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    name: lock satisfies requirements.txt
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
+        with:
+          python-version: "3.12"
+
+      - name: Install packaging
+        run: python -m pip install --quiet packaging
+
+      - name: Check lockfile is in sync with requirements.txt
+        # Constraint check: every requirement in requirements.txt must be
+        # satisfied by the exact pins in requirements.lock. Deterministic and
+        # offline. Regenerate the lock with (see script output):
+        #   uv pip compile requirements.txt -o requirements.lock --quiet --no-header --strip-extras
+        run: python .github/scripts/check_lockfile.py .
