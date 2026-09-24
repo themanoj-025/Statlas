@@ -14,7 +14,17 @@ Strict mode (--strict, local use):
   Use right after regenerating; time-sensitive, hence not the CI gate.
 
 Exit codes: 0 = in sync, 1 = drift/missing, 2 = tooling error.
+
+Formatting contract (shared/README.md):
+  * every line <= 85 columns,
+  * magic trailing commas on multi-line calls,
+  * LF endings, trailing newline.
+  These keep the file byte-stable under `ruff format` at ANY configured
+  line-length (88/100/120), so per-repo formatter settings can never
+  reformat it again (the V-01 regression class).
 """
+
+from __future__ import annotations
 
 import argparse
 import re
@@ -57,7 +67,11 @@ def load_source_requirements(repo: Path) -> list[Requirement]:
 
 def norm(name: str) -> str:
     """PEP 503 name normalization (uv writes dashed names: jaraco-context)."""
-    return canonicalize_name(name)
+    # Assignment (not a bare return) keeps mypy clean even when the
+    # pre-commit hook's isolated env lacks `packaging` (canonicalize_name
+    # degrades to Any; returning Any from -> str is flagged no-any-return).
+    normalized: str = canonicalize_name(name)
+    return normalized
 
 
 def load_lock_pins(repo: Path) -> dict[str, Version]:
@@ -90,7 +104,7 @@ def constraint_check(repo: Path) -> tuple[str, list[str]]:
     for req in load_source_requirements(repo):
         key = norm(req.name)
         if key not in pins:
-            problems.append(f"{req.name} not pinned in {LOCK}: needs {req.specifier}")
+            problems.append(f"{req.name} not pinned in {LOCK}: {req.specifier}")
             continue
         ver = pins[key]
         if ver not in SpecifierSet(str(req.specifier)):
@@ -129,6 +143,7 @@ def strict_check(repo: Path, py: str) -> tuple[str, list[str]]:
             cwd=repo,
             capture_output=True,
             text=True,
+            check=False,
         )
         if proc.returncode != 0:
             return "COMPILE-ERROR", [proc.stderr.strip()[:800]]
@@ -145,9 +160,14 @@ def strict_check(repo: Path, py: str) -> tuple[str, list[str]]:
 
 def main() -> int:
     ap = argparse.ArgumentParser(
-        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
+        description=__doc__,
+        formatter_class=argparse.RawDescriptionHelpFormatter,
     )
-    ap.add_argument("repos", nargs="*", default=["."])
+    ap.add_argument(
+        "repos",
+        nargs="*",
+        default=["."],
+    )
     ap.add_argument(
         "--strict",
         action="store_true",
@@ -156,8 +176,7 @@ def main() -> int:
     ap.add_argument(
         "--python-version",
         default="3.11",
-        help="python-version for --strict compile (default: %(default)s; "
-        "use 3.12 for repos with 3.12+ floors)",
+        help="python-version for --strict compile (3.12 for 3.12+ floors)",
     )
     args = ap.parse_args()
 
@@ -177,9 +196,10 @@ def main() -> int:
             print(f"  {p}")
         if status == "DRIFT":
             print(
-                f"  -> regenerate: uv pip compile {SRC} -o {LOCK} "
-                f"--quiet --no-header --strip-extras "
-                f"--python-version {args.python_version} --python-platform {PLATFORM}"
+                "  -> regenerate: uv pip compile "
+                f"{SRC} -o {LOCK} --quiet --no-header --strip-extras "
+                f"--python-version {args.python_version} "
+                f"--python-platform {PLATFORM}",
             )
         print()
 
