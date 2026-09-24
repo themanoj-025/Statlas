@@ -9,6 +9,14 @@ Checks (stdlib only, no dependencies):
   5. All fences are balanced (no unterminated blocks).
 
 Exit codes: 0 = clean, 1 = violations found (printed with line numbers).
+
+Formatting contract (shared/README.md):
+  * every line <= 85 columns,
+  * magic trailing commas on multi-line calls (never wrap without one),
+  * LF endings, trailing newline.
+  These keep the file byte-stable under `ruff format` at ANY configured
+  line-length (88/100/120), so per-repo formatter settings can never
+  reformat it again (the V-01 regression class).
 """
 
 from __future__ import annotations
@@ -101,7 +109,8 @@ def lint(path: Path) -> list[str]:
             continue
 
         for _text, target in LINK_RE.findall(re.sub(r"`[^`]*`", "", line)):
-            if target.startswith(("http://", "https://", "mailto:", "#")) or not target:
+            external = ("http://", "https://", "mailto:", "#")
+            if target.startswith(external) or not target:
                 fragment = target[1:] if target.startswith("#") else None
                 if fragment and fragment not in slugs:
                     problems.append(f"{path}:{no}: broken anchor #{fragment}")
@@ -113,8 +122,9 @@ def lint(path: Path) -> list[str]:
             if rel:
                 if (path.parent / rel).exists():
                     if frag and rel.lower().endswith(".md"):
+                        md_target = path.parent / rel
                         md_slugs = collect_slugs(
-                            (path.parent / rel).read_text(encoding="utf-8").splitlines()
+                            md_target.read_text(encoding="utf-8").splitlines(),
                         )
                         if frag and frag not in md_slugs:
                             problems.append(f"{path}:{no}: broken anchor {target}")
@@ -130,7 +140,7 @@ def lint(path: Path) -> list[str]:
 
     if fence_char:
         problems.append(
-            f"{path}: unterminated fenced code block (opened with {fence_char * fence_len})"
+            f"{path}: unterminated fence (opened with {fence_char * fence_len})",
         )
     return problems
 
@@ -138,7 +148,8 @@ def lint(path: Path) -> list[str]:
 def main() -> int:
     root = Path(".")
     targets = [root / "README.md"]
-    docs = sorted((root / "docs").rglob("*.md")) if (root / "docs").is_dir() else []
+    docs_dir = root / "docs"
+    docs = sorted(docs_dir.rglob("*.md")) if docs_dir.is_dir() else []
     exit_code = 0
     for doc in [t for t in targets if t.exists()] + docs:
         for problem in lint(doc):
