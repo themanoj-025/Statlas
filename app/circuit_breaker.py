@@ -33,7 +33,10 @@ import logging
 import time
 from collections.abc import Callable
 from enum import Enum
-from typing import Any
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:
+    from types import TracebackType
 
 logger = logging.getLogger(__name__)
 
@@ -63,10 +66,11 @@ class CircuitBreaker:
 
     @property
     def state(self) -> CircuitState:
-        if self._state == CircuitState.OPEN:
-            if time.monotonic() - self._last_failure_time >= self.recovery_timeout:
-                self._state = CircuitState.HALF_OPEN
-                logger.info("Circuit breaker %s: OPEN -> HALF_OPEN", self.name)
+        if self._state != CircuitState.OPEN:
+            return self._state
+        if time.monotonic() - self._last_failure_time >= self.recovery_timeout:
+            self._state = CircuitState.HALF_OPEN
+            logger.info("Circuit breaker %s: OPEN -> HALF_OPEN", self.name)
         return self._state
 
     def record_success(self) -> None:
@@ -119,6 +123,10 @@ class CircuitBreaker:
 
         return wrapper
 
+    # PYI034: the idiomatic fix (typing.Self) fails mypy at the
+    # python_version 3.10 targets of the oldest consumer repos, and the
+    # byte-stable contract bans adding typing_extensions. Suppressed at the
+    # workspace root via per-file-ignores (no consumer repo enables PYI034).
     def __enter__(self) -> CircuitBreaker:
         if self.is_open():
             raise CircuitBreakerOpenError(f"Circuit breaker {self.name} is OPEN")
@@ -126,9 +134,9 @@ class CircuitBreaker:
 
     def __exit__(
         self,
-        exc_type: type | None,
-        exc_val: Exception | None,
-        exc_tb: Any,
+        exc_type: type[BaseException] | None,
+        exc_val: BaseException | None,
+        exc_tb: TracebackType | None,
     ) -> None:
         if exc_type is None:
             self.record_success()
