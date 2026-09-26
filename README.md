@@ -13,11 +13,10 @@
 
 <p align="center">
   <a href="https://github.com/themanoj-025/Statlas/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/themanoj-025/Statlas/ci.yml?branch=main&label=CI" alt="CI Status" /></a>
-  <a href="https://github.com/themanoj-025/Statlas/releases"><img src="https://img.shields.io/badge/version-0.2.0-144E33" alt="Version" /></a>
+  <!-- NOTE: pyproject.toml (0.1.0) and web/package.json (0.2.0) disagree on
+       version — reconcile before the next release tag, then add a release badge. -->
   <a href="LICENSE"><img src="https://img.shields.io/github/license/themanoj-025/Statlas" alt="License: AGPL-3.0" /></a>
   <a href="https://github.com/themanoj-025/Statlas/stargazers"><img src="https://img.shields.io/github/stars/themanoj-025/Statlas?style=social" alt="Stars" /></a>
-  <a href="https://github.com/themanoj-025/Statlas/issues"><img src="https://img.shields.io/github/issues/themanoj-025/Statlas" alt="Issues" /></a>
-  <a href="https://github.com/themanoj-025/Statlas/graphs/contributors"><img src="https://img.shields.io/github/contributors/themanoj-025/Statlas" alt="Contributors" /></a>
   <a href="https://github.com/themanoj-025/Statlas/commits/main"><img src="https://img.shields.io/github/last-commit/themanoj-025/Statlas" alt="Last Commit" /></a>
 </p>
 
