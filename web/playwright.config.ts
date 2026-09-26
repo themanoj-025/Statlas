@@ -40,10 +40,23 @@ export default defineConfig({
       use: { viewport: { width: 1440, height: 900 } },
     },
   ],
-  webServer: {
-    command: "bash scripts/e2e-server.sh",
-    url: "http://127.0.0.1:3000",
-    reuseExistingServer: !process.env.CI,
-    timeout: 180_000,
-  },
+  webServer: [
+    // API slice: seeds the dev DB and boots the FastAPI layer, then exposes a
+    // health endpoint so Playwright can wait deterministically.
+    {
+      name: "api",
+      command: "bash scripts/e2e-server.sh api-only",
+      url: "http://127.0.0.1:8000/api/v1/health",
+      reuseExistingServer: !process.env.CI,
+      timeout: 60_000,
+    },
+    // Web slice: production build + standalone Next.js server on :3000.
+    {
+      name: "web",
+      command: "bash scripts/e2e-server.sh web-only",
+      url: "http://127.0.0.1:3000/",
+      reuseExistingServer: !process.env.CI,
+      timeout: 60_000,
+    },
+  ],
 });
