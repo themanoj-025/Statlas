@@ -29,7 +29,7 @@ from __future__ import annotations
 import argparse
 import re
 import shutil
-import subprocess
+import subprocess  # nosec B404 - the gate shells out to uv by design
 import sys
 import tempfile
 from pathlib import Path
@@ -124,7 +124,7 @@ def strict_check(repo: Path, py: str) -> tuple[str, list[str]]:
         uv = shutil.which("uv")
         if uv is None:
             return "COMPILE-ERROR", ["uv executable not found on PATH"]
-        proc = subprocess.run(
+        proc = subprocess.run(  # nosec B603 - fixed argv list, no shell
             [
                 uv,
                 "pip",
