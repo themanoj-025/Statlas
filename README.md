@@ -48,6 +48,46 @@
   <em>Open-source (AGPL-3.0) and self-hostable — runs out of the box on a fixture-demo dataset, no API keys required.</em>
 </p>
 
+### 🏆 Why Statlas?
+- **Transparent Analytics:** No black boxes. Every stat is traced back to a dated snapshot and published methodology.
+- **ML Player Archetypes:** Discover unique player profiles using k-means clustering of per-90 statistics.
+- **Rich Visualizations:** Radar comparisons, snapshot trend charts, and proportionally accurate shot/pass maps.
+- **100% Local Dev:** Runs out-of-the-box using a seeded fixture dataset. Zero API keys required to start developing.
+
+---
+
+## 📈 GitHub Stats
+
+<p align="center">
+  <img src="https://img.shields.io/github/followers/themanoj-025?label=Followers&style=flat-square&color=blue&logo=github" alt="Followers" />
+  <img src="https://img.shields.io/github/stars/themanoj-025?label=Stars&style=flat-square&color=blue&logo=github" alt="Stars" />
+</p>
+
+<p align="center">
+  <a href="https://github.com/themanoj-025">
+    <img src="https://github-readme-stats.vercel.app/api?username=themanoj-025&show_icons=true&theme=radical&include_all_commits=true&count_private=true" alt="GitHub Stats" />
+  </a>
+  <a href="https://github.com/themanoj-025">
+    <img src="https://github-readme-streak-stats.herokuapp.com/?user=themanoj-025&theme=radical" alt="GitHub Streak" />
+  </a>
+</p>
+
+<p align="center">
+  <a href="https://github.com/themanoj-025">
+    <img src="https://github-readme-activity-graph.vercel.app/graph?username=themanoj-025&theme=react-dark&hide_border=true" alt="Activity Graph" />
+  </a>
+</p>
+
+<p align="center">
+  <a href="https://github.com/themanoj-025">
+    <img src="https://github-readme-stats.vercel.app/api/top-langs/?username=themanoj-025&layout=compact&theme=radical" alt="Top Languages" />
+  </a>
+</p>
+
+<p align="center">
+  <img src="https://komarev.com/ghpvc/?username=themanoj-025&label=PROFILE+VIEWS&color=0e75b6&style=flat" alt="Profile Views" />
+</p>
+
 ---
 
 ## 📑 Table of Contents
