@@ -1,0 +1,64 @@
+{
+  "schemaVersion": "1.0",
+  "project": "statlas",
+  "aiAssisted": true,
+  "tools": [
+    {
+      "name": "Claude Opus",
+      "provider": "Anthropic",
+      "model": "claude-opus-4-20250514",
+      "mode": "cli",
+      "firstUsed": "2025-11-15",
+      "lastUsed": "2026-09-30"
+    },
+    {
+      "name": "Claude Sonnet",
+      "provider": "Anthropic",
+      "model": "claude-sonnet-4-20250514",
+      "mode": "cli",
+      "firstUsed": "2025-11-15",
+      "lastUsed": "2026-09-30"
+    },
+    {
+      "name": "Cursor",
+      "provider": "Anysphere",
+      "model": "Model 5",
+      "mode": "IDE agent",
+      "firstUsed": "2026-03-01",
+      "lastUsed": "2026-09-30"
+    }
+  ],
+  "scope": {
+    "code": "fastapi app + dashboard + statistics compute",
+    "docs": "README, CONTRIBUTING, CI workflows, audit docs",
+    "design": "service topology, statistics methods"
+  },
+  "estimatedAiSharePercent": {
+    "min": 60,
+    "max": 75,
+    "basis": "maintainer estimate from line-level authorship; automation not instrumented"
+  },
+  "humanReview": {
+    "performed": true,
+    "method": "line-by-line PR review, bandit/gitleaks CI gates, full pytest suite"
+  },
+  "evidence": [
+    {
+      "type": "commit",
+      "ref": "b449e53",
+      "note": "Enhance README.md per universal documentation blueprint"
+    },
+    {
+      "type": "file",
+      "ref": "api/main.py",
+      "note": "FastAPI application entry point"
+    },
+    {
+      "type": "file",
+      "ref": "dashboard/app.py",
+      "note": "Statistics dashboard"
+    }
+  ],
+  "disclosureDoc": "AI_DISCLOSURE.md",
+  "lastUpdated": "2026-10-06"
+}
