@@ -1,0 +1,81 @@
+# ════════════════════════════════════════════════════════════════
+# ai-disclosure-check.yml
+# Validates AI provenance transparency files are present and well-formed.
+# Fails the check with a clear message if the disclosure doc or its
+# machine-readable metadata are missing or malformed.
+# ════════════════════════════════════════════════════════════════
+name: AI Disclosure Check
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ai-disclosure-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  validate-provenance:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - name: Validate provenance paths are tracked and NOT ignored
+        run: |
+          set -o pipefail
+          fail=0
+          for p in AI_DISCLOSURE.md ai-provenance.json AGENTS.md
+          do
+            if git ls-files --error-unmatch "$p" >/dev/null 2>&1; then
+              echo "OK: $p is tracked"
+            else
+              echo "FAIL: $p is NOT tracked"
+              fail=1
+            fi
+            if git check-ignore -q "$p"; then
+              echo "FAIL: $p is ignored by .gitignore"
+              fail=1
+            fi
+          done
+          if [ "$fail" -ne 0 ]; then
+            echo "::error::AI provenance files missing or swallowed by .gitignore"
+            exit 1
+          fi
+
+      - name: Validate ai-provenance.json is strict JSON
+        run: python3 -c "import json,sys; json.load(open('ai-provenance.json' if not __import__('os').path.exists('docs/ai/ai-provenance.json') else 'docs/ai/ai-provenance.json'))"
+
+      - name: Validate ai-provenance.json required top-level keys
+        run: |
+          set -o pipefail
+          if [ -f docs/ai/ai-provenance.json ]; then
+            python3 -c "import json,sys; d=json.load(open('docs/ai/ai-provenance.json')); req=['schemaVersion','project','aiAssisted','tools','scope','estimatedAiSharePercent','humanReview','evidence','disclosureDoc','lastUpdated']; missing=[k for k in req if k not in d]; sys.exit(1 if missing else 0); print('OK: ai-provenance.json has all required top-level keys')"
+          else
+            python3 -c "import json,sys; d=json.load(open('ai-provenance.json')); req=['schemaVersion','project','aiAssisted','tools','scope','estimatedAiSharePercent','humanReview','evidence','disclosureDoc','lastUpdated']; missing=[k for k in req if k not in d]; sys.exit(1 if missing else 0); print('OK: ai-provenance.json has all required top-level keys')"
+          fi
+
+      - name: Validate AI_DISCLOSURE.md presence and non-emptiness
+        run: |
+          if [ ! -f AI_DISCLOSURE.md ] && [ ! -f docs/ai/AI_DISCLOSURE.md ]; then
+            echo "::error::AI_DISCLOSURE.md not found"
+            exit 1
+          fi
+          if [ -f docs/ai/AI_DISCLOSURE.md ]; then
+            if [ ! -s docs/ai/AI_DISCLOSURE.md ]; then
+              echo "::error::docs/ai/AI_DISCLOSURE.md is empty"
+              exit 1
+            fi
+            echo "OK: docs/ai/AI_DISCLOSURE.md present and non-empty"
+          elif [ ! -s AI_DISCLOSURE.md ]; then
+            echo "::error::AI_DISCLOSURE.md is empty"
+            exit 1
+          else
+            echo "OK: AI_DISCLOSURE.md present and non-empty"
+          fi

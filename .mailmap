@@ -1,0 +1,6 @@
+# .mailmap — remap duplicate author identities to a single canonical email
+# (standardise on this when shortlog shows the same human with several
+# different names/emails).
+#
+# Format: <canonical> <<canonical@email>> <<other>>
+# or: <canonical> <<canonical@email>> <<other email>> <<other name>>
