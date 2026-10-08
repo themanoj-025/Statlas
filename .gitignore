@@ -41,3 +41,30 @@ radar_balance.txt
 .coverage.*
 coverage.xml
 htmlcov/
+
+# =====================================================================
+# KEEP: AI provenance & transparency files — these must remain
+# visible to any repository viewer. Do not add rules above this block
+# that would shadow a directory these files live in without also
+# adding a negation here. Verified with `git check-ignore -v`.
+# =====================================================================
+!AI_DISCLOSURE.md
+!AI_USAGE.md
+!PROMPTS.md
+!AGENTS.md
+!CLAUDE.md
+!GEMINI.md
+!.cursorrules
+!.github/copilot-instructions.md
+!.claude/commands/
+!.claude/commands/**
+!.claude/agents/
+!.claude/agents/**
+!.claude/settings.json
+!docs/ai/
+!docs/ai/**
+!.ai/
+!.ai/**
+!ai-provenance.json
+!.gitmessage
+!CITATION.cff

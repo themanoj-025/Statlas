@@ -1,0 +1,2 @@
+# Ignore bulk refactors, mass renames, and large-copy edits so git blame stays readable.
+# Add new entries here for any future mass renames/refactors.
