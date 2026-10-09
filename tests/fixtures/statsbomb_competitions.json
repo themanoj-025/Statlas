@@ -1,0 +1,12 @@
+[
+  {
+    "competition_id": 123,
+    "competition_name": "La Liga",
+    "country_name": "Spain",
+    "competition_gender": "Male",
+    "season_ids": [2024],
+    "seasons": [
+      {"season_id": 2024, "season_name": "2024/2025"}
+    ]
+  }
+]

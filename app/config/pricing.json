@@ -1,0 +1,76 @@
+{
+  "schema_version": 1,
+  "generated_from": "CONSTITUTION §1 business model + suite/PRD.md REQ-021 (Phase 4)",
+  "currency": "usd",
+  "plans": {
+    "free": {
+      "label": "Free",
+      "price_monthly_cents": 0,
+      "stripe_price_id": null,
+      "limits": {
+        "leaderboard_rows": 50,
+        "comparisons_per_day": 3,
+        "trend_window": 5,
+        "assistant_queries_per_period": 10,
+        "report_quotas_per_period": 0,
+        "embeds_active": 0,
+        "api_rate_limit_per_minute": 0,
+        "shortlists_max": 1,
+        "shortlist_entries_max": 10,
+        "saved_searches_max": 5,
+        "watches_max": 10
+      }
+    },
+    "pro": {
+      "label": "Pro",
+      "price_monthly_cents": 700,
+      "stripe_price_id": null,
+      "limits": {
+        "leaderboard_rows": null,
+        "comparisons_per_day": null,
+        "trend_window": 10,
+        "assistant_queries_per_period": 200,
+        "report_quotas_per_period": 10,
+        "embeds_active": 10,
+        "api_rate_limit_per_minute": 0,
+        "shortlists_max": null,
+        "shortlist_entries_max": null,
+        "saved_searches_max": null,
+        "watches_max": null
+      }
+    },
+    "api_business": {
+      "label": "API Business",
+      "price_monthly_cents": 4900,
+      "stripe_price_id": null,
+      "limits": {
+        "leaderboard_rows": null,
+        "comparisons_per_day": null,
+        "trend_window": 10,
+        "assistant_queries_per_period": 1000,
+        "report_quotas_per_period": 100,
+        "embeds_active": null,
+        "api_rate_limit_per_minute": 120,
+        "shortlists_max": null,
+        "shortlist_entries_max": null,
+        "saved_searches_max": null,
+        "watches_max": null
+      }
+    }
+  },
+  "api_tiers": {
+    "api_business": {
+      "requests_per_minute": 120,
+      "requests_per_day": 50000
+    }
+  },
+  "notes": [
+    "stripe_price_id values are filled in at setup time from the live Stripe dashboard and mirrored in docs/billing/pricing-config.md. Null means the plan is not purchasable via Stripe Checkout (Free) or not yet configured.",
+    "Limits with null mean unlimited within the tier.",
+    "The assistant quota is a HARD CAP (no silent overage billing) — the documented model per Phase 4 Part B3.",
+    "Workspace (Phase 7): Free gets 1 shortlist and 10 entries per shortlist — a genuine taste of the workflow. Pro/API-Business: unlimited. Exceeding a cap returns an explicit, honest upsell message (403), never a generic error.",
+    "Structured search (Phase 8): Free gets 5 saved searches (history + presets unlimited); Pro/API-Business unlimited saved searches. Same upsell style as the workspace caps.",
+    "Scouting reports (Phase 9): Pro feature — Free gets 0 report generations per period (honest upsell), Pro 10, API-Business 100. Reports consume a SEPARATE report_quotas allowance, never the chat assistant quota (documented in docs/product/scouting-reports.md).",
+    "Watchlist (Phase 10): Free gets 10 watched entities (players/teams) — a genuine taste of the follow workflow. Pro/API-Business: unlimited. Exceeding the cap returns the same honest, specific upsell style as Phases 7/8/9 (403)."
+  ]
+}

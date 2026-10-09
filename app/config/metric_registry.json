@@ -1,0 +1,152 @@
+{
+  "schema_version": 1,
+  "generated_from": "methodology.md (Phase 0)",
+  "qualifying_minutes": 900,
+  "display_floor_minutes": 180,
+  "min_pool_size": 30,
+  "index_metric_id": "si_index",
+  "position_groups": ["GK", "CB", "FB", "DM", "CM", "AM", "W", "ST"],
+  "outfield_metrics": [
+    "si_gls_p90", "si_xg_p90", "si_sh_p90", "si_prgp_p90", "si_prgc_p90",
+    "si_xag_p90", "si_kp_p90", "si_tkl_p90", "si_int_p90", "si_press_p90",
+    "si_cmp_pct", "si_dis_p90"
+  ],
+  "gk_metrics": ["si_save_pct", "si_psxg_ga_p90", "si_ga_p90", "si_cross_pct"],
+  "metrics": {
+    "si_gls_p90": {
+      "name": "Goals per 90", "kind": "per90", "direction": "higher_is_better",
+      "fbref": {"table": "standard", "column": "Gls", "candidates": ["Standard Gls", "Gls"]},
+      "bounds": [0.0, 5.0], "display_floor": {"type": "minutes", "value": 180},
+      "null_vs_zero": "zero_when_genuine"
+    },
+    "si_xg_p90": {
+      "name": "xG per 90", "kind": "per90", "direction": "higher_is_better",
+      "fbref": {"table": "standard", "column": "xG", "candidates": ["Expected xG", "xG"]},
+      "understat": "xG",
+      "precedence": {"tier_1": ["understat", "fbref"], "default": ["fbref"]},
+      "bounds": [0.0, 5.0], "display_floor": {"type": "minutes", "value": 180},
+      "null_vs_zero": "zero_when_genuine"
+    },
+    "si_sh_p90": {
+      "name": "Shots per 90", "kind": "per90", "direction": "higher_is_better",
+      "fbref": {"table": "shooting", "column": "Sh", "candidates": ["Sh", "Standard Sh"]},
+      "understat": "shots",
+      "precedence": {"tier_1": ["understat", "fbref"], "default": ["fbref"]},
+      "bounds": [0.0, 20.0], "display_floor": {"type": "minutes", "value": 180},
+      "null_vs_zero": "zero_when_genuine"
+    },
+    "si_prgp_p90": {
+      "name": "Progressive passes per 90", "kind": "per90", "direction": "higher_is_better",
+      "fbref": {"table": "passing", "column": "PrgP", "candidates": ["Att PrgP", "PrgP"]},
+      "bounds": [0.0, 35.0], "display_floor": {"type": "minutes", "value": 180},
+      "null_vs_zero": "zero_when_genuine"
+    },
+    "si_prgc_p90": {
+      "name": "Progressive carries per 90", "kind": "per90", "direction": "higher_is_better",
+      "fbref": {"table": "possession", "column": "PrgC", "candidates": ["Carries PrgC", "PrgC"]},
+      "bounds": [0.0, 30.0], "display_floor": {"type": "minutes", "value": 180},
+      "null_vs_zero": "zero_when_genuine"
+    },
+    "si_xag_p90": {
+      "name": "xAG per 90", "kind": "per90", "direction": "higher_is_better",
+      "fbref": {"table": "passing", "column": "xAG", "candidates": ["Att xAG", "xAG"]},
+      "understat": "xA",
+      "precedence": {"tier_1": ["understat", "fbref"], "default": ["fbref"]},
+      "bounds": [0.0, 3.0], "display_floor": {"type": "minutes", "value": 180},
+      "null_vs_zero": "zero_when_genuine"
+    },
+    "si_kp_p90": {
+      "name": "Key passes per 90", "kind": "per90", "direction": "higher_is_better",
+      "fbref": {"table": "passing", "column": "KP", "candidates": ["Att KP", "KP"]},
+      "understat": "key_passes",
+      "precedence": {"tier_1": ["understat", "fbref"], "default": ["fbref"]},
+      "bounds": [0.0, 15.0], "display_floor": {"type": "minutes", "value": 180},
+      "null_vs_zero": "zero_when_genuine"
+    },
+    "si_tkl_p90": {
+      "name": "Tackles per 90", "kind": "per90", "direction": "higher_is_better",
+      "fbref": {"table": "defense", "column": "Tkl", "candidates": ["Tackles Tkl", "Tkl"]},
+      "bounds": [0.0, 15.0], "display_floor": {"type": "minutes", "value": 180},
+      "null_vs_zero": "zero_when_genuine"
+    },
+    "si_int_p90": {
+      "name": "Interceptions per 90", "kind": "per90", "direction": "higher_is_better",
+      "fbref": {"table": "defense", "column": "Int", "candidates": ["Blocks Int", "Int"]},
+      "bounds": [0.0, 15.0], "display_floor": {"type": "minutes", "value": 180},
+      "null_vs_zero": "zero_when_genuine"
+    },
+    "si_press_p90": {
+      "name": "Pressures per 90", "kind": "per90", "direction": "higher_is_better",
+      "fbref": {"table": "pressing", "column": "Press", "candidates": ["Pressures Press", "Press"]},
+      "bounds": [0.0, 100.0], "display_floor": {"type": "minutes", "value": 180},
+      "null_vs_zero": "zero_when_genuine"
+    },
+    "si_cmp_pct": {
+      "name": "Pass completion %", "kind": "rate", "direction": "higher_is_better",
+      "fbref": {"table": "passing", "column": "Cmp%", "candidates": ["Total Cmp%", "Cmp%"],
+                "floor_column": {"column": "Att", "candidates": ["Total Att", "Att"]}},
+      "display_floor": {"type": "attempts", "value": 50},
+      "bounds": [0.0, 100.0], "null_vs_zero": "null_when_floor_not_met"
+    },
+    "si_dis_p90": {
+      "name": "Dispossessed per 90", "kind": "per90", "direction": "lower_is_better",
+      "fbref": {"table": "possession", "column": "Dis", "candidates": ["Carries Dis", "Dis"]},
+      "bounds": [0.0, 15.0], "display_floor": {"type": "minutes", "value": 180},
+      "null_vs_zero": "zero_when_genuine"
+    },
+    "si_save_pct": {
+      "name": "Save percentage", "kind": "rate", "direction": "higher_is_better",
+      "fbref": {"table": "keepers", "column": "Save%", "candidates": ["Shots on target Save%", "Save%"],
+                "floor_column": {"column": "SoTA", "candidates": ["SoTA", "Shots on target SoTA"]}},
+      "display_floor": {"type": "count", "value": 20},
+      "bounds": [0.0, 100.0], "null_vs_zero": "null_when_floor_not_met"
+    },
+    "si_psxg_ga_p90": {
+      "name": "PSxG minus GA per 90", "kind": "derived", "direction": "higher_is_better",
+      "formula": "psxg_minus_ga",
+      "inputs": {
+        "psxg": {"table": "keepers_adv", "column": "PSxG", "candidates": ["Expected PSxG", "PSxG"]},
+        "ga": {"table": "keepers", "column": "GA", "candidates": ["GA", "Per 90 Minutes GA"], "fallback_per90_column": "GA90"}
+      },
+      "bounds": [-5.0, 5.0], "display_floor": {"type": "minutes", "value": 180},
+      "null_vs_zero": "zero_when_genuine"
+    },
+    "si_ga_p90": {
+      "name": "Goals against per 90", "kind": "per90", "direction": "lower_is_better",
+      "fbref": {"table": "keepers", "column": "GA", "candidates": ["GA", "Per 90 Minutes GA"], "fallback_per90_column": "GA90"},
+      "bounds": [0.0, 12.0], "display_floor": {"type": "minutes", "value": 180},
+      "null_vs_zero": "zero_when_genuine"
+    },
+    "si_cross_pct": {
+      "name": "Crosses stopped %", "kind": "rate", "direction": "higher_is_better",
+      "fbref": {"table": "keepers_adv", "column": "Stp%", "candidates": ["Crosses Stp%", "Stp%"],
+                "floor_column": {"column": "Opp", "candidates": ["Crosses Opp", "Opp"]}},
+      "display_floor": {"type": "count", "value": 10},
+      "bounds": [0.0, 100.0], "null_vs_zero": "null_when_floor_not_met"
+    }
+  },
+  "position_weights": {
+    "ST": {"si_gls_p90": 0.30, "si_xg_p90": 0.20, "si_sh_p90": 0.10, "si_prgp_p90": 0.05, "si_prgc_p90": 0.05, "si_xag_p90": 0.10, "si_kp_p90": 0.05, "si_tkl_p90": 0.02, "si_int_p90": 0.02, "si_press_p90": 0.05, "si_cmp_pct": 0.05, "si_dis_p90": 0.01},
+    "W":  {"si_gls_p90": 0.15, "si_xg_p90": 0.10, "si_sh_p90": 0.05, "si_prgp_p90": 0.10, "si_prgc_p90": 0.15, "si_xag_p90": 0.20, "si_kp_p90": 0.10, "si_tkl_p90": 0.02, "si_int_p90": 0.02, "si_press_p90": 0.05, "si_cmp_pct": 0.05, "si_dis_p90": 0.01},
+    "AM": {"si_gls_p90": 0.15, "si_xg_p90": 0.10, "si_sh_p90": 0.05, "si_prgp_p90": 0.10, "si_prgc_p90": 0.05, "si_xag_p90": 0.25, "si_kp_p90": 0.15, "si_tkl_p90": 0.02, "si_int_p90": 0.02, "si_press_p90": 0.05, "si_cmp_pct": 0.05, "si_dis_p90": 0.01},
+    "CM": {"si_gls_p90": 0.05, "si_xg_p90": 0.05, "si_sh_p90": 0.02, "si_prgp_p90": 0.20, "si_prgc_p90": 0.10, "si_xag_p90": 0.15, "si_kp_p90": 0.10, "si_tkl_p90": 0.08, "si_int_p90": 0.05, "si_press_p90": 0.08, "si_cmp_pct": 0.10, "si_dis_p90": 0.02},
+    "DM": {"si_gls_p90": 0.02, "si_xg_p90": 0.02, "si_sh_p90": 0.01, "si_prgp_p90": 0.15, "si_prgc_p90": 0.08, "si_xag_p90": 0.05, "si_kp_p90": 0.03, "si_tkl_p90": 0.15, "si_int_p90": 0.12, "si_press_p90": 0.15, "si_cmp_pct": 0.18, "si_dis_p90": 0.04},
+    "FB": {"si_gls_p90": 0.03, "si_xg_p90": 0.03, "si_sh_p90": 0.02, "si_prgp_p90": 0.18, "si_prgc_p90": 0.18, "si_xag_p90": 0.10, "si_kp_p90": 0.05, "si_tkl_p90": 0.12, "si_int_p90": 0.10, "si_press_p90": 0.08, "si_cmp_pct": 0.08, "si_dis_p90": 0.03},
+    "CB": {"si_gls_p90": 0.02, "si_xg_p90": 0.03, "si_sh_p90": 0.01, "si_prgp_p90": 0.18, "si_prgc_p90": 0.05, "si_xag_p90": 0.02, "si_kp_p90": 0.01, "si_tkl_p90": 0.18, "si_int_p90": 0.15, "si_press_p90": 0.15, "si_cmp_pct": 0.16, "si_dis_p90": 0.04},
+    "GK": {"si_save_pct": 0.35, "si_psxg_ga_p90": 0.30, "si_ga_p90": 0.20, "si_cross_pct": 0.15}
+  },
+  "anomaly": {
+    "field_bounds": {
+      "minutes_played": [0.0, 3600.0],
+      "matches_played": [0.0, 80.0]
+    },
+    "cross_source": {
+      "enabled": true,
+      "sample_size": 20,
+      "metrics": {
+        "si_xg_p90": {"relative_tolerance": 0.30, "absolute_tolerance": 0.30},
+        "si_sh_p90": {"relative_tolerance": 0.30, "absolute_tolerance": 2.0}
+      }
+    }
+  }
+}

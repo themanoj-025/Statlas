@@ -1,0 +1,28 @@
+# Cancel superseded runs of this workflow on the same ref (PR pushes).
+# Never cancels on main pushes or scheduled runs.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+name: Stale Issues & PRs
+on:
+  schedule:
+    - cron: '0 0 * * *'
+permissions:
+  issues: write
+  pull-requests: write
+jobs:
+  stale:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/stale@5bef64f19d7facfb25b37b414482c7164d639639 # v9
+        with:
+          stale-issue-message: 'This issue has been automatically marked as stale. It will be closed in 14 days if no activity occurs.'
+          stale-pr-message: 'This PR has been automatically marked as stale. It will be closed in 7 days if no activity occurs.'
+          days-before-issue-stale: 30
+          days-before-pr-stale: 14
+          days-before-issue-close: 14
+          days-before-pr-close: 7
+          exempt-issue-labels: 'pinned,security,bug'
+          exempt-pr-labels: 'pinned,security'

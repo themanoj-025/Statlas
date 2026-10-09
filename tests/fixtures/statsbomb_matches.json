@@ -1,0 +1,10 @@
+[
+  {
+    "match_id": 10001,
+    "match_date": "2025-01-12",
+    "competition": {"competition_id": 123, "competition_name": "La Liga", "country_name": "Spain"},
+    "season": {"season_id": 2024, "season_name": "2024/2025"},
+    "home_team": {"home_team_id": 1, "home_team_name": "FC Barcelona", "home_team_gender": "Male"},
+    "away_team": {"away_team_id": 2, "away_team_name": "Real Madrid", "away_team_gender": "Male"}
+  }
+]

@@ -1,0 +1,32 @@
+# Cancel superseded runs of this workflow on the same ref (PR pushes).
+# Never cancels on main pushes or scheduled runs.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+# Least-privilege token scope; jobs declaring their own permissions override this.
+permissions:
+  contents: read
+
+name: SBOM Generation
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+jobs:
+  sbom:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - name: Generate SBOM with Syft
+        uses: anchore/sbom-action@e22c389904149dbc22b58101806040fa8d37a610 # v0
+        with:
+          path: .
+          format: spdx-json
+          output-file: sbom.spdx.json
+      - name: Upload SBOM
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: sbom
+          path: sbom.spdx.json

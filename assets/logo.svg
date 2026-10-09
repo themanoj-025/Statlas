@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 560 120" role="img" aria-label="Statlas">
+  <!-- Pitch-green rounded tile with a stylized pitch -->
+  <rect x="4" y="10" width="100" height="100" rx="20" fill="#1E7A4C"/>
+  <rect x="20" y="28" width="68" height="64" rx="6" fill="none" stroke="#FFFFFF" stroke-width="4"/>
+  <line x1="54" y1="28" x2="54" y2="92" stroke="#FFFFFF" stroke-width="4"/>
+  <circle cx="54" cy="60" r="9" fill="none" stroke="#FFFFFF" stroke-width="4"/>
+  <!-- Amber data dot — the "analytics that shows its work" accent -->
+  <circle cx="42" cy="46" r="5" fill="#A85F0E"/>
+  <!-- Wordmark -->
+  <text x="130" y="82" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="64" font-weight="700" fill="#1E7A4C" letter-spacing="1">Statlas</text>
+  <text x="132" y="104" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="14" font-weight="500" fill="#6B7280" letter-spacing="2.5">FOOTBALL ANALYTICS</text>
+</svg>

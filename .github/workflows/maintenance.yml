@@ -1,0 +1,45 @@
+# Cancel superseded runs of this workflow on the same ref (PR pushes).
+# Never cancels on main pushes or scheduled runs.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+# Least-privilege token scope; jobs declaring their own permissions override this.
+permissions:
+  contents: read
+
+name: "Scheduled maintenance"
+
+on:
+  schedule:
+    - cron: '0 6 * * 1'  # Every Monday
+  workflow_dispatch:
+
+jobs:
+  pip-audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
+        with:
+          cache: pip
+          python-version: "3.12"
+
+      - name: Install pip-audit
+        run: pip install pip-audit
+
+      - name: Audit dependencies for vulnerabilities
+        run: pip-audit -r requirements.txt --desc on
+        continue-on-error: true
+
+  dependency-review:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    if: github.event_name == 'pull_request'
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: actions/dependency-review-action@a1d282b36b6f3519aa1f3fc636f609c47dddb294 # v5.0.0
+        with:
+          fail-on-severity: high

@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<!--
+  Fixture data — NOT real production data. Represents the embedded JSON payload
+  Understat serves inside <script> tags (playersDataObject). Player ids are fake.
+-->
+<html>
+<head><title>EPL</title></head>
+<body>
+<div id="header">
+  <h1>EPL — 2025</h1>
+</div>
+<script>
+var teamsData = JSON.parse('{"1":{"id":"1","title":"Manchester City","short_title":"MCI"}}');
+var playersDataObject = JSON.parse('[{"id":"123","player_name":"Erling Haaland","games":"35","time":"2700","goals":"24","assists":"4","shots":"60","key_passes":"30","yellow_card":"3","red_card":"0","npg":"22","npxG":"20.0","xG":"20.25","xA":"6.75","xGChain":"30.0","xGBuildup":"18.0","position":"F","team_title":"Manchester City","title":"Erling Haaland"},{"id":"456","player_name":"Mohamed Salah","games":"28","time":"1800","goals":"18","assists":"8","shots":"75","key_passes":"50","yellow_card":"2","red_card":"0","npg":"16","npxG":"14.0","xG":"15.0","xA":"7.5","xGChain":"28.0","xGBuildup":"20.0","position":"F","team_title":"Liverpool","title":"Mohamed Salah"}]');
+</script>
+</body>
+</html>

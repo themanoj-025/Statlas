@@ -1,0 +1,45 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+.hypothesis/
+.coverage
+
+# Runtime HTTP cache (sources/base.py HttpCache)
+.cache/
+
+# Generated runtime data (seed script + pipeline output). The coverage
+# matrix is tracked on purpose — Constitution §3 makes it the machine-readable
+# single source of truth, and CI validates it (tests/test_matrix_validation.py).
+data/*
+!data/coverage_matrix.json
+*.db
+
+# Logs
+logs/
+*.log
+
+# Node / Next.js
+node_modules/
+.next/
+out/
+*.tsbuildinfo
+next-env.d.ts
+
+# Environment / secrets (keep .env.example tracked)
+.env
+.env.*
+!.env.example
+
+# ── Portfolio-standard ignores (sweep 2026-09) ──────────────
+radar_balance.txt
+.venv*/
+*.egg-info/
+*.db-shm
+*.db-wal
+.coverage.*
+coverage.xml
+htmlcov/
+
+# KEEP: AI provenance & transparency files — these must remain

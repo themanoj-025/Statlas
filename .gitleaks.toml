@@ -1,0 +1,4 @@
+# gitleaks allowlist. Only add entries that are provably safe test
+# fixtures or docs that intentionally embed a pattern resembling a key.
+# Never add a real secret here.
+[allowlist]

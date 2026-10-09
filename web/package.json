@@ -1,0 +1,43 @@
+{
+  "name": "statlas-web",
+  "version": "0.2.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "test": "node --test lib/share.test.ts lib/chartSvg.test.ts",
+    "test:e2e": "playwright test",
+    "test:e2e:core": "playwright test --project=e2e",
+    "test:e2e:breakpoints": "playwright test --project=mobile-375 --project=tablet-768 --project=desktop-1440",
+    "perf:audit": "lhci autorun",
+    "lint": "eslint . && stylelint '**/*.css'",
+    "lint:fix": "eslint . --fix && stylelint '**/*.css' --fix"
+  },
+  "dependencies": {
+    "dompurify": "^3.4.14",
+    "lucide-react": "^1.33.0",
+    "next": "16.3.0",
+    "react": "19.2.8",
+    "react-dom": "19.2.8"
+  },
+  "devDependencies": {
+    "@axe-core/playwright": "^4.13.0",
+    "@eslint/eslintrc": "^3.3.6",
+    "@lhci/cli": "^0.15.1",
+    "@next/eslint-plugin-next": "^16.3.2",
+    "@playwright/test": "^1.62.1",
+    "@types/dompurify": "^3.2.0",
+    "@types/node": "^26.2.0",
+    "@types/react": "^19.2.0",
+    "@types/react-dom": "^19.2.0",
+    "eslint": "^10.9.0",
+    "stylelint": "^17.14.1",
+    "stylelint-config-standard": "^40.0.0",
+    "typescript": "^7.0.2"
+  },
+  "overrides": {
+    "tmp": "^0.2.6",
+    "@puppeteer/browsers": "^3.2.0"
+  }
+}
