@@ -1,4 +1,4 @@
-# Rules.md — Statlas Coding Standards & AI-Agent Operating Rules
+# Rules.md — Statlas Coding Standards & Engineering Operating Rules
 
 | Field | Value |
 |---|---|
@@ -7,7 +7,7 @@
 | Owner | Staff Engineer |
 | Status | Approved (mirrors docs/CONSTITUTION.md) |
 
-**This file is the constitution for humans and AI agents.** It extends `docs/CONSTITUTION.md` with engineering-grade operating rules. Violations must be flagged, never silently worked around.
+**This file is the constitution for engineering operations.** It extends `docs/CONSTITUTION.md` with engineering-grade operating rules. Violations must be flagged, never silently worked around.
 
 ## 1. Guiding Principles
 
@@ -77,7 +77,7 @@ flowchart LR
 - **Coverage target:** no formal % gate; the bar is "every new function with non-trivial logic gets a test" + CI counts must never drop (compare counts, not just pass/fail).
 - **Full strategy:** [Testing.md](Testing.md).
 
-## 5. AI Agent Operating Rules (imperative)
+## 5. Engineering Operating Rules
 
 1. Read **Tracker.md** and **ImplementationPlan.md** before starting any task. Never pick a task that isn't in the tracker.
 2. Never mark a task 🟢 Done in Tracker.md without its tests passing.
