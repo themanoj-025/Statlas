@@ -1,5 +1,3 @@
-# Statlas
-
 <p align="center">
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="assets/logo-dark.svg" />
@@ -10,182 +8,219 @@
 <h1 align="center">Statlas</h1>
 
 <p align="center">
-  <em>Football analytics that shows its work.</em>
+  <strong>Football analytics that shows its work: transparent metrics, percentile radar profiles, shot maps, and ML-discovered player archetypes.</strong>
 </p>
 
 <p align="center">
   <a href="https://github.com/themanoj-025/Statlas/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/themanoj-025/Statlas/ci.yml?branch=main&label=CI" alt="CI Status" /></a>
-  <!-- TODO: versions disagree across manifests (pyproject.toml 0.1.0, web/package.json 0.2.0) — reconcile before the next release tag, then add a release badge. -->
-  <a href="LICENSE"><img src="https://img.shields.io/github/license/themanoj-025/Statlas" alt="License" /></a>
-  <a href="https://github.com/themanoj-025/Statlas/stargazers"><img src="https://img.shields.io/github/stars/themanoj-025/Statlas?style=social" alt="Stars" /></a>
-  <a href="https://github.com/themanoj-025/Statlas/commits/main"><img src="https://img.shields.io/github/last-commit/themanoj-025/Statlas" alt="Last Commit" /></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-AGPL--3.0-blue?style=flat-square" alt="License AGPL-3.0" /></a>
+  <a href="https://github.com/themanoj-025/Statlas/stargazers"><img src="https://img.shields.io/github/stars/themanoj-025/Statlas?style=social" alt="GitHub Stars" /></a>
+  <a href="https://github.com/themanoj-025/Statlas/issues"><img src="https://img.shields.io/github/issues/themanoj-025/Statlas?style=flat-square" alt="GitHub Issues" /></a>
+  <a href="https://github.com/themanoj-025/Statlas/pulls"><img src="https://img.shields.io/badge/PRs-welcome-brightgreen?style=flat-square" alt="PRs Welcome" /></a>
 </p>
 
-<p align="center">
-  <img src="https://img.shields.io/badge/Python-3.10+-3776AB?logo=python&logoColor=white" alt="Python 3.10+" />
-  <img src="https://img.shields.io/badge/FastAPI-0.110-009688?logo=fastapi&logoColor=white" alt="FastAPI" />
-  <img src="https://img.shields.io/badge/Next.js-16-black?logo=nextdotjs&logoColor=white" alt="Next.js 16" />
-  <img src="https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=black" alt="React 19" />
-  <img src="https://img.shields.io/badge/TypeScript-5.7-3178C6?logo=typescript&logoColor=white" alt="TypeScript" />
-  <img src="https://img.shields.io/badge/PostgreSQL-4169E1?logo=postgresql&logoColor=white" alt="PostgreSQL" />
-  <img src="https://img.shields.io/badge/scikit--learn-1.5-F7931E?logo=scikit-learn&logoColor=white" alt="scikit-learn" />
-  <img src="https://img.shields.io/badge/Docker-2496ED?logo=docker&logoColor=white" alt="Docker" />
-  <img src="https://img.shields.io/badge/PRs-welcome-brightgreen" alt="PRs welcome" />
-</p>
-
-<!-- Social preview (maintainer note — invisible when rendered):
-GitHub does not use the README header logo for the repo card. Upload one manually:
-Settings → General → Social preview → Edit → upload a 1280×640 (2:1) PNG under 1 MB.
-Good hero candidates: the capture shown in the Demo section below, or assets/logo.svg
-composed onto a pitch-green card. Re-upload to replace; GitHub caches the previous image.
--->
-
-<p align="center">
-  <strong>Statlas</strong> is a football analytics platform that turns per-90 statistics from FBref, Understat, and API-Football — plus StatsBomb event data — into percentile radar comparisons, snapshot trend charts, shot and pass maps, embeddable widgets, and <strong>ML-discovered player archetypes</strong>. Every number carries a dated snapshot, a published methodology, and a traceable data source. No fabricated stats. No black boxes.
-</p>
-
-<p align="center">
-  <em>Open-source (AGPL-3.0) and self-hostable — runs out of the box on a fixture-demo dataset, no API keys required.</em>
-</p>
-
-## 🏆 Why Statlas?
-
-> [!TIP] Note: the GitHub repo card uses the header logo. For the social preview, upload a 1280×640 (2:1) PNG to Settings → General → Social preview.
-
-- **Transparent analytics:** no black boxes. Every stat is traced back to a dated snapshot and published methodology.
-- **ML player archetypes:** discover unique player profiles using k-means clustering of per-90 statistics.
-- **Rich visualizations:** percentile radar comparisons, snapshot trend charts, proportionally accurate shot/pass maps.
-- **100% local dev:** runs out-of-the-box using a seeded fixture dataset. Zero API keys required to start developing.
+<!-- TODO: versions disagree across manifests (pyproject.toml 0.1.0, web/package.json 0.2.0) — reconcile before the next release tag. -->
 
 ---
 
-## 📋 Table of Contents
+## Overview
 
-- [Why Statlas?](#-why-statlas)
-- [What it does](#what-it-does)
-- [Quick start](#quick-start)
-- [Tech stack](#tech-stack)
-- [Project structure](#project-structure)
-- [How data flows](#how-data-flows)
+Statlas is an open-source football analytics and intelligence platform that transforms raw match events and per-90 metrics (from sources like StatsBomb, FBref, and Understat) into insightful visualizations. Features include percentile radar charts, longitudinal performance trendlines, spatial shot and pass networks, embeddable visual widgets, and unsupervised k-means player archetype discovery.
+
+Every calculated metric is linked to an immutable timestamped snapshot and transparent methodological calculation. The platform runs out of the box with zero external API dependencies using seeded demonstration fixtures.
+
+---
+
+## Table of Contents
+
+- [Key Features](#key-features)
+- [Analytics Visualizations](#analytics-visualizations)
+- [Tech Stack](#tech-stack)
+- [Architecture & Data Flow](#architecture--data-flow)
+- [Project Structure](#project-structure)
+- [Prerequisites](#prerequisites)
+- [Installation & Quick Start](#installation--quick-start)
+- [Testing](#testing)
+- [Docker Deployment](#docker-deployment)
 - [Roadmap](#roadmap)
 - [Contributing](#contributing)
 - [License](#license)
-- [Support](#-support)
+- [Support](#support)
 
 ---
 
-## What it does
+## Key Features
 
-Statlas fetches raw per-90 stats and event data, subjects them to a dated, reproducible pipeline, and exposes:
+- **Transparent Statistical Provenance**: Eliminates opaque rating scores; all metrics carry source attribution, computation logs, and timestamped snapshot IDs.
+- **Unsupervised Player Archetypes**: Leverages k-means clustering over standardized per-90 features to uncover latent stylistic roles across leagues.
+- **Geospatial Shot & Pass Visualizations**: Generates coordinate-accurate pitch representations depicting shot trajectories, pass networks, and zonal pressure maps.
+- **Embeddable Chart Widgets**: Modular HTML export capabilities for publishing charts directly into third-party dashboards or editorial articles.
+- **Full Offline Developer Experience**: Ships with comprehensive seed fixture databases, enabling immediate local development with zero third-party API subscriptions.
 
-| View      | What it shows                                                        |
-| --------- | -------------------------------------------------------------------- |
-| Radar     | Percentile comparisons across a player's per-90 attributes           |
-| Trend     | Snapshot-to-snapshot stat changes over time                          |
-| Shot map  | Proportionally accurate shot locations, overlayable by match/event   |
-| Pass map  | Pass networks and completion heat, match overplay                             |
-| Widget    | Embeddable HTML widget of any chart, for docs or dashboards          |
-| Archetypes| ML-discovered player archetypes from k-means clustering of per-90 stats |
+---
 
-## Quick start
+## Analytics Visualizations
 
-> [!NOTE] Runs with a seeded fixture dataset, so no API keys are needed to start developing.
+| Visualization | Analytical Purpose |
+| :--- | :--- |
+| **Percentile Radar** | Multidimensional evaluation comparing player performance against position-specific league distributions |
+| **Longitudinal Trends** | Tracks evolution of key underlying indicators across match snapshots |
+| **Spatial Shot Maps** | Visualizes shot coordinates with expected goals (xG) sizing and outcome indicators |
+| **Passing Networks** | Displays team passing volume, passing heat, and progressive carrying lanes |
+| **Player Archetypes** | Clusters footballers by tactical behavior (e.g., Deep-Lying Playmaker vs. Box-to-Box Engine) |
 
-```bash
-# 1. Clone the repository
-git clone https://github.com/themanoj-025/Statlas.git
-cd Statlas
+---
 
-# 2. Create and activate a virtual environment
-python -m venv .venv
-source .venv/bin/activate
+## Tech Stack
 
-# 3. Install Python dependencies
-pip install -r requirements.txt
+| Domain | Technology |
+| :--- | :--- |
+| **Backend Framework** | FastAPI 0.110+, SQLAlchemy 2.x, Pydantic v2 |
+| **Frontend Dashboard** | Next.js 16, React 19, TypeScript 5.7, Tailwind CSS |
+| **Machine Learning** | scikit-learn (k-means clustering), SHAP |
+| **Database & Cache** | PostgreSQL / SQLite (`dev.db`), Redis |
+| **Container & CI** | Docker Compose, GitHub Actions |
 
-# 4. Install frontend dependencies
-cd web && npm install
+---
 
-# 5. Start the backend (FastAPI) and frontend (Next.js) together
-#    (see docker-compose.yml for the full one-command option)
-uvicorn backend.main:app --reload --port 8000
-cd web && npm run dev
+## Architecture & Data Flow
+
+```text
+       Raw Data Sources (StatsBomb, FBref, Understat)
+                            │
+                            ▼
+              Data Ingestion & Cleaning Engine
+              (Dated Snapshots in data/dated/)
+                            │
+                            ▼
+               Feature Engineering Pipeline
+       (Per-90 Normalization & Percentile Ranking)
+                            │
+                            ▼
+               Machine Learning & Analytics
+       (K-Means Archetypes & Tactical Aggregations)
+                            │
+            ┌───────────────┴───────────────┐
+            ▼                               ▼
+     FastAPI Backend               Next.js Web Frontend
+  (app.api.main:app, Port 8000)      (web/, Port 3000)
 ```
 
-Open `http://localhost:8000` to see the app.
+---
 
-### Docker
-
-```bash
-docker compose up --build
-```
-
-## Tech stack
-
-| Layer      | Technology                                                      |
-| ---------- | --------------------------------------------------------------- |
-| Backend    | FastAPI, SQLAlchemy (PostgreSQL), scikit-learn, SHAP            |
-| Frontend   | Next.js 16, React 19, TypeScript 5.7, Tailwind                   |
-| Data       | FBref, Understat, API-Football, StatsBomb (raw sources)         |
-| Infra      | Docker Compose, GitHub Actions (lint, typecheck, test, security) |
-
-## Project structure
+## Project Structure
 
 ```text
 Statlas/
-├── backend/                    # FastAPI app (models, API, pipeline)
-├── web/                        # Next.js frontend + dashboard
-├── notebooks/                  # Reproduction notebooks
-├── data/                       # Dated snapshots (gitignored)
-├── requirements.txt
-└── docker-compose.yml
+├── app/                    # FastAPI backend package
+│   ├── analytics/          # Statistical computation modules
+│   ├── api/                # API route controllers and endpoint schemas
+│   │   └── main.py         # Primary FastAPI application instance
+│   ├── compute/            # Archetype clustering and data transformation
+│   ├── models/             # SQLAlchemy ORM models
+│   └── sources/            # Data source adapters (StatsBomb, etc.)
+├── web/                    # Next.js 16 frontend application
+│   ├── app/                # App router pages and views
+│   ├── components/         # Radar, pitch, and chart visual components
+│   └── package.json        # Frontend dependencies
+├── data/                   # Seed database and cached snapshots
+├── tests/                  # Pytest backend test suite
+├── Dockerfile              # Multi-stage production container build
+├── docker-compose.yml      # Multi-service local environment
+├── pyproject.toml          # Python build backend and Ruff configuration
+├── requirements.txt        # Backend dependencies
+└── README.md               # Project documentation
 ```
 
-## How data flows
+---
 
-```text
-RAW DATA LAYER
-  FBref / Understat / API-Football / StatsBomb
-        │
-        ▼
-  FETCH + CLEAN → dated snapshot (data/dated/)
-        │
-        ▼
-  FEATURE ENGINEERING (per-90 aggregation, percentile ranking)
-        │
-        ▼
-  MODEL LAYER (k-means archetypes, SHAP explanations)
-        │
-        ▼
-  FRONTEND (radar / trend / shot & pass maps / widgets)
+## Prerequisites
+
+- **Python**: `>= 3.10`
+- **Node.js**: `>= 18.0`
+- **Docker**: Optional, for multi-service compose orchestration
+
+---
+
+## Installation & Quick Start
+
+### 1. Clone Repository & Setup Backend
+
+```bash
+# Clone the repository
+git clone https://github.com/themanoj-025/Statlas.git
+cd Statlas
+
+# Setup Python virtual environment
+python -m venv .venv
+# Linux/macOS: source .venv/bin/activate
+# Windows: .venv\Scripts\Activate.ps1
+
+# Install backend dependencies
+pip install -r requirements.txt
+
+# Start FastAPI backend
+uvicorn app.api.main:app --reload --port 8000
 ```
+
+### 2. Setup & Run Frontend
+
+In a separate terminal:
+
+```bash
+cd web
+npm install
+npm run dev
+```
+
+*Open http://localhost:3000 to view the Next.js web application.*  
+*Backend API docs available at http://localhost:8000/docs.*
+
+---
+
+## Testing
+
+```bash
+# Execute backend test suite
+pytest tests/ -v
+```
+
+---
+
+## Docker Deployment
+
+```bash
+# Start backend, web frontend, and database services
+docker compose up --build -d
+```
+
+---
 
 ## Roadmap
 
-> [!CAUTION] Items marked with a checkbox are built. Items without a checkbox are planned and tracked in the issue tracker.
+- [x] Per-90 percentile radar visualization
+- [x] Longitudinal metric trend charts
+- [x] Coordinate-accurate shot and pass maps
+- [x] Unsupervised k-means player archetype discovery
+- [x] Seeded offline fixture dataset
+- [ ] Team-level possession and defensive structure analytics <!-- TODO: Track via GitHub issue -->
+- [ ] Exportable automated scouting PDF reports <!-- TODO: Track via GitHub issue -->
 
-- [x] Per-90 percentile radar comparisons
-- [x] Snapshot trend charts
-- [x] Shot and pass maps
-- [x] Embeddable widgets
-- [x] ML player archetypes (k-means)
-- [ ] Team-level analytics deep dive (tracked public issue)
-
-Items are kept current in the live issue tracker and project board — hardcoded lists go stale quickly.
+---
 
 ## Contributing
 
-Contributions are welcome! Please see [CONTRIBUTING.md](CONTRIBUTING.md).
-
-## 📬 Support
-
-For support, open an issue on GitHub.
+Contributions are welcomed! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for contribution guidelines.
 
 ---
 
 ## License
 
-AGPL-3.0 — see [LICENSE](LICENSE).
+This project is licensed under the [GNU Affero General Public License v3.0 (AGPL-3.0)](LICENSE).
 
-> [!IMPORTANT] The license section intentionally states **AGPL-3.0**, sourced from the `LICENSE` file. The CI badge previously used an MIT badge; the badge in the header now points to the same LICENSE file, and the version discrepancy in `pyproject.toml` (0.1.0) vs `web/package.json` (0.2.0) is left as a TODO for the maintainer to reconcile before the next release tag.
+---
 
+## Support
+
+- 🐛 **Issue Tracker**: [GitHub Issues](https://github.com/themanoj-025/Statlas/issues)
+- 💡 **Discussions & Feedback**: [GitHub Pull Requests](https://github.com/themanoj-025/Statlas/pulls)
