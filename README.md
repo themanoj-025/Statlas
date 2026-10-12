@@ -48,7 +48,9 @@ composed onto a pitch-green card. Re-upload to replace; GitHub caches the previo
   <em>Open-source (AGPL-3.0) and self-hostable — runs out of the box on a fixture-demo dataset, no API keys required.</em>
 </p>
 
-## 🏆 Why Statlas?\n\n> [!TIP] Note: the GitHub repo card uses the header logo. For the social preview, upload a 1280×640 (2:1) PNG to Settings → General → Social preview.
+## 🏆 Why Statlas?
+
+> [!TIP] Note: the GitHub repo card uses the header logo. For the social preview, upload a 1280×640 (2:1) PNG to Settings → General → Social preview.
 
 - **Transparent analytics:** no black boxes. Every stat is traced back to a dated snapshot and published methodology.
 - **ML player archetypes:** discover unique player profiles using k-means clustering of per-90 statistics.
@@ -59,7 +61,7 @@ composed onto a pitch-green card. Re-upload to replace; GitHub caches the previo
 
 ## 📋 Table of Contents
 
-- [Why Statlas?](#why-statlas)
+- [Why Statlas?](#-why-statlas)
 - [What it does](#what-it-does)
 - [Quick start](#quick-start)
 - [Tech stack](#tech-stack)
@@ -68,7 +70,7 @@ composed onto a pitch-green card. Re-upload to replace; GitHub caches the previo
 - [Roadmap](#roadmap)
 - [Contributing](#contributing)
 - [License](#license)
-- [Support](#support)
+- [Support](#-support)
 
 ---
 
@@ -129,7 +131,7 @@ docker compose up --build
 
 ## Project structure
 
-```
+```text
 Statlas/
 ├── backend/                    # FastAPI app (models, API, pipeline)
 ├── web/                        # Next.js frontend + dashboard
@@ -175,8 +177,15 @@ Items are kept current in the live issue tracker and project board — hardcoded
 
 Contributions are welcome! Please see [CONTRIBUTING.md](CONTRIBUTING.md).
 
+## 📬 Support
+
+For support, open an issue on GitHub.
+
+---
+
 ## License
 
 AGPL-3.0 — see [LICENSE](LICENSE).
 
 > [!IMPORTANT] The license section intentionally states **AGPL-3.0**, sourced from the `LICENSE` file. The CI badge previously used an MIT badge; the badge in the header now points to the same LICENSE file, and the version discrepancy in `pyproject.toml` (0.1.0) vs `web/package.json` (0.2.0) is left as a TODO for the maintainer to reconcile before the next release tag.
+
