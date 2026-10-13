@@ -35,9 +35,9 @@ def downgrade() -> None:
                 r RECORD;
             BEGIN
                 FOR r IN (
-                    SELECT typname 
-                    FROM pg_type 
-                    JOIN pg_namespace ON pg_type.typnamespace = pg_namespace.oid 
+                    SELECT typname
+                    FROM pg_type
+                    JOIN pg_namespace ON pg_type.typnamespace = pg_namespace.oid
                     WHERE typcategory = 'E' AND nspname = current_schema()
                 ) LOOP
                     EXECUTE 'DROP TYPE IF EXISTS ' || quote_ident(r.typname) || ' CASCADE';
