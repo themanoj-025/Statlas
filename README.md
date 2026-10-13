@@ -59,7 +59,7 @@ composed onto a pitch-green card. Re-upload to replace; GitHub caches the previo
 
 ## 📋 Table of Contents
 
-- [Why Statlas?](#why-statlas)
+- [Why Statlas?](#-why-statlas)
 - [What it does](#what-it-does)
 - [Quick start](#quick-start)
 - [Tech stack](#tech-stack)
@@ -68,7 +68,7 @@ composed onto a pitch-green card. Re-upload to replace; GitHub caches the previo
 - [Roadmap](#roadmap)
 - [Contributing](#contributing)
 - [License](#license)
-- [Support](#support)
+- [Support](#-support)
 
 ---
 
@@ -129,7 +129,7 @@ docker compose up --build
 
 ## Project structure
 
-```
+```text
 Statlas/
 ├── backend/                    # FastAPI app (models, API, pipeline)
 ├── web/                        # Next.js frontend + dashboard
@@ -174,6 +174,10 @@ Items are kept current in the live issue tracker and project board — hardcoded
 ## Contributing
 
 Contributions are welcome! Please see [CONTRIBUTING.md](CONTRIBUTING.md).
+
+## 📬 Support
+
+If you encounter issues or have questions, please open an issue on GitHub.
 
 ## License
 
