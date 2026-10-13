@@ -30,6 +30,7 @@ def downgrade() -> None:
     Base.metadata.drop_all(bind=bind)
     if bind.dialect.name == "postgresql":
         import sqlalchemy as sa
+
         bind.execute(sa.text("""
             DO $$ DECLARE
                 r RECORD;
@@ -44,4 +45,3 @@ def downgrade() -> None:
                 END LOOP;
             END $$;
         """))
-
