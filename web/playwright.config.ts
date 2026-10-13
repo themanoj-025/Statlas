@@ -48,7 +48,7 @@ export default defineConfig({
       command: "bash scripts/e2e-server.sh api-only",
       url: "http://127.0.0.1:8000/api/v1/health",
       reuseExistingServer: !process.env.CI,
-      timeout: 60_000,
+      timeout: 120_000,
     },
     // Web slice: production build + standalone Next.js server on :3000.
     {
@@ -56,7 +56,7 @@ export default defineConfig({
       command: "bash scripts/e2e-server.sh web-only",
       url: "http://127.0.0.1:3000/",
       reuseExistingServer: !process.env.CI,
-      timeout: 60_000,
+      timeout: 120_000,
     },
   ],
 });

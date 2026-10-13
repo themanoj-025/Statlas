@@ -11,6 +11,7 @@ ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 API_PORT="${STATLAS_API_PORT:-8000}"
 WEB_PORT="${PORT:-3000}"
 API_URL="${STATLAS_API_URL:-http://127.0.0.1:${API_PORT}}"
+DB_URL="${DATABASE_URL:-sqlite+pysqlite:///${ROOT}/data/dev.db}"
 
 # Subcommand routing: "api-only" bootstraps the API + health endpoint
 # (used by Playwright's webServer.slice api), "web-only" builds the web
