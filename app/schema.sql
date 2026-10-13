@@ -608,7 +608,7 @@ CREATE INDEX ix_saved_players_user ON saved_players (user_id, saved_at DESC);
 CREATE TYPE market_source AS ENUM ('transfermarkt', 'understat_transfer', 'instat', 'manual');
 CREATE TYPE transfer_type AS ENUM ('permanent', 'loan', 'free_agent');
 CREATE TYPE transfer_status AS ENUM ('confirmed', 'reported');
-CREATE TYPE contract_status AS ENUM ('active', 'expiring_next_season', 'expired', 'on_loan');
+CREATE TYPE contract_status_type AS ENUM ('active', 'expiring_next_season', 'expired', 'on_loan');
 CREATE TYPE valuation_confidence AS ENUM ('high', 'medium', 'low');
 CREATE TYPE risk_tier AS ENUM ('low', 'medium', 'high');
 
@@ -651,7 +651,7 @@ CREATE TABLE contract_status (
     current_team_id            INTEGER REFERENCES teams(id),
     contract_end_date          TIMESTAMPTZ,
     contract_value_per_year_eur DOUBLE PRECISION,
-    contract_status            contract_status NOT NULL DEFAULT 'active',
+    contract_status            contract_status_type NOT NULL DEFAULT 'active',
     source                     market_source NOT NULL,
     snapshot_date              TIMESTAMPTZ NOT NULL,
     raw                        JSONB NOT NULL DEFAULT '{}',
