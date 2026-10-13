@@ -36,7 +36,7 @@ MARKET_SOURCE_ENUM = Enum(
 TRANSFER_TYPE_ENUM = Enum("permanent", "loan", "free_agent", name="transfer_type")
 TRANSFER_STATUS_ENUM = Enum("confirmed", "reported", name="transfer_status")
 CONTRACT_STATUS_ENUM = Enum(
-    "active", "expiring_next_season", "expired", "on_loan", name="contract_status"
+    "active", "expiring_next_season", "expired", "on_loan", name="contract_status_type"
 )
 VALUATION_CONFIDENCE_ENUM = Enum("high", "medium", "low", name="valuation_confidence")
 RISK_TIER_ENUM = Enum("low", "medium", "high", name="risk_tier")

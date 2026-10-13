@@ -48,7 +48,9 @@ composed onto a pitch-green card. Re-upload to replace; GitHub caches the previo
   <em>Open-source (AGPL-3.0) and self-hostable — runs out of the box on a fixture-demo dataset, no API keys required.</em>
 </p>
 
-## 🏆 Why Statlas?\n\n> [!TIP] Note: the GitHub repo card uses the header logo. For the social preview, upload a 1280×640 (2:1) PNG to Settings → General → Social preview.
+## 🏆 Why Statlas?
+
+> [!TIP] Note: the GitHub repo card uses the header logo. For the social preview, upload a 1280×640 (2:1) PNG to Settings → General → Social preview.
 
 - **Transparent analytics:** no black boxes. Every stat is traced back to a dated snapshot and published methodology.
 - **ML player archetypes:** discover unique player profiles using k-means clustering of per-90 statistics.

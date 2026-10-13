@@ -181,7 +181,7 @@ pygments==2.21.0
     #   rich
 pyparsing==3.3.2
     # via pip-requirements-parser
-pytest==8.0
+pytest==9.0.3
     # via -r requirements.txt
 python-json-logger==4.2.0
     # via -r requirements.txt
