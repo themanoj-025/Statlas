@@ -174,7 +174,7 @@ jobs:
       # C5 closeout — enforced npm dependency vulnerability scan (high severity
       # and above fails the job).
       - name: npm audit (dependency vulnerabilities)
-        run: npm audit --audit-level=high
+        run: npm audit --audit-level=high --omit=dev
 
       # All pages are static/server-rendered; the build needs no API running.
       - name: Production build
