@@ -24,6 +24,7 @@ from app.config import load_registry
 from app.db import create_schema, session_scope
 from app.orchestration.weekly_refresh import run_weekly_refresh
 from app.sources.base import RawPlayerStatRecord
+from app.sources.market_data import FixtureMarketDataSource
 from seed_pkg.scrapers import (
     PL_TEAMS,
     POSITION_GROUPS,
@@ -589,6 +590,7 @@ def main() -> int:
                 snapshot_date=snapshot_date,
                 fbref_source=_FakeSource("fbref", fbref),
                 understat_source=_FakeSource("understat", understat),
+                market_source=FixtureMarketDataSource(seed=SEED + date_index),
             )
             total_snapshots += report.snapshots_inserted
             print(

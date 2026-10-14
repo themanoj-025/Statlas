@@ -99,4 +99,3 @@ case "${1:-}" in
     wait
     ;;
 esac
-
