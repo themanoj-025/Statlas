@@ -728,55 +728,55 @@ Production deployment is containerized via Docker Compose or Kubernetes:
 
 ## <a id="exam"></a>§EXAM — Cold-Reader Verification Exam (25 Questions)
 
-1. **Q: What is the primary architectural framework powering the Statlas web frontend?**  
+1. **Q: What is the primary architectural framework powering the Statlas web frontend?**
    *A:* Next.js 16 utilizing the App Router. Reference: [§TLDR](#tldr).
-2. **Q: Which Python framework serves the REST backend API routes?**  
+2. **Q: Which Python framework serves the REST backend API routes?**
    *A:* FastAPI 0.110. Reference: [`app/api/main.py`](app/api/main.py).
-3. **Q: What open-source license governs the Statlas repository?**  
+3. **Q: What open-source license governs the Statlas repository?**
    *A:* GNU Affero General Public License v3.0 (AGPL-3.0). Reference: [`LICENSE`](LICENSE).
-4. **Q: In which files are the platform's metric definitions and league tiers stored?**  
+4. **Q: In which files are the platform's metric definitions and league tiers stored?**
    *A:* `app/config/metric_registry.json` and `app/config/tiers.json`. Reference: [§WHAT](#what).
-5. **Q: What is the name of the proprietary composite score calculated for players?**  
+5. **Q: What is the name of the proprietary composite score calculated for players?**
    *A:* The Statlas Index. Reference: [`app/compute/index.py`](app/compute/index.py).
-6. **Q: How does the system handle missing metrics in lower-tier leagues when calculating the Statlas Index?**  
+6. **Q: How does the system handle missing metrics in lower-tier leagues when calculating the Statlas Index?**
    *A:* It performs dynamic proportional weight redistribution across available dimensions so the sum remains 1.0. Reference: [§WHAT](#what).
-7. **Q: Which unsupervised machine learning algorithm clusters player archetypes?**  
+7. **Q: Which unsupervised machine learning algorithm clusters player archetypes?**
    *A:* K-means clustering with silhouette analysis validation. Reference: [`app/compute/clustering/`](app/compute/clustering/).
-8. **Q: What dimensions define the standardized pitch coordinate system in `app/compute/spatial_analysis.py`?**  
+8. **Q: What dimensions define the standardized pitch coordinate system in `app/compute/spatial_analysis.py`?**
    *A:* Regulation 120 meters (length) by 80 meters (width). Reference: [§WHAT](#what).
-9. **Q: What default operating mode allows local development without external API keys?**  
+9. **Q: What default operating mode allows local development without external API keys?**
    *A:* `STATLAS_DATASET_MODE=fixture-demo`. Reference: [§ENV](#env).
-10. **Q: Which external data providers have dedicated ingestion adapters in `app/sources/`?**  
+10. **Q: Which external data providers have dedicated ingestion adapters in `app/sources/`?**
     *A:* FBref, Understat, API-Football, StatsBomb Open Data, and Transfermarkt. Reference: [`app/sources/`](app/sources/).
-11. **Q: What is the default throttling delay between FBref requests configured in `FBREF_DELAY_SECONDS`?**  
+11. **Q: What is the default throttling delay between FBref requests configured in `FBREF_DELAY_SECONDS`?**
     *A:* 10.0 seconds. Reference: [§ENV](#env).
-12. **Q: What algorithm verifies and resolves conflicting player names across providers?**  
+12. **Q: What algorithm verifies and resolves conflicting player names across providers?**
     *A:* Levenshtein distance matching (>0.88 threshold) paired with team and birth year confirmation. Reference: [`app/sources/reconciliation.py`](app/sources/reconciliation.py).
-13. **Q: How are inverted metrics (such as goals conceded per 90) handled during percentile ranking?**  
+13. **Q: How are inverted metrics (such as goals conceded per 90) handled during percentile ranking?**
     *A:* Using mathematical complement transformations (`100.0 - rank`). Reference: [`app/compute/percentiles.py`](app/compute/percentiles.py).
-14. **Q: What lifecycle states exist for candidates in a scouting workspace?**  
+14. **Q: What lifecycle states exist for candidates in a scouting workspace?**
     *A:* `Discovered`, `Scouting`, `Target`, `Signed`, and `Archived`. Reference: [§STATE](#state).
-15. **Q: What mechanism prevents hallucinations in automated narrative scouting reports?**  
+15. **Q: What mechanism prevents hallucinations in automated narrative scouting reports?**
     *A:* A factual verification engine that extracts claims and checks them against recorded database figures. Reference: [§WHAT](#what).
-16. **Q: What roles are supported in the organization tenancy model?**  
+16. **Q: What roles are supported in the organization tenancy model?**
     *A:* Owner, Manager, Scout, and Viewer. Reference: [§AUTH](#auth).
-17. **Q: What ORM library and migration tool manage the relational database schema?**  
+17. **Q: What ORM library and migration tool manage the relational database schema?**
     *A:* SQLAlchemy and Alembic. Reference: [`alembic/`](alembic/).
-18. **Q: Where is the central FastAPI router assembled?**  
+18. **Q: Where is the central FastAPI router assembled?**
     *A:* `app/api/main.py`. Reference: [`app/api/main.py`](app/api/main.py).
-19. **Q: What component renders multi-axis percentile visualizations without external canvas dependencies?**  
+19. **Q: What component renders multi-axis percentile visualizations without external canvas dependencies?**
     *A:* Pure SVG polygon radar generation in `web/components/`. Reference: [§PERF](#perf).
-20. **Q: What total number of automated tests are collected in the backend test suite?**  
+20. **Q: What total number of automated tests are collected in the backend test suite?**
     *A:* 899 tests across 67 test files. Reference: [§TEST-CATALOG](#test-catalog).
-21. **Q: What three viewport widths are verified for zero horizontal overflow?**  
+21. **Q: What three viewport widths are verified for zero horizontal overflow?**
     *A:* 375px (mobile), 768px (tablet), and 1440px (desktop). Reference: [§TEST-STRATEGY](#test-strategy).
-22. **Q: Which command initializes the database tables from the CLI?**  
+22. **Q: Which command initializes the database tables from the CLI?**
     *A:* `python -m app.cli db init`. Reference: [§CLI](#cli).
-23. **Q: What database engines are supported via `DATABASE_URL`?**  
+23. **Q: What database engines are supported via `DATABASE_URL`?**
     *A:* PostgreSQL and SQLite. Reference: [§ENV](#env).
-24. **Q: How are ties resolved during percentile rank calculations?**  
+24. **Q: How are ties resolved during percentile rank calculations?**
     *A:* Using fractional ranking to prevent artificial score inflation. Reference: [`app/compute/percentiles.py`](app/compute/percentiles.py).
-25. **Q: How many total tracked files are cataloged with 100% manifest coverage in Appendix A?**  
+25. **Q: How many total tracked files are cataloged with 100% manifest coverage in Appendix A?**
     *A:* All 584 tracked files. Reference: [§APP](#app).
 
 ---
