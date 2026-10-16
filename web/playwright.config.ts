@@ -12,8 +12,8 @@ import { defineConfig, devices } from "@playwright/test";
 export default defineConfig({
   testDir: "./e2e",
   fullyParallel: false, // share one seeded stack; keep runs deterministic
-  workers: 1,
-  timeout: 60_000,
+  workers: process.env.CI ? 2 : 1,
+  timeout: 45_000,
   retries: 1, // flaky first-visit (dev-mode compile) tolerated once
   reporter: [["list"], ["html", { open: "never", outputFolder: "playwright-report" }]],
   use: {
@@ -23,7 +23,11 @@ export default defineConfig({
   projects: [
     // Core e2e flows run once at desktop; breakpoint + theme coverage is its
     // own project matrix so overflow regressions fail loudly per viewport.
-    { name: "e2e", testMatch: /e2e\/.*\.spec\.ts/ },
+    {
+      name: "e2e",
+      testMatch: /e2e\/.*\.spec\.ts/,
+      testIgnore: /e2e\/breakpoints\.spec\.ts/,
+    },
     {
       name: "mobile-375",
       testMatch: /e2e\/breakpoints\.spec\.ts/,
