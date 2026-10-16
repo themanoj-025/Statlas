@@ -1,6 +1,8 @@
-* text=auto
+# Auto-detect text files and normalize line endings
+* text=auto eol=lf
 
-*.py text eol=lf
+# Code files
+*.py text eol=lf diff=python
 *.ts text eol=lf
 *.tsx text eol=lf
 *.mjs text eol=lf
@@ -11,3 +13,35 @@
 *.sql text eol=lf
 *.html text eol=lf
 *.txt text eol=lf
+*.yml text eol=lf
+*.yaml text eol=lf
+*.toml text eol=lf
+
+# Shell / batch scripts
+*.sh text eol=lf
+*.bat text eol=crlf
+*.ps1 text eol=crlf
+
+# Security: prevent secret files from appearing in diffs if accidentally created
+*.env -diff
+*.pem -diff
+*.key -diff
+*.cert -diff
+*.p12 -diff
+*.pfx -diff
+*.pkcs12 -diff
+
+# Binary files - don't modify
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.pdf binary
+*.zip binary
+*.tar.gz binary
+*.db binary
+*.sqlite binary
+*.sqlite3 binary
+*.parquet binary
+*.pkl binary

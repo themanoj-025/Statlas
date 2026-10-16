@@ -1,52 +1,162 @@
-# Python
+# ==============================================================================
+# Statlas - Security & Production .gitignore
+# ==============================================================================
+
+# ------------------------------------------------------------------------------
+# 1. SECRETS & ENVIRONMENT VARIABLES (CRITICAL)
+# ------------------------------------------------------------------------------
+.env
+.env.*
+*.env
+.env.local
+.env.*.local
+.env.development
+.env.test
+.env.staging
+.env.production
+!.env.example
+!.env.template
+!.env.sample
+
+# Private keys, certificates & credentials
+*.pem
+*.key
+*.keystore
+*.jks
+*.p12
+*.pfx
+*.pkcs12
+*.cer
+*.crt
+*.der
+*.id_rsa
+id_rsa*
+id_ed25519*
+id_ecdsa*
+id_dsa*
+
+# Cloud & service credentials
+credentials.json
+client_secret*.json
+service-account*.json
+service_account*.json
+serviceAccountKey*.json
+google-services.json
+GoogleService-Info.plist
+.aws/
+.azure/
+.gcp/
+gcloud/
+.act-secrets
+*.publishsettings
+
+# Authentication tokens & configs
+.netrc
+.pypirc
+.npmrc
+*token*.json
+token.pickle
+auth*.json
+
+# ------------------------------------------------------------------------------
+# 2. PYTHON RUNTIME, BUILDS & VIRTUAL ENVIRONMENTS
+# ------------------------------------------------------------------------------
 __pycache__/
 *.py[cod]
+*$py.class
+*.so
+.Python
+dist/
+build/
+*.egg-info/
+*.egg
+
+# Virtual environments
 .venv/
-.pytest_cache/
-.hypothesis/
-.coverage
+venv/
+env/
+ENV/
+.venv*/
+env.bak/
+venv.bak/
 
-# Runtime HTTP cache (sources/base.py HttpCache)
-.cache/
-
-# Generated runtime data (seed script + pipeline output). The coverage
-# matrix is tracked on purpose — Constitution §3 makes it the machine-readable
-# single source of truth, and CI validates it (tests/test_matrix_validation.py).
-data/*
-!data/coverage_matrix.json
-*.db
-
-# Logs
-logs/
-*.log
-
-# Node / Next.js
+# ------------------------------------------------------------------------------
+# 3. NODE.JS & NEXT.JS ARTIFACTS
+# ------------------------------------------------------------------------------
 node_modules/
 .next/
 out/
 *.tsbuildinfo
 next-env.d.ts
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
 
-# Environment / secrets (keep .env.example tracked)
-.env
-.env.*
-!.env.example
+# ------------------------------------------------------------------------------
+# 4. RUNTIME DATA & PIPELINE ARTIFACTS
+# ------------------------------------------------------------------------------
+# Constitution §3: data/coverage_matrix.json is machine-readable single source of truth
+data/*
+!data/coverage_matrix.json
+.cache/
 
-# ── Portfolio-standard ignores (sweep 2026-09) ──────────────
-radar_balance.txt
-.venv*/
-*.egg-info/
+# ------------------------------------------------------------------------------
+# 5. LOGS & DATABASE FILES
+# ------------------------------------------------------------------------------
+logs/
+*.log
+*.dump
+*.stackdump
+*.db
 *.db-shm
 *.db-wal
+*.db-journal
+*.sqlite
+*.sqlite3
+
+# ------------------------------------------------------------------------------
+# 6. TESTING & CODE QUALITY
+# ------------------------------------------------------------------------------
+.pytest_cache/
+.hypothesis/
+.ruff_cache/
+.mypy_cache/
+.coverage
 .coverage.*
 coverage.xml
 htmlcov/
+radar_balance.txt
+
+# ------------------------------------------------------------------------------
+# 7. IDE, EDITORS & OS
+# ------------------------------------------------------------------------------
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+.vscode/*.local.*
+.vscode/mcp.json
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
+$RECYCLE.BIN/
+*.tmp
+*.temp
+*.bak
 
 # =====================================================================
-# KEEP: AI provenance & transparency files — these must remain
-# visible to any repository viewer. Do not add rules above this block
-# that would shadow a directory these files live in without also
-# adding a negation here. Verified with `git check-ignore -v`.
+# KEEP: AI provenance & transparency files — must remain visible
 # =====================================================================
 !AI_DISCLOSURE.md
 !AI_USAGE.md
