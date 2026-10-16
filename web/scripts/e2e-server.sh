@@ -23,7 +23,7 @@ case "${1:-}" in
     # Seeds the dev DB once (the web tier also seeds on its own boot), then
     # start the API layer only. The Next.js dev server is NOT started.
     echo "[e2e-server] api-only: seeding dev database..."
-    cd "${ROOT}" && python "${ROOT}/scripts/seed_dev_db.py" >/dev/null 2>&1 || {
+    cd "${ROOT}" && python "${ROOT}/scripts/seed_dev_db.py" || {
       echo "[e2e-server] api-only: seed failed" >&2
       exit 1
     }
@@ -43,9 +43,15 @@ case "${1:-}" in
     wait
     ;;
   web-only)
-    # Build the web tier (matches CI production build), then serve the
-    # standalone Next.js server on :3000. The API must already be up (or
-    # STATLAS_API_URL points to a running API).
+    # Wait for the API slice to be healthy before building, so SSG prerendering finds real data.
+    echo "[e2e-server] web-only: waiting for API on ${API_URL}/api/v1/health..."
+    for _ in $(seq 1 90); do
+      if curl -sf -o /dev/null "${API_URL}/api/v1/health"; then
+        echo "[e2e-server] web-only: API ready."
+        break
+      fi
+      sleep 1
+    done
     echo "[e2e-server] web-only: building web (production build, matches CI)..."
     cd "${ROOT}/web" || exit 1
     STATLAS_API_URL="${API_URL}" npm run build || {

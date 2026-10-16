@@ -185,7 +185,7 @@ jobs:
   e2e:
     name: "Web — e2e (Playwright: radar, search/filter, axe, breakpoints)"
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 45
     defaults:
       run:
         working-directory: web
@@ -221,7 +221,7 @@ jobs:
       # webServer config boots seed -> FastAPI -> next start automatically;
       # any axe violation or layout regression fails the job.
       - name: Run e2e suite
-        run: npx playwright test --timeout=60000
+        run: npx playwright test --timeout=45000
 
   lighthouse:
     name: "Web — Lighthouse CI (LCP < 2.5s enforced)"
