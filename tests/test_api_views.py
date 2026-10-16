@@ -160,6 +160,33 @@ class TestPlayerView:
         assert callable(build_player_payload)
 
 
+class TestAPILeagues:
+    """Test leagues API view functions."""
+
+    def test_module_has_router(self) -> None:
+        from app.api.api_leagues import router
+
+        assert router is not None
+
+
+class TestAPIPlayers:
+    """Test players API view functions."""
+
+    def test_module_has_router(self) -> None:
+        from app.api.api_players import router
+
+        assert router is not None
+
+
+class TestAPITeams:
+    """Test teams API view functions."""
+
+    def test_module_has_router(self) -> None:
+        from app.api.api_teams import router
+
+        assert router is not None
+
+
 class TestMiddleware:
     """Test API middleware."""
 
