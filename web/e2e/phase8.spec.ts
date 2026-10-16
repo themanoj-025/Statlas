@@ -70,7 +70,7 @@ test("empty-result query surfaces actionable guidance, not a bare no-results", a
 
 test("keyboard-only condition building works without a mouse", async ({ page }) => {
   await page.goto("/search");
-  await page.getByLabel("Query builder").waitFor({ timeout: 20_000 });
+  await page.getByLabel("Query builder").first().waitFor({ timeout: 20_000 });
 
   // Add a condition via keyboard only (focus the add button, Enter).
   await page.getByRole("button", { name: "Add condition" }).focus();
@@ -105,7 +105,7 @@ test("saved searches: save, list, run, history, delete", async ({ page }) => {
   await register(page, "saved");
 
   await page.goto("/search");
-  const builder = page.getByLabel("Query builder");
+  const builder = page.getByLabel("Query builder").first();
   await expect(builder).toBeVisible({ timeout: 20_000 });
 
   // Save the current (default) query.
@@ -162,7 +162,7 @@ test("add-to-shortlist from results (per-row and bulk) reaches the workspace", a
 test("axe is green on the query builder (save panel open) and results", async ({ page }) => {
   await register(page, "axe");
   await page.goto("/search");
-  const builder = page.getByLabel("Query builder");
+  const builder = page.getByLabel("Query builder").first();
   await expect(builder).toBeVisible({ timeout: 20_000 });
 
   // Open the save panel (a11y-critical form markup).
@@ -190,7 +190,7 @@ test("axe is green on the query builder (save panel open) and results", async ({
 
 test("signed-out /search still works for public execution with honest auth prompts", async ({ page }) => {
   await page.goto("/search");
-  await expect(page.getByLabel("Query builder")).toBeVisible({ timeout: 20_000 });
+  await expect(page.getByLabel("Query builder").first()).toBeVisible({ timeout: 20_000 });
 
   // Public execution works without an account.
   await page.getByRole("button", { name: "Search" }).click();

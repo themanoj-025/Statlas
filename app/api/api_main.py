@@ -26,6 +26,9 @@ from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.responses import JSONResponse
 
 from app.api.analytics_views import router as analytics_router
+from app.api.api_leagues import router as leagues_router
+from app.api.api_players import router as players_router
+from app.api.api_teams import router as teams_router
 from app.api.archetype_views import router as archetype_router
 from app.api.assistant_views import router as assistant_router
 from app.api.billing_views import router as billing_router
@@ -156,6 +159,9 @@ app.include_router(tactical_router)
 app.include_router(org_router)
 app.include_router(comment_router)
 app.include_router(analytics_router)
+app.include_router(leagues_router)
+app.include_router(players_router)
+app.include_router(teams_router)
 
 
 VALID_POSITIONS = {"GK", "CB", "FB", "DM", "CM", "AM", "W", "ST"}
