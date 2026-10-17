@@ -98,7 +98,7 @@ export function CreateOrgClient() {
       </div>
 
       {error && (
-        <p style={{ marginTop: "12px", fontSize: "0.85rem", color: "var(--color-negative, #ef4444)" }}>
+        <p style={{ marginTop: "12px", fontSize: "0.85rem", color: "var(--color-danger, #b3261e)" }}>
           {error}
         </p>
       )}

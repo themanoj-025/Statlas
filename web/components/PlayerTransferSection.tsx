@@ -36,10 +36,10 @@ function formatEur(value: number): string {
 function ConfidenceBadge({ level }: { level: string }) {
   const color =
     level === "high"
-      ? "var(--color-positive, #22c55e)"
+      ? "var(--color-success, #2e7d4f)"
       : level === "medium"
-      ? "var(--color-warning, #f59e0b)"
-      : "var(--color-negative, #ef4444)";
+      ? "var(--color-warning, #b45309)"
+      : "var(--color-danger, #b3261e)";
   return (
     <span
       className="badge badge--sm"
@@ -53,10 +53,10 @@ function ConfidenceBadge({ level }: { level: string }) {
 function RiskBadge({ tier }: { tier: string }) {
   const color =
     tier === "low"
-      ? "var(--color-positive, #22c55e)"
+      ? "var(--color-success, #2e7d4f)"
       : tier === "medium"
-      ? "var(--color-warning, #f59e0b)"
-      : "var(--color-negative, #ef4444)";
+      ? "var(--color-warning, #b45309)"
+      : "var(--color-danger, #b3261e)";
   return (
     <span
       className="badge badge--sm"
@@ -199,8 +199,8 @@ export function PlayerTransferSection({ playerId }: { playerId: number }) {
                   fontWeight: 600,
                   color:
                     data.valuation.valuation_gap_eur > 0
-                      ? "var(--color-positive, #22c55e)"
-                      : "var(--color-negative, #ef4444)",
+                      ? "var(--color-success, #2e7d4f)"
+                      : "var(--color-danger, #b3261e)",
                 }}
               >
                 {data.valuation.valuation_gap_eur > 0 ? "+" : ""}
@@ -237,7 +237,7 @@ export function PlayerTransferSection({ playerId }: { playerId: number }) {
             </div>
             {data.risk.risk_factors.length > 0 && (
               <div style={{ marginBottom: "8px" }}>
-                <span style={{ fontSize: "0.8rem", fontWeight: 600, color: "var(--color-negative, #ef4444)" }}>
+                <span style={{ fontSize: "0.8rem", fontWeight: 600, color: "var(--color-danger, #b3261e)" }}>
                   Risk factors:
                 </span>
                 <ul style={{ margin: "4px 0 0", paddingLeft: "16px", fontSize: "0.8rem" }}>
@@ -249,7 +249,7 @@ export function PlayerTransferSection({ playerId }: { playerId: number }) {
             )}
             {data.risk.mitigation_factors.length > 0 && (
               <div>
-                <span style={{ fontSize: "0.8rem", fontWeight: 600, color: "var(--color-positive, #22c55e)" }}>
+                <span style={{ fontSize: "0.8rem", fontWeight: 600, color: "var(--color-success, #2e7d4f)" }}>
                   Mitigations:
                 </span>
                 <ul style={{ margin: "4px 0 0", paddingLeft: "16px", fontSize: "0.8rem" }}>
