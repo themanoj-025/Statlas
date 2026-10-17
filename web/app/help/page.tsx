@@ -20,7 +20,7 @@ const CATEGORIES = [
       },
       {
         q: "Why is a player missing, or showing \u201cpending qualification\u201d?",
-        a: "Three reasons: (1) below the 900-minute minutes threshold, (2) outside current data coverage, or (3) a scrape failed or is pending review. The page tells you which one applies.",
+        a: "Three reasons: (1) below the 900 league minutes threshold, (2) outside current data coverage, or (3) a scrape failed or is pending review. The page tells you which one applies.",
       },
       {
         q: "Why is a player\u2019s percentile different across pages or over time?",

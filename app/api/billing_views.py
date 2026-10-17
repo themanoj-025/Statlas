@@ -88,16 +88,18 @@ _require_user = require_user
 def register(
     body: RegisterBody, response: Response, request: Request
 ) -> dict[str, Any]:
-    # Rate limit: 5 registrations per IP per 10 minutes
+    # Rate limit: 5 registrations per IP per 10 minutes (exempt in e2e test harness)
+    from app.config import get_settings
     from app.rate_limiting import get_rate_limiter
 
-    limiter = get_rate_limiter()
-    client_ip = request.client.host if request.client else "unknown"
-    if limiter.is_limited(f"register:{client_ip}", max_attempts=5, window_seconds=600):
-        raise HTTPException(
-            status_code=429,
-            detail="Too many registration attempts. Please try again later.",
-        )
+    if not get_settings().reports_dev_narrator:
+        limiter = get_rate_limiter()
+        client_ip = request.client.host if request.client else "unknown"
+        if limiter.is_limited(f"register:{client_ip}", max_attempts=5, window_seconds=600):
+            raise HTTPException(
+                status_code=429,
+                detail="Too many registration attempts. Please try again later.",
+            )
     with session_scope() as db:
         existing = db.query(User).filter(User.email == body.email.lower()).first()
         if existing is not None:

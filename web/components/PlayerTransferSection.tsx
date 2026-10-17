@@ -36,7 +36,7 @@ function formatEur(value: number): string {
 function ConfidenceBadge({ level }: { level: string }) {
   const color =
     level === "high"
-      ? "var(--color-success, #2e7d4f)"
+      ? "var(--pitch-700, #1b4d3e)"
       : level === "medium"
       ? "var(--color-warning, #b45309)"
       : "var(--color-danger, #b3261e)";
@@ -53,7 +53,7 @@ function ConfidenceBadge({ level }: { level: string }) {
 function RiskBadge({ tier }: { tier: string }) {
   const color =
     tier === "low"
-      ? "var(--color-success, #2e7d4f)"
+      ? "var(--pitch-700, #1b4d3e)"
       : tier === "medium"
       ? "var(--color-warning, #b45309)"
       : "var(--color-danger, #b3261e)";

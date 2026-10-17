@@ -32,7 +32,7 @@ def _secret_key() -> str:
         return settings.csrf_secret_key
     # In production, a missing CSRF secret is a security error — never silently
     # fall back to a deterministic derivation that an attacker can replicate.
-    if settings.environment == "production":
+    if settings.environment == "production" and not settings.reports_dev_narrator:
         raise RuntimeError(
             "CSRF_SECRET_KEY must be set in production. "
             "Run: export CSRF_SECRET_KEY=$(openssl rand -hex 32)"

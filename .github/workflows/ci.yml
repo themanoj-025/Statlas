@@ -222,6 +222,9 @@ jobs:
       # any axe violation or layout regression fails the job.
       - name: Run e2e suite
         run: npx playwright test --timeout=45000
+        env:
+          STATLAS_ENV: "test"
+          CSRF_SECRET_KEY: "e2e-csrf-secret-key-for-testing-only-32bytes"
 
   lighthouse:
     name: "Web — Lighthouse CI (LCP < 2.5s enforced)"
