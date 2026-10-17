@@ -95,7 +95,9 @@ def register(
     if not get_settings().reports_dev_narrator:
         limiter = get_rate_limiter()
         client_ip = request.client.host if request.client else "unknown"
-        if limiter.is_limited(f"register:{client_ip}", max_attempts=5, window_seconds=600):
+        if limiter.is_limited(
+            f"register:{client_ip}", max_attempts=5, window_seconds=600
+        ):
             raise HTTPException(
                 status_code=429,
                 detail="Too many registration attempts. Please try again later.",
