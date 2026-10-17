@@ -106,6 +106,7 @@ export default function AboutPage() {
         <h2 style={{ fontSize: "var(--text-xl)", marginBottom: "var(--space-3)" }}>How it is built</h2>
         <div className="prose">
           <p>
+            Statlas is built and maintained by one person.
             Server-rendered Next.js pages over a versioned FastAPI backend, PostgreSQL for
             structured data, and a modular data-source layer that can swap scraped feeds for a
             licensed feed as revenue justifies it.
