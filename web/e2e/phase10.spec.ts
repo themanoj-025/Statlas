@@ -17,7 +17,7 @@ import AxeBuilder from "@axe-core/playwright";
  * - axe green on the watchlist page AND the notification bell dropdown
  */
 
-const PASSWORD = "hunter2hunter";
+const PASSWORD = "Hunter2!hunter";
 
 async function register(page: Page, tag: string): Promise<string> {
   const email = `e2e-watch-${tag}-${Date.now()}@example.com`;

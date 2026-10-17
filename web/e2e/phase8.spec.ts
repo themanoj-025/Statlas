@@ -16,7 +16,7 @@ import AxeBuilder from "@axe-core/playwright";
  * - axe green on the builder with the save panel open and on the results
  */
 
-const PASSWORD = "hunter2hunter";
+const PASSWORD = "Hunter2!hunter";
 
 async function register(page: Page, tag: string): Promise<void> {
   const email = `e2e-search-${tag}-${Date.now()}@example.com`;

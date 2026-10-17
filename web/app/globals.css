@@ -20,10 +20,12 @@
 
 html {
   -webkit-text-size-adjust: 100%;
+  overflow-x: clip;
 }
 
 body {
   margin: 0;
+  overflow-x: clip;
   font-family: var(--font-ui);
   font-size: var(--text-base);
   line-height: var(--leading-relaxed);
@@ -157,6 +159,18 @@ table,
   display: grid;
   gap: var(--space-4);
   grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+@media (max-width: 640px) {
+  .grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .grid__span-3,
+  .grid__span-4,
+  .grid__span-6,
+  .grid__span-8 {
+    grid-column: span 2;
+  }
 }
 
 @media (min-width: 768px) {

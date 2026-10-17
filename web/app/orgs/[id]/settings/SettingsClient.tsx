@@ -55,8 +55,8 @@ export function SettingsClient({
         <div
           style={{
             padding: "8px 16px",
-            background: "var(--color-negative-muted, #fef2f2)",
-            border: "1px solid var(--color-negative, #ef4444)",
+            background: "var(--color-danger-muted, #fbeae9)",
+            border: "1px solid var(--color-danger, #b3261e)",
             borderRadius: "8px",
             marginBottom: "16px",
             fontSize: "0.85rem",

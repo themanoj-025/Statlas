@@ -132,12 +132,12 @@ export function MembersClient({
           </button>
         </div>
         {inviteResult && (
-          <p style={{ marginTop: "8px", fontSize: "0.8rem", color: "var(--color-positive, #22c55e)" }}>
+          <p style={{ marginTop: "8px", fontSize: "0.8rem", color: "var(--color-success, #2e7d4f)" }}>
             {inviteResult}
           </p>
         )}
         {error && (
-          <p style={{ marginTop: "8px", fontSize: "0.8rem", color: "var(--color-negative, #ef4444)" }}>
+          <p style={{ marginTop: "8px", fontSize: "0.8rem", color: "var(--color-danger, #b3261e)" }}>
             {error}
           </p>
         )}
@@ -209,7 +209,7 @@ export function MembersClient({
                     <button
                       type="button"
                       className="button button--sm button--ghost"
-                      style={{ color: "var(--color-negative, #ef4444)" }}
+                      style={{ color: "var(--color-danger, #b3261e)" }}
                       onClick={() => void handleRemove(m.user_id)}
                     >
                       Remove

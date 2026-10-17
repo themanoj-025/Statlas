@@ -18,7 +18,7 @@ import AxeBuilder from "@axe-core/playwright";
  * - signed-out: /workspace shows the honest sign-in prompt
  */
 
-const PASSWORD = "hunter2hunter";
+const PASSWORD = "Hunter2!hunter";
 
 async function register(page: Page, tag: string): Promise<void> {
   const email = `e2e-${tag}-${Date.now()}@example.com`;

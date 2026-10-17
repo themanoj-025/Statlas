@@ -21,7 +21,7 @@ import AxeBuilder from "@axe-core/playwright";
  * - axe green on the reports page with the appendix open
  */
 
-const PASSWORD = "hunter2hunter";
+const PASSWORD = "Hunter2!hunter";
 
 async function registerPro(page: Page, tag: string): Promise<string> {
   const email = `e2e-report-${tag}-${Date.now()}@example.com`;
