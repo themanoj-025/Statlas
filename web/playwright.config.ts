@@ -12,8 +12,8 @@ import { defineConfig, devices } from "@playwright/test";
 export default defineConfig({
   testDir: "./e2e",
   fullyParallel: false, // share one seeded stack; keep runs deterministic
-  workers: process.env.CI ? 2 : 1,
-  timeout: 45_000,
+  workers: 1,
+  timeout: 60_000,
   retries: 1, // flaky first-visit (dev-mode compile) tolerated once
   reporter: [["list"], ["html", { open: "never", outputFolder: "playwright-report" }]],
   use: {

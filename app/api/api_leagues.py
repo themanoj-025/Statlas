@@ -58,7 +58,7 @@ def league_stats(
     metric: str = Query("si_gls_p90"),
     season: str | None = None,
     limit: int = Query(200, ge=1, le=1000),
-) -> dict[str, Any]:
+) -> list[dict[str, Any]]:
     from app.queries.league_queries import get_league_stats_table
 
     return _with_session(

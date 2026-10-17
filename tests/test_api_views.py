@@ -168,6 +168,11 @@ class TestAPILeagues:
 
         assert router is not None
 
+    def test_league_stats_endpoint(self, client: Any) -> None:
+        res = client.get("/api/v1/leagues/premier-league/stats")
+        assert res.status_code == 200
+        assert isinstance(res.json(), list)
+
 
 class TestAPIPlayers:
     """Test players API view functions."""

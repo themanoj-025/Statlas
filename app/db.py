@@ -29,11 +29,20 @@ def _make_engine(url: str | None = None) -> Engine:
     if url is None or "sqlite" in (url or ""):
         # SQLite (tests / local dev without Postgres). StaticPool + check_same_thread
         # so in-memory databases survive across sessions within one process.
+        # For file databases, use NullPool with timeout so threads have isolated connections.
         target_url = url or "sqlite+pysqlite:///:memory:"
+        if ":memory:" in target_url:
+            return create_engine(
+                target_url,
+                poolclass=StaticPool,
+                connect_args={"check_same_thread": False},
+            )
+        from sqlalchemy.pool import NullPool
+
         return create_engine(
             target_url,
-            poolclass=StaticPool,
-            connect_args={"check_same_thread": False},
+            poolclass=NullPool,
+            connect_args={"check_same_thread": False, "timeout": 30},
         )
     # PostgreSQL / MySQL — production-ready pooling.
     return create_engine(
