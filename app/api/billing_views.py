@@ -215,13 +215,9 @@ def password_reset_request(
     with session_scope() as db:
         user = db.query(User).filter(User.email == email_lower).first()
         if user is not None:
-            token = auth.create_password_reset_token(db, user.id)
-            # In production, send email here. For dev/testing, log only a truncated reference.
-            logger.info(
-                "Password reset token generated for %s (token prefix: %s...)",
-                user.email,
-                token[:8],
-            )
+            token = auth.create_reset_token(db, user.id)
+            # In production, send email here. For dev/testing, log only an opaque event.
+            logger.info("Password reset requested for user_id=%s", user.id)
     return {
         "detail": "If an account with that email exists, a reset link has been sent."
     }
@@ -248,7 +244,7 @@ def password_reset_confirm(
             headers={"Retry-After": "3600"},
         )
     with session_scope() as db:
-        user_id = auth.consume_password_reset_token(db, body.token)
+        user_id = auth.consume_reset_token(db, body.token)
         if user_id is None:
             raise HTTPException(
                 status_code=400,

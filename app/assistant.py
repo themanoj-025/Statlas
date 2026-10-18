@@ -411,8 +411,8 @@ def _execute_tool(
         KeyError,
         RuntimeError,
     ) as exc:  # tool failures surface in the result, not the API
-        logger.exception("assistant tool %s failed", name)
-        return {"error": f"Tool {name} failed: {exc}"}
+        logger.exception("assistant tool %s failed: %s", name, exc)
+        return {"error": f"Tool {name} encountered an error during execution."}
 
 
 def _serialize(result: dict[str, Any]) -> str:
