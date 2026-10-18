@@ -206,7 +206,8 @@ def health() -> dict[str, Any]:
         with session_scope() as db:
             db.execute(text("SELECT 1"))
     except (OSError, RuntimeError) as exc:
-        db_status = f"unhealthy: {exc}"
+        logger.warning("Database health check failed: %s", exc)
+        db_status = "unhealthy"
     try:
         from app.cache import get_cache
 
@@ -214,7 +215,8 @@ def health() -> dict[str, Any]:
         if hasattr(cache, "redis"):
             cache.redis.ping()
     except (OSError, ConnectionError) as exc:
-        redis_status = f"unhealthy: {exc}"
+        logger.warning("Redis health check failed: %s", exc)
+        redis_status = "unhealthy"
 
     overall = (
         "ok" if db_status == "healthy" and redis_status == "healthy" else "degraded"
@@ -238,7 +240,8 @@ def readiness() -> dict[str, Any]:
             db.execute(text("SELECT 1"))
         return {"ready": True}
     except (ValueError, OSError) as exc:
-        raise HTTPException(status_code=503, detail=f"Database unavailable: {exc}")
+        logger.warning("Database readiness check failed: %s", exc)
+        raise HTTPException(status_code=503, detail="Database unavailable")
 
 
 @app.get("/api/v1/meta", response_model=MetaResponse)

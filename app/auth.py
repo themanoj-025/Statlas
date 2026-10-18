@@ -269,8 +269,8 @@ def user_payload(user: User) -> dict[str, Any]:
 PASSWORD_RESET_TTL_MINUTES = 60
 
 
-def create_password_reset_token(db: Session, user_id: int) -> str:
-    """Create a single-use password-reset token. Returns the raw token
+def create_reset_token(db: Session, user_id: int) -> str:
+    """Create a single-use account recovery reset token. Returns the raw token
     (shown once to the user via email). The DB stores only the hash."""
     from app.models import PasswordResetToken
 
@@ -289,8 +289,11 @@ def create_password_reset_token(db: Session, user_id: int) -> str:
     return raw
 
 
-def consume_password_reset_token(db: Session, raw_token: str) -> int | None:
-    """Validate and consume a password-reset token. Returns the user_id on
+create_password_reset_token = create_reset_token
+
+
+def consume_reset_token(db: Session, raw_token: str) -> int | None:
+    """Validate and consume an account recovery reset token. Returns the user_id on
     success, None if invalid/expired/already-used."""
     from app.models import PasswordResetToken
 
@@ -311,6 +314,9 @@ def consume_password_reset_token(db: Session, raw_token: str) -> int | None:
     row.used_at = now
     db.commit()
     return row.user_id
+
+
+consume_password_reset_token = consume_reset_token
 
 
 # ---------------------------------------------------------------------------

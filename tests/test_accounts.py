@@ -60,24 +60,24 @@ def _create_user(
 class TestPasswordReset:
     def test_create_and_consume_token(self, db) -> None:
         user = _create_user(db)
-        raw_token = auth.create_password_reset_token(db, user.id)
+        raw_token = auth.create_reset_token(db, user.id)
 
-        user_id = auth.consume_password_reset_token(db, raw_token)
+        user_id = auth.consume_reset_token(db, raw_token)
         assert user_id == user.id
 
     def test_single_use_token(self, db) -> None:
         user = _create_user(db)
-        raw_token = auth.create_password_reset_token(db, user.id)
+        raw_token = auth.create_reset_token(db, user.id)
 
-        auth.consume_password_reset_token(db, raw_token)
+        auth.consume_reset_token(db, raw_token)
         # Second use should fail
-        result = auth.consume_password_reset_token(db, raw_token)
+        result = auth.consume_reset_token(db, raw_token)
         assert result is None
 
     def test_expired_token_rejected(self, db) -> None:
         user = _create_user(db)
         # Create a token and manually expire it
-        raw_token = auth.create_password_reset_token(db, user.id)
+        raw_token = auth.create_reset_token(db, user.id)
         row = (
             db.query(PasswordResetToken)
             .filter(PasswordResetToken.user_id == user.id)
@@ -86,17 +86,17 @@ class TestPasswordReset:
         row.expires_at = datetime.now(timezone.utc) - timedelta(hours=1)
         db.commit()
 
-        result = auth.consume_password_reset_token(db, raw_token)
+        result = auth.consume_reset_token(db, raw_token)
         assert result is None
 
     def test_invalid_token_rejected(self, db) -> None:
-        result = auth.consume_password_reset_token(db, "totally-invalid-token")
+        result = auth.consume_reset_token(db, "totally-invalid-token")
         assert result is None
 
     def test_password_changes_after_reset(self, db) -> None:
         user = _create_user(db, password="old-password")
-        raw_token = auth.create_password_reset_token(db, user.id)
-        user_id = auth.consume_password_reset_token(db, raw_token)
+        raw_token = auth.create_reset_token(db, user.id)
+        user_id = auth.consume_reset_token(db, raw_token)
 
         # Simulate password change
         db_user = db.get(User, user_id)
