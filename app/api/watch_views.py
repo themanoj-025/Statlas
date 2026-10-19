@@ -99,7 +99,7 @@ def follow(body: FollowBody, request: Request) -> dict[str, Any]:
 
 
 @router.post("/{watch_id}/unfollow")
-def unfollow(watch_id: int, request: Request) -> dict[str, str]:
+def unfollow(watch_id: int, request: Request) -> dict[str, Any]:
     user = _require_user(request)
     with session_scope() as db:
         try:
@@ -155,7 +155,7 @@ def alert_detail(alert_id: int, request: Request) -> dict[str, Any]:
 
 
 @router.post("/alerts/{alert_id}/read")
-def mark_read(alert_id: int, request: Request) -> dict[str, str]:
+def mark_read(alert_id: int, request: Request) -> dict[str, Any]:
     user = _require_user(request)
     with session_scope() as db:
         try:
@@ -171,7 +171,7 @@ def mark_read(alert_id: int, request: Request) -> dict[str, str]:
 
 
 @router.post("/alerts/{alert_id}/dismiss")
-def dismiss(alert_id: int, request: Request) -> dict[str, str]:
+def dismiss(alert_id: int, request: Request) -> dict[str, Any]:
     user = _require_user(request)
     with session_scope() as db:
         try:

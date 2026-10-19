@@ -141,7 +141,7 @@ def create_shortlist(body: CreateShortlistBody, request: Request) -> dict[str, A
 
 
 @router.post("/{shortlist_id}/remove")
-def remove_shortlist(shortlist_id: int, request: Request) -> dict[str, str]:
+def remove_shortlist(shortlist_id: int, request: Request) -> dict[str, Any]:
     user = _require_user(request)
     with session_scope() as db:
         try:
@@ -274,7 +274,7 @@ def add_tag(entry_id: int, body: TagBody, request: Request) -> dict[str, Any]:
 
 
 @router.post("/entries/{entry_id}/tags/remove")
-def remove_tag(entry_id: int, body: TagBody, request: Request) -> dict[str, str]:
+def remove_tag(entry_id: int, body: TagBody, request: Request) -> dict[str, Any]:
     user = _require_user(request)
     with session_scope() as db:
         try:
@@ -292,7 +292,7 @@ def remove_tag(entry_id: int, body: TagBody, request: Request) -> dict[str, str]
 
 
 @router.post("/entries/{entry_id}/remove")
-def remove_entry(entry_id: int, request: Request) -> dict[str, str]:
+def remove_entry(entry_id: int, request: Request) -> dict[str, Any]:
     user = _require_user(request)
     with session_scope() as db:
         try:
