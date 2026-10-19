@@ -57,6 +57,7 @@ export function GenerateReport({
         text: "Report generated and every claim verified against Statlas data.",
       });
     } catch (err) {
+      console.error("[GenerateReport] generation failed:", err);
       setPhase("idle");
       const text = err instanceof ApiError ? err.message : "Could not generate the report.";
       if (err instanceof ApiError && err.status === 403) {

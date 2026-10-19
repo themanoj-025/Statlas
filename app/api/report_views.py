@@ -38,7 +38,8 @@ _require_user = require_user
 
 
 def _narrator() -> Any:
-    if get_settings().reports_dev_narrator:
+    settings = get_settings()
+    if settings.reports_dev_narrator or settings.environment == "test":
         return reports.deterministic_narrator
     return None
 

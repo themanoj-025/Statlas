@@ -49,6 +49,7 @@ async function openFirstPlayerProfile(page: Page): Promise<void> {
   await page.locator(".position-card").first().click();
   await expect(page.locator("a[href^='/players/']").first()).toBeVisible({ timeout: 20_000 });
   await page.locator("a[href^='/players/']").first().click();
+  await page.waitForURL(/\/players\/[^/?#]+$/, { timeout: 20_000 });
   await expect(page.getByRole("heading", { level: 1 }).first()).toBeVisible({ timeout: 20_000 });
 }
 

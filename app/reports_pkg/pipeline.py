@@ -137,6 +137,14 @@ def generate_report(
             "Upgrade to Pro to get started."
         )
 
+    if narrator is None and (
+        get_settings().reports_dev_narrator
+        or get_settings().environment == "test"
+    ):
+        from app.reports_pkg.narrators import deterministic_narrator
+
+        narrator = deterministic_narrator
+
     # Then the key gate: an unconfigured deployment is an honest state, not a
     # scripted demo (the Phase 4 assistant's rule, applied to reports).
     if narrator is None and not get_settings().anthropic_api_key:
