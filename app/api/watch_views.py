@@ -125,7 +125,7 @@ def alerts(
     include_read: bool = Query(False),
     include_dismissed: bool = Query(False),
     limit: int = Query(50, ge=1, le=200),
-) -> list[dict[str, Any]]:
+) -> dict[str, Any]:
     user = _require_user(request)
     with session_scope() as db:
         return {
