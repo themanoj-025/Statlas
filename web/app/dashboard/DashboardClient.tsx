@@ -68,8 +68,10 @@ export function DashboardClient() {
   }, []);
 
   useEffect(() => {
-    void load();
-  }, [load, attempt]);
+    if (status === "signed-in") {
+      void load();
+    }
+  }, [load, attempt, status]);
 
   // --- Auth states ---
 

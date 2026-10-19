@@ -4,7 +4,7 @@ import AxeBuilder from "@axe-core/playwright";
 const BASE = process.env.BASE_URL ?? "http://127.0.0.1:3000";
 
 async function goto(page: import("@playwright/test").Page, path: string) {
-  await page.goto(`${BASE}${path}`, { waitUntil: "networkidle" });
+  await page.goto(`${BASE}${path}`);
 }
 
 // Register a fresh user and return the email.

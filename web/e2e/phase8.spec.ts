@@ -189,6 +189,7 @@ test("axe is green on the query builder (save panel open) and results", async ({
 });
 
 test("signed-out /search still works for public execution with honest auth prompts", async ({ page }) => {
+  await page.context().clearCookies();
   await page.goto("/search");
   await expect(page.getByLabel("Query builder").first()).toBeVisible({ timeout: 20_000 });
 

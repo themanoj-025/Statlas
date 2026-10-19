@@ -57,6 +57,7 @@ def grant_pro(body: GrantProBody, _request: Request) -> dict[str, Any]:
             raise HTTPException(
                 status_code=404, detail="user not found — register first"
             )
+        user.plan = "pro"
         existing = (
             db.query(Subscription)
             .filter(Subscription.user_id == user.id, Subscription.status == "active")
@@ -71,7 +72,13 @@ def grant_pro(body: GrantProBody, _request: Request) -> dict[str, Any]:
                     status="active",
                 )
             )
-            db.commit()
+        else:
+            existing.plan = "pro"
+        from app.models import ReportQuota
+        quota_rows = db.query(ReportQuota).filter(ReportQuota.user_id == user.id).all()
+        for q in quota_rows:
+            q.reports_limit = 10
+        db.commit()
     return {"ok": True}
 
 

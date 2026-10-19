@@ -187,6 +187,7 @@ test("no horizontal overflow on workspace pages (light + dark)", async ({ page }
 });
 
 test("signed-out /workspace shows the honest sign-in prompt", async ({ page }) => {
+  await page.context().clearCookies();
   await page.goto("/workspace");
   await expect(page.getByText("Workspace is per-account")).toBeVisible({ timeout: 20_000 });
   await expect(page.getByRole("link", { name: "Sign in" }).first()).toBeVisible();
