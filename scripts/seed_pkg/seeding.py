@@ -569,6 +569,10 @@ def _apply_demo_cases(
 def main() -> int:
     if DEV_DB.exists():
         DEV_DB.unlink()
+    for ext in ("-wal", "-shm"):
+        sidecar = DEV_DB.with_name(f"{DEV_DB.name}{ext}")
+        if sidecar.exists():
+            sidecar.unlink()
     (PROJECT_ROOT / "data").mkdir(exist_ok=True)
 
     create_schema()
