@@ -138,8 +138,7 @@ def generate_report(
         )
 
     if narrator is None and (
-        get_settings().reports_dev_narrator
-        or get_settings().environment == "test"
+        get_settings().reports_dev_narrator or get_settings().environment == "test"
     ):
         from app.reports_pkg.narrators import deterministic_narrator
 
