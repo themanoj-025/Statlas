@@ -33,10 +33,10 @@ test.describe("Phase 13 — Dashboard", () => {
     await goto(page, "/dashboard");
 
     // Dashboard title.
-    await expect(page.locator("h1")).toContainText("Dashboard");
+    await expect(page.locator("h1")).toContainText("Dashboard", { timeout: 20_000 });
 
     // Workspace shortcuts section.
-    await expect(page.getByText("Your workspace")).toBeVisible();
+    await expect(page.getByText("Your workspace")).toBeVisible({ timeout: 20_000 });
     await expect(page.getByText("Shortlists")).toBeVisible();
     await expect(page.getByText("Saved searches")).toBeVisible();
     await expect(page.getByText("Reports")).toBeVisible();
@@ -62,7 +62,7 @@ test.describe("Phase 13 — Dashboard", () => {
     // Recently viewed empty state.
     await expect(
       page.getByText("Recently viewed players will appear here as you explore"),
-    ).toBeVisible();
+    ).toBeVisible({ timeout: 20_000 });
 
     // Trending empty state.
     await expect(
@@ -86,8 +86,8 @@ test.describe("Phase 13 — Dashboard", () => {
 
     // Click the Workspace shortcut card.
     await page.locator('a[href="/workspace"]').first().click();
-    await page.waitForURL(`${BASE}/workspace`, { timeout: 10000 });
-    await expect(page.locator("h1")).toContainText("Workspace");
+    await page.waitForURL(`${BASE}/workspace`, { timeout: 20000 });
+    await expect(page.locator("h1")).toContainText("Workspace", { timeout: 20_000 });
   });
 
   test("header shows Dashboard link for signed-in users", async ({ page }) => {

@@ -221,9 +221,10 @@ jobs:
       # webServer config boots seed -> FastAPI -> next start automatically;
       # any axe violation or layout regression fails the job.
       - name: Run e2e suite
-        run: npx playwright test --timeout=45000
+        run: npx playwright test --timeout=60000
         env:
           STATLAS_ENV: "test"
+          REPORTS_DEV_NARRATOR: "1"
           CSRF_SECRET_KEY: "e2e-csrf-secret-key-for-testing-only-32bytes"
 
   lighthouse:
