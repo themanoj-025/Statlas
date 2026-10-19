@@ -269,6 +269,9 @@ def get_quota(db: Session, user: User) -> dict[str, Any]:
         )
         db.add(row)
         db.commit()
+    elif row.queries_limit != limit:
+        row.queries_limit = limit
+        db.commit()
     return {
         "used": row.queries_used,
         "limit": row.queries_limit,

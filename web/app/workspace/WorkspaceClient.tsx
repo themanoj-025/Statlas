@@ -31,8 +31,10 @@ export function WorkspaceClient() {
   }, []);
 
   useEffect(() => {
-    void load();
-  }, [load, attempt]);
+    if (status === "signed-in") {
+      void load();
+    }
+  }, [load, attempt, status]);
 
   if (status === "loading") {
     return <WorkspaceSkeleton />;

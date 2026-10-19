@@ -42,6 +42,9 @@ def get_report_quota(db: Session, user_id: int) -> dict[str, Any]:
         )
         db.add(row)
         db.commit()
+    elif row.reports_limit != limit:
+        row.reports_limit = limit
+        db.commit()
     return {
         "used": row.reports_used,
         "limit": row.reports_limit,
