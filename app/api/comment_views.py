@@ -190,7 +190,7 @@ def edit_comment(
 
 
 @router.delete("/{comment_id}")
-def delete_comment(comment_id: int, request: Request) -> dict[str, str]:
+def delete_comment(comment_id: int, request: Request) -> dict[str, Any]:
     """Soft-delete a comment. Author or org manager/owner can delete.
     Org membership verified to prevent cross-org deletion."""
     user = _require_user(request)

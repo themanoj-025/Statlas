@@ -67,7 +67,7 @@ def list_keys(request: Request) -> dict[str, Any]:
 
 
 @router.delete("/keys/{key_id}")
-def revoke_key(key_id: int, request: Request) -> dict[str, str]:
+def revoke_key(key_id: int, request: Request) -> dict[str, Any]:
     user = _require_user(request)
     with session_scope() as db:
         ok = api_keys.revoke_api_key(db, user.id, key_id)
