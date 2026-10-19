@@ -119,7 +119,7 @@ def dashboard_summary(request: Request) -> dict[str, Any]:
                     ):
                         transfer_opportunities.append(gem)
                         seen_player_ids.add(gem["player_id"])
-        except (ValueError, KeyError) as exc:
+        except (ValueError, KeyError, AttributeError, Exception) as exc:
             logger.debug("Transfer data unavailable for dashboard: %s", exc)
 
     return {

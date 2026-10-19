@@ -26,6 +26,7 @@ from app.queries.dashboard_state import (
     dismiss_recommendation,
     get_or_create_dashboard_state,
     get_saved_players,
+    get_top_viewed_positions,
     save_player,
     unsave_player,
 )

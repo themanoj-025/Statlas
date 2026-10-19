@@ -54,6 +54,7 @@ test.describe("Phase 12 — Account system", () => {
 
   test("axe: account page", async ({ page }) => {
     await register(page, "axe-acct");
+    await expect(page.locator("h1")).toContainText("Account");
     const results = await new AxeBuilder({ page }).analyze();
     expect(results.violations).toHaveLength(0);
   });
