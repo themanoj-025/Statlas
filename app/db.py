@@ -10,7 +10,7 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, event
 from sqlalchemy.engine import Engine
 from sqlalchemy.orm import Session, sessionmaker
 from sqlalchemy.pool import StaticPool
@@ -21,6 +21,20 @@ logger = logging.getLogger(__name__)
 
 _engine: Engine | None = None
 _session_factory: sessionmaker[Session] | None = None
+
+
+@event.listens_for(Engine, "connect")
+def _set_sqlite_pragma(dbapi_connection: Any, connection_record: Any) -> None:
+    """Configure SQLite connections for high concurrency: WAL mode and busy timeout."""
+    if hasattr(dbapi_connection, "cursor"):
+        try:
+            cursor = dbapi_connection.cursor()
+            cursor.execute("PRAGMA journal_mode=WAL")
+            cursor.execute("PRAGMA busy_timeout=60000")
+            cursor.execute("PRAGMA synchronous=NORMAL")
+            cursor.close()
+        except Exception:
+            pass
 
 
 def _make_engine(url: str | None = None) -> Engine:
@@ -42,7 +56,7 @@ def _make_engine(url: str | None = None) -> Engine:
         return create_engine(
             target_url,
             poolclass=NullPool,
-            connect_args={"check_same_thread": False, "timeout": 30},
+            connect_args={"check_same_thread": False, "timeout": 60},
         )
     # PostgreSQL / MySQL — production-ready pooling.
     return create_engine(
