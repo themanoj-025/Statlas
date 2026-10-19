@@ -37,6 +37,8 @@ async function registerPro(page: Page, tag: string): Promise<string> {
     data: { email },
   });
   expect(grant.ok()).toBeTruthy();
+  await page.reload();
+  await expect(page.getByText(/plan: pro/i).first()).toBeVisible({ timeout: 20_000 });
   return email;
 }
 
