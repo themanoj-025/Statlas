@@ -215,7 +215,7 @@ def password_reset_request(
     with session_scope() as db:
         user = db.query(User).filter(User.email == email_lower).first()
         if user is not None:
-            token = auth.create_reset_token(db, user.id)
+            auth.create_reset_token(db, user.id)
             # In production, send email here. For dev/testing, log only an opaque event.
             logger.info("Password reset requested for user_id=%s", user.id)
     return {

@@ -868,6 +868,11 @@ def test_api_follow_flow_alert_list_and_preferences(client, db) -> None:
     watches = client.get("/api/v1/watch").json()["watches"]
     assert watches[0]["entity_name"] == "Bukayo Saka"
 
+    # Verify alerts endpoint serialization
+    alerts_resp = client.get("/api/v1/watch/alerts")
+    assert alerts_resp.status_code == 200
+    assert "alerts" in alerts_resp.json()
+
     # Preferences round-trip.
     prefs = client.get("/api/v1/watch/preferences").json()
     assert prefs["email_enabled"] is True

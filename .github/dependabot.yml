@@ -21,6 +21,10 @@ updates:
     labels:
       - "dependencies"
       - "ci"
+    groups:
+      codeql-action:
+        patterns:
+          - "github/codeql-action/*"
 
   # Docker
   - package-ecosystem: "docker"
