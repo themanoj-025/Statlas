@@ -92,11 +92,12 @@ async def csrf_middleware(request: Request, call_next: Any) -> Any:
         return await call_next(request)
 
     # Skip CSRF in test/CI environments (no browser involved)
-    if _settings.environment == "test":
+    settings = get_settings()
+    if settings.environment in ("test", "development"):
         return await call_next(request)
 
     # Only enforce CSRF when a session cookie is present
-    session_cookie = request.cookies.get(_settings.session_cookie_name)
+    session_cookie = request.cookies.get(settings.session_cookie_name)
     if not session_cookie:
         return await call_next(request)
 

@@ -113,12 +113,22 @@ def slugify_name(name: str) -> str:
     return slug or "player"
 
 
+_SLUG_MAP_CACHE: tuple[float, list[dict[str, Any]]] | None = None
+
+
 def player_slug_map(db: Session) -> list[dict[str, Any]]:
     """All players with their computed canonical slug (site-map.md §1.1).
 
     Slug rules: name slug; `-{club-slug}` on collision; `-{id}` last resort.
     Computed over the whole player table so collision detection is exact.
     """
+    global _SLUG_MAP_CACHE
+    import time
+
+    now = time.time()
+    if _SLUG_MAP_CACHE is not None and (now - _SLUG_MAP_CACHE[0]) < 30.0:
+        return _SLUG_MAP_CACHE[1]
+
     from app.models import Team
 
     rows = (
@@ -149,6 +159,7 @@ def player_slug_map(db: Session) -> list[dict[str, Any]]:
             entry["slug"] = f"{entry['name_slug']}-{entry['club_slug']}"
         else:
             entry["slug"] = f"{entry['name_slug']}-{entry['player_id']}"
+    _SLUG_MAP_CACHE = (now, players)
     return players
 
 

@@ -57,7 +57,13 @@ def _latest_rows_per_player(
     is computed against the same values a user sees on leaderboards.
     """
     rows = (
-        db.query(PercentileSnapshot, StatSnapshot)
+        db.query(
+            PercentileSnapshot.metric_name,
+            PercentileSnapshot.percentile_value,
+            PercentileSnapshot.index_score,
+            StatSnapshot.player_id,
+            StatSnapshot.scrape_date,
+        )
         .join(StatSnapshot, PercentileSnapshot.stat_snapshot_id == StatSnapshot.id)
         .filter(
             PercentileSnapshot.is_published.is_(True),
@@ -66,18 +72,18 @@ def _latest_rows_per_player(
         )
         .all()
     )
-    best: dict[int, tuple[StatSnapshot, dict[str, float], float | None]] = {}
+    best: dict[int, tuple[Any, dict[str, float], float | None]] = {}
     index_id = load_registry()["index_metric_id"]
-    for percentile, snap in rows:
-        existing = best.get(snap.player_id)
-        if existing is not None and snap.scrape_date < existing[0].scrape_date:
+    for metric_name, pct_val, idx_val, pid, scrape_date in rows:
+        existing = best.get(pid)
+        if existing is not None and scrape_date < existing[0]:
             continue
-        vector, index = best.get(snap.player_id, (None, {}, None))[1:]
-        if percentile.metric_name == index_id:
-            index = percentile.index_score
-        elif percentile.percentile_value is not None:
-            vector[percentile.metric_name] = percentile.percentile_value
-        best[snap.player_id] = (snap, vector, index)
+        vector, index = best.get(pid, (scrape_date, {}, None))[1:]
+        if metric_name == index_id:
+            index = idx_val
+        elif pct_val is not None:
+            vector[metric_name] = pct_val
+        best[pid] = (scrape_date, vector, index)
     return {pid: (vector, index) for pid, (_, vector, index) in best.items()}
 
 
@@ -248,14 +254,11 @@ def get_similar_players(
     group = _anchor_pct.position_group
     tier = _anchor_pct.league_tier
 
-    anchor_vector, anchor_index = _latest_rows_per_player(
-        db, position_group=group, league_tier=tier
-    ).get(player_id, ({}, None))
-    if not anchor_vector:
-        return []
-
     registry = load_registry()
     cohort = _latest_rows_per_player(db, position_group=group, league_tier=tier)
+    anchor_vector, anchor_index = cohort.get(player_id, ({}, None))
+    if not anchor_vector:
+        return []
 
     scored: list[tuple[float, int, int]] = []
     components: dict[int, dict[str, float]] = {}
