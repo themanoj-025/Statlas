@@ -71,10 +71,8 @@ def get_trending_players(
     latest_date = dates[0][0]
     prev_date = dates[1][0]
 
-    # Find players with percentile gains by joining through StatSnapshot
-    from sqlalchemy import and_
-
-    curr_subq = (
+    # Find players with percentile gains by comparing published snapshots
+    curr_rows = (
         db.query(
             StatSnapshot.player_id,
             PercentileSnapshot.metric_name,
@@ -87,10 +85,10 @@ def get_trending_players(
             PercentileSnapshot.computed_date == latest_date,
             PercentileSnapshot.is_published.is_(True),
         )
-        .subquery()
+        .all()
     )
 
-    prev_subq = (
+    prev_rows = (
         db.query(
             StatSnapshot.player_id,
             PercentileSnapshot.metric_name,
@@ -103,61 +101,60 @@ def get_trending_players(
             PercentileSnapshot.computed_date == prev_date,
             PercentileSnapshot.is_published.is_(True),
         )
-        .subquery()
-    )
-
-    gains = (
-        db.query(
-            curr_subq.c.player_id,
-            func.avg(curr_subq.c.percentile_value - prev_subq.c.percentile_value).label(
-                "avg_gain"
-            ),
-            func.count().label("metrics_with_data"),
-        )
-        .join(
-            prev_subq,
-            and_(
-                curr_subq.c.player_id == prev_subq.c.player_id,
-                curr_subq.c.metric_name == prev_subq.c.metric_name,
-            ),
-        )
-        .filter(curr_subq.c.percentile_value > prev_subq.c.percentile_value)
-        .group_by(curr_subq.c.player_id)
-        .having(
-            func.avg(curr_subq.c.percentile_value - prev_subq.c.percentile_value) > 5.0
-        )
-        .order_by(
-            func.avg(curr_subq.c.percentile_value - prev_subq.c.percentile_value).desc()
-        )
-        .limit(limit * 3)
         .all()
     )
 
-    results: list[dict] = []
-    for row in gains:
-        pid = row.player_id
-        if pid in exclude_ids:
+    prev_map = {(pid, m): val for pid, m, val in prev_rows if val is not None}
+
+    from collections import defaultdict
+
+    player_gains: dict[int, list[float]] = defaultdict(list)
+    for pid, m, c_val in curr_rows:
+        if c_val is None or pid in exclude_ids:
             continue
-        player = db.get(Player, pid)
+        p_val = prev_map.get((pid, m))
+        if p_val is not None and c_val > p_val:
+            player_gains[pid].append(c_val - p_val)
+
+    qualifying: list[tuple[int, float, int]] = []
+    for pid, gains in player_gains.items():
+        avg_gain = sum(gains) / len(gains)
+        if avg_gain > 5.0:
+            qualifying.append((pid, avg_gain, len(gains)))
+
+    qualifying.sort(key=lambda x: x[1], reverse=True)
+    top_candidates = qualifying[: limit * 3]
+
+    candidate_pids = [pid for pid, _, _ in top_candidates]
+    players_map = (
+        {p.id: p for p in db.query(Player).filter(Player.id.in_(candidate_pids)).all()}
+        if candidate_pids
+        else {}
+    )
+    team_ids = {p.current_team_id for p in players_map.values() if p.current_team_id}
+    teams_map = (
+        {t.id: t for t in db.query(Team).filter(Team.id.in_(team_ids)).all()}
+        if team_ids
+        else {}
+    )
+
+    results: list[dict] = []
+    for pid, avg_gain, metrics_with_data in top_candidates:
+        player = players_map.get(pid)
         if player is None:
             continue
-        team_name = None
-        if player.current_team_id:
-            from app.models import Team
-
-            team = db.get(Team, player.current_team_id)
-            team_name = team.name if team else None
+        team = teams_map.get(player.current_team_id) if player.current_team_id else None
         results.append(
             {
                 "player_id": pid,
                 "player_name": player.canonical_name,
-                "team_name": team_name,
+                "team_name": team.name if team else None,
                 "position_group": player.position_group,
-                "avg_gain": round(float(row.avg_gain), 1),
+                "avg_gain": round(float(avg_gain), 1),
                 "explanation": (
                     f"Average percentile gain of "
-                    f"{abs(round(float(row.avg_gain), 1))} points across "
-                    f"{row.metrics_with_data} metrics"
+                    f"{abs(round(float(avg_gain), 1))} points across "
+                    f"{metrics_with_data} metrics"
                 ),
             }
         )

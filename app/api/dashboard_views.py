@@ -100,25 +100,15 @@ def dashboard_summary(request: Request) -> dict[str, Any]:
         recommended = dq.get_recommended_players(db, user.id)
         saved = dq.get_saved_players(db, user.id)
 
-        # Transfer opportunities (top 3 hidden gems from most-viewed positions)
+        # Transfer opportunities (top 3 hidden gems)
         transfer_opportunities: list[dict] = []
         try:
             from app.compute.opportunity import detect_hidden_gems
 
-            # Get most-viewed position groups from recent activity
-            viewed_positions = dq.get_top_viewed_positions(db, user.id)
-            seen_player_ids: set[int] = set()
-            for _pos in viewed_positions[:3]:
-                gems = detect_hidden_gems(
-                    db, min_stat_percentile=75, max_market_value=30_000_000, limit=3
-                )
-                for gem in gems:
-                    if (
-                        gem["player_id"] not in seen_player_ids
-                        and len(transfer_opportunities) < 3
-                    ):
-                        transfer_opportunities.append(gem)
-                        seen_player_ids.add(gem["player_id"])
+            gems = detect_hidden_gems(
+                db, min_stat_percentile=75, max_market_value=30_000_000, limit=3
+            )
+            transfer_opportunities.extend(gems[:3])
         except (ValueError, KeyError, AttributeError, Exception) as exc:
             logger.debug("Transfer data unavailable for dashboard: %s", exc)
 
