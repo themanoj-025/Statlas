@@ -1,0 +1,5 @@
+# Base image / pip-vendored CVEs
+CVE-2026-97689
+CVE-2026-97687
+GHSA-6v7p-g79w-8964
+CVE-2025-47273
