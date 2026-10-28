@@ -11,7 +11,8 @@ ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 API_PORT="${STATLAS_API_PORT:-8000}"
 WEB_PORT="${PORT:-3000}"
 API_URL="${STATLAS_API_URL:-http://127.0.0.1:${API_PORT}}"
-DB_URL="${DATABASE_URL:-sqlite+pysqlite:///${ROOT}/data/dev.db}"
+export DATABASE_URL="${DATABASE_URL:-sqlite+pysqlite:///${ROOT}/data/dev.db}"
+mkdir -p "${ROOT}/data"
 export STATLAS_ENV="${STATLAS_ENV:-test}"
 export CSRF_SECRET_KEY="${CSRF_SECRET_KEY:-e2e-csrf-secret-key-for-testing-only-32bytes}"
 
@@ -25,12 +26,12 @@ case "${1:-}" in
     # Seeds the dev DB once (the web tier also seeds on its own boot), then
     # start the API layer only. The Next.js dev server is NOT started.
     echo "[e2e-server] api-only: seeding dev database..."
-    cd "${ROOT}" && python "${ROOT}/scripts/seed_dev_db.py" || {
+    cd "${ROOT}" && DATABASE_URL="${DATABASE_URL}" python "${ROOT}/scripts/seed_dev_db.py" || {
       echo "[e2e-server] api-only: seed failed" >&2
       exit 1
     }
     echo "[e2e-server] api-only: starting API on :${API_PORT}..."
-    cd "${ROOT}" && DATABASE_URL="${DB_URL}" STATLAS_ENV="${STATLAS_ENV:-test}" REPORTS_DEV_NARRATOR=1 python -m uvicorn app.api.main:app --host 127.0.0.1 --port "${API_PORT}" &
+    cd "${ROOT}" && DATABASE_URL="${DATABASE_URL}" STATLAS_ENV="${STATLAS_ENV:-test}" REPORTS_DEV_NARRATOR=1 python -m uvicorn app.api.main:app --host 127.0.0.1 --port "${API_PORT}" &
     API_PID=$!
     cleanup() { kill "$API_PID" 2>/dev/null; }
     trap cleanup EXIT INT TERM
@@ -56,12 +57,12 @@ case "${1:-}" in
     done
     echo "[e2e-server] web-only: building web (production build, matches CI)..."
     cd "${ROOT}/web" || exit 1
-    STATLAS_API_URL="${API_URL}" npm run build || {
+    STATLAS_API_URL="${API_URL}" NEXT_PUBLIC_STATLAS_API_URL="${API_URL}" npm run build || {
       echo "[e2e-server] web-only: web build failed" >&2
       exit 1
     }
     echo "[e2e-server] web-only: starting web (standalone) on :${WEB_PORT}..."
-    STATLAS_API_URL="${API_URL}" npm run start -- --hostname 127.0.0.1 --port "${WEB_PORT}" &
+    STATLAS_API_URL="${API_URL}" NEXT_PUBLIC_STATLAS_API_URL="${API_URL}" npm run start -- --hostname 127.0.0.1 --port "${WEB_PORT}" &
     WEB_PID=$!
     cleanup() { kill "$WEB_PID" 2>/dev/null; }
     trap cleanup EXIT INT TERM
@@ -70,23 +71,23 @@ case "${1:-}" in
   *)
     # Combined mode (original behavior).
     echo "[e2e-server] seeding dev database..."
-    cd "${ROOT}" && python "${ROOT}/scripts/seed_dev_db.py" || {
+    cd "${ROOT}" && DATABASE_URL="${DATABASE_URL}" python "${ROOT}/scripts/seed_dev_db.py" || {
       echo "[e2e-server] seed failed" >&2
       exit 1
     }
     echo "[e2e-server] starting API on :${API_PORT}..."
-    cd "${ROOT}" && DATABASE_URL="${DB_URL}" REPORTS_DEV_NARRATOR=1 python -m uvicorn app.api.main:app --host 127.0.0.1 --port "${API_PORT}" &
+    cd "${ROOT}" && DATABASE_URL="${DATABASE_URL}" STATLAS_ENV="${STATLAS_ENV:-test}" REPORTS_DEV_NARRATOR=1 python -m uvicorn app.api.main:app --host 127.0.0.1 --port "${API_PORT}" &
     API_PID=$!
 
     echo "[e2e-server] building web (production build, matches CI)..."
     cd "${ROOT}/web" || exit 1
-    STATLAS_API_URL="${API_URL}" npm run build || {
+    STATLAS_API_URL="${API_URL}" NEXT_PUBLIC_STATLAS_API_URL="${API_URL}" npm run build || {
       echo "[e2e-server] web build failed" >&2
       exit 1
     }
 
     echo "[e2e-server] starting web (standalone) on :${WEB_PORT}..."
-    STATLAS_API_URL="${API_URL}" npm run start -- --hostname 127.0.0.1 --port "${WEB_PORT}" &
+    STATLAS_API_URL="${API_URL}" NEXT_PUBLIC_STATLAS_API_URL="${API_URL}" npm run start -- --hostname 127.0.0.1 --port "${WEB_PORT}" &
     WEB_PID=$!
 
     cleanup() {
