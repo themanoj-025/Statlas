@@ -464,7 +464,7 @@ function EmptyState({ message }: { message: string }) {
 
 function DashboardSkeleton() {
   return (
-    <div className="dashboard" aria-busy="true" aria-label="Loading dashboard">
+    <div className="dashboard" role="status" aria-busy="true" aria-label="Loading dashboard">
       <div className="dashboard__title skeleton skeleton--text" />
       <div className="dashboard__shortcuts">
         {Array.from({ length: 4 }).map((_, i) => (

@@ -199,6 +199,7 @@ export function SearchClient({ meta, presets }: { meta: Meta; presets: SearchPre
         value_max: c.value_max ?? null,
       }))
     );
+    setPreview(null);
     setResults(null);
   };
 

@@ -43,7 +43,7 @@ test("methodology shows a worked example with real numbers", async ({ page }) =>
 
 test("about page states the solo-founder reality plainly", async ({ page }) => {
   await page.goto("/about");
-  await expect(page.getByText(/one person\./i)).toBeVisible();
+  await expect(page.getByText(/one person\./i).first()).toBeVisible();
   await expect(page.getByText(/not a black box/i)).toBeVisible();
 });
 
