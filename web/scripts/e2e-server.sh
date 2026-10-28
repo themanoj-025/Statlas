@@ -30,7 +30,7 @@ case "${1:-}" in
       exit 1
     }
     echo "[e2e-server] api-only: starting API on :${API_PORT}..."
-    cd "${ROOT}" && DATABASE_URL="${DB_URL}" REPORTS_DEV_NARRATOR=1 python -m uvicorn app.api.main:app --host 127.0.0.1 --port "${API_PORT}" &
+    cd "${ROOT}" && DATABASE_URL="${DB_URL}" STATLAS_ENV="${STATLAS_ENV:-test}" REPORTS_DEV_NARRATOR=1 python -m uvicorn app.api.main:app --host 127.0.0.1 --port "${API_PORT}" &
     API_PID=$!
     cleanup() { kill "$API_PID" 2>/dev/null; }
     trap cleanup EXIT INT TERM

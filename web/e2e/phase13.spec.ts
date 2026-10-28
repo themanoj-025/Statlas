@@ -44,16 +44,16 @@ test.describe("Phase 13 — Dashboard", () => {
     await expect(shortcuts.getByText("Watchlist")).toBeVisible();
 
     // Recently viewed section (empty for new user).
-    await expect(page.getByText("Recently viewed")).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Recently viewed" })).toBeVisible();
 
     // Trending section.
-    await expect(page.getByText("Trending this week")).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Trending this week" })).toBeVisible();
 
     // Saved players section.
-    await expect(page.getByText("Saved players")).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Saved players" })).toBeVisible();
 
     // Recommended section.
-    await expect(page.getByText("Recommended for you")).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Recommended for you" })).toBeVisible();
   });
 
   test("empty-state messages are present for new user", async ({ page }) => {
