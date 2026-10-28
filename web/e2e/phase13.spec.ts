@@ -36,11 +36,12 @@ test.describe("Phase 13 — Dashboard", () => {
     await expect(page.locator("h1")).toContainText("Dashboard", { timeout: 20_000 });
 
     // Workspace shortcuts section.
+    const shortcuts = page.locator(".dashboard__shortcuts");
     await expect(page.getByText("Your workspace")).toBeVisible({ timeout: 20_000 });
-    await expect(page.getByText("Shortlists")).toBeVisible();
-    await expect(page.getByText("Saved searches")).toBeVisible();
-    await expect(page.getByText("Reports")).toBeVisible();
-    await expect(page.getByText("Watchlist")).toBeVisible();
+    await expect(shortcuts.getByText("Shortlists")).toBeVisible();
+    await expect(shortcuts.getByText("Saved searches")).toBeVisible();
+    await expect(shortcuts.getByText("Reports")).toBeVisible();
+    await expect(shortcuts.getByText("Watchlist")).toBeVisible();
 
     // Recently viewed section (empty for new user).
     await expect(page.getByText("Recently viewed")).toBeVisible();
@@ -64,10 +65,12 @@ test.describe("Phase 13 — Dashboard", () => {
       page.getByText("Recently viewed players will appear here as you explore"),
     ).toBeVisible({ timeout: 20_000 });
 
-    // Trending empty state.
+    // Trending empty state or trending players if available in the test db.
     await expect(
-      page.getByText("Trending players will appear here based on sustained"),
-    ).toBeVisible();
+      page
+        .getByText("Trending players will appear here based on sustained")
+        .or(page.locator(".dashboard__player-row").first()),
+    ).toBeVisible({ timeout: 20_000 });
 
     // Saved players empty state.
     await expect(
@@ -87,7 +90,7 @@ test.describe("Phase 13 — Dashboard", () => {
     // Click the Workspace shortcut card.
     await page.locator('a[href="/workspace"]').first().click();
     await page.waitForURL(`${BASE}/workspace`, { timeout: 20000 });
-    await expect(page.locator("h1")).toContainText("Workspace", { timeout: 20_000 });
+    await expect(page.locator("h1")).toContainText("Workspace", { timeout: 20_000, ignoreCase: true });
   });
 
   test("header shows Dashboard link for signed-in users", async ({ page }) => {

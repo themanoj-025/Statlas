@@ -12,7 +12,7 @@ export function ResultRow({ entry }: { entry: SearchResultEntry }) {
   return (
     <tr>
       <td>
-        <Link href={entry.slug ? `/players/${entry.slug}` : "#"} className="shortlist-entry__name">
+        <Link href={entry.slug ? `/players/${entry.slug}` : "#"} prefetch={false} className="shortlist-entry__name">
           {entry.name}
         </Link>
         <span className="shortlist-entry__meta">

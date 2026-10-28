@@ -131,12 +131,18 @@ def get_rate_limiter() -> RedisRateLimiter | InMemoryRateLimiter:
     if _limiter is not None:
         return _limiter
 
+    from app.config import get_settings
+
+    settings = get_settings()
+
+    # In dev/test or when REDIS_URL is unset/empty, avoid socket timeout and use in-memory rate limiter directly.
+    if settings.environment in ("test", "development") or not settings.redis_url:
+        _limiter = InMemoryRateLimiter()
+        return _limiter
+
     try:
         import redis as redis_lib
 
-        from app.config import get_settings
-
-        settings = get_settings()
         client = redis_lib.from_url(
             settings.redis_url,
             decode_responses=True,

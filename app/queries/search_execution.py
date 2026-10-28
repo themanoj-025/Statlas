@@ -125,6 +125,7 @@ def execute_structured_query(
 
     # Assemble per-player data (at most one row per (player, metric) at the
     # latest date — the percentile unique key includes the snapshot).
+    team_names = {t.id: t.name for t in db.query(Team.id, Team.name).all()}
     players: dict[int, dict[str, Any]] = {}
     for percentile, snap, player, league in rows:
         entry = players.setdefault(
@@ -133,7 +134,7 @@ def execute_structured_query(
                 "player_id": player.id,
                 "name": player.canonical_name,
                 "position_group": percentile.position_group,
-                "club": _team_name(db, snap.team_id),
+                "club": team_names.get(snap.team_id) if snap.team_id else None,
                 "league": league.name,
                 "league_slug": league.slug,
                 "tier": league.tier,

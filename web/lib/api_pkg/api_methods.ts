@@ -202,7 +202,7 @@ export const api = {
   ) =>
     post<SearchResults>(
       `/api/v1/search/execute${qs(params as Record<string, string | number | undefined>)}`,
-      { query_definition: queryDefinition },
+      { query_definition: queryDefinition, ...params },
       init
     ),
   searchPresets: () => get<{ presets: SearchPreset[] }>("/api/v1/search/presets"),
@@ -216,7 +216,7 @@ export const api = {
   runSavedSearch: (searchId: number, params: { limit?: number; offset?: number; sort_by?: string; sort_dir?: string } = {}) =>
     post<{ saved: SavedSearchesPayload["searches"][number]; results: SearchResults }>(
       `/api/v1/search/saved/${searchId}/run${qs(params as Record<string, string | number | undefined>)}`,
-      {}
+      { ...params }
     ),
   deleteSavedSearch: (searchId: number) =>
     del<{ ok: boolean }>(`/api/v1/search/saved/${searchId}`),
@@ -225,7 +225,7 @@ export const api = {
   rerunHistoryEntry: (historyId: number, params: { limit?: number; offset?: number; sort_by?: string; sort_dir?: string } = {}) =>
     post<{ reran: { history_id: number }; results: SearchResults }>(
       `/api/v1/search/history/${historyId}/rerun${qs(params as Record<string, string | number | undefined>)}`,
-      {}
+      { ...params }
     ),
   // Phase 9 — AI scouting reports. All session-authenticated; generation is
   // Pro-gated with a separate monthly allowance (D5).

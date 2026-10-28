@@ -98,19 +98,32 @@ class SaveSearchBody(QueryDefinitionBody):
 
 
 @router.post("/execute")
-def execute(body: ExecuteBody, request: Request) -> dict[str, Any]:
+def execute(
+    body: ExecuteBody,
+    request: Request,
+    limit: int | None = Query(default=None, ge=1, le=100),
+    offset: int | None = Query(default=None, ge=0),
+    sort_by: str | None = Query(default=None),
+    sort_dir: str | None = Query(default=None, pattern="^(asc|desc)$"),
+    log_history: bool | None = Query(default=None),
+) -> dict[str, Any]:
     user = _optional_user(request)
+    actual_limit = limit if limit is not None else body.limit
+    actual_offset = offset if offset is not None else body.offset
+    actual_sort_by = sort_by if sort_by is not None else body.sort_by
+    actual_sort_dir = sort_dir if sort_dir is not None else body.sort_dir
+    actual_log_history = log_history if log_history is not None else body.log_history
     with session_scope() as db:
         try:
             return ss.execute_structured_query(
                 db,
                 body.query_definition,
                 user_id=user,
-                log_history=body.log_history,
-                limit=body.limit,
-                offset=body.offset,
-                sort_by=body.sort_by,
-                sort_dir=body.sort_dir,
+                log_history=actual_log_history,
+                limit=actual_limit,
+                offset=actual_offset,
+                sort_by=actual_sort_by,
+                sort_dir=actual_sort_dir,
             )
         except (
             ss.SearchNotFound,
@@ -155,18 +168,30 @@ def save_search(body: SaveSearchBody, request: Request) -> dict[str, Any]:
 
 
 @router.post("/saved/{search_id}/run")
-def run_saved(search_id: int, body: RunBody, request: Request) -> dict[str, Any]:
+def run_saved(
+    search_id: int,
+    body: RunBody,
+    request: Request,
+    limit: int | None = Query(default=None, ge=1, le=100),
+    offset: int | None = Query(default=None, ge=0),
+    sort_by: str | None = Query(default=None),
+    sort_dir: str | None = Query(default=None, pattern="^(asc|desc)$"),
+) -> dict[str, Any]:
     user = _require_user(request)
+    actual_limit = limit if limit is not None else body.limit
+    actual_offset = offset if offset is not None else body.offset
+    actual_sort_by = sort_by if sort_by is not None else body.sort_by
+    actual_sort_dir = sort_dir if sort_dir is not None else body.sort_dir
     with session_scope() as db:
         try:
             return ss.run_saved_search(
                 db,
                 user.id,
                 search_id,
-                limit=body.limit,
-                offset=body.offset,
-                sort_by=body.sort_by,
-                sort_dir=body.sort_dir,
+                limit=actual_limit,
+                offset=actual_offset,
+                sort_by=actual_sort_by,
+                sort_dir=actual_sort_dir,
             )
         except (
             ss.SearchNotFound,
@@ -201,18 +226,30 @@ def history(request: Request, limit: int = Query(20, ge=1, le=50)) -> dict[str, 
 
 
 @router.post("/history/{history_id}/rerun")
-def rerun_history(history_id: int, body: RunBody, request: Request) -> dict[str, Any]:
+def rerun_history(
+    history_id: int,
+    body: RunBody,
+    request: Request,
+    limit: int | None = Query(default=None, ge=1, le=100),
+    offset: int | None = Query(default=None, ge=0),
+    sort_by: str | None = Query(default=None),
+    sort_dir: str | None = Query(default=None, pattern="^(asc|desc)$"),
+) -> dict[str, Any]:
     user = _require_user(request)
+    actual_limit = limit if limit is not None else body.limit
+    actual_offset = offset if offset is not None else body.offset
+    actual_sort_by = sort_by if sort_by is not None else body.sort_by
+    actual_sort_dir = sort_dir if sort_dir is not None else body.sort_dir
     with session_scope() as db:
         try:
             return ss.rerun_history_entry(
                 db,
                 user.id,
                 history_id,
-                limit=body.limit,
-                offset=body.offset,
-                sort_by=body.sort_by,
-                sort_dir=body.sort_dir,
+                limit=actual_limit,
+                offset=actual_offset,
+                sort_by=actual_sort_by,
+                sort_dir=actual_sort_dir,
             )
         except (
             ss.SearchNotFound,

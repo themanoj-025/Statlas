@@ -114,12 +114,18 @@ def get_cache() -> CacheBackend:
     if _backend is not None:
         return _backend
 
+    from app.config import get_settings
+
+    settings = get_settings()
+
+    # In dev/test or when REDIS_URL is unset/empty, avoid socket timeout and use in-memory cache directly.
+    if settings.environment in ("test", "development") or not settings.redis_url:
+        _backend = InMemoryCacheBackend()
+        return _backend
+
     try:
         import redis as redis_lib
 
-        from app.config import get_settings
-
-        settings = get_settings()
         client = redis_lib.from_url(
             settings.redis_url,
             decode_responses=True,

@@ -86,7 +86,7 @@ export function SimilarPlayers({ playerId, playerName }: { playerId: number; pla
               <div className="similar-player__row">
                 <span>
                   {player.slug ? (
-                    <Link href={`/players/${player.slug}`}>{player.name}</Link>
+                    <Link href={`/players/${player.slug}`} prefetch={false}>{player.name}</Link>
                   ) : (
                     player.name
                   )}

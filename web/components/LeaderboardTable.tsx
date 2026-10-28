@@ -273,7 +273,7 @@ export function LeaderboardTable({
                   <tr key={entry.player_id}>
                     <td className="num">{rank}</td>
                     <td>
-                      <Link href={entry.slug ? `/players/${entry.slug}` : "#"}>{entry.name}</Link>
+                      <Link href={entry.slug ? `/players/${entry.slug}` : "#"} prefetch={false}>{entry.name}</Link>
                     </td>
                     <td>{entry.club ?? "—"}</td>
                     <td className="num">{entry.position_group}</td>
