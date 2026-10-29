@@ -44,7 +44,7 @@ test("methodology shows a worked example with real numbers", async ({ page }) =>
 test("about page states the solo-founder reality plainly", async ({ page }) => {
   await page.goto("/about");
   await expect(page.getByText(/one person\./i).first()).toBeVisible();
-  await expect(page.getByText(/not a black box/i)).toBeVisible();
+  await expect(page.getByText(/not a black box/i).first()).toBeVisible();
 });
 
 test("help page answers the missing-player question specifically", async ({ page }) => {
@@ -63,7 +63,7 @@ test("pricing FAQ states the downgrade policy from Phase 4", async ({ page }) =>
   // Downgrade question: saved work persists — the actual Phase 4 decision.
   const downgrade = page.getByText(/what happens to my saved comparisons/i).first();
   await downgrade.click();
-  await expect(page.getByText(/everything you created while on pro stays yours/i)).toBeVisible();
+  await expect(page.getByText(/everything you created while on pro stays yours/i).first()).toBeVisible();
 });
 
 test("report-a-data-error link exists on a player page and is a real mailto", async ({ page }) => {
