@@ -93,7 +93,12 @@ def execute_structured_query(
         raise InvalidQuery("No season data exists yet.")
     latest_date = (
         db.query(func.max(StatSnapshot.scrape_date))
-        .filter(StatSnapshot.season == season)
+        .join(PercentileSnapshot, PercentileSnapshot.stat_snapshot_id == StatSnapshot.id)
+        .filter(
+            StatSnapshot.season == season,
+            PercentileSnapshot.metric_name == index_id,
+            PercentileSnapshot.is_published.is_(True),
+        )
         .scalar()
     )
     if latest_date is None:

@@ -133,7 +133,7 @@ app.add_middleware(
     # from the web app origin (billing POST routes included).
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
-    allow_headers=["Content-Type", "Authorization", "X-CSRF-Token"],
+    allow_headers=["*"],
     max_age=86400,  # Cache preflight for 24 hours
 )
 # GZip compression for all responses (reduces payload size ~70%)

@@ -255,14 +255,23 @@ def seed_alert(body: SeedAlertBody) -> dict[str, Any]:
             )
             return snap
 
-        _seed_snapshot(prev_date, body.from_percentile)
-        _seed_snapshot(curr_date, body.to_percentile)
+        snap1 = _seed_snapshot(prev_date, body.from_percentile)
+        snap2 = _seed_snapshot(curr_date, body.to_percentile)
         db.commit()
 
         # Run the REAL detection job (same entry point the weekly refresh calls).
         from app.watch.detection import detect_watch_triggers
 
         report = detect_watch_triggers(db, curr_date)
+
+        # Purge the fixture snapshots now that the alert has been generated
+        # so subsequent tests (search, player profiles, reports) see clean data.
+        db.query(PercentileSnapshot).filter(
+            PercentileSnapshot.stat_snapshot_id.in_([snap1.id, snap2.id])
+        ).delete(synchronize_session=False)
+        db.delete(snap1)
+        db.delete(snap2)
+        db.commit()
         return {
             "alerts_created": report.alerts_created,
             "player": player.canonical_name,
