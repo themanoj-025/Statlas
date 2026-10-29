@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
 // Pages that require authentication — redirect to /login if no session cookie
-const PROTECTED_PATHS = ["/account", "/workspace", "/reports", "/watchlist"];
+const PROTECTED_PATHS = ["/account"];
 
 // Pages that should redirect to /dashboard if already signed in
 const GUEST_ONLY_PATHS = ["/login", "/register"];
@@ -33,9 +33,6 @@ export function middleware(request: NextRequest) {
 export const config = {
   matcher: [
     "/account/:path*",
-    "/workspace/:path*",
-    "/reports/:path*",
-    "/watchlist/:path*",
     "/login",
     "/register",
   ],

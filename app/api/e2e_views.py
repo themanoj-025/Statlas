@@ -75,10 +75,27 @@ def grant_pro(body: GrantProBody, _request: Request) -> dict[str, Any]:
         else:
             existing.plan = "pro"
         from app.models import ReportQuota
+        from app.reports_pkg.quota import _quota_window
 
-        quota_rows = db.query(ReportQuota).filter(ReportQuota.user_id == user.id).all()
-        for q in quota_rows:
-            q.reports_limit = 10
+        start, end = _quota_window()
+        quota = (
+            db.query(ReportQuota)
+            .filter(ReportQuota.user_id == user.id, ReportQuota.period_start == start)
+            .first()
+        )
+        if quota is None:
+            db.add(
+                ReportQuota(
+                    user_id=user.id,
+                    period_start=start,
+                    period_end=end,
+                    reports_used=0,
+                    reports_limit=10,
+                )
+            )
+        else:
+            quota.reports_used = 0
+            quota.reports_limit = 10
         db.commit()
     return {"ok": True}
 

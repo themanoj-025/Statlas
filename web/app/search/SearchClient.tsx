@@ -158,6 +158,7 @@ export function SearchClient({ meta, presets }: { meta: Meta; presets: SearchPre
         setSaved((v) => v);
       }
     } catch (err) {
+      console.error("[SearchClient] run() error:", err);
       setRunError(err instanceof ApiError ? err.message : "Could not run the query.");
     } finally {
       setRunning(false);
