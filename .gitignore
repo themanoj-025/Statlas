@@ -37,18 +37,33 @@ id_dsa*
 
 # Cloud & service credentials
 credentials.json
+*credentials*.json
 client_secret*.json
+client_secrets*.json
 service-account*.json
 service_account*.json
 serviceAccountKey*.json
 google-services.json
+google-credentials*.json
 GoogleService-Info.plist
 .aws/
 .azure/
 .gcp/
 gcloud/
 .act-secrets
+*.secrets.*
+.secrets
 *.publishsettings
+*.tfstate
+*.tfstate.*
+.terraform/
+.terraform.lock.hcl
+kubeconfig
+*.kubeconfig
+.kube/
+
+# Password vaults & cryptographic stores
+*.kdbx
 
 # Authentication tokens & configs
 .netrc
@@ -114,6 +129,8 @@ logs/
 *.db-journal
 *.sqlite
 *.sqlite3
+*.sql.gz
+*.rdb
 
 # ------------------------------------------------------------------------------
 # 6. TESTING & CODE QUALITY
