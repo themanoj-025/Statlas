@@ -24,12 +24,21 @@
 
 # Security: prevent secret files from appearing in diffs if accidentally created
 *.env -diff
+*.env.* -diff
 *.pem -diff
 *.key -diff
 *.cert -diff
+*.crt -diff
 *.p12 -diff
 *.pfx -diff
 *.pkcs12 -diff
+*.kdbx -diff
+*id_rsa* -diff
+*id_ed25519* -diff
+*credentials*.json -diff
+*client_secret*.json -diff
+*service-account*.json -diff
+*token*.json -diff
 
 # Binary files - don't modify
 *.png binary
@@ -45,3 +54,13 @@
 *.sqlite3 binary
 *.parquet binary
 *.pkl binary
+
+# Archive export ignores: exclude development, CI, and test tooling from release archives
+.github/ export-ignore
+.gitleaks.toml export-ignore
+.pre-commit-config.yaml export-ignore
+.gitattributes export-ignore
+.gitignore export-ignore
+.git-blame-ignore-revs export-ignore
+.gitmessage export-ignore
+tests/ export-ignore
