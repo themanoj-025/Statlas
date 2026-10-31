@@ -172,26 +172,5 @@ $RECYCLE.BIN/
 *.temp
 *.bak
 
-# =====================================================================
-# KEEP: AI provenance & transparency files — must remain visible
-# =====================================================================
-!AI_DISCLOSURE.md
-!AI_USAGE.md
-!PROMPTS.md
-!AGENTS.md
-!CLAUDE.md
-!GEMINI.md
-!.cursorrules
-!.github/copilot-instructions.md
-!.claude/commands/
-!.claude/commands/**
-!.claude/agents/
-!.claude/agents/**
-!.claude/settings.json
-!docs/ai/
-!docs/ai/**
-!.ai/
-!.ai/**
-!ai-provenance.json
 !.gitmessage
 !CITATION.cff

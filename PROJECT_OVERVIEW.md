@@ -867,8 +867,6 @@ Total tracked files in repository tree: 584
 | [`.gitmessage`](.gitmessage) | `no-ext` | 11 | 288 | Configuration or static asset |
 | [`.mailmap`](.mailmap) | `no-ext` | 6 | 298 | Configuration or static asset |
 | [`.pre-commit-config.yaml`](.pre-commit-config.yaml) | `.yaml` | 21 | 557 | Configuration or static asset |
-| [`AGENTS.md`](AGENTS.md) | `.md` | 72 | 1705 | Documentation asset |
-| [`AI_DISCLOSURE.md`](AI_DISCLOSURE.md) | `.md` | 66 | 2482 | Documentation asset |
 | [`CHANGELOG.md`](CHANGELOG.md) | `.md` | 40 | 1378 | Documentation asset |
 | [`CONTRIBUTING.md`](CONTRIBUTING.md) | `.md` | 14 | 508 | Documentation asset |
 | [`Dockerfile`](Dockerfile) | `no-ext` | 50 | 1893 | Configuration or static asset |
@@ -877,7 +875,6 @@ Total tracked files in repository tree: 584
 | [`Makefile`](Makefile) | `no-ext` | 102 | 4809 | Configuration or static asset |
 | [`README.md`](README.md) | `.md` | 312 | 13778 | Documentation asset |
 | [`SECURITY.md`](SECURITY.md) | `.md` | 25 | 983 | Documentation asset |
-| [`ai-provenance.json`](ai-provenance.json) | `.json` | 64 | 1599 | Configuration or static asset |
 | [`alembic.ini`](alembic.ini) | `.ini` | 150 | 5141 | Configuration or static asset |
 | [`alembic/README`](alembic/README) | `no-ext` | 1 | 40 | Database schema migration script |
 | [`alembic/env.py`](alembic/env.py) | `.py` | 78 | 2272 | Database schema migration script |
