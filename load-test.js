@@ -1,21 +1,10 @@
-// Canonical k6 smoke test — synced verbatim into every portfolio repo
-// (see shared/tools/sync_load_test.py). Per-repo tailoring happens through
-// environment variables, NOT through editing local copies — local edits
-// create the variant drift this canonical exists to prevent.
+// k6 smoke and performance test script.
 //
-// Tailoring env vars (set in the repo's load-test workflow `env:` block):
+// Configuration via environment variables:
 //   K6_BASE_URL     target base URL            (default http://localhost:8000)
-//   K6_HEALTH_PATH  health endpoint path       (default /health;
-//                   Streamlit apps use /_stcore/health, Match-Mind /api/health)
-//   K6_TARGET       peak virtual users         (default 10; Streamlit trio: 5)
-//   K6_P95_MS       p(95) latency budget in ms (default 500; Streamlit trio: 1000)
-//
-// Example (Streamlit repo):
-//   env: |
-//     K6_BASE_URL=http://127.0.0.1:8501
-//     K6_HEALTH_PATH=/_stcore/health
-//     K6_TARGET=5
-//     K6_P95_MS=1000
+//   K6_HEALTH_PATH  health endpoint path       (default /health)
+//   K6_TARGET       peak virtual users         (default 10)
+//   K6_P95_MS       p(95) latency budget in ms (default 500)
 
 import http from 'k6/http';
 import { check, sleep } from 'k6';
