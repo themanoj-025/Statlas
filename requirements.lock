@@ -4,7 +4,7 @@ annotated-doc==0.0.5
     # via fastapi
 annotated-types==0.8.0
     # via pydantic
-anthropic==2.3.0
+anthropic==2.8.0
     # via -r requirements.txt
 anyio==4.14.2
     # via
@@ -31,6 +31,10 @@ charset-normalizer==3.5.1
     #   requests
 click==8.4.2
     # via uvicorn
+colorama==0.4.6
+    # via
+    #   click
+    #   pytest
 cyclonedx-python-lib==11.12.0
     # via pip-audit
 defusedxml==0.7.1
@@ -167,12 +171,12 @@ psycopg2-binary==2.9.13
     # via -r requirements.txt
 py-serializable==2.1.0
     # via cyclonedx-python-lib
-pydantic==2.14.2
+pydantic==2.14.3
     # via
     #   -r requirements.txt
     #   anthropic
     #   fastapi
-pydantic-core==2.50.2
+pydantic-core==2.50.4
     # via pydantic
 pygments==2.21.0
     # via
@@ -196,7 +200,7 @@ requests==2.31.0
     #   stripe
 rich==15.0.0
     # via pip-audit
-ruff==0.17.3
+ruff==0.17.4
     # via -r requirements.txt
 scikit-learn==1.7.2
     # via -r requirements.txt
@@ -210,7 +214,7 @@ sortedcontainers==2.4.0
     # via cyclonedx-python-lib
 soupsieve==2.9.2
     # via beautifulsoup4
-sqlalchemy==2.1.6
+sqlalchemy==2.1.8
     # via
     #   -r requirements.txt
     #   alembic
