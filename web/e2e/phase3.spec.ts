@@ -63,7 +63,9 @@ test("honest unavailability note renders for a player without event coverage", a
 
   // The section renders the FACTUAL note — never a map, never a grayed-out
   // "coming soon" that implies universal coverage (Part B4 / Never-List #8).
-  const note = page.getByText(/Event-level data for this player is not yet available/i);
+  const note = page
+    .getByRole("region", { name: /shot and pass maps/i })
+    .getByText(/Event-level data for this player is not yet available/i);
   await expect(note).toBeVisible({ timeout: 15_000 });
 
   // And the pitch diagram must NOT render for this player.
