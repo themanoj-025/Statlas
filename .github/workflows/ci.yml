@@ -308,10 +308,16 @@ jobs:
           print('OpenAPI spec generated:', len(json.dumps(app.openapi())), 'bytes')
           "
       - name: Fuzz API against OpenAPI contract
+        continue-on-error: true  # advisory: report contract findings without blocking the build
         run: |
           uvicorn app.api.main:app --host 0.0.0.0 --port 8000 &
-          sleep 3
-          st run --checks all /tmp/openapi.json --base-url http://localhost:8000 -w 5 --hypothesis-suppress-health-check=too_slow 2>&1 | tail -20 || true
+          for _ in $(seq 1 30); do
+            curl -fsS http://127.0.0.1:8000/docs >/dev/null 2>&1 && break
+            sleep 1
+          done
+          st run --checks all /tmp/openapi.json --url http://localhost:8000 \
+            -w 5 \
+            --suppress-health-check=too_slow
 
   docker-cache:
     name: Docker image build + layer cache
