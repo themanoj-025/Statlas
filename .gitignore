@@ -174,3 +174,39 @@ $RECYCLE.BIN/
 
 !.gitmessage
 !CITATION.cff
+
+# ==============================================================================
+# APPENDED - credential & local-state hardening (never commit these)
+# ==============================================================================
+
+# Key material
+*.ppk
+*.jwk
+*.ovpn
+
+# Cloud / SSH / registry / package-index credentials
+.gcloud/
+.docker/config.json
+.ssh/
+.npmrc.local
+*service-account*.json
+
+# Secret-bearing files
+secrets.yml
+secrets.yaml
+secrets.json
+*.secret
+.token
+*.token
+
+# Local databases & dumps (may contain user data / PII)
+*.db.gz
+
+# Terraform state (often holds plaintext secrets)
+*.tfvars
+!*.tfvars.example
+
+# Runtime logs & coverage (can leak request payloads / PII)
+
+# Local tool caches
+.pyre/
