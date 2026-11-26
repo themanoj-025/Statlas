@@ -1,18 +1,299 @@
 # ════════════════════════════════════════════════════════════════
-# release.yml — configure GitHub Releases
-# Only relevant if the project publishes versioned releases.
+# release.yml — versioned release pipeline
+#
+# Trigger: push a semver tag (v1.2.3 or v1.2.3-rc.1).
+#   1. verify  — tag/version consistency, and CI must be green on the commit
+#   2. build   — sdist + wheel, validated with twine
+#   3. image   — versioned image(s) pushed to GHCR with build provenance
+#   4. publish — GitHub Release with changelog, generated notes, dist, SBOM
 # ════════════════════════════════════════════════════════════════
+
+# Releases are never cancelled by a newer tag push: a half-published release
+# is worse than a queued one.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
 name: Release
 
 on:
   push:
     tags: ["v*"]
 
-permissions:
-  contents: read
-
 jobs:
-  placeholder:
+  verify:
+    name: Verify tag and CI status
     runs-on: ubuntu-latest
+    timeout-minutes: 45
+    # Reading CI runs for the tagged commit needs actions:read; an explicit
+    # permissions block zeroes every scope it does not list.
+    permissions:
+      contents: read
+      actions: read
+    outputs:
+      version: ${{ steps.meta.outputs.version }}
+      prerelease: ${{ steps.meta.outputs.prerelease }}
     steps:
-      - run: echo "Release workflow not configured for this repo"
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+
+      - name: Validate tag format
+        run: |
+          set -euo pipefail
+          tag="${GITHUB_REF_NAME}"
+          if ! [[ "$tag" =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$ ]]; then
+            echo "::error::Tag '$tag' is not semver (expected vMAJOR.MINOR.PATCH[-prerelease])."
+            exit 1
+          fi
+
+      - name: Check declared version matches the tag
+        id: meta
+        run: |
+          set -euo pipefail
+          version="${GITHUB_REF_NAME#v}"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          if [[ "$version" == *-* ]]; then
+            echo "prerelease=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "prerelease=false" >> "$GITHUB_OUTPUT"
+          fi
+
+          python3 - "$version" <<'PY'
+          import json
+          import sys
+          import tomllib
+          from pathlib import Path
+
+          version = sys.argv[1]
+          declared = None
+          if Path("pyproject.toml").exists():
+              data = tomllib.loads(Path("pyproject.toml").read_text(encoding="utf-8"))
+              declared = data.get("project", {}).get("version")
+              if declared is None:
+                  declared = data.get("tool", {}).get("poetry", {}).get("version")
+          if declared is None and Path("package.json").exists():
+              declared = json.loads(Path("package.json").read_text(encoding="utf-8")).get("version")
+          if declared is None:
+              print("No declared package version found; skipping the version check.")
+              raise SystemExit(0)
+          if str(declared) != version:
+              print(f"::error::Tag v{version} does not match the declared version {declared}. "
+                    "Bump the version (or tag the matching commit) before releasing.")
+              raise SystemExit(1)
+          print(f"Tag v{version} matches the declared version {declared}.")
+          PY
+
+      - name: Wait for CI to pass on the tagged commit
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          for attempt in $(seq 1 60); do
+            runs=$(gh api \
+              "repos/${GITHUB_REPOSITORY}/actions/workflows/ci.yml/runs?head_sha=${GITHUB_SHA}&per_page=20" \
+              --jq '[.workflow_runs[] | select(.event == "push")]')
+            success=$(jq -r '[.[] | select(.status == "completed" and .conclusion == "success")] | length' <<<"$runs")
+            if [ "$success" -gt 0 ]; then
+              echo "CI passed on $GITHUB_SHA."
+              exit 0
+            fi
+            pending=$(jq -r '[.[] | select(.status != "completed")] | length' <<<"$runs")
+            if [ "$pending" -eq 0 ]; then
+              failed=$(jq -r '[.[] | select(.status == "completed" and .conclusion != "success")]
+                | if length > 0 then (last | "\(.conclusion) \(.html_url)") else empty end' <<<"$runs")
+              if [ -n "$failed" ]; then
+                echo "::error::CI did not pass on $GITHUB_SHA: $failed. Fix CI before tagging a release."
+                exit 1
+              fi
+            fi
+            echo "Waiting for CI on $GITHUB_SHA (attempt ${attempt}/60)..."
+            sleep 30
+          done
+          echo "::error::Timed out after 30 minutes waiting for CI on $GITHUB_SHA."
+          exit 1
+
+  build:
+    name: Build distribution
+    needs: verify
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Build sdist and wheel
+        run: |
+          set -euo pipefail
+          python -m pip install --upgrade pip build twine
+          python -m build
+          twine check dist/*
+
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: dist
+          path: dist/*
+          if-no-files-found: error
+
+  image:
+    name: Publish container image
+    needs: verify
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    permissions:
+      contents: read
+      packages: write
+      attestations: write
+      id-token: write
+    strategy:
+      fail-fast: false
+      matrix:
+        image: [{"suffix":"","file":"Dockerfile","target":""}]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Compute image name
+        run: echo "IMAGE=ghcr.io/${GITHUB_REPOSITORY,,}${{ matrix.image.suffix }}" >> "$GITHUB_ENV"
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@8aa5831fb8d48d8f76594c7ddde61ae58019f550 # v4.8.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract image metadata
+        id: meta
+        uses: docker/metadata-action@dc802804100637a589fabce1cb79ff13a1411302 # v6
+        with:
+          images: ${{ env.IMAGE }}
+          tags: |
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}},enable=${{ needs.verify.outputs.prerelease == 'false' }}
+            type=raw,value=latest,enable=${{ needs.verify.outputs.prerelease == 'false' }}
+
+      - name: Build and push
+        id: push
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
+        with:
+          context: .
+          file: ${{ matrix.image.file }}
+          target: ${{ matrix.image.target }}
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Attest build provenance
+        uses: actions/attest-build-provenance@8beda2b7ed98355c0e97c0a63bec38ae472e66c4 # v4
+        with:
+          subject-name: ${{ env.IMAGE }}
+          subject-digest: ${{ steps.push.outputs.digest }}
+          push-to-registry: true
+
+      - name: Record image digest
+        run: echo "${IMAGE}@${{ steps.push.outputs.digest }}" > image-digest.txt
+
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: digest-${{ strategy.job-index }}
+          path: image-digest.txt
+          if-no-files-found: error
+
+  publish:
+    name: Publish GitHub Release
+    needs: [verify, build, image]
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: write
+      actions: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Download build artifacts
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          mkdir -p artifacts release
+          gh run download "$GITHUB_RUN_ID" -D artifacts/dist -n dist
+          gh run download "$GITHUB_RUN_ID" -D artifacts -p "digest-*"
+
+      - name: Generate source SBOM
+        uses: anchore/sbom-action@66cbf4bc1f1c0d2edc94016e65bc221b6bb0ad6c # v0.24.3
+        with:
+          path: .
+          format: spdx-json
+          output-file: release/sbom.spdx.json
+
+      - name: Assemble release assets
+        run: |
+          set -euo pipefail
+          cp artifacts/dist/* release/
+          find artifacts -type f -name 'image-digest.txt' -exec cat {} + | sort -u > release/container-digests.txt
+          cd release
+          sha256sum -- * > SHA256SUMS
+          ls -l
+
+      - name: Build release notes from the changelog
+        env:
+          RELEASE_VERSION: ${{ needs.verify.outputs.version }}
+        run: |
+          python3 - <<'PY'
+          import os
+          import re
+          from pathlib import Path
+
+          version = os.environ["RELEASE_VERSION"]
+          changelog = Path("CHANGELOG.md")
+          text = changelog.read_text(encoding="utf-8") if changelog.exists() else ""
+
+          def section(name: str) -> str:
+              match = re.search(rf"^##\s+\[?{re.escape(name)}\]?[^\n]*$", text, re.MULTILINE)
+              if not match:
+                  return ""
+              rest = text[match.end():]
+              following = re.search(r"^##\s+", rest, re.MULTILINE)
+              return (rest[: following.start()] if following else rest).strip()
+
+          body = section(version) or section("Unreleased")
+          lines = [f"## {version}", ""]
+          digests = Path("release/container-digests.txt")
+          if digests.exists() and digests.read_text(encoding="utf-8").strip():
+              lines += ["### Container images", "", "```", digests.read_text(encoding="utf-8").strip(), "```", ""]
+          lines += [body or "_No changelog entry found for this release._", ""]
+          Path("release-notes.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
+          PY
+
+      - name: Create the GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PRERELEASE: ${{ needs.verify.outputs.prerelease }}
+        run: |
+          set -euo pipefail
+          tag="${GITHUB_REF_NAME}"
+          if ! gh release view "$tag" >/dev/null 2>&1; then
+            # `body` from the changelog is pre-pended to GitHub's generated notes.
+            jq -n \
+              --arg tag "$tag" \
+              --arg body "$(cat release-notes.md)" \
+              --argjson prerelease "$PRERELEASE" \
+              '{tag_name: $tag, name: $tag, body: $body,
+                generate_release_notes: true, prerelease: $prerelease}' \
+              | gh api -X POST "repos/${GITHUB_REPOSITORY}/releases" --input -
+          else
+            echo "Release $tag already exists; adding assets."
+          fi
+          gh release upload "$tag" release/* --clobber
