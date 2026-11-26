@@ -57,7 +57,7 @@ Every file links to every other file via its **Related Documents** table (13 row
 | [Schema.md](Schema.md) | 11 tables, ER, migrations, sensitive data | Backend, DBAs |
 | [ImplementationPlan.md](ImplementationPlan.md) | Phased plan, tasks, DoD | Engineers, PM, AI agents |
 | [Tracker.md](Tracker.md) | Live status dashboard | Everyone |
-| [Rules.md](Rules.md) | Engineering + AI-agent constitution | Engineers, AI agents |
+| [Rules.md](Rules.md) | Engineering constitution | Engineers, contributors |
 | [API.md](API.md) | All /api/v1 endpoints | Integration |
 | [SecurityAndCompliance.md](SecurityAndCompliance.md) | Threat model, compliance checklist | Security, legal |
 | [Testing.md](Testing.md) | Test pyramid, gates, e2e | QA, engineers |

@@ -184,7 +184,7 @@ Top 3 (full register: [RiskRegister.md](RiskRegister.md)):
 | [Schema.md](Schema.md) | Data model behind every feature |
 | [ImplementationPlan.md](ImplementationPlan.md) | Build plan mapped to REQ IDs |
 | [Tracker.md](Tracker.md) | Live status of every REQ |
-| [Rules.md](Rules.md) | Engineering + AI-agent operating rules |
+| [Rules.md](Rules.md) | Engineering operating rules |
 | [API.md](API.md) | Endpoints serving these features |
 | [SecurityAndCompliance.md](SecurityAndCompliance.md) | Compliance constraints (RISK-03/04) |
 | [Testing.md](Testing.md) | How each REQ is verified |

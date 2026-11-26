@@ -24,7 +24,7 @@ docs/
 │   ├── Schema.md                  data model (ER, tables, indexes, migrations)
 │   ├── ImplementationPlan.md      phased build plan (Phases 0–4)
 │   ├── Tracker.md                 live status dashboard (single source of truth)
-│   ├── Rules.md                   engineering + AI-agent operating rules
+│   ├── Rules.md                   engineering operating rules
 │   ├── API.md                     every /api/v1 endpoint
 │   ├── SecurityAndCompliance.md   threat model, compliance checklist
 │   ├── Testing.md                 test pyramid, gates, e2e matrix
@@ -96,7 +96,7 @@ docs/
 | Data model | [suite/Schema.md](suite/Schema.md) + `app/schema.sql` |
 | Build plan | [suite/ImplementationPlan.md](suite/ImplementationPlan.md) |
 | What's done / next / stuck | [suite/Tracker.md](suite/Tracker.md) |
-| Coding + AI-agent rules | [suite/Rules.md](suite/Rules.md) |
+| Coding standards & operating rules | [suite/Rules.md](suite/Rules.md) |
 | API reference | [suite/API.md](suite/API.md) |
 | Testing / gates | [suite/Testing.md](suite/Testing.md) |
 | Deploy / rollback | [suite/Deployment.md](suite/Deployment.md) |
